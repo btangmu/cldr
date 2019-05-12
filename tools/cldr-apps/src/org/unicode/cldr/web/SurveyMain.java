@@ -4365,17 +4365,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     };
 
     /**
-     * Any user of this should be within session sync
-     *
-     * @param ctx
-     * @return
-     */
-    UserLocaleStuff getOldUserFile(CookieSession session, CLDRLocale locale) {
-        UserLocaleStuff uf = (UserLocaleStuff) session.getByLocale(USER_FILE_KEY, locale.toString());
-        return uf;
-    }
-
-    /**
      * Return the UserLocaleStuff for the current context. Any user of this
      * should be within session sync (ctx.session) and must be balanced with
      * calls to close();

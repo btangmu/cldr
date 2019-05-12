@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
-import java.lang.ref.Reference;
 import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.util.Hashtable;
@@ -206,19 +205,6 @@ public class WebContext implements Cloneable, Appendable {
     }
 
     /**
-     * Construct a new, fake WebContext - for testing purposes. Writes all
-     * output to stdout.
-     *
-     * @param fake
-     *            ignored
-     */
-    public WebContext(OutputStream os) throws IOException {
-        dontCloseMe = false;
-        out = openUTF8Writer(os);
-        pw = new PrintWriter(out);
-    }
-
-    /**
      * Copy one WebContext to another. This is useful when you wish to create a
      * sub-context which has a different base URL (such as for processing a
      * certain form or widget).
@@ -231,11 +217,6 @@ public class WebContext implements Cloneable, Appendable {
             throw new InternalError("Can't slice a URLWebContext - use clone()");
         }
         init(other);
-    }
-
-    public WebContext(Writer sw) {
-        dontCloseMe = false;
-        pw = new PrintWriter(out = sw);
     }
 
     /**
@@ -1072,231 +1053,6 @@ public class WebContext implements Cloneable, Appendable {
     }
 
     /**
-     * Get an object out of the session data
-     *
-     * @param key
-     * @param aLocale
-     *            locale to fetch
-     * @return the object or null
-     */
-    public final Object getByLocale(String key, String aLocale) {
-        return session.getByLocale(key, aLocale);
-    }
-
-    /**
-     * Put an object into the session data
-     *
-     * @param key
-     * @param locale
-     * @param value
-     *            object to put
-     */
-    public final void putByLocale(String key, String locale, Object value) {
-        session.putByLocale(key, locale, value);
-    }
-
-    /**
-     * Remove an object from the session data
-     *
-     * @param key
-     * @param aLocale
-     */
-    public final void removeByLocale(String key, String aLocale) {
-        session.removeByLocale(key, aLocale);
-    }
-
-    /**
-     * Remove an object from the current locale's session data
-     *
-     * @param key
-     */
-    public final void removeByLocale(String key) {
-        removeByLocale(key, locale.toString());
-    }
-
-    /**
-     * Put an object into the current locale's session data
-     *
-     * @param key
-     * @param value
-     */
-    public final void putByLocale(String key, Object value) {
-        putByLocale(key, locale.toString(), value);
-    }
-
-    /**
-     * Get an object from the current locale's session data
-     *
-     * @param key
-     * @return the object
-     */
-    public final Object getByLocale(String key) {
-        return getByLocale(key, locale.toString());
-    }
-
-    // Static data
-    static Hashtable<CLDRLocale, Hashtable<String, Object>> staticStuff = new Hashtable<CLDRLocale, Hashtable<String, Object>>();
-
-    /**
-     * Debugging: print a Reference object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_Reference(Object o) {
-        int s = 0;
-        Object oo = ((Reference<?>) o).get();
-        println("Reference -&gt; <ul>");
-        s += staticInfo_Object(oo);
-        println("</ul>");
-        return s;
-    }
-
-    /**
-     * Debugging: print a DataPod object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_DataPod(Object o) {
-        print(o.toString());
-
-        return 1;
-    }
-
-    /**
-     * Debugging: print an Object object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_Object(Object o) {
-        if (o == null) {
-            println("null");
-            return 0;
-        } else if (o instanceof String) {
-            return staticInfo_String(o);
-        } else if (o instanceof Boolean) {
-            return staticInfo_Boolean(o);
-        } else if (o instanceof Reference) {
-            return staticInfo_Reference(o);
-        } else if (o instanceof Hashtable) {
-            return staticInfo_Hashtable(o);
-        } else if (o instanceof DataSection) {
-            return staticInfo_DataPod(o);
-        } else {
-            println(o.getClass().toString());
-            return 1;
-        }
-    }
-
-    /**
-     * Debugging: print a Hashtable object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_Hashtable(Object o) {
-        int s = 0;
-        Hashtable<?, ?> subHash = (Hashtable<?, ?>) o;
-        println("<ul>");
-        for (Iterator<?> ee = subHash.keySet().iterator(); ee.hasNext();) {
-            String kk = ee.next().toString();
-            println(kk + ":");
-            Object oo = subHash.get(kk);
-            s += staticInfo_Object(oo);
-            println("<br>");
-        }
-        println("</ul>");
-        return s;
-    }
-
-    /**
-     * Debugging: print a String object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_String(Object o) {
-        String obj = (String) o;
-        println("(" + obj + ")<br>");
-        return 1;
-    }
-
-    /**
-     * Debugging: print a Boolean object
-     *
-     * @param o
-     * @return number of sub-objects including this object
-     */
-    public int staticInfo_Boolean(Object o) {
-        Boolean obj = (Boolean) o;
-        println(obj.toString() + "<br>");
-        return 1;
-    }
-
-    /**
-     * Debugging: print out all static objects
-     *
-     * @return the number of sub items
-     */
-    public final int staticInfo() {
-        println("<h4>Static Info</h4>");
-        int s = staticInfo_Object(staticStuff);
-        println(staticStuff.size() + " locales, " + s + " sub items.");
-        println("<hr>");
-        return s;
-    }
-
-    /**
-     * Put an object into the current locale's static store
-     *
-     * @param key
-     * @param value
-     */
-    public final void putByLocaleStatic(String key, Object value) {
-        putByLocaleStatic(key, locale, value);
-    }
-
-    /**
-     * Get an object from the current locale's static store
-     *
-     * @param key
-     * @return the object
-     */
-    public final Object getByLocaleStatic(String key) {
-        return getByLocaleStatic(key, locale);
-    }
-
-    // bottlenecks for static access
-    /**
-     * Get an object from the specified static stuff
-     */
-    public static synchronized final Object getByLocaleStatic(String key, CLDRLocale aLocale) {
-        Hashtable<?, ?> subHash = staticStuff.get(aLocale);
-        if (subHash == null) {
-            return null;
-        }
-        return subHash.get(key);
-    }
-
-    /**
-     * Put an object into the current locale's static stuff
-     *
-     * @param key
-     * @param locale
-     * @param value
-     */
-    public static final synchronized void putByLocaleStatic(String key, CLDRLocale locale, Object value) {
-        Hashtable<String, Object> subHash = staticStuff.get(locale);
-        if (subHash == null) {
-            subHash = new Hashtable<String, Object>();
-            staticStuff.put(locale, subHash);
-        }
-        subHash.put(key, value);
-    }
-
-    /**
      * Print the coverage level for a certain locale.
      */
     public void showCoverageLevel() {
@@ -1361,9 +1117,8 @@ public class WebContext implements Cloneable, Appendable {
     }
 
     public static final String COVLEV_RECOMMENDED = "default";
-    public static final String PREF_COVLEV_LIST[] = { COVLEV_RECOMMENDED, Level.OPTIONAL.toString(),
-        Level.COMPREHENSIVE.toString(), Level.MODERN.toString(), Level.MODERATE.toString(), Level.BASIC.toString(),
-        Level.MINIMAL.toString() };
+    public static final String PREF_COVLEV_LIST[] = { COVLEV_RECOMMENDED,
+        Level.COMPREHENSIVE.toString(), Level.MODERN.toString(), Level.MODERATE.toString(), Level.BASIC.toString() };
 
     /**
      * The default level, if no organization is available.
@@ -1428,42 +1183,36 @@ public class WebContext implements Cloneable, Appendable {
         return def;
     }
 
-    /**
-     * Get a currently valid DataSection.. creating it if need be. prints
-     * informative notes to the ctx in case of a long delay.
-     *
-     * @param prefix
-     *
-     * Called from RefreshRow.jsp, though Eclipse won't show that in "Open Call Hierarchy" because jsp.
-     */
-    DataSection getSection(String prefix) {
-        return getSection(prefix, null, getEffectiveCoverageLevel(getLocale().toString()), LoadingShow.showLoading);
-    }
-
     public enum LoadingShow {
         dontShowLoading, showLoading
     };
 
     /**
-     * Get a currently valid DataSection for the specified ptype.. creating it
-     * if need be. prints informative notes to the ctx in case of a long delay.
+     * Get a currently valid DataSection.. creating it if need be. prints
+     * informative notes to the ctx in case of a long delay.
      *
      * @param prefix
-     * @deprecated Use
-     *             {@link #getSection(String,XPathMatcher,String,LoadingShow)}
-     *             instead
+     * @return the DataSection
+     *
+     * Called (rarely?) from RefreshRow.jsp, though Eclipse won't show that in "Open Call Hierarchy" because jsp.
      */
-    public DataSection getSection(String prefix, String ptype, LoadingShow options) {
-        return getSection(prefix, null, ptype, options);
+    DataSection getSection(String prefix) {
+        return getSection(prefix, null, getEffectiveCoverageLevel(getLocale().toString()), LoadingShow.showLoading);
     }
 
     /**
+     * Get a DataSection
+     *
      * Recommended entrypoint for pageid
      *
-     * @param pageId
-     * @param ptype
-     * @param options
-     * @return
+     * This is the function ordinarily called when a new section is opened in Survey Tool.
+     *
+     * @param pageId the PageId, with a name such as "Generic" and a SectionId with a name such as "DateTime"
+     * @param ptype a string such as "comprehensive"
+     * @param options the LoadingShow, with a name such as "dontShowLoading"
+     * @return the DataSection
+     *
+     * Called from RefreshRow.jsp, though Eclipse won't show that in "Open Call Hierarchy" because jsp.
      */
     public DataSection getSection(PageId pageId, String ptype, LoadingShow options) {
         return getSection(null, null, ptype, options, pageId);
@@ -1478,10 +1227,22 @@ public class WebContext implements Cloneable, Appendable {
      *            TODO
      */
     public DataSection getSection(String prefix, XPathMatcher matcher, String ptype, LoadingShow options) {
-        return getSection(prefix, matcher, ptype, options, null);
+        return getSection(prefix, matcher, ptype, options, null /* pageId */);
     }
 
-    public DataSection getSection(String prefix, XPathMatcher matcher, String ptype, LoadingShow options, PageId pageId) {
+    /**
+     * Get a DataSection
+     *
+     * @param prefix
+     * @param matcher
+     * @param ptype
+     * @param options
+     * @param pageId
+     * @return the DataSection
+     *
+     * Called only locally, by the other versions of getSection
+     */
+    private DataSection getSection(String prefix, XPathMatcher matcher, String ptype, LoadingShow options, PageId pageId) {
         String loadString = "data was loaded.";
         DataSection section = null;
 

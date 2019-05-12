@@ -1944,6 +1944,8 @@ public class DataSection implements JSONString {
      * @param simple
      *            if true, means that data is simply xpath+type. If false, all
      *            xpaths under prefix.
+     *
+     * Called by WebContext.getSection and by SurveyAjax.submitVoteOrAbstention.
      */
     public static DataSection make(PageId pageId, WebContext ctx, CookieSession session, CLDRLocale locale, String prefix,
         XPathMatcher matcher, boolean showLoading, String ptype) {

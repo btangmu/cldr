@@ -2,6 +2,9 @@
 <%@ include file="/WEB-INF/jspf/report.jspf"  %>
 <%@ page import="org.unicode.cldr.util.*" %>
 
+/*
+ * TODO: is this file r_rxt.jsp still used for anything? If so, document; if not, delete.
+ */
 <div class='ferrbox'>
 Debugging only.!
 </div>
@@ -27,7 +30,7 @@ session=<%= ctx.session.id %>
 <hr>
 
 <%
- DataSection section2 = ctx.getSection(XPathTable.xpathToBaseXpath(xp),Level.COMPREHENSIVE.toString(),WebContext.LoadingShow.dontShowLoading);
+ DataSection section2 = ctx.getSection(XPathTable.xpathToBaseXpath(xp),null,Level.COMPREHENSIVE.toString(),WebContext.LoadingShow.dontShowLoading);
 DataSection.DataRow r = section2.getDataRow(xpid);
 %>
 
