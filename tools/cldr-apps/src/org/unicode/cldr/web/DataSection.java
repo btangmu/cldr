@@ -398,7 +398,7 @@ public class DataSection implements JSONString {
              * DataSection.toJSONString()
              * JSONObject.valueToString(Object)
              * JSONWriter.value(Object)
-             * RefreshRow.jsp -- line with .key("section").value(section)
+             * doRefreshRow -- line with .key("section").value(section)
              *
              * @return the JSON string. For example: {"isBailey":false,"tests":[],"rawValue":"↑↑↑","valueHash":"4oaR4oaR4oaR","pClass":"loser",
              *      "isFallback":false,"value":"↑↑↑","isBaselineValue":false,"example":"<div class='cldr_example'>2345<\/div>"}
@@ -564,7 +564,7 @@ public class DataSection implements JSONString {
          * The candidate items for this DataRow, stored in a Map whose keys are CandidateItem.rawValue
          * and whose values are CandidateItem objects.
          * 
-         * Public for access by RefreshRow.jsp.
+         * Public for access by doRefreshRow.
          */
         public Map<String, CandidateItem> items = new TreeMap<String, CandidateItem>();
 
@@ -2208,7 +2208,7 @@ public class DataSection implements JSONString {
      * 
      * @return pageId
      * 
-     * Called from RefreshRow.jsp
+     * Called by doRefreshRow
      */
     public PageId getPageId() {
         return pageId;
@@ -2221,7 +2221,7 @@ public class DataSection implements JSONString {
      * @param matcher
      * @return the DisplaySet
      * 
-     * Called from RefreshRow.jsp
+     * Called by doRefreshRow
      */
     public DisplaySet createDisplaySet(SortMode sortMode, XPathMatcher matcher) {
         DisplaySet aDisplaySet = sortMode.createDisplaySet(matcher, rowsHash.values());

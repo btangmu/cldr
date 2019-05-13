@@ -1194,7 +1194,7 @@ public class WebContext implements Cloneable, Appendable {
      * @param prefix
      * @return the DataSection
      *
-     * Called (rarely?) from RefreshRow.jsp, though Eclipse won't show that in "Open Call Hierarchy" because jsp.
+     * Called by printSectionTableCloseShort and showXpath
      */
     DataSection getSection(String prefix) {
         return getSection(prefix, null, getEffectiveCoverageLevel(getLocale().toString()), LoadingShow.showLoading);
@@ -1212,7 +1212,7 @@ public class WebContext implements Cloneable, Appendable {
      * @param options the LoadingShow, with a name such as "dontShowLoading"
      * @return the DataSection
      *
-     * Called from RefreshRow.jsp, though Eclipse won't show that in "Open Call Hierarchy" because jsp.
+     * Called by doRefreshRow
      */
     public DataSection getSection(PageId pageId, String ptype, LoadingShow options) {
         return getSection(null, null, ptype, options, pageId);

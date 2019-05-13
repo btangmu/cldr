@@ -3308,7 +3308,7 @@ function addImportVotesFooter(voteTableDiv, voteList, mainCategories) {
 function refreshRow2(tr,theRow,vHash,onSuccess, onFailure) {
 	showLoader(tr.theTable.theDiv.loader,stui.loadingOneRow);
 	// vHash not used.
-    var ourUrl = contextPath + "/RefreshRow.jsp?what="+WHAT_GETROW+"&xpath="+theRow.xpathId +"&_="+surveyCurrentLocale+"&fhash="+tr.rowHash+/*"&vhash="+vHash+*/"&s="+tr.theTable.session +"&json=t&automatic=t";
+    var ourUrl = contextPath + "/RefreshRow.jsp?what="+WHAT_GETROW+"&xpath="+theRow.xpathId +"&_="+surveyCurrentLocale+"&fhash="+tr.rowHash+"&s="+tr.theTable.session +"&automatic=t";
 
     if(isDashboard()) {
     	ourUrl += "&dashboard=true";

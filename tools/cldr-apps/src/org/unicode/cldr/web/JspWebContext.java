@@ -201,17 +201,6 @@ public class JspWebContext extends WebContext {
     }
 
     /**
-     * Open a table, but without the 'code' column.
-     *
-     * @see #closeTableNoCode()
-     */
-    public void openTableNoCode() {
-        openMainForm();
-        this.put(SurveyMain.DATAROW_JSP, SurveyMain.DATAROW_JSP_DEFAULT);
-        SurveyForum.printSectionTableOpenShort(this, null);
-    }
-
-    /**
      * Show a single xpath's data to the user for submission/vetting.
      *
      * @param xpath
@@ -245,15 +234,6 @@ public class JspWebContext extends WebContext {
      */
     public void closeTable() {
         SurveyMain.printSectionTableCloseCode(this);
-    }
-
-    /**
-     * Close the table without a 'code' column.
-     *
-     * @see #openTableNoCode()
-     */
-    public void closeTableNoCode() {
-        SurveyForum.printSectionTableCloseShort(this, null);
     }
 
     /**

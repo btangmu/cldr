@@ -459,12 +459,15 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     /**
-     * Servlet initializer
+     * Initialize servlet
+     *
+     * @param req
+     * @return the SurveyMain instance
      */
-
     public static SurveyMain getInstance(HttpServletRequest req) {
-        if (config == null)
+        if (config == null) {
             return null; // not initialized.
+        }
         return (SurveyMain) config.getServletContext().getAttribute(SurveyMain.class.getName());
     }
 
