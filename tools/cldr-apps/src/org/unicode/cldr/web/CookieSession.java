@@ -48,6 +48,9 @@ public class CookieSession {
     public UserRegistry.User user = null;
     /**
      * @deprecated need to refactor anything that uses this.
+     * TODO: refactor how?? One possibility: "sm = SurveyMain.getInstance(request)" as in
+     * SurveyAjax.processRequest, which requires the HttpServletRequest.
+     * Another possibility: WebContext.sm (not static; e.g. "ctx.sm")
      */
     public static SurveyMain sm = null;
 

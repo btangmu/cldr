@@ -340,6 +340,8 @@ public class SurveyAjax extends HttpServlet {
                 sendNoSurveyMain(out);
             } else if (what == null) {
                 sendError(out, "Missing parameter: " + REQ_WHAT, ErrorCode.E_INTERNAL);
+            } else if (what.equals(WHAT_GETROW)) {
+                getRow(request, response, out, sm, sess, l, xpath);
             } else if (what.equals(WHAT_STATS_BYLOC)) {
                 JSONWriter r = newJSONStatusQuick(sm);
                 JSONObject query = DBUtils.queryToCachedJSON(what, 5 * 60 * 1000, StatisticsUtils.QUERY_ALL_VOTES);
@@ -515,7 +517,7 @@ public class SurveyAjax extends HttpServlet {
                         mySession.userDidAction();
 
                         CLDRLocale locale = CLDRLocale.getInstance(loc);
-                        CheckCLDR.Options options = DataSection.getOptions(null, mySession, locale);
+                        CheckCLDR.Options options = DataSection.getOptions(null, mySession, locale); // TODO: why null for WebContext here?
                         STFactory stf = sm.getSTFactory();
                         TestResultBundle cc = stf.getTestResult(locale, options);
                         int id = Integer.parseInt(xpath);
@@ -2461,8 +2463,8 @@ public class SurveyAjax extends HttpServlet {
 
         final String candVal = val;
 
-        DataSection section = DataSection.make(null, null, mySession, locale, xp, null, false,
-            Level.COMPREHENSIVE.toString());
+        DataSection section = DataSection.make(null /* pageId */, null /* ctx */, mySession,
+            locale, xp, null /* matcher */, false /* showLoading */, Level.COMPREHENSIVE.toString());
         section.setUserAndFileForVotelist(mySession.user, null);
 
         DataRow pvi = section.getDataRow(xp);
@@ -2532,41 +2534,36 @@ public class SurveyAjax extends HttpServlet {
     }
 
     /**
+     * Get data associated with a particular row (xpath).
      *
      * @param request
      * @param response
      * @param out
+     * @param sm
+     * @param sess
+     * @param locale
+     * @param xpath
      * @throws IOException
      * @throws JSONException
      *
-     * Called only from RefreshRow.jsp
-     * TODO: remove RefreshRow.jsp. Instead, client should request SurveyAjax directly, with "what=getrow".
-     * REQ_WHAT, WHAT_GETROW are already defined. Client requests RefreshRow.jsp with "what=getrow" (currently ignored).
-     * Client requests with "json=t" always, no longer needed.
-     * Similar situation in EmbeddedReport.jsp.
-     * RefreshRow.jsp?what=getrow&xpath=1316&_=sr&fhash=_xqyb&s=2169E81BBEF063E206B82AC01E4168A6&json=t&automatic=t&cacheKill=1550336566857
-     * Also voteinfo, fieldHash, zoomedIn unused
+     * An earlier version of this code was formerly in RefreshRow.jsp.
+     * Moved to SurveyAjax.java to make more consistent with other requests, to reduce the amount of code needed,
+     * to enable features of Eclipse that don't work correctly for jsp files, and to facilitate refactoring
+     * getSection to improve performance related to DataSection.
      * Reference: https://unicode-org.atlassian.net/projects/CLDR/issues/CLDR-11877
+     *        and https://unicode-org.atlassian.net/projects/CLDR/issues/CLDR-12020
      */
-    public static void doRefreshRow(HttpServletRequest request, HttpServletResponse response, Writer out)
-        throws IOException, JSONException {
+    public static void getRow(HttpServletRequest request, HttpServletResponse response, Writer out,
+            SurveyMain sm, String sess, CLDRLocale locale, String xpath)
+            throws IOException, JSONException {
 
         CLDRConfigImpl.setUrls(request);
         WebContext ctx = new WebContext(request, response);
         ElapsedTimer et = new ElapsedTimer();
 
-        // String what = request.getParameter(SurveyAjax.REQ_WHAT);
-        String sess = request.getParameter(SurveyMain.QUERY_SESSION);
-        String loc = request.getParameter(SurveyMain.QUERY_LOCALE);
-
-        CLDRLocale locale = SurveyAjax.validateLocale(new PrintWriter(out), loc, sess);
-        if (locale == null) {
-            return;
-        }
-        loc = locale.toString(); // normalized
-
+        String loc = locale.toString();
         ctx.setLocale(locale);
-        String xpath = WebContext.decodeFieldString(request.getParameter(SurveyForum.F_XPATH));
+        xpath = WebContext.decodeFieldString(xpath); // TODO: why doesn't processRequest do decodeFieldString? Not needed, all ASCII?
         String strid = WebContext.decodeFieldString(request.getParameter("strid"));
         if (strid != null && strid.isEmpty()) {
             strid = null;
@@ -2582,25 +2579,20 @@ public class SurveyAjax extends HttpServlet {
         }
         CookieSession mySession = CookieSession.retrieve(sess);
 
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("application/json");
-
         Thread curThread = Thread.currentThread();
         String threadName = curThread.getName();
-
-        SurveyMain sm = CookieSession.sm;
 
         try {
             curThread.setName(request.getServletPath() + ":" + loc + ":" + xpath);
 
             if (mySession == null) {
                 new org.json.JSONWriter(out).object().key("err")
-                .value("Your session has timed out or the SurveyTool has restarted.").endObject();
+                    .value("Your session has timed out or the SurveyTool has restarted.").endObject();
                 return;
             }
 
-            if (request.getParameter("automatic") == null || request.getParameter("automatic").isEmpty()) {
+            String auto = request.getParameter("automatic");
+            if (auto == null || auto.isEmpty()) {
                 mySession.userDidAction(); // don't touch for auto refresh
             }
 
@@ -2631,8 +2623,8 @@ public class SurveyAjax extends HttpServlet {
                 try {
                     xp = sm.xpt.getByStringID(strid);
                 } catch (Throwable t) {
-                    new org.json.JSONWriter(out).object().key("err").value("Exception getting stringid " + strid).key("err_code")
-                        .value("E_BAD_SECTION").endObject();
+                    new org.json.JSONWriter(out).object().key("err").value("Exception getting stringid " + strid)
+                        .key("err_code").value("E_BAD_SECTION").endObject();
                     return;
                 }
                 if (xp != null) {
@@ -2664,20 +2656,20 @@ public class SurveyAjax extends HttpServlet {
                     if (pageId != null) {
                         /*
                          * We arrive here normally when loading a page, invoked by request from CldrSurveyVettingLoader.js
-                         * var url = contextPath + "/RefreshRow.jsp?_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
+                         * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
                          */
-                        section = ctx.getSection(pageId, coverage.toString(), WebContext.LoadingShow.dontShowLoading);
+                        section = ctx.getSection(null /* prefix */, null /* matcher */, coverage.toString(), WebContext.LoadingShow.dontShowLoading, pageId); // 5 args
                         section.setUserAndFileForVotelist(mySession.user, null);
                     } else if (xp != null) {
                         /*
                          * We arrive here when a user votes for an item, invoked by request from survey.js
-                         * var ourUrl = contextPath + "/RefreshRow.jsp?what="+WHAT_GETROW+"&xpath="+theRow.xpathId +"&_="+surveyCurrentLocale+"&fhash="+tr.rowHash+"&s="+tr.theTable.session +"&automatic=t";
+                         * var ourUrl = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&xpath="+theRow.xpathId +"&_="+surveyCurrentLocale+"&fhash="+tr.rowHash+"&s="+tr.theTable.session +"&automatic=t";
                          * 
                          * We also arrive here when a user selects a "Fix" button in the Dashboard, invoked by request from review.js
-                         * var url = contextPath + "/RefreshRow.jsp?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
+                         * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
                          */
                         baseXp = XPathTable.xpathToBaseXpath(xp);
-                        section = ctx.getSection(baseXp, matcher, coverage.toString(), WebContext.LoadingShow.dontShowLoading);
+                        section = ctx.getSection(baseXp /* prefix */, matcher, coverage.toString(), WebContext.LoadingShow.dontShowLoading, null /* pageId */); // 5 args
                     } else {
                         new org.json.JSONWriter(out).object().key("err")
                             .value("Could not understand that section, xpath, or ID. Bad URL?")

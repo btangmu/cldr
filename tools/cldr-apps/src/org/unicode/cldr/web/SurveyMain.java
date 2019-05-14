@@ -5856,7 +5856,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             }
             progress.update("Create XPT"); // restore
             try {
-                xpt = XPathTable.createTable(dbUtils.getDBConnection(), this);
+                xpt = XPathTable.createTable(dbUtils.getDBConnection());
             } catch (SQLException e) {
                 busted("On XPathTable startup", e);
                 return;

@@ -60,7 +60,6 @@ import org.unicode.cldr.util.VoteResolver.Status;
 import org.unicode.cldr.util.XMLSource;
 import org.unicode.cldr.util.XPathParts;
 import org.unicode.cldr.web.DataSection.DataRow.CandidateItem;
-import org.unicode.cldr.web.SurveyMain.UserLocaleStuff;
 import org.unicode.cldr.web.UserRegistry.User;
 
 import com.google.common.collect.ImmutableList;
@@ -398,7 +397,7 @@ public class DataSection implements JSONString {
              * DataSection.toJSONString()
              * JSONObject.valueToString(Object)
              * JSONWriter.value(Object)
-             * doRefreshRow -- line with .key("section").value(section)
+             * getRow -- line with .key("section").value(section)
              *
              * @return the JSON string. For example: {"isBailey":false,"tests":[],"rawValue":"↑↑↑","valueHash":"4oaR4oaR4oaR","pClass":"loser",
              *      "isFallback":false,"value":"↑↑↑","isBaselineValue":false,"example":"<div class='cldr_example'>2345<\/div>"}
@@ -564,7 +563,7 @@ public class DataSection implements JSONString {
          * The candidate items for this DataRow, stored in a Map whose keys are CandidateItem.rawValue
          * and whose values are CandidateItem objects.
          * 
-         * Public for access by doRefreshRow.
+         * Public for access by getRow.
          */
         public Map<String, CandidateItem> items = new TreeMap<String, CandidateItem>();
 
@@ -1492,212 +1491,6 @@ public class DataSection implements JSONString {
         }
 
         /**
-         * Show a "skip box" for this DisplaySet
-         *
-         * TODO: explain what a "skip box" is
-         *
-         * @param ctx the WebContext
-         * @param skip an integer, meaning what?
-         *
-         * @return an integer related to the "skip" parameter
-         *
-         * Called only by DataSection.showSection
-         */
-        private int showSkipBox(WebContext ctx, int skip) {
-            int total = size();
-            DataRow displayList[] = null;
-            if (this != null) {
-                displayList = rows;
-            }
-            ctx.println("<div class='pager' style='margin: 2px'>");
-
-            // TODO: replace with ctx.fieldValue("skip",-1)
-            if (skip <= 0) {
-                skip = 0;
-            }
-            // calculate nextSkip
-            int from = skip + 1;
-            int to = from + ctx.prefCodesPerPage() - 1;
-            if (to >= total) {
-                to = total;
-            }
-
-            ctx.println("<div style='float: right;'>Items " + from + " to " + to + " of " + total + "</div>");
-            ctx.println("<p class='hang' > <b>Sorted:</b>  ");
-
-            showSkipBox_menu(ctx, SurveyMain.PREF_SORTMODE_CODE, "Code");
-            if (isCalendar) {
-                showSkipBox_menu(ctx, SurveyMain.PREF_SORTMODE_CODE_CALENDAR, "Type");
-            }
-            if (isMetazones) {
-                showSkipBox_menu(ctx, SurveyMain.PREF_SORTMODE_METAZONE, "Type");
-            }
-            showSkipBox_menu(ctx, SurveyMain.PREF_SORTMODE_WARNING, "Priority");
-            if (canName) {
-                showSkipBox_menu(ctx, SurveyMain.PREF_SORTMODE_NAME, SurveyMain.BASELINE_LANGUAGE_NAME + "-" + "Name");
-            }
-            WebContext subCtx = (WebContext) ctx.clone();
-            if (skip > 0) {
-                subCtx.setQuery("skip", new Integer(skip).toString());
-            }
-
-            ctx.println("</p>");
-
-            // Print navigation
-            if (total >= (ctx.prefCodesPerPage())) {
-                int prevSkip = skip - ctx.prefCodesPerPage();
-                if (prevSkip < 0) {
-                    prevSkip = 0;
-                }
-                ctx.print("<p class='hang'>");
-                if (skip <= 0) {
-                    ctx.print("<span class='pagerl_inactive'>\u2190&nbsp;prev"
-                        + "</span>&nbsp;");
-                } else {
-                    ctx.print("<a class='pagerl_active' href=\"" + ctx.url() + ctx.urlConnector() + "skip="
-                        + new Integer(prevSkip) + "\">" + "\u2190&nbsp;prev");
-                    ctx.print("</a>&nbsp;");
-                }
-                int nextSkip = skip + ctx.prefCodesPerPage();
-                if (nextSkip >= total) {
-                    nextSkip = -1;
-                    if (total >= (ctx.prefCodesPerPage())) {
-                        ctx.println(" <span class='pagerl_inactive' >" + "next&nbsp;"
-                            + "\u2192" + "</span>");
-                    }
-                } else {
-                    ctx.println(" <a class='pagerl_active' href=\"" + ctx.url() + ctx.urlConnector() + "skip="
-                        + new Integer(nextSkip) + "\">" + "next&nbsp;"
-                        + "\u2192" + "</a>");
-                }
-                ctx.print("</p>");
-            }
-
-            if (total >= (ctx.prefCodesPerPage())) {
-                if (partitions.length > 1) {
-                    ctx.println("<table summary='navigation box' style='border-collapse: collapse'><tr valign='top'><td>");
-                }
-                if (skip > 0) {
-                    if (skip >= total) {
-                        skip = 0;
-                    }
-                }
-                if (partitions.length > 1) {
-                    ctx.println("</td>");
-                }
-                for (int j = 0; j < partitions.length; j++) {
-                    if (j > 0) {
-                        ctx.println("<tr valign='top'><td></td>");
-                    }
-                    if (partitions[j].name != null) {
-                        ctx.print("<td  class='pagerln' align='left'><p style='margin-top: 2px; margin-bottom: 2px;' class='hang'><b>"
-                            + partitions[j].name + ":</b>");
-                    }
-                    int ourStart = partitions[j].start;
-                    int ourLimit = partitions[j].limit;
-                    for (int i = ourStart; i < ourLimit; i = (i - (i % ctx.prefCodesPerPage())) + ctx.prefCodesPerPage()) {
-                        // skip at the top of the page
-                        int pageStart = i - (i % ctx.prefCodesPerPage());
-
-                        int end = pageStart + ctx.prefCodesPerPage() - 1;
-                        if (end >= ourLimit) {
-                            end = ourLimit - 1;
-                        }
-                        // \u2013 = --
-                        // \u2190 = <--
-                        // \u2026 = ...
-                        boolean isus = (pageStart == skip);
-                        if (isus) {
-                            if (((i != pageStart) || (i == 0)) && (partitions[j].name != null)) {
-                                ctx.print(" <b><a class='selected' style='text-decoration:none' href='#" + partitions[j].name
-                                    + "'>");
-                            } else {
-                                ctx.println(" <b class='selected'>");
-                            }
-                        } else {
-                            ctx.print(" <a class='notselected' href=\"" + ctx.url() + ctx.urlConnector() + "skip=" + pageStart);
-                            if ((i != pageStart) && (partitions[j].name != null)) {
-                                ctx.println("#" + partitions[j].name);
-                            }
-                            ctx.println("\">"); // skip to the pageStart
-                        }
-                        if (displayList != null) {
-                            String iString = sortMode.getDisplayName(displayList[i]);
-                            if (iString.length() > SurveyMain.PAGER_SHORTEN_WIDTH) {
-                                iString = iString.substring(0, SurveyMain.PAGER_SHORTEN_WIDTH) + "\u2026";
-                            }
-                            ctx.print(iString);
-                        } else {
-                            ctx.print("" + (i + 1));
-                            ctx.print("\u2013" + (end + 1));
-                        }
-                        if (isus) {
-                            if (((i != pageStart) || (i == 0)) && (partitions[j].name != null)) {
-                                ctx.print("</a></b> ");
-                            } else {
-                                ctx.println("</b> ");
-                            }
-                        } else {
-                            ctx.println("</a> ");
-                        }
-                    }
-                    if (partitions.length > 1) {
-                        ctx.print("</p>");
-                    }
-                    if (partitions.length > 1) {
-                        ctx.println("</td></tr>");
-                    }
-                }
-                if (partitions.length > 1) {
-                    ctx.println("</table>");
-                }
-            } // no multiple pages
-            else {
-                if (partitions.length > 1) {
-                    ctx.println("<br><b>Items:</b><ul>");
-                    for (int j = 0; j < partitions.length; j++) {
-                        ctx.print("<b><a class='selected' style='text-decoration:none' href='#" + partitions[j].name + "'>");
-                        ctx.print(partitions[j].name + "</a></b> ");
-                        if (j < partitions.length - 1) {
-                            ctx.println("<br>");
-                        }
-                    }
-                    ctx.println("</ul>");
-                }
-            }
-            ctx.println("</div>");
-            return skip;
-        }
-
-        /**
-         * Show a "skip box menu" for this DisplaySet
-         *
-         * @param ctx
-         * @param aMode
-         * @param aDesc
-         *
-         * Called only by showSkipBox
-         */
-        private void showSkipBox_menu(WebContext ctx, String aMode, String aDesc) {
-            WebContext nuCtx = (WebContext) ctx.clone();
-            nuCtx.addQuery(SurveyMain.PREF_SORTMODE, aMode);
-
-            if (!sortMode.getName().equals(aMode)) {
-                nuCtx.print("<a class='notselected' href='" + nuCtx.url() + "'>");
-            } else {
-                nuCtx.print("<span class='selected'>");
-            }
-            nuCtx.print(aDesc);
-            if (!sortMode.getName().equals(aMode)) {
-                nuCtx.println("</a>");
-            } else {
-                nuCtx.println("</span>");
-            }
-
-            nuCtx.println(" ");
-        }
-
-        /**
          * Get the size of this DisplaySet
          *
          * @return the number of rows
@@ -1763,11 +1556,6 @@ public class DataSection implements JSONString {
         }
     }
 
-    /*
-     * A string used only in VETTING_PROBLEMS_LIST
-     */
-    private static String CHANGES_DISPUTED = "Disputed";
-
     /**
      * Divider denoting a specific Continent division.
      */
@@ -1809,16 +1597,6 @@ public class DataSection implements JSONString {
      */
     private static final Pattern NAME_TYPE_PATTERN = PatternCache.get("[a-zA-Z0-9]+|.*exemplarCity.*");
 
-    /*
-     * A string used only in VETTING_PROBLEMS_LIST
-     */
-    private static String PARTITION_ERRORS = "Error Values";
-
-    /*
-     * A string used only in VETTING_PROBLEMS_LIST
-     */
-    private static String PARTITION_UNCONFIRMED = "Unconfirmed";
-
     /**
      * Trace in detail time taken to populate?
      */
@@ -1828,13 +1606,6 @@ public class DataSection implements JSONString {
      * Show time taken to populate?
      */
     private static final boolean SHOW_TIME = false || TRACE_TIME || DEBUG || CldrUtility.getProperty("TEST", false);
-
-    /**
-     * An array of strings, used only in showSection()
-     * @deprecated
-     */
-    @Deprecated
-    public static final String VETTING_PROBLEMS_LIST[] = { PARTITION_ERRORS, CHANGES_DISPUTED, PARTITION_UNCONFIRMED };
 
     /**
      * Field to cache the Coverage info
@@ -1932,25 +1703,24 @@ public class DataSection implements JSONString {
     }
 
     /**
-     * Create, populate, and complete a DataSection given the specified locale
-     * and prefix
+     * Create, populate, and complete a DataSection given the specified locale and prefix
      *
-     * @param ctx
-     *            context to use (contains CLDRDBSource, etc.)
+     * @param pageId the PageId, with a name such as "Generic" and a SectionId with a name such as "DateTime"; or null
+     * @param ctx the WebContext to use (contains CLDRDBSource, etc.); or null
+     * @param session
      * @param locale
-     *            locale
-     * @param prefix
-     *            XPATH prefix
-     * @param simple
-     *            if true, means that data is simply xpath+type. If false, all
-     *            xpaths under prefix.
+     * @param prefix the XPATH prefix, such as ...; or null
+     * @param matcher
+     * @param showLoading
+     * @param ptype a string such as "comprehensive"
+     * @return the DataSection
      *
-     * Called by WebContext.getSection and by SurveyAjax.submitVoteOrAbstention.
+     * Called by WebContext.getSection (ctx != null) and by SurveyAjax.submitVoteOrAbstention (ctx == null).
      */
     public static DataSection make(PageId pageId, WebContext ctx, CookieSession session, CLDRLocale locale, String prefix,
         XPathMatcher matcher, boolean showLoading, String ptype) {
 
-        SurveyMain sm = CookieSession.sm; // TODO: non-deprecated way of getting sm
+        SurveyMain sm = CookieSession.sm; // TODO: non-deprecated way of getting sm -- could be ctx.sm unless ctx is null
 
         DataSection section = new DataSection(pageId, sm, locale, prefix, matcher, ptype);
 
@@ -2208,7 +1978,7 @@ public class DataSection implements JSONString {
      * 
      * @return pageId
      * 
-     * Called by doRefreshRow
+     * Called by getRow
      */
     public PageId getPageId() {
         return pageId;
@@ -2221,7 +1991,7 @@ public class DataSection implements JSONString {
      * @param matcher
      * @return the DisplaySet
      * 
-     * Called by doRefreshRow
+     * Called by getRow
      */
     public DisplaySet createDisplaySet(SortMode sortMode, XPathMatcher matcher) {
         DisplaySet aDisplaySet = sortMode.createDisplaySet(matcher, rowsHash.values());
@@ -2864,147 +2634,6 @@ public class DataSection implements JSONString {
     }
 
     /**
-     * Show a DataSection to the user. Caller must hold session sync.
-     *
-     * @param ctx
-     *            the context to show
-     * @param canModify
-     *            user is allowed to modify
-     * @param only_prefix_xpath
-     *            only show this prefix
-     * @param zoomedIn
-     *            show in zoomed-in mode
-     *
-     * There are two functions by this name. This one has a String for the 3rd param;
-     * the other has an XPathMatcher.
-     *
-     * Called only by showXpath in SurveyForum.java
-     */
-    void showSection(WebContext ctx, boolean canModify, String only_prefix_xpath) {
-        XPathMatcher matcher = BaseAndPrefixMatcher.getInstance(-1, only_prefix_xpath);
-        int skip = 0; // where the index points to
-        int oskip = ctx.fieldInt("skip", 0); // original skip from user.
-
-        UserLocaleStuff uf = null;
-        synchronized (ctx.session) {
-            uf = ctx.getUserFile();
-
-            /*
-             * TODO: remove this call to getCheck unless it has useful side effects. Formerly the return value was assigned
-             * to a variable checkCldr which was not accessed.
-             */
-            uf.getCheck(ctx.getEffectiveCoverageLevel(ctx.getLocale().toString()), ctx.getOptionsMap());
-
-            boolean disputedOnly = ctx.field("only").equals("disputed");
-
-            DisplaySet dSet = getDisplaySet(ctx, matcher);
-
-            if (dSet.size() == 0) {
-                ctx.println("<h3>There are no items to display on this page ");
-                if (getSkippedDueToCoverage() > 0) {
-                    ctx.println("due to the selected coverage level. To see " + getSkippedDueToCoverage() + " skipped items, "
-                        + "click on ");
-
-                    WebContext subCtx2 = new WebContext(ctx);
-                    subCtx2.removeQuery(SurveyMain.QUERY_LOCALE);
-                    subCtx2.removeQuery(SurveyMain.QUERY_LOCALE);
-                    subCtx2.removeQuery(SurveyForum.F_FORUM);
-                    SurveyMain.printMenu(subCtx2, "", "options", "My Options", SurveyMain.QUERY_DO);
-
-                    ctx.println("and set your coverage level to a higher value.");
-                }
-                ctx.println("</h3>");
-                return;
-            }
-
-            boolean checkPartitions = (dSet.partitions.length > 0) && (dSet.partitions[0].name != null);
-            int moveSkip = -1; // move the "skip" marker?
-            int xfind = ctx.fieldInt(SurveyMain.QUERY_XFIND);
-            if (xfind != -1) {
-                // see if we can find this base_xpath somewhere..
-                int pn = 0;
-                for (int i = 0; i < dSet.rows.length && (moveSkip == -1); i++) {
-                    DataRow row = dSet.rows[i];
-                    if (row.getXpathId() == xfind) {
-                        moveSkip = pn;
-                    }
-                    pn++;
-                }
-                if (moveSkip != -1) {
-                    /*
-                     * make it fall on a page boundary
-                     */
-                    oskip = (moveSkip / ctx.prefCodesPerPage()) * ctx.prefCodesPerPage();
-                }
-            }
-            // -----
-            if (!(matcher != null && matcher.getXPath() != XPathTable.NO_XPATH)) {
-                skip = dSet.showSkipBox(ctx, oskip);
-            } else {
-                skip = 0;
-            }
-
-            ctx.printUrlAsHiddenFields();
-
-            if (disputedOnly == true) {
-                ctx.println("(<b>Disputed Only</b>)<br><input type='hidden' name='only' value='disputed'>");
-            }
-
-            ctx.println("<input type='hidden' name='skip' value='" + ctx.field("skip") + "'>");
-            DataSection.printSectionTableOpen(ctx, this, true /* zoomedIn */, canModify);
-
-            int rowStart = skip; // where should it start?
-            int rowCount = ctx.prefCodesPerPage(); // how many to show?
-
-            if (disputedOnly) {
-                // we want to go from VETTING_PROBLEMS_LIST[0]..VETTING_PROBLEMS_LIST[n] in range.
-                for (int j = 0; j < dSet.partitions.length; j++) {
-                    for (String part : DataSection.VETTING_PROBLEMS_LIST) {
-                        if (dSet.partitions[j].name.equals(part)) {
-                            if (rowStart != skip) { // set once
-                                rowStart = dSet.partitions[j].start;
-                            }
-                            // keep setting this
-                            rowCount = (dSet.partitions[j].limit - rowStart);
-                        }
-                    }
-                }
-            }
-
-            int rowEnd = rowStart + rowCount;
-            if (rowEnd > dSet.rows.length) {
-                rowEnd = dSet.rows.length;
-            }
-            for (int i = rowStart; i < rowEnd; i++) {
-                if (checkPartitions) {
-                    for (int j = 0; j < dSet.partitions.length; j++) {
-                        if ((dSet.partitions[j].name != null)
-                            && ((i == dSet.partitions[j].start) || ((i == rowStart) && (i >= dSet.partitions[j].start) && (i < dSet.partitions[j].limit)))) {
-                            // ensure the first item has a header.
-                            ctx.print("<tr class='heading'><th class='partsection' align='left' colspan='"
-                                + SurveyMain.PODTABLE_WIDTH + "'>" + "<a name='" + dSet.partitions[j].name + "'");
-                            if (!dSet.partitions[j].helptext.isEmpty()) {
-                                ctx.print("title='" + dSet.partitions[j].helptext + "'");
-                            }
-                            ctx.println(">" + dSet.partitions[j].name + "</a>" + "</th>");
-                            ctx.println("</tr>");
-                        }
-                    }
-                }
-            }
-            sm.printSectionTableClose(ctx, this, canModify);
-
-            if (!(matcher != null && matcher.getXPath() != XPathTable.NO_XPATH)) {
-                dSet.showSkipBox(ctx, oskip);
-            }
-
-            if (!canModify) {
-                ctx.println("<hr> <i>You are not authorized to make changes to this locale.</i>");
-            }
-        }
-    }
-
-    /**
      * Show a single item, in a very limited view.
      *
      * @param ctx
@@ -3012,9 +2641,6 @@ public class DataSection implements JSONString {
      *            xpath of the one item to show
      *
      *  Called only by showXpathShort in SurveyForum.java
-     *  
-     *  Changed name from showPeasShort to showDataRowsShort, and moved from between the two methods
-     *  named showSection, 2018-8-19
      */
     public void showDataRowsShort(WebContext ctx, int item_xpath) {
         DataRow row = getDataRow(item_xpath);

@@ -482,6 +482,14 @@ abstract public class CheckCLDR {
             return CLDRLocale.getInstance(get(Option.locale));
         }
 
+        /**
+         * Get the required coverage level for the specified locale, for this CheckCLDR object.
+         *
+         * @param localeID
+         * @return the Level
+         *
+         * Called by CheckCoverage.setCldrFileToCheck and CheckDates.setCldrFileToCheck
+         */
         public Level getRequiredLevel(String localeID) {
             Level result;
             // see if there is an explicit level
@@ -492,7 +500,8 @@ abstract public class CheckCLDR {
                     return result;
                 }
             }
-            // otherwise, see if there is an organization level
+            // otherwise, see if there is an organization level for the "Cldr" organization.
+            // This is not user-specific.
             return sc.getLocaleCoverageLevel("Cldr", localeID);
         }
 

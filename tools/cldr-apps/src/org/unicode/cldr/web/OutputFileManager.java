@@ -396,6 +396,11 @@ public class OutputFileManager {
         }
     }
 
+    /**
+     * TODO: delete dead code if there's no plan to resurrect it
+     *
+     * @param ctx
+     */
     public void doRaw(WebContext ctx) {
         ctx.println("raw not supported currently. ");
     }

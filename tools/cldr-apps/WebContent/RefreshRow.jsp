@@ -3,5 +3,6 @@
 	import="com.ibm.icu.util.ULocale,org.unicode.cldr.util.*,org.json.*"%>
 <%-- Copyright (C) 2012 IBM and Others. All Rights Reserved --%>
 <%
-	SurveyAjax.doRefreshRow(request, response, out);
+	// THIS FILE IS OBSOLETE, to be deleted...
+	// SurveyAjax.getRow(request, response, out, ...);
 %>

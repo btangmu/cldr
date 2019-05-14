@@ -1641,6 +1641,7 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
         return null;
     }
 
+    @SuppressWarnings("unused")
     public String getBaileyValue(String xpath, Output<String> pathWhereFound, Output<String> localeWhereFound) {
         return null; // only a resolving xmlsource will return a value
     }
