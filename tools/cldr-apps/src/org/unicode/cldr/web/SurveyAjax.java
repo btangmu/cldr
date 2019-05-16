@@ -2658,8 +2658,8 @@ public class SurveyAjax extends HttpServlet {
                          * We arrive here normally when loading a page, invoked by request from CldrSurveyVettingLoader.js
                          * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
                          */
-                        section = ctx.getSection(null /* prefix */, null /* matcher */, coverage.toString(), WebContext.LoadingShow.dontShowLoading, pageId); // 5 args
-                        section.setUserAndFileForVotelist(mySession.user, null);
+                        section = ctx.getDataSection(null /* prefix */, null /* matcher */, coverage.toString(), WebContext.LoadingShow.dontShowLoading, pageId); // 5 args
+                        section.setUserAndFileForVotelist(mySession.user, null); // TODO: what effect does null cldrFile here have on DataSection.getExampleBuilder??
                     } else if (xp != null) {
                         /*
                          * We arrive here when a user votes for an item, invoked by request from survey.js
@@ -2669,7 +2669,7 @@ public class SurveyAjax extends HttpServlet {
                          * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
                          */
                         baseXp = XPathTable.xpathToBaseXpath(xp);
-                        section = ctx.getSection(baseXp /* prefix */, matcher, coverage.toString(), WebContext.LoadingShow.dontShowLoading, null /* pageId */); // 5 args
+                        section = ctx.getDataSection(baseXp /* prefix */, matcher, coverage.toString(), WebContext.LoadingShow.dontShowLoading, null /* pageId */); // 5 args
                     } else {
                         new org.json.JSONWriter(out).object().key("err")
                             .value("Could not understand that section, xpath, or ID. Bad URL?")

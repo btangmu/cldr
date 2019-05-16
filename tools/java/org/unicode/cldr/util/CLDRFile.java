@@ -66,8 +66,10 @@ import com.ibm.icu.impl.Row.R2;
 import com.ibm.icu.impl.Utility;
 import com.ibm.icu.text.MessageFormat;
 import com.ibm.icu.text.PluralRules;
+import com.ibm.icu.text.SimpleDateFormat;
 import com.ibm.icu.text.Transform;
 import com.ibm.icu.text.UnicodeSet;
+import com.ibm.icu.util.Calendar;
 import com.ibm.icu.util.Freezable;
 import com.ibm.icu.util.ICUUncheckedIOException;
 import com.ibm.icu.util.Output;
@@ -176,7 +178,8 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         return dataSource.isNonInheriting();
     }
 
-    // private String creationTime = null;
+    private static final boolean DEBUG_CLDR_FILE = false;
+    private String creationTime = null; // only used if DEBUG_CLDR_FILE
 
     /**
      * Construct a new CLDRFile.
@@ -186,9 +189,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      */
     public CLDRFile(XMLSource dataSource) {
         this.dataSource = dataSource;
-        // source.xpath_value = isSupplemental ? new TreeMap() : new TreeMap(ldmlComparator);
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("📂 Created new CLDRFile(dataSource) at " + creationTime);
+
+        if (DEBUG_CLDR_FILE) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("📂 Created new CLDRFile(dataSource) at " + creationTime);
+        }
     }
 
     public CLDRFile(XMLSource dataSource, XMLSource... resolvingParents) {
@@ -196,10 +201,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         sourceList.add(dataSource);
         sourceList.addAll(Arrays.asList(resolvingParents));
         this.dataSource = new ResolvingSource(sourceList);
-        // source.xpath_value = isSupplemental ? new TreeMap() : new TreeMap(ldmlComparator);
-        
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("📂 Created new CLDRFile(dataSource, XMLSource... resolvingParents) at " + creationTime);
+
+        if (DEBUG_CLDR_FILE) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("📂 Created new CLDRFile(dataSource, XMLSource... resolvingParents) at " + creationTime);
+        }
     }
 
     public static CLDRFile loadFromFile(File f, String localeName, DraftStatus minimalDraftStatus, XMLSource source) {

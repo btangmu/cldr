@@ -877,28 +877,12 @@ public class SurveyForum {
     }
 
     /**
-     *
-     * @param ctx
-     * @param base_xpath
-     *
-     * Called from numbering_sytem.jsp and r_numbers.jsp, which are ... ??
-     */
-    public static void printSectionTableCloseShort(WebContext ctx, String base_xpath) {
-        DataSection section = null;
-        if (base_xpath != null) {
-            String podBase = DataSection.xpathToSectionBase(base_xpath);
-            section = ctx.getSection(podBase);
-        }
-        ctx.sm.printSectionTableClose(ctx, section, true);
-    }
-
-    /**
      * @param baseCtx
      * @param section_xpath
      * @param item_xpath
      * @return pod base used
      */
-    public static String showXpathShort(WebContext baseCtx, String section_xpath, int item_xpath) {
+    private static String showXpathShort(WebContext baseCtx, String section_xpath, int item_xpath) {
         String base_xpath = section_xpath;
         CLDRLocale loc = baseCtx.getLocale();
         WebContext ctx = new WebContext(baseCtx);
@@ -908,11 +892,20 @@ public class SurveyForum {
         ctx.put(WebContext.CAN_MODIFY, canModify);
         ctx.put(WebContext.ZOOMED_IN, true);
         String podBase = DataSection.xpathToSectionBase(base_xpath);
-        DataSection section = ctx.getSection(podBase);
+        DataSection section = ctx.getDataSectionForPrefix(podBase);
         section.showDataRowsShort(ctx, item_xpath);
         return podBase;
     }
 
+    /**
+     *
+     * @param baseCtx
+     * @param section_xpath
+     * @param item_xpath
+     * @return
+     *
+     * Called by org.unicode.cldr.web.JspWebContext.showXpath(String)
+     */
     public static String showXpathShort(WebContext baseCtx, String section_xpath, String item_xpath) {
         return showXpathShort(baseCtx, section_xpath, baseCtx.sm.xpt.getByXpath(item_xpath));
     }

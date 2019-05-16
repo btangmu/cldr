@@ -222,7 +222,8 @@ public class ExampleGenerator {
         this.verboseErrors = verbosity;
     }
 
-    // private String creationTime = null;
+    private static final boolean DEBUG_EXAMPLE_GENERATOR = false;
+    private String creationTime = null; // only used if DEBUG_EXAMPLE_GENERATOR
 
     /**
      * Create an Example Generator. If this is shared across threads, it must be synchronized.
@@ -231,10 +232,14 @@ public class ExampleGenerator {
      * @param supplementalDataDirectory
      */
     public ExampleGenerator(CLDRFile resolvedCldrFile, CLDRFile englishFile, String supplementalDataDirectory) {
-        if (!resolvedCldrFile.isResolved()) throw new IllegalArgumentException("CLDRFile must be resolved");
-        if (!englishFile.isResolved()) throw new IllegalArgumentException("English CLDRFile must be resolved");
-        cldrFile = resolvedCldrFile;
-        subdivisionIdToName = EmojiSubdivisionNames.getSubdivisionIdToName(cldrFile.getLocaleID());
+        if (!resolvedCldrFile.isResolved()) {
+            throw new IllegalArgumentException("CLDRFile must be resolved");
+        }
+        if (!englishFile.isResolved()) {
+            throw new IllegalArgumentException("English CLDRFile must be resolved");
+        }
+        this.cldrFile = resolvedCldrFile;
+        this.subdivisionIdToName = EmojiSubdivisionNames.getSubdivisionIdToName(cldrFile.getLocaleID());
         this.englishFile = englishFile;
         synchronized (ExampleGenerator.class) {
             if (supplementalDataInfo == null) {
@@ -245,8 +250,10 @@ public class ExampleGenerator {
 
         pluralInfo = supplementalDataInfo.getPlurals(PluralType.cardinal, cldrFile.getLocaleID());
         
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("🧞‍ Created new ExampleGenerator for loc " + cldrFile.getLocaleID() + " at " + creationTime);
+        if (DEBUG_EXAMPLE_GENERATOR) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("🧞‍ Created new ExampleGenerator for loc " + cldrFile.getLocaleID() + " at " + creationTime);
+        }
     }
 
     public enum ExampleType {

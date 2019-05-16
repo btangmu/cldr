@@ -1156,7 +1156,9 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
         public void valueChanged(String xpath, XMLSource nonResolvingSource) {
             synchronized (getSourceLocaleIDCache) {
                 AliasLocation location = getSourceLocaleIDCache.remove(xpath);
-                if (location == null) return;
+                if (location == null) {
+                    return;
+                }
                 // Paths aliasing to this path (directly or indirectly) may be affected,
                 // so clear them as well.
                 // There's probably a more elegant way to fix the paths than simply

@@ -64,6 +64,8 @@ import org.unicode.cldr.web.UserRegistry.User;
 
 import com.google.common.collect.ImmutableList;
 import com.ibm.icu.text.Collator;
+import com.ibm.icu.text.SimpleDateFormat;
+import com.ibm.icu.util.Calendar;
 import com.ibm.icu.util.Output;
 
 /**
@@ -464,6 +466,8 @@ public class DataSection implements JSONString {
              * Get the example for this CandidateItem
              *
              * @return the example, as a string, or null if examplebuilder is null
+             *
+             * Called only by DataSection.DataRow.CandidateItem.toJSONString()
              */
             private String getExample() {
                 if (examplebuilder == null) {
@@ -1445,7 +1449,12 @@ public class DataSection implements JSONString {
      * Somehow related to vote list?
      *
      * @param u the User
-     * @param f the CLDRFile
+     * @param f the CLDRFile, or null!!!
+     *
+     * TODO: Explain why getExampleBuilder is called from here, what does exampleBuilder have to
+     * do with vote list? How does this CLDRFile f relate to this DataSection?
+     *
+     * Called by getRow, make, submitVoteOrAbstention
      */
     public void setUserAndFileForVotelist(User u, CLDRFile f) {
         userForVotelist = u;
@@ -1705,7 +1714,8 @@ public class DataSection implements JSONString {
     /**
      * Create, populate, and complete a DataSection given the specified locale and prefix
      *
-     * @param pageId the PageId, with a name such as "Generic" and a SectionId with a name such as "DateTime"; or null
+     * @param pageId the PageId, with a name such as "Generic" or "T_NAmerica",
+     *                           and a SectionId with a name such as "DateTime" or "Locale_Display_Names"; or null
      * @param ctx the WebContext to use (contains CLDRDBSource, etc.); or null
      * @param session
      * @param locale
@@ -1924,7 +1934,8 @@ public class DataSection implements JSONString {
     private PageId pageId;
     private CLDRFile diskFile;
 
-    // private String creationTime = null;
+    private static final boolean DEBUG_DATA_SECTION = false;
+    private String creationTime = null; // only used if DEBUG_DATA_SECTION
 
     /**
      * Create a DataSection
@@ -1946,8 +1957,10 @@ public class DataSection implements JSONString {
         ballotBox = sm.getSTFactory().ballotBoxForLocale(locale);
         this.pageId = pageId;
 
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("🌴 Created new DataSection for loc " + loc + " at " + creationTime);
+        if (DEBUG_DATA_SECTION) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("🌴 Created new DataSection for loc " + loc + " at " + creationTime);
+        }
     }
 
     /**
@@ -2814,15 +2827,20 @@ public class DataSection implements JSONString {
 
     /**
      * @return the examplebuilder
+     *
+     * Called only by setUserAndFileForVotelist -- TODO: why setUserAndFileForVotelist?
      */
     private ExampleBuilder getExampleBuilder(CLDRFile file) {
         if (examplebuilder == null) {
-            examplebuilder = new ExampleBuilder(sm.getBaselineFile(), file);
+            examplebuilder = ExampleBuilder.getInstance(sm.getBaselineFile(), sm.getBaselineExample(), file);
         }
         return examplebuilder;
     }
 
     private ExampleBuilder getExampleBuilder() {
+        if (examplebuilder == null) {
+            System.out.println("Warning: examplebuilder is null in getExampleBuilder() ");
+        }
         return examplebuilder;
     }
 }

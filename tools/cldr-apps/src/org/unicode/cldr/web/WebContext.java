@@ -21,6 +21,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.servlet.RequestDispatcher;
@@ -1116,41 +1117,53 @@ public class WebContext implements Cloneable, Appendable {
         dontShowLoading, showLoading
     };
 
+    private static final boolean CACHE_DATA_SECTION = false; // TESTING, not ready for use
+
+    private static final Map<String, DataSection> dataSectionCache = CACHE_DATA_SECTION ? new ConcurrentHashMap<String, DataSection>() : null;
+
     /**
      * Get a DataSection (1 arg)
      *
      * Get a currently valid DataSection.. creating it if need be. prints
      * informative notes to the ctx in case of a long delay.
      *
-     * @param prefix
+     * @param prefix a string such as "//ldml"
      * @return the DataSection
      *
-     * Called by printSectionTableOpenShort, printSectionTableCloseShort and showXpathShort
+     * Called by showXpathShort which runs if you go to:
+     *     http://localhost:8080/cldr-apps/survey?_=ar_AE&x=r_steps
+     * and click on "GMT_format" (r_steps.jsp, GMT_format.jsp)
+     * -- Per cldr-dev email "Easy steps is an old feature that is no longer used"
+     *
+     * Renamed 2019-05-15 from getSection (1 arg) to getDataSectionForPrefix
      */
-    DataSection getSection(String prefix) {
-        return getSection(prefix, null /* matcher */, getEffectiveCoverageLevel(getLocale().toString()), LoadingShow.showLoading, null /* pageId */); // 5 args
+    DataSection getDataSectionForPrefix(String prefix) {
+        return getDataSection(prefix, null /* matcher */, getEffectiveCoverageLevel(getLocale().toString()), LoadingShow.showLoading, null /* pageId */); // 5 args
     }
 
     /**
      * Get a DataSection (5 args)
      *
-     * @param prefix
-     * @param matcher the XPathMatcher, which is ... ?
+     * @param prefix a string such as "//ldml"
+     * @param matcher the XPathMatcher (which is ... ?); or null
      * @param ptype a string such as "comprehensive"
      * @param options the LoadingShow, with a name such as "dontShowLoading"
-     * @param pageId the PageId, with a name such as "Generic" and a SectionId with a name such as "DateTime"
+     * @param pageId the PageId, with a name such as "Generic" and a SectionId with a name such as "DateTime"; or null
      * @return the DataSection
      *
-     * Called by getRow (with options = dontShowLoading), and locally by the other versions of getSection
+     * Called by getRow (with options = dontShowLoading), and locally by the other version of getSection
      *
-     * TODO: as part of DataSection performance improvement, consider moving getSection (all versions) to a different
+     * TODO: as part of DataSection performance improvement, consider moving this code to a different
      * module, maybe DataSection itself, especially if we can make DataSection not be user-specific.
      * WebContext is user-specific, and even request-specific.
+     *
+     * Renamed 2019-05-15 from getSection (5 args) to getDataSection
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
      */
-    public DataSection getSection(String prefix, XPathMatcher matcher, String ptype, LoadingShow options, PageId pageId) {
-        String loadString = "data was loaded.";
-        DataSection section = null;
+    public DataSection getDataSection(String prefix, XPathMatcher matcher, String ptype, LoadingShow options, PageId pageId) {
 
+        DataSection section = null;
         if (options == LoadingShow.showLoading) {
             println("<i id='loadSection'>Loading, please wait...</i>");
         }
@@ -1159,45 +1172,54 @@ public class WebContext implements Cloneable, Appendable {
                 println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Checking cache';</script>");
                 flush();
             }
-            CLDRProgressTask progress = null;
-            progress = sm.openProgress("Loading");
-            try {
-                progress.update("<span title='" + sm.xpt.getPrettyPath(prefix) + "'>" + locale + "</span>");
-                flush();
-                long t0 = System.currentTimeMillis();
-                ElapsedTimer waitTimer = new ElapsedTimer("There was a delay of {0} waiting for your other windows");
-                ElapsedTimer podTimer = null;
-                String waitString;
-                if (options == LoadingShow.showLoading) {
-                    println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Waiting for other windows';</script>");
-                    flush();
-                }
-                synchronized (session) {
-                    waitString = waitTimer.toString();
-                    podTimer = new ElapsedTimer("There was a delay of {0} as " + loadString);
-                    if (options == LoadingShow.showLoading) {
-                        println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Loading data...';</script>");
-                        flush();
-                    }
-                    section = DataSection.make(pageId, this, this.session, locale, prefix, matcher,
-                        options == LoadingShow.showLoading, ptype);
-                    if (options == LoadingShow.showLoading) {
-                        println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Cleaning up...';</script>");
-                        flush();
-                    }
-                }
-                if (options == LoadingShow.showLoading && (System.currentTimeMillis() - t0) > 10 * 1000) {
-                    println("<i><b>" + waitString + "<br/>" + podTimer + "</b></i><br/>");
-                }
-            } finally {
-                progress.close(); // TODO: this can trigger "State Error: Closing an already-closed CLDRProgressIndicator"
-                if (options == LoadingShow.showLoading) {
-                    println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='';</script>");
-                    flush();
-                }
+            String cacheKey = null;
+            if (CACHE_DATA_SECTION) {
+                cacheKey = locale.toString(); // not enough!
+                section = dataSectionCache.get(cacheKey);
             }
             if (section == null) {
-                throw new InternalError("No section.");
+                CLDRProgressTask progress = sm.openProgress("Loading");
+                try {
+                    progress.update("<span title='" + sm.xpt.getPrettyPath(prefix) + "'>" + locale + "</span>");
+                    flush();
+                    long t0 = System.currentTimeMillis();
+                    ElapsedTimer waitTimer = new ElapsedTimer("There was a delay of {0} waiting for your other windows");
+                    ElapsedTimer podTimer = null;
+                    String waitString;
+                    if (options == LoadingShow.showLoading) {
+                        println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Waiting for other windows';</script>");
+                        flush();
+                    }
+                    synchronized (session) {
+                        waitString = waitTimer.toString();
+                        podTimer = new ElapsedTimer("There was a delay of {0} as data was loaded.");
+                        if (options == LoadingShow.showLoading) {
+                            println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Loading data...';</script>");
+                            flush();
+                        }
+                        section = DataSection.make(pageId, this, this.session, locale, prefix, matcher,
+                            options == LoadingShow.showLoading, ptype);
+                        if (options == LoadingShow.showLoading) {
+                            println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Cleaning up...';</script>");
+                            flush();
+                        }
+                    }
+                    if (options == LoadingShow.showLoading && (System.currentTimeMillis() - t0) > 10 * 1000) {
+                        println("<i><b>" + waitString + "<br/>" + podTimer + "</b></i><br/>");
+                    }
+                } finally {
+                    progress.close(); // TODO: this can trigger "State Error: Closing an already-closed CLDRProgressIndicator"
+                    if (options == LoadingShow.showLoading) {
+                        println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='';</script>");
+                        flush();
+                    }
+                }
+                if (section == null) {
+                    throw new InternalError("No section.");
+                }
+                if (CACHE_DATA_SECTION) {
+                    dataSectionCache.put(cacheKey, section);
+                }
             }
         }
         section.touch();

@@ -4648,57 +4648,11 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     /**
-     * parse the metazone list for this zone. Map will contain enries with key
-     * String and value String[3] of the form: from : { from, to, metazone } for
-     * example: "1970-01-01" : { "1970-01-01", "1985-03-08", "Australia_Central"
-     * } the 'to' will be null if it does not have an ending time.
-     *
-     * @param metaMap
-     *            an 'out' parameter which will be cleared, and populated with
-     *            the contents of the metazone
-     * @return the active metazone ( where to=null ) if any, or null
-     */
-    public String zoneToMetaZone(WebContext ctx, String zone, Map<String, String[]> metaMap) {
-        String current = null;
-        synchronized (ctx.session) { // TODO: redundant sync?
-            SurveyMain.UserLocaleStuff uf = ctx.getUserFile();
-            CLDRFile resolvedFile = uf.resolvedFile;
-
-            String xpath = "//ldml/" + "dates/timeZoneNames/zone";
-            String ourSuffix = "[@type=\"" + zone + "\"]";
-            String podBase = DataSection.xpathToSectionBase(xpath);
-
-            metaMap.clear();
-
-            Iterator<String> mzit = resolvedFile.iterator(podBase + ourSuffix + "/usesMetazone");
-
-            for (; mzit.hasNext();) {
-                String ameta = (String) mzit.next();
-                String mfullPath = resolvedFile.getFullXPath(ameta);
-                XPathParts parts = XPathParts.getFrozenInstance(mfullPath);
-                String mzone = parts.getAttributeValue(-1, "mzone");
-                String from = parts.getAttributeValue(-1, "from");
-                if (from == null) {
-                    from = METAZONE_EPOCH;
-                }
-                String to = parts.getAttributeValue(-1, "to");
-                String contents[] = { from, to, mzone };
-                metaMap.put(from, contents);
-
-                if (to == null) {
-                    current = mzone;
-                }
-            }
-        }
-        return current;
-    }
-
-    /**
      * for showing the list of zones to the user
      */
 
     public void showTimeZones(WebContext ctx) {
-        String zone = ctx.field(QUERY_ZONE);
+        // String zone = ctx.field(QUERY_ZONE);
         showPathList(ctx, DataSection.EXEMPLAR_PARENT, null, false);
     }
 
