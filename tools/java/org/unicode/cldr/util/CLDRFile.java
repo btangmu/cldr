@@ -176,7 +176,8 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         return dataSource.isNonInheriting();
     }
 
-    // private String creationTime = null;
+    private static final boolean DEBUG_CLDR_FILE = false;
+    private String creationTime = null; // only used if DEBUG_CLDR_FILE
 
     /**
      * Construct a new CLDRFile.
@@ -186,9 +187,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      */
     public CLDRFile(XMLSource dataSource) {
         this.dataSource = dataSource;
-        // source.xpath_value = isSupplemental ? new TreeMap() : new TreeMap(ldmlComparator);
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("📂 Created new CLDRFile(dataSource) at " + creationTime);
+
+        if (DEBUG_CLDR_FILE) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("📂 Created new CLDRFile(dataSource) at " + creationTime);
+        }
     }
 
     public CLDRFile(XMLSource dataSource, XMLSource... resolvingParents) {
@@ -196,10 +199,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         sourceList.add(dataSource);
         sourceList.addAll(Arrays.asList(resolvingParents));
         this.dataSource = new ResolvingSource(sourceList);
-        // source.xpath_value = isSupplemental ? new TreeMap() : new TreeMap(ldmlComparator);
-        
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("📂 Created new CLDRFile(dataSource, XMLSource... resolvingParents) at " + creationTime);
+
+        if (DEBUG_CLDR_FILE) {
+            creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
+            System.out.println("📂 Created new CLDRFile(dataSource, XMLSource... resolvingParents) at " + creationTime);
+        }
     }
 
     public static CLDRFile loadFromFile(File f, String localeName, DraftStatus minimalDraftStatus, XMLSource source) {
@@ -523,7 +527,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             }
             currentFiltered.setForWritingWithSuppressionMap(xpath);
             if (currentFiltered.size() >= 2
-                && currentFiltered.getElement(1).equals("identity")) { 
+                && currentFiltered.getElement(1).equals("identity")) {
                 continue;
             }
             current.setForWritingWithSuppressionMap(getFullXPath(xpath));
@@ -554,7 +558,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
                     extras += XPathParts.NEWLINE + key;
                 }
                 finalComment += XPathParts.NEWLINE + extras;
-            }            
+            }
         }
         XPathParts.writeComment(pw, 0, finalComment, true);
         return true;
@@ -891,7 +895,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             if (accummulatedReferences == null) {
                 accummulatedReferences = references;
             } else {
-                accummulatedReferences += ", " + references;                
+                accummulatedReferences += ", " + references;
             }
         }
         if (accummulatedReferences == null) {
@@ -2307,20 +2311,20 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         }
         LanguageTagParser lparser = new LanguageTagParser().set(localeOrTZID);
         return getName(
-            lparser, 
-            onlyConstructCompound, 
-            altPicker, 
-            localeKeyTypePattern, 
-            localePattern, 
+            lparser,
+            onlyConstructCompound,
+            altPicker,
+            localeKeyTypePattern,
+            localePattern,
             localeSeparator);
     }
 
     public String getName(
-        LanguageTagParser lparser, 
-        boolean onlyConstructCompound, 
-        Transform<String, String> altPicker, 
+        LanguageTagParser lparser,
+        boolean onlyConstructCompound,
+        Transform<String, String> altPicker,
         String localeKeyTypePattern,
-        String localePattern, 
+        String localePattern,
         String localeSeparator
         ) {
 
@@ -2390,11 +2394,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
                     case "t":
                         List<String> hybrid = lparser.getLocaleExtensionsDetailed().get("h0");
                         if (hybrid != null) {
-                            kname = getKeyValueName("h0", JOIN_UNDERBAR.join(hybrid)); 
+                            kname = getKeyValueName("h0", JOIN_UNDERBAR.join(hybrid));
                         }
                         oldFormatType = getName(oldFormatType);
                         break;
-                    case "h0": 
+                    case "h0":
                         continue main;
                     case "cu":
                         oldFormatType = getName(CURRENCY_SYMBOL, oldFormatType.toUpperCase(Locale.ROOT));
@@ -2456,10 +2460,10 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
     static final Joiner JOIN_HYPHEN = Joiner.on('-');
     static final Joiner JOIN_UNDERBAR = Joiner.on('_');
 
-    public String getName(LanguageTagParser lparser, 
-        boolean onlyConstructCompound, 
-        Transform<String, String> altPicker) { 
-        return getName(lparser, onlyConstructCompound, altPicker, 
+    public String getName(LanguageTagParser lparser,
+        boolean onlyConstructCompound,
+        Transform<String, String> altPicker) {
+        return getName(lparser, onlyConstructCompound, altPicker,
             getWinningValueWithBailey("//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern"),
             getWinningValueWithBailey("//ldml/localeDisplayNames/localeDisplayPattern/localePattern"),
             getWinningValueWithBailey("//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator"));
@@ -2542,7 +2546,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
     public synchronized String getName(String localeOrTZID,
         boolean onlyConstructCompound,
         Transform<String, String> altPicker) {
-        return getName(localeOrTZID, 
+        return getName(localeOrTZID,
             onlyConstructCompound,
             getWinningValueWithBailey("//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern"),
             getWinningValueWithBailey("//ldml/localeDisplayNames/localeDisplayPattern/localePattern"),
@@ -2972,8 +2976,8 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         String full = getFullXPath(path);
         XPathParts parts = XPathParts.getFrozenInstance(full);
         String versionString = parts.findFirstAttributeValue("version");
-        return versionString == null 
-            ? null 
+        return versionString == null
+            ? null
                 : VersionInfo.getInstance(versionString);
     }
 
@@ -3061,9 +3065,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      *
      * @param path
      * @return the winning value
-     * 
+     *
      * TODO: check whether this is called only when appropriate, see https://unicode.org/cldr/trac/ticket/11299
-     * Compare getStringValueWithBailey which is identical except getStringValue versus getWinningValue. 
+     * Compare getStringValueWithBailey which is identical except getStringValue versus getWinningValue.
      */
     public String getWinningValueWithBailey(String path) {
         String winningValue = getWinningValue(path);
@@ -3082,9 +3086,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      *
      * @param path
      * @return the string value
-     * 
+     *
      * TODO: check whether this is called only when appropriate, see https://unicode.org/cldr/trac/ticket/11299
-     * Compare getWinningValueWithBailey wich is identical except getWinningValue versus getStringValue. 
+     * Compare getWinningValueWithBailey wich is identical except getWinningValue versus getStringValue.
      */
     public String getStringValueWithBailey(String path) {
         String value = getStringValue(path);
