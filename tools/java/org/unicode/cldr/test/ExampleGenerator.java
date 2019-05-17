@@ -249,7 +249,7 @@ public class ExampleGenerator {
         icuServiceBuilder.setCldrFile(cldrFile);
 
         pluralInfo = supplementalDataInfo.getPlurals(PluralType.cardinal, cldrFile.getLocaleID());
-
+        
         if (DEBUG_EXAMPLE_GENERATOR) {
             creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
             System.out.println("🧞‍ Created new ExampleGenerator for loc " + cldrFile.getLocaleID() + " at " + creationTime);

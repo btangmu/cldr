@@ -1842,15 +1842,10 @@ public class DataSection implements JSONString {
         ballotBox = sm.getSTFactory().ballotBoxForLocale(locale);
         this.pageId = pageId;
 
-<<<<<<< HEAD
-        // creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
-        // System.out.println("🌴 Created new DataSection for loc " + loc + " at " + creationTime);
-=======
         if (DEBUG_DATA_SECTION) {
             creationTime = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").format(Calendar.getInstance().getTime());
             System.out.println("🌴 Created new DataSection for loc " + loc + " at " + creationTime);
         }
->>>>>>> t12020_DataSection
     }
 
     /**
