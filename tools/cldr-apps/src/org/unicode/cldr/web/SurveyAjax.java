@@ -2464,7 +2464,7 @@ public class SurveyAjax extends HttpServlet {
         final String candVal = val;
 
         DataSection section = DataSection.make(null /* pageId */, null /* ctx */, mySession,
-            locale, xp, null /* matcher */, false /* showLoading */, Level.COMPREHENSIVE.toString());
+            locale, xp, null /* matcher */);
         section.setUserAndFileForVotelist(mySession.user, null);
 
         DataRow pvi = section.getDataRow(xp);
@@ -2572,11 +2572,6 @@ public class SurveyAjax extends HttpServlet {
         if (sectionName != null && sectionName.isEmpty()) {
             sectionName = null;
         }
-        String covlev = request.getParameter("p_covlev");
-        Level coverage = Level.COMPREHENSIVE;
-        if (covlev != null && covlev.length() > 0) {
-            coverage = Level.get(covlev);
-        }
         CookieSession mySession = CookieSession.retrieve(sess);
 
         Thread curThread = Thread.currentThread();
@@ -2658,7 +2653,7 @@ public class SurveyAjax extends HttpServlet {
                          * We arrive here normally when loading a page, invoked by request from CldrSurveyVettingLoader.js
                          * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
                          */
-                        section = ctx.getDataSection(null /* prefix */, null /* matcher */, coverage.toString(), WebContext.LoadingShow.dontShowLoading, pageId); // 5 args
+                        section = ctx.getDataSection(null /* prefix */, null /* matcher */, pageId);
                         section.setUserAndFileForVotelist(mySession.user, null); // TODO: what effect does null cldrFile here have on DataSection.getExampleBuilder??
                     } else if (xp != null) {
                         /*
@@ -2669,7 +2664,7 @@ public class SurveyAjax extends HttpServlet {
                          * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
                          */
                         baseXp = XPathTable.xpathToBaseXpath(xp);
-                        section = ctx.getDataSection(baseXp /* prefix */, matcher, coverage.toString(), WebContext.LoadingShow.dontShowLoading, null /* pageId */); // 5 args
+                        section = ctx.getDataSection(baseXp /* prefix */, matcher, null /* pageId */);
                     } else {
                         new org.json.JSONWriter(out).object().key("err")
                             .value("Could not understand that section, xpath, or ID. Bad URL?")

@@ -50,9 +50,7 @@ import org.unicode.cldr.util.LDMLUtilities;
 import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.PathHeader;
 import org.unicode.cldr.util.PathHeader.PageId;
-import org.unicode.cldr.util.PathHeader.SectionId;
 import org.unicode.cldr.util.PathHeader.SurveyToolStatus;
-import org.unicode.cldr.util.PathUtilities;
 import org.unicode.cldr.util.PatternCache;
 import org.unicode.cldr.util.StandardCodes;
 import org.unicode.cldr.util.VoteResolver;
@@ -1454,6 +1452,8 @@ public class DataSection implements JSONString {
      * TODO: Explain why getExampleBuilder is called from here, what does exampleBuilder have to
      * do with vote list? How does this CLDRFile f relate to this DataSection?
      *
+     * TODO: Determine whether we need DataSection to be user-specific, as userForVotelist implies
+     *
      * Called by getRow, make, submitVoteOrAbstention
      */
     public void setUserAndFileForVotelist(User u, CLDRFile f) {
@@ -1688,30 +1688,6 @@ public class DataSection implements JSONString {
     }
 
     /**
-     * @return a new XPathMatcher that matches all paths in the hacky
-     *         excludeAlways regex. For testing.
-     * @deprecated
-     *
-     * Referenced only in CLDR23Tool.jsp -- which is what??
-     */
-    public static XPathMatcher getHackyExcludeMatcher() {
-        init();
-        return new XPathMatcher() {
-
-            @Override
-            public String getName() {
-                // TODO Auto-generated method stub
-                return null;
-            }
-
-            @Override
-            public boolean matches(String xpath, int xpid) {
-                return excludeAlways.matcher(xpath).matches();
-            }
-        };
-    }
-
-    /**
      * Create, populate, and complete a DataSection given the specified locale and prefix
      *
      * @param pageId the PageId, with a name such as "Generic" or "T_NAmerica",
@@ -1721,18 +1697,20 @@ public class DataSection implements JSONString {
      * @param locale
      * @param prefix the XPATH prefix, such as ...; or null
      * @param matcher
-     * @param showLoading
-     * @param ptype a string such as "comprehensive"
      * @return the DataSection
      *
-     * Called by WebContext.getSection (ctx != null) and by SurveyAjax.submitVoteOrAbstention (ctx == null).
+     * Called by WebContext.getDataSection (ctx != null) and by SurveyAjax.submitVoteOrAbstention (ctx == null).
+     * WebContext.getDataSection calls like this:
+     *    DataSection.make(pageId, this [ctx], this.session, locale, prefix, matcher)
+     * submitVoteOrAbstention calls like this:
+     *    DataSection.make(null [pageId], null [ctx], mySession, locale, xp, null [matcher])
      */
     public static DataSection make(PageId pageId, WebContext ctx, CookieSession session, CLDRLocale locale, String prefix,
-        XPathMatcher matcher, boolean showLoading, String ptype) {
+        XPathMatcher matcher) {
 
         SurveyMain sm = CookieSession.sm; // TODO: non-deprecated way of getting sm -- could be ctx.sm unless ctx is null
 
-        DataSection section = new DataSection(pageId, sm, locale, prefix, matcher, ptype);
+        DataSection section = new DataSection(pageId, sm, locale, prefix, matcher);
 
         section.hasExamples = true;
 
@@ -1749,58 +1727,20 @@ public class DataSection implements JSONString {
         }
         synchronized (session) {
             TestResultBundle checkCldr = sm.getSTFactory().getTestResult(locale, getOptions(ctx, session, locale));
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
             if (checkCldr == null) {
                 throw new InternalError("checkCldr == null");
             }
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
-            String workingCoverageLevel = section.getPtype();
-            com.ibm.icu.dev.util.ElapsedTimer cet = null;
-            if (showLoading && SHOW_TIME) {
-                cet = new com.ibm.icu.dev.util.ElapsedTimer();
-                System.err.println("Begin populate of " + locale + " // " + prefix + ":" + workingCoverageLevel + " - is:"
-                    + ourSrc.getClass().getName());
-            }
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
             section.baselineFile = sm.getBaselineFile();
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
             section.skippedDueToCoverage = 0;
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
-            if (showLoading && ctx != null) {
-                ctx.println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Loading...';</script>");
-                ctx.flush();
-            }
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
-            if (ourSrc.getSupplementalDirectory() == null) {
-                throw new InternalError("?!! ourSrc hsa no supplemental dir!");
-            }
-            section.populateFrom(ourSrc, checkCldr, workingCoverageLevel);
-            int popCount = section.getAll().size();
-            if (showLoading && ctx != null) {
-                ctx.println("<script type=\"text/javascript\">document.getElementById('loadSection').innerHTML='Completing..."
-                    + popCount + " items';</script>");
-                ctx.flush();
-            }
+            section.populateFrom(ourSrc, checkCldr);
+            /*
+             * Call ensureComplete if and only if pageId is null. TODO: Explain, why?
+             * pageId is null when called from submitVoteOrAbstention, and also
+             * when a user selects a "Fix" button in the Dashboard. Ordinarily
+             * when the user opens a page, pageId is not null.
+             */
             if (pageId == null) {
-                section.ensureComplete(ourSrc, checkCldr, workingCoverageLevel);
-                popCount = section.getAll().size();
-            }
-            if (showLoading && ctx != null && SHOW_TIME) {
-                int allCount = section.getAll().size();
-                System.err.println("Populate+complete " + locale + " // " + prefix + ":" + section.getPtype() + " = " + cet
-                    + " - Count: " + popCount + "+" + (allCount - popCount) + "=" + allCount);
+                section.ensureComplete(ourSrc, checkCldr);
             }
         }
         return section;
@@ -1810,15 +1750,17 @@ public class DataSection implements JSONString {
      * Get the options for the given WebContext, or, if the context is null, get the
      * options for the given CookieSession and CLDRLocale
      *
-     * @param ctx
+     * @param ctx the WebContext, or null
      * @param session
      * @param locale
      * @return the CheckCLDR.Options object
+     *
+     * Called by DataSection.make (ctx maybe null) and by SurveyAjax.processRequest (ctx null)
      */
     public static CheckCLDR.Options getOptions(WebContext ctx, CookieSession session, CLDRLocale locale) {
         CheckCLDR.Options options;
         if (ctx != null) {
-            options = (ctx.getOptionsMap());
+            options = ctx.getOptionsMap();
         } else {
             final String def = CookieSession.sm
                 .getListSetting(session.settings(), SurveyMain.PREF_COVLEV,
@@ -1829,61 +1771,6 @@ public class DataSection implements JSONString {
             options = new Options(locale, SurveyMain.getTestPhase(), def, org);
         }
         return options;
-    }
-
-    /**
-     * Given a (cleaned, etc) xpath, return the podBase, i.e.,
-     * context.getPod(base), that would be used to show that xpath. Keep this in
-     * sync with SurveyMain.showLocale() where there is the list of menu items.
-     *
-     * @param xpath the xpath string
-     *
-     * @return a string, for example, "//ldml/units"
-     */
-    public static String xpathToSectionBase(String xpath) {
-        int n;
-        String base;
-
-        // is it one of the prefixes we can check statically?
-        String staticBases[] = {
-            /*
-             *  LOCALEDISPLAYNAMES
-             */
-            "//ldml/" + PathUtilities.NUMBERSCURRENCIES, "//ldml/" + "dates/timeZoneNames/zone",
-            "//ldml/" + "dates/timeZoneNames/metazone",
-            /*
-             *  OTHERROOTS
-             */
-            SurveyMain.GREGO_XPATH, PathUtilities.LOCALEDISPLAYPATTERN_XPATH, PathUtilities.OTHER_CALENDARS_XPATH,
-            "//ldml/units" };
-
-        // is it one of the static bases?
-        for (n = 0; n < staticBases.length; n++) {
-            if (xpath.startsWith(staticBases[n])) {
-                return staticBases[n];
-            }
-        }
-
-        // dynamic LOCALEDISPLAYNAMES
-        for (n = 0; n < PathUtilities.LOCALEDISPLAYNAMES_ITEMS.length; n++) {
-            // is it a simple code list?
-            base = PathUtilities.LOCALEDISPLAYNAMES + PathUtilities.LOCALEDISPLAYNAMES_ITEMS[n] + '/'
-                + SurveyMain.typeToSubtype(PathUtilities.LOCALEDISPLAYNAMES_ITEMS[n]);
-            // see: SurveyMain.showLocaleCodeList()
-            if (xpath.startsWith(base)) {
-                return base;
-            }
-        }
-
-        // OTHERROOTS
-        for (n = 0; n < SurveyMain.OTHERROOTS_ITEMS.length; n++) {
-            base = "//ldml/" + SurveyMain.OTHERROOTS_ITEMS[n];
-            if (xpath.startsWith(base)) {
-                return base;
-            }
-        }
-
-        return "//ldml"; // the "misc" pile.
     }
 
     private BallotBox<User> ballotBox;
@@ -1911,8 +1798,6 @@ public class DataSection implements JSONString {
 
     // TODO: myCollator unused? does createCollator have useful side-effect?
     final Collator myCollator = CodeSortMode.createCollator();
-
-    private String ptype;
 
     /*
      * hashtable of type->Row
@@ -1945,12 +1830,14 @@ public class DataSection implements JSONString {
      * @param loc
      * @param prefix
      * @param matcher
-     * @param ptype
+     *
+     * Called only by DataSection.make
+     *
+     * Old parameter ptype was always "comprehensive"
      */
-    DataSection(PageId pageId, SurveyMain sm, CLDRLocale loc, String prefix, XPathMatcher matcher, String ptype) {
+    DataSection(PageId pageId, SurveyMain sm, CLDRLocale loc, String prefix, XPathMatcher matcher) {
         this.locale = loc;
         this.sm = sm;
-        this.ptype = ptype;
         this.matcher = matcher;
         xpathPrefix = prefix;
         intgroup = loc.getLanguage(); // calculate interest group
@@ -2017,21 +1904,15 @@ public class DataSection implements JSONString {
     /**
      * Makes sure this DataSection contains the rows we'd like to see.
      *
-     * @obsolete not called anymore
-     *
-     * TODO: Actually still called by DataSection.make, clarify whether "obsolete"
+     * Called only by DataSection.make, only when pageId == null
      */
-    private void ensureComplete(CLDRFile ourSrc, TestResultBundle checkCldr, String workingCoverageLevel) {
+    private void ensureComplete(CLDRFile ourSrc, TestResultBundle checkCldr) {
 
         STFactory stf = sm.getSTFactory();
-        SectionId sectionId = (pageId != null) ? pageId.getSectionId() : null;
 
-        int workingCoverageValue = Level.fromString(workingCoverageLevel).getLevel();
-        if (sectionId == SectionId.Timezones || pageId == PageId.Timezone_Display_Patterns
-            || (pageId == null && xpathPrefix.startsWith("//ldml/" + "dates/timeZoneNames"))) {
+         if (xpathPrefix.startsWith("//ldml/dates/timeZoneNames")) {
             // work on zones
-            boolean isMetazones = (sectionId == SectionId.Timezones)
-                || (pageId == null && xpathPrefix.startsWith("//ldml/" + "dates/timeZoneNames/metazone"));
+            boolean isMetazones = xpathPrefix.startsWith("//ldml/dates/timeZoneNames/metazone");
             boolean isSingleXPath = false;
             // Make sure the DataSection contains the rows we'd like to see.
             // regular zone
@@ -2128,13 +2009,6 @@ public class DataSection implements JSONString {
                     }
                     // Filter out data that is higher than the desired coverage level
                     int coverageValue = getCoverageInfo().getCoverageValue(base_xpath_string, locale.getBaseName());
-                    if (coverageValue > workingCoverageValue) {
-                        if (coverageValue <= 100) {
-                            // KEEP COUNT OF FILTERED ITEMS
-                            skippedDueToCoverage++;
-                        } // else: would never be shown, don't care.
-                        continue;
-                    }
 
                     DataSection.DataRow myp = getDataRow(base_xpath_string); /* rowXPath */
 
@@ -2211,15 +2085,6 @@ public class DataSection implements JSONString {
     }
 
     /**
-     * Get the ptype for this DataSection
-     *
-     * @return the ptype string
-     */
-    private String getPtype() {
-        return ptype;
-    }
-
-    /**
      * Get the number of things that were skipped due to coverage
      *
      * TODO: clarify what kind of things, and what it means for them to be "skipped due to coverage"
@@ -2235,16 +2100,14 @@ public class DataSection implements JSONString {
      *
      * @param ourSrc the CLDRFile
      * @param checkCldr the TestResultBundle
-     * @param workingCoverageLevel
+     * Old param workingCoverageLevel was always "comprehensive"
      *
      * Called only by DataSection.make, as section.populateFrom(ourSrc, checkCldr, workingCoverageLevel).
      */
-    private void populateFrom(CLDRFile ourSrc, TestResultBundle checkCldr, String workingCoverageLevel) {
+    private void populateFrom(CLDRFile ourSrc, TestResultBundle checkCldr) {
         STFactory stf = sm.getSTFactory();
         diskFile = stf.getDiskFile(locale);
         String workPrefix = xpathPrefix;
-
-        int workingCoverageValue = Level.fromString(workingCoverageLevel).getLevel();
 
         Set<String> allXpaths;
 
@@ -2298,7 +2161,7 @@ public class DataSection implements JSONString {
                 System.err.println("@@X@ base[" + workPrefix + "]: " + baseXpaths.size() + ", extra: " + extraXpaths.size());
             }
         }
-        populateFromAllXpaths(allXpaths, workPrefix, ourSrc, extraXpaths, stf, workingCoverageValue, checkCldr);
+        populateFromAllXpaths(allXpaths, workPrefix, ourSrc, extraXpaths, stf, checkCldr);
     }
     
     /**
@@ -2309,14 +2172,13 @@ public class DataSection implements JSONString {
      * @param ourSrc
      * @param extraXpaths
      * @param stf
-     * @param workingCoverageValue
      * @param checkCldr
      * 
      * TODO: resurrect SHOW_TIME and TRACE_TIME code, deleted in revision 14327, if and when needed for debugging.
      * It was deleted when this code was moved from populateFrom to new subroutine populateFromAllXpaths.
      */
     private void populateFromAllXpaths(Set<String> allXpaths, String workPrefix, CLDRFile ourSrc, Set<String> extraXpaths, STFactory stf,
-        int workingCoverageValue, TestResultBundle checkCldr) {
+        TestResultBundle checkCldr) {
 
         for (String xpath : allXpaths) {
             if (xpath == null) {
@@ -2347,7 +2209,7 @@ public class DataSection implements JSONString {
             if (ph != null) {
                 ststats = stf.getPathHeader(xpath).getSurveyToolStatus();
             }
-            if ((ststats == SurveyToolStatus.HIDE || ststats == SurveyToolStatus.DEPRECATED)) {
+            if (ststats == SurveyToolStatus.HIDE || ststats == SurveyToolStatus.DEPRECATED) {
                 continue;
             }
 
@@ -2356,12 +2218,6 @@ public class DataSection implements JSONString {
             String baseXpath = sm.xpt.getById(base_xpath);
 
             int coverageValue = getCoverageInfo().getCoverageValue(baseXpath, locale.getBaseName());
-            if (coverageValue > workingCoverageValue) {
-                if (coverageValue <= Level.COMPREHENSIVE.getLevel()) {
-                    skippedDueToCoverage++;
-                } // else: would never be shown, don't care
-                continue;
-            }
             if (fullPath == null) {
                 fullPath = xpath; // (this is normal for 'extra' paths)
             }
@@ -2647,26 +2503,6 @@ public class DataSection implements JSONString {
     }
 
     /**
-     * Show a single item, in a very limited view.
-     *
-     * @param ctx
-     * @param item_xpath
-     *            xpath of the one item to show
-     *
-     *  Called only by showXpathShort in SurveyForum.java
-     */
-    public void showDataRowsShort(WebContext ctx, int item_xpath) {
-        DataRow row = getDataRow(item_xpath);
-        if (row != null) {
-            row.showDataRowShort(ctx);
-        } else {
-            ctx.println("<tr><td colspan='2'>" + ctx.iconHtml("stop", "internal error")
-                + "<i>internal error: nothing to show for xpath " + item_xpath + "," + " " + sm.xpt.getById(item_xpath)
-                + "</i></td></tr>");
-        }
-    }
-
-    /**
      * @param ctx
      * @param matcher
      * @return
@@ -2803,7 +2639,7 @@ public class DataSection implements JSONString {
             result.put("hasExamples", hasExamples);
             result.put("xpathPrefix", xpathPrefix);
             result.put("skippedDueToCoverage", getSkippedDueToCoverage());
-            result.put("coverage", getPtype());
+            // result.put("coverage", "comprehensive" /* getPtype() */);
             return result.toString();
         } catch (Throwable t) {
             SurveyLog.logException(t, "Trying to load rows for " + this.toString());
@@ -2830,16 +2666,19 @@ public class DataSection implements JSONString {
      *
      * Called only by setUserAndFileForVotelist -- TODO: why setUserAndFileForVotelist?
      */
-    private ExampleBuilder getExampleBuilder(CLDRFile file) {
+    private ExampleBuilder getExampleBuilder(CLDRFile cldrFile) {
         if (examplebuilder == null) {
-            examplebuilder = ExampleBuilder.getInstance(sm.getBaselineFile(), sm.getBaselineExample(), file);
+            if (cldrFile == null) {
+                System.out.println("Warning: cldrFile is null in getExampleBuilder");
+           }
+            examplebuilder = ExampleBuilder.getInstance(sm.getBaselineFile(), sm.getBaselineExample(), cldrFile);
         }
         return examplebuilder;
     }
 
     private ExampleBuilder getExampleBuilder() {
         if (examplebuilder == null) {
-            System.out.println("Warning: examplebuilder is null in getExampleBuilder() ");
+            System.out.println("Warning: examplebuilder is null in getExampleBuilder"); // never happens?
         }
         return examplebuilder;
     }
