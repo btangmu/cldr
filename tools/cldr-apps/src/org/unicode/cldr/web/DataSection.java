@@ -62,6 +62,8 @@ import org.unicode.cldr.web.UserRegistry.User;
 
 import com.google.common.collect.ImmutableList;
 import com.ibm.icu.text.Collator;
+import com.ibm.icu.text.SimpleDateFormat;
+import com.ibm.icu.util.Calendar;
 import com.ibm.icu.util.Output;
 
 /**
@@ -86,12 +88,12 @@ public class DataSection implements JSONString {
      * Default for Eclipse "Sort Members" is to put Types, including inner classes, before all
      * other members; however, it also alphabetizes methods, which may not be helpful.
      */
-
+    
     /**
      * The baseline CLDRFile for this DataSection
      */
     public CLDRFile baselineFile;
-
+    
     /**
      * The DisplayAndInputProcessor for this DataSection
      */
@@ -121,7 +123,7 @@ public class DataSection implements JSONString {
              *
              * This member is "final", its value for each CandidateItem is set once and for all
              * when the constructor is called.
-             *
+             * 
              * Renamed from "value" to "rawValue" 2018-8-13, for consistency with the client variable name,
              * to emphasize distinction from getProcessedValue(), and to reduce confusion with other
              * occurrences of the word "value".
@@ -170,7 +172,7 @@ public class DataSection implements JSONString {
              * unused if USE_CANDIDATE_HISTORY is false.
              */
             private String history = null;
-
+            
             /**
              * Create a new CandidateItem with the given value
              *
@@ -278,11 +280,11 @@ public class DataSection implements JSONString {
              * Get the class for this CandidateItem
              *
              * @return the class as a string, for example, "winner"
-             *
+             * 
              * All return values: "winner", "alias", "fallback", "fallback_code", "fallback_root", "loser".
-             *
+             * 
              * Called by CandidateItem.toJSONString (for item.pClass)
-             *
+             * 
              * Relationships between class, color, and inheritance (http://cldr.unicode.org/index/survey-tool/guide#TOC-Inheritance):
              * "The inherited values are color coded:
              *  1.  Darker [blue] The original is from a parent locale, such as if you are working in
@@ -299,7 +301,7 @@ public class DataSection implements JSONString {
                         /*
                          * surveytool.css has:
                          *  .alias {background-color: #ddf;}
-                         *
+                         *  
                          *  This can happen when called from CandidateItem.toJSONString (for item.pClass).
                          *  Try http://localhost:8080/cldr-apps/v#/aa/Fields/
                          */
@@ -323,7 +325,7 @@ public class DataSection implements JSONString {
                      * An item can be both winning and inherited (alias/fallback). If an item is both
                      * winning and inherited, then its class/style/color is determined by inheritance,
                      * not by whether it's winning.
-                     *
+                     * 
                      * redesign.css has:
                      * .winner, .value {font-weight:bold;}
                      * .value-div .winner, .value-div .value {font-size:16px;}
@@ -409,7 +411,7 @@ public class DataSection implements JSONString {
                     .put("example", getExample())
                     .put("isBaselineValue", isBaselineValue)
                     .put("pClass", getPClass())
-                    .put("tests", SurveyAjax.JSONWriter.wrap(this.tests));
+                    .put("tests", SurveyAjax.JSONWriter.wrap(this.tests));                
                 if (USE_CANDIDATE_HISTORY) {
                     j.put("history", history);
                 }
@@ -504,7 +506,7 @@ public class DataSection implements JSONString {
         /**
          * pathWhereFound, if not null, may be, for example:
          * //ldml/numbers/currencies/currency[@type="AUD"]/displayName[@count="one"]
-         *
+         * 
          * It is the inheritance path for "sideways" inheritance.
          *
          * If not null it may cause getPClass to return "alias".
@@ -514,7 +516,7 @@ public class DataSection implements JSONString {
         /*
          * confirmStatus indicates the status of the winning value. It is sent to
          * the client, which displays a corresponding status icon in the "A"
-         * ("Approval status") column. See VoteResolver.Status and VoteResolver.getWinningStatus.
+         * ("Approval status") column. See VoteResolver.Status and VoteResolver.getWinningStatus. 
          */
         Status confirmStatus;
 
@@ -543,7 +545,7 @@ public class DataSection implements JSONString {
          * Change for https://unicode.org/cldr/trac/ticket/11299 : formerly the rawValue for
          * inheritedItem was the Bailey value. Instead, now rawValue will be INHERITANCE_MARKER,
          * and the Bailey value will be stored in DataRow.inheritedValue.
-         *
+         * 
          * inheritedItem is set by updateInheritedValue and by setShimTests
          */
         private CandidateItem inheritedItem = null;
@@ -562,7 +564,7 @@ public class DataSection implements JSONString {
         /**
          * The candidate items for this DataRow, stored in a Map whose keys are CandidateItem.rawValue
          * and whose values are CandidateItem objects.
-         *
+         * 
          * Public for access by getRow.
          */
         public Map<String, CandidateItem> items = new TreeMap<String, CandidateItem>();
@@ -579,24 +581,24 @@ public class DataSection implements JSONString {
          * Used only in the function getPrettyPath
          */
         private String pp = null;
-
+        
         /**
          * The pretty path for this DataRow, set by the constructor.
-         *
+         * 
          *  Accessed by NameSort.java, SortMode.java, datarow_short_code.jsp
          */
         public String prettyPath = null;
 
         /*
          * Ordering for use in collator
-         *
+         * 
          * Referenced by SortMode.java
          */
         public int reservedForSort[] = SortMode.reserveForSort();
-
+        
         /**
          * The winning value for this DataRow
-         *
+         * 
          * It gets set by resolver.getWinningValue() by the DataRow constructor.
          */
         private String winningValue;
@@ -618,18 +620,18 @@ public class DataSection implements JSONString {
 
         /**
          * The xpathId for this DataRow, assigned in the constructor based on xpath.
-         *
+         * 
          * Accessed by SortMode.java
          */
         int xpathId = -1;
-
+        
         /**
          * The baseline value for this DataRow, that is the previous release version plus latest XML fixes by members
          * of the technical committee (TC). In other words, the current "trunk" value, where "trunk"
          * refers to XML files in version control (on trunk, as opposed to any branch).
          */
         private String baselineValue;
-
+        
         /**
          * The baseline status for this DataRow (corresponding to baselineValue)
          */
@@ -642,7 +644,7 @@ public class DataSection implements JSONString {
 
         /**
          * Create a new DataRow for the given xpath.
-         *
+         * 
          * @param xpath
          */
         public DataRow(String xpath) {
@@ -672,7 +674,7 @@ public class DataSection implements JSONString {
          * If the item is new, then:
          *  check whether the item is winning, and if so make winningItem point to it;
          *  check whether the item matches baselineValue, and if so set isBaselineValue = true.
-         *
+         * 
          * @param value
          * @param candidateHistory a string used for debugging and possibly also for describing to the user
          *          how/why/when/where the item was added
@@ -748,7 +750,7 @@ public class DataSection implements JSONString {
          * Return the winning (current) item for this DataRow.
          *
          * @return winningItem
-         *
+         * 
          * "The type DataSection.DataRow must implement the inherited abstract method CLDRInfo.PathValueInfo.getCurrentItem()
          */
         public CandidateItem getCurrentItem() {
@@ -784,10 +786,10 @@ public class DataSection implements JSONString {
 
         /**
          * Get the CandidateItem for this DataRow that has the given value.
-         *
+         * 
          * @param value
          * @return the CandidateItem or null if none has that value
-         *
+         * 
          * Called only from SurveyAjax.java, as "ci = pvi.getItem(candVal)".
          */
         public CandidateItem getItem(String value) {
@@ -799,14 +801,14 @@ public class DataSection implements JSONString {
          *
          * @deprecated use getValues() instead
          * @see #getValues()
-         *
+         * 
          * Called by getVotesForUser.
-         *
+         * 
          * Also called from row.jsp -- how to replace getItems() there with getValues()? Confusion over return type,
          *    Collection<? extends CandidateInfo>
          *       versus
          *    Collection<CandidateItem>
-         *
+         *    
          * Also called from r_txt.jsp whose usage isn't clear.
          */
         @SuppressWarnings("unchecked")
@@ -882,13 +884,13 @@ public class DataSection implements JSONString {
         }
 
         /**
-         *
+         * 
          * @param ctx
          * @param canModify
          * @param zoomedIn
          * @param specialUrl
          * @return
-         *
+         * 
          * Called only by row.jsp
          */
         public String itemTypeName(WebContext ctx, boolean canModify, boolean zoomedIn, String specialUrl) {
@@ -949,10 +951,10 @@ public class DataSection implements JSONString {
          * Does the DataSection, to which this DataRow belongs, have examples?
          *
          * @return true or false
-         *
+         * 
          * TODO: Why is this a method of DataRow, when the field of the same name that it returns
          * is a field of DataSection??
-         *
+         * 
          * Called only by row.jsp
          */
         public boolean hasExamples() {
@@ -1063,7 +1065,7 @@ public class DataSection implements JSONString {
          * @param checkCldr the tests to use
          *
          * Called only by populateFromThisXpath, which is a method of DataSection.
-         *
+         * 
          * Reference: Distinguish two kinds of votes for inherited value in Survey Tool
          *     https://unicode.org/cldr/trac/ticket/11299
          * This function formerly created a CandidateItem with value equal to the Bailey value,
@@ -1073,7 +1075,7 @@ public class DataSection implements JSONString {
          * the actual Bailey value in the inheritedValue field of DataRow.
          *
          * TODO: Get rid of, or merge with, the code that currently does 'row.addItem(CldrUtility.INHERITANCE_MARKER, "getCountry")' in populateFromThisXpath.
-         *
+         * 
          * Normally (always?) inheritedItem is null when this function is called; however, in principle
          * it may be possible that inheritedItem isn't null due to ensureComplete calling setShimTests.
          */
@@ -1092,7 +1094,7 @@ public class DataSection implements JSONString {
             Output<String> inheritancePathWhereFound = new Output<String>(); // may become pathWhereFound
             Output<String> localeWhereFound = new Output<String>(); // may be used to construct inheritedLocale
             inheritedValue = ourSrc.getConstructedBaileyValue(xpath, inheritancePathWhereFound, localeWhereFound);
-
+            
             if (TRACE_TIME) {
                 System.err.println("@@1:" + (System.currentTimeMillis() - lastTime));
             }
@@ -1103,7 +1105,7 @@ public class DataSection implements JSONString {
                  * This happens often. For example, v#/en/Alphabetic_Information
                  * xpath = //ldml/characters/exemplarCharacters[@type="index"]
                  * In the caller, ourValueIsInherited is false and ourValue isn't null
-                 *
+                 * 
                  * Another example: v#/pt_PT/Gregorian
                  * xpath = //ldml/dates/calendars/calendar[@type="gregorian"]/dateTimeFormats/availableFormats/dateFormatItem[@id="yMMMEEEEd"]
                  * ourValueIsInherited = false; ourValue = "EEEE, d/MM/y"; isExtraPath = false
@@ -1121,7 +1123,7 @@ public class DataSection implements JSONString {
                  * Call addItem even if item with this value already exists, for simplicity and to update inheritedItem.history.
                  *
                  * Set inheritedItem = the item with value INHERITANCE_MARKER.
-                 */
+                 */                    
                 inheritedItem = addItem(CldrUtility.INHERITANCE_MARKER, "inherited");
 
                 if (TRACE_TIME) {
@@ -1135,7 +1137,7 @@ public class DataSection implements JSONString {
                     if (TRACE_TIME) {
                         System.err.println("@@3:" + (System.currentTimeMillis() - lastTime));
                     }
-                }
+                }                    
             }
             if ((checkCldr != null) && (inheritedItem != null) && (inheritedItem.tests == null)) {
                 if (TRACE_TIME) {
@@ -1149,7 +1151,7 @@ public class DataSection implements JSONString {
                 if (TRACE_TIME) {
                     System.err.println("@@6:" + (System.currentTimeMillis() - lastTime));
                 }
-
+                
                 if (!iTests.isEmpty()) {
                     inheritedItem.setTests(iTests);
                 }
@@ -1263,7 +1265,7 @@ public class DataSection implements JSONString {
                  * as exceptions, the rest should become fields of DataRow to facilitate consistency
                  * checking without sending them all as parameters to checkDataRowConsistency.
                  * Anyway, try to keep the names same on server and client, and avoid using function calls
-                 * or compound expressions for the arguments passed to jo.put here.
+                 * or compound expressions for the arguments passed to jo.put here. 
                  */
                 jo.put("canFlagOnLosing", canFlagOnLosing);
                 jo.put("code", code);
@@ -1781,7 +1783,7 @@ public class DataSection implements JSONString {
 
     /**
      * Does this DataSection have examples?
-     *
+     * 
      * TODO: resolve confusion: this is a field of DataSection, but it's returned by a function with the same name in DataRow
      */
     public boolean hasExamples = false;
@@ -1873,9 +1875,9 @@ public class DataSection implements JSONString {
 
     /**
      * Get the page id
-     *
+     * 
      * @return pageId
-     *
+     * 
      * Called by getRow
      */
     public PageId getPageId() {
@@ -1888,7 +1890,7 @@ public class DataSection implements JSONString {
      * @param sortMode
      * @param matcher
      * @return the DisplaySet
-     *
+     * 
      * Called by getRow
      */
     public DisplaySet createDisplaySet(SortMode sortMode, XPathMatcher matcher) {
@@ -2052,7 +2054,7 @@ public class DataSection implements JSONString {
      *
      * @param xpath the integer...
      * @return the matching DataRow
-     *
+     * 
      * Called from r_rxt.jsp
      */
     public DataRow getDataRow(int xpath) {
@@ -2161,7 +2163,7 @@ public class DataSection implements JSONString {
         }
         populateFromAllXpaths(allXpaths, workPrefix, ourSrc, extraXpaths, stf, checkCldr);
     }
-
+    
     /**
      * Populate this DataSection with a row for each of the given xpaths
      *
@@ -2171,7 +2173,7 @@ public class DataSection implements JSONString {
      * @param extraXpaths
      * @param stf
      * @param checkCldr
-     *
+     * 
      * TODO: resurrect SHOW_TIME and TRACE_TIME code, deleted in revision 14327, if and when needed for debugging.
      * It was deleted when this code was moved from populateFrom to new subroutine populateFromAllXpaths.
      */
@@ -2239,7 +2241,7 @@ public class DataSection implements JSONString {
         TestResultBundle checkCldr, int coverageValue, int base_xpath) {
         /*
          * 'extra' paths get shim treatment
-         *
+         * 
          * NOTE: this is a sufficient but not a necessary condition for isExtraPath; if it gets false here,
          * it may still get true below if ourSrc.getStringValue returns null.
          */
@@ -2280,7 +2282,7 @@ public class DataSection implements JSONString {
             /*
              * This happens, for example, with xpath = "//ldml/dates/timeZoneNames/metazone[@type=\"Kyrgystan\"]/long/generic"
              * at http://localhost:8080/cldr-apps/v#/fr_CA/CAsia/
-             *
+             * 
              * getStringValue calls getFallbackPath which calls getRawExtraPaths which contains xpath
              */
             if (DEBUG) {
@@ -2310,7 +2312,7 @@ public class DataSection implements JSONString {
         /*
          * Load the 'data row' which represents one user visible row.
          * (may be nested in the case of alt types) (nested??)
-         *
+         *  
          * Is it ever true that rowsHash already contains xpath here, or does getDataRow always create a new DataRow here?
          * Seemingly getDataRow always creates a new DataRow here.
          */
@@ -2319,7 +2321,7 @@ public class DataSection implements JSONString {
         /*
          * Normally row.inheritedItem is null at this point, unless setShimTests has already been called
          * by ensureComplete, for some timezones. If row.inheritedItem is null, possibly create it.
-         *
+         * 
          * However, skip updateInheritedValue if isExtra. See setShimTests below, which may set inheritedItem
          * when isExtraPath.
          */
@@ -2351,11 +2353,11 @@ public class DataSection implements JSONString {
         if (locale.getCountry() != null && locale.getCountry().length() > 0) {
             /*
              * If "vote for inherited" isn't already represented as an item, add it (child locales only).
-             *
+             * 
              * TODO: Note that updateInheritedValue is called above, unless isExtraPath; normally
              * it's the job of updateInheritedValue to do addItem(CldrUtility.INHERITANCE_MARKER); is there
              * any need to call it here as well? setShimTests below may also do addItem(CldrUtility.INHERITANCE_MARKER).
-             */
+             */            
             row.addItem(CldrUtility.INHERITANCE_MARKER, "country");
         }
 
@@ -2377,7 +2379,7 @@ public class DataSection implements JSONString {
         if (((eDraft != null) && (!eDraft.equals("false"))) && (altProp == null)) {
             altProp = SurveyMain.PROPOSED_DRAFT;
         }
-
+        
         /*
          * If ourValue is inherited, do NOT add a CandidateItem for it.
          * TODO: clarify. If ourValue is inherited, then indeed there should be an item
@@ -2406,9 +2408,9 @@ public class DataSection implements JSONString {
      * For each string in the given set, based on values that have votes,
      * add an item to the given row with that string as its value,
      * unless the string matches ourValue.
-     *
+     * 
      * Also run some tests if appropriate.
-     *
+     * 
      * @param v the set of values that have votes
      * @param xpath
      * @param row the DataRow
@@ -2438,7 +2440,7 @@ public class DataSection implements JSONString {
      *
      * TODO: rename this function and/or move parts elsewhere? The setting of various fields may be
      * more necessary than adding an item for ourValue. This function lacks a coherent purpose.
-     *
+     * 
      * @param ourValue
      * @param row
      * @param checkCldrResult
@@ -2446,7 +2448,7 @@ public class DataSection implements JSONString {
      * @param xpath
      * @param setInheritFrom
      * @param examplesResult
-     *
+     * 
      * TODO: addOurValue could be a method of DataRow instead of DataSection, then wouldn't need row, xpath as params
      */
     private void addOurValue(String ourValue, DataRow row, List<CheckStatus> checkCldrResult,
@@ -2478,11 +2480,11 @@ public class DataSection implements JSONString {
         }
         if (setInheritFrom != null) {
             row.inheritedLocale = setInheritFrom;
-        }
+        }        
 
         /*
          * Store who voted for what. [ this could be loaded at displaytime..]
-         *
+         * 
          * TODO: explain the following block.
          * myItem.examples is assigned to here, but not referenced anywhere else,
          * so what is this block for, and does examples need to be a member of
@@ -2551,7 +2553,7 @@ public class DataSection implements JSONString {
      * @param section
      * @param zoomedIn
      * @param canModify
-     *
+     * 
      * Called by showXpath in SurveyForum.java, and by showSection
      */
     static void printSectionTableOpen(WebContext ctx, DataSection section, boolean zoomedIn, boolean canModify) {
