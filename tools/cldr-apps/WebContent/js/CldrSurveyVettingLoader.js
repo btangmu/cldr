@@ -1198,7 +1198,6 @@ function showV() {
 							// (common case) this is an actual locale data page.
 							itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(surveyCurrentLocale) + '/' + surveyCurrentPage + '/' + surveyCurrentId));
 							var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
-							// var url = contextPath + "/RefreshRow.jsp?_="+surveyCurrentLocale+"&s="+surveySessionId+"&x="+surveyCurrentPage+"&strid="+surveyCurrentId+cacheKill();
 							$('#nav-page').show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
 							myLoad(url, "section", function(json) {
 								isLoading=false;

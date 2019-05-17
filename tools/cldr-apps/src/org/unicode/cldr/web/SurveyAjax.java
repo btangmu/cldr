@@ -2658,7 +2658,7 @@ public class SurveyAjax extends HttpServlet {
                     } else if (xp != null) {
                         /*
                          * We arrive here when a user votes for an item, invoked by request from survey.js
-                         * var ourUrl = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&xpath="+theRow.xpathId +"&_="+surveyCurrentLocale+"&fhash="+tr.rowHash+"&s="+tr.theTable.session +"&automatic=t";
+                         * var ourUrl = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&xpath="+theRow.xpathId +"&fhash="+tr.rowHash+"&s="+tr.theTable.session +"&automatic=t";
                          * 
                          * We also arrive here when a user selects a "Fix" button in the Dashboard, invoked by request from review.js
                          * var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";

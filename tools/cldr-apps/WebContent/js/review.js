@@ -228,7 +228,6 @@ function toggleFix(event) {
 	toggleOverlay();
 	if (!isPopover) {
 	    var url = contextPath + "/SurveyAjax?what="+WHAT_GETROW+"&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
-	    // var url = contextPath + "/RefreshRow.jsp?what="+WHAT_GETROW+"&json=t&_="+surveyCurrentLocale+"&s="+surveySessionId+"&xpath="+tr.data('path')+"&strid="+surveyCurrentId+cacheKill()+"&dashboard=true";
 	    myLoad(url, "section", function(json) {
 	    			isLoading=false;
 	    			theDiv = document.createElement("div");
