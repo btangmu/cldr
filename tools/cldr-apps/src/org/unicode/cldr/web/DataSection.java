@@ -1699,11 +1699,15 @@ public class DataSection implements JSONString {
      * @param matcher
      * @return the DataSection
      *
-     * Called by WebContext.getDataSection (ctx != null) and by SurveyAjax.submitVoteOrAbstention (ctx == null).
+     * Called by WebContext.getDataSection (ctx != null)
+     *    and by SurveyAjax.submitVoteOrAbstention (ctx == null)
+     *    and by submit.jsp (but Eclipse won't show that due to jsp!)
      * WebContext.getDataSection calls like this:
      *    DataSection.make(pageId, this [ctx], this.session, locale, prefix, matcher)
      * submitVoteOrAbstention calls like this:
      *    DataSection.make(null [pageId], null [ctx], mySession, locale, xp, null [matcher])
+     * submit.jsp calls like this:
+     *    DataSection.make(null, null, cs, loc, base, null)
      */
     public static DataSection make(PageId pageId, WebContext ctx, CookieSession session, CLDRLocale locale, String prefix,
         XPathMatcher matcher) {
