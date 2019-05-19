@@ -14,7 +14,7 @@
 </head>
 <body>
 <%
-	OutputFileManager.outputAllFiles(request, out);
+	OutputFileManager.outputAndVerifyAllFiles(request, out);
 %>
 </body>
 </html>

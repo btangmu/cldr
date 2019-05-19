@@ -142,7 +142,7 @@ public class OutputFileManager {
     public String tryCommitWhyNot = null;
 
     /**
-     * Output all files (VXML, etc.)
+     * Output all files (VXML, etc.) and verify their consistency
      *
      * @param request the HttpServletRequest, used for "vap"
      * @param out the Writer, to receive HTML output
@@ -153,55 +153,74 @@ public class OutputFileManager {
      * This function was created using code moved here from admin-OutputAllFiles.jsp.
      * Reference: CLDR-12016 and CLDR-11877
      */
-    public static void outputAllFiles(HttpServletRequest request, Writer out) {
-        SurveyMain sm = CookieSession.sm;
+    public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
+        String vap = request.getParameter("vap");
         try {
-            String vap = request.getParameter("vap");
             if (vap == null || !vap.equals(SurveyMain.vap)) {
                 out.write("Not authorized.");
                 return;
             }
+            synchronized (OutputFileManager.class) {
+                SurveyMain sm = CookieSession.sm;
+                OutputFileManager ofm = sm.getOutputFileManager();
+                // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- is this still needed?
+                out.write("Have OFM=" + ofm.toString() + "\n");
+                ofm.outputAllFiles(out);
+                /*
+                 * TODO: verifyAllFiles
+                 */
+            }
+        } catch (Exception e) {
+            System.err.println("Exception in outputAndVerifyAllFiles: " + e);
+        }
+    }
 
+    /**
+     * Output all files (VXML, etc.)
+     *
+     * @param request the HttpServletRequest, used for "vap"
+     * @param out the Writer, to receive HTML output
+     *
+     * This function was created using code moved here from admin-OutputAllFiles.jsp.
+     * Reference: CLDR-12016 and CLDR-11877
+     */
+    private void outputAllFiles(Writer out) {
+        try {
             long start = System.currentTimeMillis();
             ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
             int numupd = 0;
 
-            // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- why?
-            OutputFileManager ofm = sm.getOutputFileManager();
-            out.write("Have OFM=" + ofm.toString() + "\n");
             out.write("<ol>\n");
 
             Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
             sortSet.addAll(SurveyMain.getLocalesSet());
             Connection conn = null;
-            synchronized (OutputFileManager.class) {
-                try {
-                    conn = sm.dbUtils.getDBConnection();
-                    for (CLDRLocale loc : sortSet) {
-                        Timestamp locTime = ofm.getLocaleTime(conn, loc);
-                        out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
-                        for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
-                            boolean nu = ofm.fileNeedsUpdate(locTime, loc, kind.name());
-                            String background = nu ? "#ff9999" : "green";
-                            String weight = nu ? "regular" : "bold";
-                            String color = nu ? "silver" : "black";
-                            out.write("<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
-                            out.write(kind.toString());
-                            if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
-                                System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
-                                ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
-                                File f = ofm.getOutputFile(conn, loc, kind.name());
-                                out.write(" x=" + (f != null && f.exists()));
-                                numupd++;
-                                System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
-                            }
-                            out.write("</span>  &nbsp;");
+            try {
+                conn = sm.dbUtils.getDBConnection();
+                for (CLDRLocale loc : sortSet) {
+                    Timestamp locTime = this.getLocaleTime(conn, loc);
+                    out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
+                    for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
+                        boolean nu = this.fileNeedsUpdate(locTime, loc, kind.name());
+                        String background = nu ? "#ff9999" : "green";
+                        String weight = nu ? "regular" : "bold";
+                        String color = nu ? "silver" : "black";
+                        out.write("<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
+                        out.write(kind.toString());
+                        if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
+                            System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
+                            ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
+                            File f = this.getOutputFile(conn, loc, kind.name());
+                            out.write(" x=" + (f != null && f.exists()));
+                            numupd++;
+                            System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
                         }
-                        out.write("</li>\n");
+                        out.write("</span>  &nbsp;");
                     }
-                } finally {
-                    DBUtils.close(conn);
+                    out.write("</li>\n");
                 }
+            } finally {
+                DBUtils.close(conn);
             }
             out.write("</ol>\n");
             out.write("<hr>\n");
