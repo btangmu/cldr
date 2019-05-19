@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -136,152 +137,83 @@ public class OutputFileManager {
     public static final String RXML_PREFIX = "/rxml/main";
     public static final String FXML_PREFIX = "/fxml/main";
     public static final String FEED_PREFIX = "/feed";
-    //
-    // /**
-    // * @param kind
-    // * @param vetted
-    // * @param resolved
-    // * @param ourDate
-    // * @param nrOutFiles
-    // * @param outdir
-    // * @param voteDir
-    // * @param lastTime
-    // * @param countStart
-    // * @param inFiles
-    // * @param nrInFiles
-    // * @param progress
-    // * @return
-    // * @throws InternalError
-    // * @throws SQLException
-    // * @throws IOException
-    // */
-    // private int writeDataFile(String kind, boolean vetted, boolean resolved,
-    // String ourDate, int nrOutFiles, File outdir, File voteDir,
-    // long lastTime, long countStart, File[] inFiles, int nrInFiles,
-    // CLDRProgressTask progress) throws InternalError, IOException,
-    // SQLException {
-    // String lastfile;
-    // //Set<Integer> xpathSet = new TreeSet<Integer>();
-    // boolean xpathSet[] = new boolean[0];
-    // Connection conn = dbUtils.getDBConnection();
-    // for(int i=0;(i<nrInFiles) && !SurveyThread.shouldStop();i++) {
-    // String fileName = inFiles[i].getName();
-    // int dot = fileName.indexOf('.');
-    // String localeName = fileName.substring(0,dot);
-    // progress.update(i,localeName);
-    // lastfile = fileName;
-    // File outFile = new File(outdir, fileName);
-    // CLDRLocale loc = CLDRLocale.getInstance(localeName);
-    // if(isCacheableKind(kind)) {
-    // getOutputFile(conn,loc,kind);
-    // continue; // use cache
-    // }
-    //
-    // // if i>5 break [ for testing ]
-    //
-    // XMLSource dbSource = makeDBSource( loc, vetted, resolved);
-    // CLDRFile file =
-    // makeCLDRFile(dbSource).setSupplementalDirectory(supplementalDataDir);
-    //
-    // long nextTime = System.currentTimeMillis();
-    // if((nextTime - lastTime) > 10000) { // denote, every 10 seconds
-    // lastTime = nextTime;
-    // SurveyLog.logger.warning("output: " + kind + " / " + localeName +
-    // ": #"+i+"/"+nrInFiles+", or "+
-    // (((double)(System.currentTimeMillis()-countStart))/i)+"ms per.");
-    // }
-    //
-    // if(!kind.equals("txml")) {
-    // try {
-    // PrintWriter utf8OutStream = new PrintWriter(
-    // new OutputStreamWriter(
-    // new FileOutputStream(outFile), "UTF8"));
-    // synchronized(this.vet) {
-    // file.write(utf8OutStream);
-    // }
-    // nrOutFiles++;
-    // utf8OutStream.close();
-    // lastfile = null;
-    // // } catch (UnsupportedEncodingException e) {
-    // // throw new InternalError("UTF8 unsupported?").setCause(e);
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // throw new InternalError("IO Exception "+e.toString());
-    // } finally {
-    // if(lastfile != null) {
-    // SurveyLog.logger.warning("Last file written: " + kind + " / " +
-    // lastfile);
-    // }
-    // }
-    // }
-    // lastfile = fileName + " - vote data";
-    // // write voteFile
-    // File voteFile = new File(voteDir,fileName);
-    // try {
-    // PrintWriter utf8OutStream = new PrintWriter(
-    // new OutputStreamWriter(
-    // new FileOutputStream(voteFile), "UTF8"));
-    // boolean NewxpathSet[] = this.vet.writeVoteFile(utf8OutStream, conn,
-    // dbSource, file, ourDate, xpathSet);
-    // nrOutFiles++;
-    // utf8OutStream.close();
-    // lastfile = null;
-    // if(NewxpathSet==null) {
-    // voteFile.delete();
-    // } else {
-    // xpathSet=NewxpathSet;
-    // }
-    // // } catch (UnsupportedEncodingException e) {
-    // // throw new InternalError("UTF8 unsupported?").setCause(e);
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // throw new InternalError("IO Exception on vote file "+e.toString());
-    // } catch (SQLException e) {
-    // // TODO Auto-generated catch block
-    // e.printStackTrace();
-    // throw new
-    // InternalError("SQL Exception on vote file "+DBUtils.unchainSqlException(e));
-    // } finally {
-    // if(lastfile != null) {
-    // SurveyLog.logger.warning("Last  vote file written: " + kind + " / " +
-    // lastfile);
-    // }
-    // }
-    //
-    // }
-    // DBUtils.closeDBConnection(conn);
-    //
-    // progress.update(nrInFiles, "writing " +"xpathTable");
-    // lastfile = "xpathTable.xml" + " - xpath table";
-    // // write voteFile
-    // File xpathFile = new File(voteDir,"xpathTable.xml");
-    // SurveyLog.logger.warning("Writting xpath @ " +
-    // voteDir.getAbsolutePath());
-    // try {
-    // PrintWriter utf8OutStream = new PrintWriter(
-    // new OutputStreamWriter(
-    // new FileOutputStream(xpathFile), "UTF8"));
-    // xpt.writeXpaths(utf8OutStream, ourDate, xpathSet);
-    // nrOutFiles++;
-    // utf8OutStream.close();
-    // lastfile = null;
-    // // } catch (UnsupportedEncodingException e) {
-    // // throw new InternalError("UTF8 unsupported?").setCause(e);
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // throw new InternalError("IO Exception on vote file "+e.toString());
-    // } finally {
-    // if(lastfile != null) {
-    // SurveyLog.logger.warning("Last  vote file written: " + kind + " / " +
-    // lastfile);
-    // }
-    // }
-    // return nrOutFiles;
-    // }
-    //
 
     public boolean tryCommit = true;
     public String tryCommitWhyNot = null;
+
+    /**
+     * Output all files (VXML, etc.)
+     *
+     * @param request the HttpServletRequest, used for "vap"
+     * @param out the Writer, to receive HTML output
+     *
+     * Invoked by pasting a url like this into a browser:
+     *     http://localhost:8080/cldr-apps/admin-OutputAllFiles.jsp?vap=...
+     *
+     * This function was created using code moved here from admin-OutputAllFiles.jsp.
+     * Reference: CLDR-12016 and CLDR-11877
+     */
+    public static void outputAllFiles(HttpServletRequest request, Writer out) {
+        SurveyMain sm = CookieSession.sm;
+        try {
+            String vap = request.getParameter("vap");
+            if (vap == null || !vap.equals(SurveyMain.vap)) {
+                out.write("Not authorized.");
+                return;
+            }
+
+            long start = System.currentTimeMillis();
+            ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
+            int numupd = 0;
+
+            // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- why?
+            OutputFileManager ofm = sm.getOutputFileManager();
+            out.write("Have OFM=" + ofm.toString() + "\n");
+            out.write("<ol>\n");
+
+            Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
+            sortSet.addAll(SurveyMain.getLocalesSet());
+            Connection conn = null;
+            synchronized (OutputFileManager.class) {
+                try {
+                    conn = sm.dbUtils.getDBConnection();
+                    for (CLDRLocale loc : sortSet) {
+                        Timestamp locTime = ofm.getLocaleTime(conn, loc);
+                        out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
+                        for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
+                            boolean nu = ofm.fileNeedsUpdate(locTime, loc, kind.name());
+                            String background = nu ? "#ff9999" : "green";
+                            String weight = nu ? "regular" : "bold";
+                            String color = nu ? "silver" : "black";
+                            out.write("<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
+                            out.write(kind.toString());
+                            if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
+                                System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
+                                ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
+                                File f = ofm.getOutputFile(conn, loc, kind.name());
+                                out.write(" x=" + (f != null && f.exists()));
+                                numupd++;
+                                System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
+                            }
+                            out.write("</span>  &nbsp;");
+                        }
+                        out.write("</li>\n");
+                    }
+                } finally {
+                    DBUtils.close(conn);
+                }
+            }
+            out.write("</ol>\n");
+            out.write("<hr>\n");
+            out.write("Total upd: " + numupd + "/" + (sortSet.size() + 2) + "\n");
+            out.write("Total time: " + overallTimer + " : " + ((System.currentTimeMillis() - start) / (1000.0 * 60)) + "min\n");
+
+            System.err.println(overallTimer + " - updated " + numupd + "/" + (sortSet.size() + 2) +
+                " in " + (System.currentTimeMillis() - start) / (1000.0 * 60) + " min");
+        } catch (Exception e) {
+            System.err.println("Exception in outputAllFiles: " + e);
+        }
+    }
 
     /**
      * Write out the specified file.
