@@ -14,62 +14,60 @@
 </head>
 <body>
 
-<% if( (request.getParameter("vap")==null)
-	   || !request.getParameter("vap").equals(CookieSession.sm.vap)) { %>
-	   Not authorized. 
-<% return;
-	} %>
-
 <%
-long start = System.currentTimeMillis();
-ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
-int numupd = 0;
-	OutputFileManager ofm = CookieSession.sm.getOutputFileManager();
-%>
+	String vap = request.getParameter("vap");
+	if (vap ==null || !vap.equals(SurveyMain.vap)) {
+		out.write("Not authorized.");
+		return;
+	}
 
-Have OFM=<%= ofm %>
+	long start = System.currentTimeMillis();
+	ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
+	int numupd = 0;
+	SurveyMain sm = CookieSession.sm;
 
-<ol>
-<%
+	// top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19"
+	OutputFileManager ofm = sm.getOutputFileManager();
+	out.write("Have OFM=" + ofm.toString() + "\n");
+	out.write("<ol>\n");
+
 	Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
 	sortSet.addAll(SurveyMain.getLocalesSet());
 	Connection conn = null;
 	synchronized(OutputFileManager.class) {
 	try {
-		conn = CookieSession.sm.dbUtils.getDBConnection();
+		conn = sm.dbUtils.getDBConnection();
 		for (CLDRLocale loc : sortSet) {
-	          Timestamp locTime=ofm.getLocaleTime(conn, loc);
-%>
-			<li><%= loc.getDisplayName() %> - <%= locTime.toLocaleString() %><br/>
-	
- <% 				for(OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
-		//if(kind!=OutputFileManager.Kind.vxml) continue;
-		boolean nu= ofm.fileNeedsUpdate(locTime,loc,kind.name());   %> 
-					<span style=' background-color: <%= nu?"#ff9999":"green" %>; font-weight: <%= nu?"regular":"bold" %>; color: <%= nu?"silver":"black" %>;'><%= kind %><%
-						if(nu&&(kind==OutputFileManager.Kind.vxml || kind==OutputFileManager.Kind.pxml)) {
-							System.err.println("Writing " + loc.getDisplayName() + ":"+kind);
-							ElapsedTimer et = new ElapsedTimer("to write " + loc +":"+kind);
-							File f = ofm.getOutputFile(conn, loc, kind.name());
-							out.print(" x=" + (f != null && f.exists()));
-							numupd++;
-							System.err.println(et + " - upd " + numupd+"/"+(sortSet.size()+2));
-						}
-					 %></span>  &nbsp;
-	
-	<%  } %>
-			</li>
-<%
+	        Timestamp locTime=ofm.getLocaleTime(conn, loc);
+	        out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
+			for(OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
+				boolean nu= ofm.fileNeedsUpdate(locTime,loc,kind.name());
+				String background = nu?"#ff9999":"green";
+				String weight = nu?"regular":"bold";
+				String color = nu?"silver":"black";
+				out.write("<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
+				out.write(kind.toString());
+				if(nu&&(kind==OutputFileManager.Kind.vxml || kind==OutputFileManager.Kind.pxml)) {
+					System.err.println("Writing " + loc.getDisplayName() + ":"+kind);
+					ElapsedTimer et = new ElapsedTimer("to write " + loc +":"+kind);
+					File f = ofm.getOutputFile(conn, loc, kind.name());
+					out.print(" x=" + (f != null && f.exists()));
+					numupd++;
+					System.err.println(et + " - upd " + numupd+"/"+(sortSet.size()+2));
+				}
+				out.write("</span>  &nbsp;");
+			}
+			out.write("</li>\n");
 		}
 	} finally {
 		DBUtils.close(conn);
 	}
-}
-%>
-</ol>
-<hr>
-Total upd: <%= numupd+"/"+(sortSet.size()+2) %>
-Total time: <%= overallTimer %> : <%= ((System.currentTimeMillis()-start)/(1000.0*60)) %>min
-<%
+	}
+	out.write("</ol>\n");
+	out.write("<hr>\n");
+	out.write("Total upd: " + numupd + "/" + (sortSet.size() + 2) + "\n");
+	out.write("Total time: " + overallTimer + " : " + ((System.currentTimeMillis()-start)/(1000.0*60)) + "min\n");
+
 	System.err.println(overallTimer +  " - updated " + numupd+"/"+(sortSet.size()+2) + " in " + (System.currentTimeMillis()-start)/(1000.0*60) + " min");
 %>
 </body>
