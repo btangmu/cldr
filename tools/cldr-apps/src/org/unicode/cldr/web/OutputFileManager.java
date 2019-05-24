@@ -80,8 +80,6 @@ public class OutputFileManager {
                 + ((vxmlDir == null) ? "(null vxml directory)" : vxmlDir.getAbsolutePath());
 
             System.err.println(whyNot);
-
-            // svnShutdown();
         }
         if (tryCommit) {
             System.err.println("SVN commits active in " + vxmlDir.getAbsolutePath() + " - r"
@@ -162,12 +160,21 @@ public class OutputFileManager {
                 // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- is this still needed?
                 out.write("Have OFM=" + ofm.toString() + "\n");
                 ofm.outputAllFiles(out);
+                ofm.removeEmptyFiles(out);
                 ofm.verifyAllFiles(out);
             }
         } catch (Exception e) {
             System.err.println("Exception in outputAndVerifyAllFiles: " + e);
             e.printStackTrace();
         }
+    }
+    /**
+     * Remove "empty" VXML files
+     *
+     * @param out the Writer, to receive HTML output
+     */
+    private void removeEmptyFiles(Writer out) throws IOException {
+        out.write("<p>⚠️ removeEmptyFiles -- not yet implemented! ⚠️</p>");
     }
 
     /**
@@ -350,7 +357,7 @@ public class OutputFileManager {
         Set<String> diff = symmetricDifference(vxmlFiles, cldrFiles);
         if (!diff.isEmpty()) {
             out.write("<h2>Verification failure, vxml and trunk do not correspond</h2>\n");
-            out.write("Difference(s):<br>\n");
+            out.write("File(s) present in vxml but not in trunk, or vice-versa:<br>\n");
             for (String name: diff) {
                 out.write(name + "<br>\n");
             }
@@ -495,9 +502,19 @@ public class OutputFileManager {
 
     Map<String, Object> OPTS_SKIP_ANNOTATIONS = ImmutableMap.of(
         "SKIP_PATH", isAnnotations);
+    /*
+     * TODO: decide whether to keep SKIP_FILE_IF_SKIP_ALL_PATHS.
+     * If we do a separate "remove empty files" step (better due to taking
+     * inheritance into account, e.g., if sr_Cyrl_BA.xml is non-empty, then sr_Cyrl.xml
+     * will also be treated as non-empty) then we won't use SKIP_FILE_IF_SKIP_ALL_PATHS.
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12016
+     */
     Map<String, Object> OPTS_KEEP_ANNOTATIONS = ImmutableMap.of(
-        "SKIP_PATH", isAnnotations.negate(),
-        "SKIP_FILE_IF_SKIP_ALL_PATHS", true);
+        "SKIP_PATH", isAnnotations.negate()
+        /***,
+        "SKIP_FILE_IF_SKIP_ALL_PATHS", true
+        ***/
+        );
 
     /**
      * @param loc
@@ -829,8 +846,13 @@ public class OutputFileManager {
     /**
      * Get a timestamp associated with the given CLDRLocale and java.sql.Connection.
      *
-     * @param conn
-     * @param loc
+     * The timestamp may depend on
+     * (1) when the most recent vote was made for any item in the given locale
+     * (2) the modification time of a file for that locale in trunk/baseline (version control)
+     * (3) the timestamp for the parent locale, if more recent
+     *
+     * @param conn the java.sql.Connection used for querying the VOTE_VALUE table
+     * @param loc the CLDRLocale
      * @return the Timestamp
      * @throws SQLException
      */
@@ -871,29 +893,21 @@ public class OutputFileManager {
         return theDate;
     }
 
+    static final boolean debugWhyUpdate = false;
+
     /**
+     * Is an update needed for a file for the given locale and kind?
      *
-     * @param loc
-     * @param kind
-     * @return
+     * @param loc the locale
+     * @param kind VXML, etc.
+     * @return true if an update is needed, else false
+     *
      * @throws IOException
      * @throws SQLException
      */
-    boolean fileNeedsUpdate(CLDRLocale loc, String kind) throws IOException, SQLException {
-        Connection conn = null;
-        try {
-            conn = DBUtils.getInstance().getDBConnection();
-            return fileNeedsUpdate(conn, loc, kind);
-        } finally {
-            DBUtils.close(conn);
-        }
-    }
-
-    public boolean fileNeedsUpdate(Connection conn, CLDRLocale loc, String kind) throws SQLException, IOException {
+    private boolean fileNeedsUpdate(Connection conn, CLDRLocale loc, String kind) throws SQLException, IOException {
         return fileNeedsUpdate(getLocaleTime(conn, loc), loc, kind);
     }
-
-    static final boolean debugWhyUpdate = false;
 
     public boolean fileNeedsUpdate(Timestamp theDate, CLDRLocale loc, String kind) throws SQLException, IOException {
         File outFile = sm.getDataFile(kind, loc);
