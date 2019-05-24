@@ -18,7 +18,9 @@ import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -47,6 +49,7 @@ import org.tmatesoft.svn.core.wc.SVNUpdateClient;
 import org.tmatesoft.svn.core.wc.SVNWCClient;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRLocale;
+import org.unicode.cldr.util.CLDRPaths;
 import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.Pair;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
@@ -87,9 +90,15 @@ public class OutputFileManager {
     }
 
     public enum Kind {
-        vxml("Vetted XML. This is the 'final' output from the SurveyTool."), xml("Input XML. This is the on-disk data as read by the SurveyTool."), rxml(
-            "Fully resolved, vetted, XML. This includes all parent data. Huge and expensive."), fxml("'Final' data. Obsolete."), pxml(
-                "Proposed XML. This data contains all possible user proposals and can be used to reconstruct the voting situation.");
+        vxml("Vetted XML. This is the 'final' output from the SurveyTool."),
+
+        xml("Input XML. This is the on-disk data as read by the SurveyTool."),
+
+        rxml("Fully resolved, vetted, XML. This includes all parent data. Huge and expensive."),
+
+        fxml("'Final' data. Obsolete."),
+
+        pxml("Proposed XML. This data contains all possible user proposals and can be used to reconstruct the voting situation.");
 
         Kind(String desc) {
             this.desc = desc;
@@ -103,23 +112,10 @@ public class OutputFileManager {
     };
 
     /**
-     * Are SVN commits active? If not, why not.
-     *
-     * @return null if active, otherwise reason.
-     */
-    public String getTryCommitWhyNot() {
-        if (tryCommit) {
-            return null;
-        } else {
-            return tryCommitWhyNot;
-        }
-    }
-
-    /**
      * @param kind
      * @return true if this kind is cacheable
      */
-    public static boolean isCacheableKind(String kind) {
+    private static boolean isCacheableKind(String kind) {
         try {
             Kind.valueOf(kind);
             return true;
@@ -166,19 +162,222 @@ public class OutputFileManager {
                 // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- is this still needed?
                 out.write("Have OFM=" + ofm.toString() + "\n");
                 ofm.outputAllFiles(out);
-                /*
-                 * TODO: verifyAllFiles
-                 */
+                ofm.verifyAllFiles(out);
             }
         } catch (Exception e) {
             System.err.println("Exception in outputAndVerifyAllFiles: " + e);
+            e.printStackTrace();
         }
+    }
+
+    /**
+     * Verify all VXML files
+     *
+     * @param out the Writer, to receive HTML output
+     *
+     * The following need to be verified on the server when generating vxml:
+     * • The same file must not occur in both the common/X and seed/X directories, for any X=main|annotations
+     * • If a parent locale (except for root) must occur in the same directory as the child locale
+     * • Every file in trunk (common|seed/X) must have a corresponding vxml file
+     * • Every file in vxml (common|seed/X) must have a corresponding trunk file
+     * This should fail with clear warning to the user that there is a major problem.
+     * Reference: CLDR-12016
+     * @throws IOException
+     *
+     * vetdata
+     * └── vxml
+     *     ├── common
+     *     │   ├── annotations
+     *     │   └── main
+     *     └── seed
+     *         ├── annotations
+     *         └── main
+     */
+    private void verifyAllFiles(Writer out) throws IOException {
+        File vxmlDir = sm.makeDataDir(Kind.vxml.name());
+
+        /*
+         * CLDRConfig.COMMON_DIR, etc., are private; what's a better way to get them here without hard-coding?
+         */
+        String[] commonAndSeed = {"common" /* CLDRConfig.COMMON_DIR */, "seed" /* CLDRConfig.SEED_DIR */};
+        String[] mainAndAnnotations = {"main" /* CLDRConfig.MAIN_DIR */, "annotations" /* CLDRConfig.ANNOTATIONS_DIR */};
+
+        int failureCount = 0;
+
+        /*
+         * The same file must not occur in both the common/X and seed/X directories, for any X=main|annotations
+         */
+        if (!verifyNoDuplicatesInCommonAndSeed(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+            ++failureCount;
+        }
+        /*
+         * A parent locale (except for root) must occur in the same directory as the child locale
+         */
+        if (!verifyParentChildSameDirectory(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+            ++failureCount;
+        }
+        /*
+         * Every file in trunk (common|seed/X) must have a corresponding vxml file
+         * Every file in vxml (common|seed/X) must have a corresponding trunk file
+         */
+        if (!verifyVxmlAndTrunkFilesCorrespond(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+            ++failureCount;
+        }
+
+        if (failureCount == 0) {
+            out.write("<h1>✅ VXML verification succeeded</h1>\nOK<br>");
+        } else {
+            out.write("<h1>❌ VXML verification failed!</h1>\nFailure count = " + failureCount + "<br>");
+        }
+    }
+
+    /**
+     * Verify that the same file does not occur in both the common/X and seed/X directories, for any X=main|annotations
+     *
+     * @param out
+     * @return true if verification succeeded, false for failure
+     * @throws IOException
+     */
+    private boolean verifyNoDuplicatesInCommonAndSeed(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+            throws IOException {
+
+        for (String m: mainAndAnnotations) {
+            String commonDirName = vxmlDir + "/" + commonAndSeed[0] + "/" + m;
+            String seedDirName = vxmlDir + "/" + commonAndSeed[1] + "/" + m;
+            File dirFile = new File(commonDirName);
+            if (dirFile.exists()) {
+                for (String commonName : dirFile.list()) {
+                    String commonPathName = commonDirName + "/" + commonName;
+                    String seedPathName = seedDirName + "/" + commonName;
+                    File fSeed = new File(seedPathName);
+                    if (fSeed.exists()) {
+                        out.write("<h2>Verification failure, found duplicates</h2>\n"
+                            + commonPathName + "<br>\n"
+                            + seedPathName + "<br>\n");
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Verify that a file for parent locale does occur in the same directory as the file for the child locale
+     *
+     * Examples:
+     *   if we have "aa_NA.xml" we should have "aa.xml" in the same folder
+     *   if we have "ff_Adlm_BF.xml" we should have "ff_Adlm.xml" in the same folder
+     * Note handling of two underscores in "ff_Adlm_BF.xml"
+     *
+     * @param out
+     * @return true if verification succeeded, false for failure
+     * @throws IOException
+     */
+    private boolean verifyParentChildSameDirectory(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+            throws IOException {
+
+        for (String c: commonAndSeed) {
+            for (String m: mainAndAnnotations) {
+                String dirName = vxmlDir + "/" + c + "/" + m;
+                File dirFile = new File(dirName);
+                if (dirFile.exists()) {
+                    for (String childName : dirFile.list()) {
+                        String childPathName = dirName + "/" + childName;
+                        /*
+                         * Get the parent from the child. Change "aa_NA.xml" to "aa.xml";
+                         * "ff_Adlm_BF.xml" to "ff_Adlm.xml"; "sr_Cyrl_BA.xml" to "sr_Cyrl.xml" (not "sr.xml")
+                         */
+                        String localeName = childName.replaceFirst("\\.xml$", "");
+                        CLDRLocale childLoc = CLDRLocale.getInstance(localeName);
+                        if (childLoc == null) {
+                            out.write("<h2>Verification failure, locale not recognized from file name</h2>\n"
+                                + childPathName + "<br>\n");
+                            return false;
+                        }
+                        CLDRLocale parLoc = childLoc.getParent();
+                        if (parLoc != null) {
+                            // String parentName = fileName.replaceFirst("_[a-zA-Z]+\\.xml$", "\\.xml");
+                            String parentName = parLoc.toString() + ".xml";
+                            if (!childName.equals(parentName) && !"root.xml".equals(parentName)) {
+                                String parentPathName = dirName + "/" + parentName;
+                                File fParent = new File(parentPathName);
+                                if (!fParent.exists()) {
+                                    out.write("<h2>Verification failure, child without parent</h2>\n"
+                                        + "Child, present: " + childPathName + "<br>\n"
+                                        + "Parent, absent: " + parentPathName + "<br>\n");
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Verify that every file in trunk (common|seed/X) has a corresponding vxml file
+     * AND every file in vxml (common|seed/X) has a corresponding trunk file
+     *
+     * @param out
+     * @return true if verification succeeded, false for failure
+     * @throws IOException
+     */
+    private boolean verifyVxmlAndTrunkFilesCorrespond(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+            throws IOException {
+
+        String cldrDir = CLDRPaths.BASE_DIRECTORY;
+        ArrayList<String> vxmlFiles = new ArrayList<String>();
+        ArrayList<String> cldrFiles = new ArrayList<String>();
+        for (String c: commonAndSeed) {
+            for (String m: mainAndAnnotations) {
+                File vxmlDirFile = new File(vxmlDir + "/" + c + "/" + m);
+                File cldrDirFile = new File(cldrDir + "/" + c + "/" + m);
+                if (vxmlDirFile.exists()) {
+                    for (String name : vxmlDirFile.list()) {
+                        vxmlFiles.add(c + "/" + m  + "/" + name);
+                    }
+                }
+                if (cldrDirFile.exists()) {
+                    for (String name : cldrDirFile.list()) {
+                        cldrFiles.add(c + "/" + m  + "/" + name);
+                    }
+                }
+            }
+        }
+        Set<String> diff = symmetricDifference(vxmlFiles, cldrFiles);
+        if (!diff.isEmpty()) {
+            out.write("<h2>Verification failure, vxml and trunk do not correspond</h2>\n");
+            out.write("Difference(s):<br>\n");
+            for (String name: diff) {
+                out.write(name + "<br>\n");
+            }
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Return the set of all strings that are in one list but not the other
+     *
+     * @param list1
+     * @param list2
+     * @return the Set
+     */
+    private static Set<String> symmetricDifference(final ArrayList<String> list1, final ArrayList<String> list2) {
+        Set<String> diff = new HashSet<String>(list1);
+        diff.addAll(list2);
+        Set<String> tmp = new HashSet<String>(list1);
+        tmp.retainAll(list2);
+        diff.removeAll(tmp);
+        return diff;
     }
 
     /**
      * Output all files (VXML, etc.)
      *
-     * @param request the HttpServletRequest, used for "vap"
      * @param out the Writer, to receive HTML output
      *
      * This function was created using code moved here from admin-OutputAllFiles.jsp.
@@ -205,7 +404,7 @@ public class OutputFileManager {
                         String background = nu ? "#ff9999" : "green";
                         String weight = nu ? "regular" : "bold";
                         String color = nu ? "silver" : "black";
-                        out.write("<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
+                        out.write("\n\n\t<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
                         out.write(kind.toString());
                         if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
                             System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
@@ -584,6 +783,9 @@ public class OutputFileManager {
      * @throws SQLException
      */
     File getOutputFile(SurveyMain surveyMain, CLDRLocale loc, String kind) throws IOException, SQLException {
+        /*
+         * Get a java.sql.Connection to be used by fileNeedsUpdate, getLocaleTime
+         */
         Connection conn = null;
         try {
             conn = surveyMain.dbUtils.getDBConnection();
@@ -624,6 +826,14 @@ public class OutputFileManager {
     boolean haveVbv = false;
     public boolean outputDisabled = false;
 
+    /**
+     * Get a timestamp associated with the given CLDRLocale and java.sql.Connection.
+     *
+     * @param conn
+     * @param loc
+     * @return the Timestamp
+     * @throws SQLException
+     */
     public Timestamp getLocaleTime(Connection conn, CLDRLocale loc) throws SQLException {
         Timestamp theDate = null;
         if (haveVbv || DBUtils.hasTable(conn, DBUtils.Table.VOTE_VALUE.toString())) {
