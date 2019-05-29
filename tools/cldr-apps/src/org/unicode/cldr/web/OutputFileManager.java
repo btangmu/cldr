@@ -18,10 +18,13 @@ import java.io.Writer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,9 +54,13 @@ import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.CLDRPaths;
 import org.unicode.cldr.util.CldrUtility;
+import org.unicode.cldr.util.LocaleIDParser;
 import org.unicode.cldr.util.Pair;
+import org.unicode.cldr.util.XMLFileReader;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.ibm.icu.dev.util.ElapsedTimer;
 
@@ -94,7 +101,7 @@ public class OutputFileManager {
 
         rxml("Fully resolved, vetted, XML. This includes all parent data. Huge and expensive."),
 
-        fxml("'Final' data. Obsolete."),
+        fxml("'Final' data. Obsolete."), /* TODO: if it's really obsolete, can we delete fxml code? */
 
         pxml("Proposed XML. This data contains all possible user proposals and can be used to reconstruct the voting situation.");
 
@@ -144,8 +151,11 @@ public class OutputFileManager {
      * Invoked by pasting a url like this into a browser:
      *     http://localhost:8080/cldr-apps/admin-OutputAllFiles.jsp?vap=...
      *
-     * This function was created using code moved here from admin-OutputAllFiles.jsp.
+     * This function was started using code moved here from admin-OutputAllFiles.jsp.
      * Reference: CLDR-12016 and CLDR-11877
+     *
+     * Compare output-status.jsp which maybe should be linked from here -- user may want to
+     * view it at the same time as this.
      */
     public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
         String vap = request.getParameter("vap");
@@ -156,25 +166,266 @@ public class OutputFileManager {
             }
             synchronized (OutputFileManager.class) {
                 SurveyMain sm = CookieSession.sm;
+
                 OutputFileManager ofm = sm.getOutputFileManager();
                 // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- is this still needed?
                 out.write("Have OFM=" + ofm.toString() + "\n");
-                ofm.outputAllFiles(out);
-                ofm.removeEmptyFiles(out);
-                ofm.verifyAllFiles(out);
+
+                File manualVetdataDir = createNewManualVetdataDir(sm.getVetdir());
+                if (manualVetdataDir == null) {
+                    out.write("Directory creation failed.");
+                    return;
+                }
+                out.write("<p>Created new directory: " + manualVetdataDir.toString() + "</p>");
+
+                /*
+                 * CLDRConfig.COMMON_DIR, etc., are private; what's a better way to get them here without hard-coding?
+                 */
+                String[] commonAndSeed = {"common" /* CLDRConfig.COMMON_DIR */, "seed" /* CLDRConfig.SEED_DIR */};
+                String[] mainAndAnnotations = {"main" /* CLDRConfig.MAIN_DIR */, "annotations" /* CLDRConfig.ANNOTATIONS_DIR */};
+
+                if (!ofm.outputAllFiles(out, manualVetdataDir, commonAndSeed, mainAndAnnotations)) {
+                    out.write("File output failed.");
+                    return;
+                }
+
+                File manualVxmlDir = new File(manualVetdataDir.toString() + "/" + Kind.vxml.name());
+                ofm.removeEmptyFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
+                ofm.verifyAllFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
             }
         } catch (Exception e) {
             System.err.println("Exception in outputAndVerifyAllFiles: " + e);
             e.printStackTrace();
         }
     }
+
+    /**
+     * Create a new directory like ".../vetdata-2019-05-28T12-34-56-789Z", as a sibling
+     * of the "automatic vetdata" directory
+     *
+     * @param autoVetdataDir the File for the "automatic vetdata" directory
+     * @return the File for the newly created directory, or null for failure
+     */
+    private static File createNewManualVetdataDir(File autoVetdataDir) {
+        /*
+         * Include in the directory name a timestamp like 2019-05-28T12-34-56-789Z,
+         * which is almost standard like 2019-05-28T12:34:56.789Z,
+         * but using hyphens to replace all colons and periods.
+         */
+        String timestamp = Instant.now().toString();
+        timestamp = timestamp.replace(':', '-');
+        timestamp = timestamp.replace('.', '-');
+        String manualVetdataDirName = autoVetdataDir.getParent() + "/" + autoVetdataDir.getName() + "-" + timestamp;
+        File manualVetdataDir = new File(manualVetdataDirName);
+        if (manualVetdataDir.mkdirs() == false) {
+            return null;
+        }
+        return manualVetdataDir;
+    }
+
+    /**
+     * Output all files (VXML, etc.)
+     *
+     * @param out the Writer, to receive HTML output
+     * @param vetDataDir the folder in which to write
+     * @return true for success, false for failure
+     *
+     * This function was first created using code moved here from admin-OutputAllFiles.jsp.
+     * Reference: CLDR-12016 and CLDR-11877 and CLDR-11850
+     */
+    private boolean outputAllFiles(Writer out, File vetDataDir, String[] commonAndSeed, String[] mainAndAnnotations) {
+        try {
+            long start = System.currentTimeMillis();
+            ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
+            int numupd = 0;
+
+            out.write("<ol>\n");
+
+            Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
+            sortSet.addAll(SurveyMain.getLocalesSet());
+            /*
+             * TODO: we're always creating a new folder for *manual* generation, so we don't need a Connection to
+             * determine whether files need updating; correct? If so, simplify; no try/finally.
+             */
+            // Connection conn = null;
+            try {
+                // conn = sm.dbUtils.getDBConnection();
+                for (CLDRLocale loc : sortSet) {
+                    // Timestamp locTime = this.getLocaleTime(conn, loc);
+                    // out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
+                    out.write("<li>" + loc.getDisplayName() + "<br/>\n");
+                    for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
+                        /*
+                         * TODO: we're always creating a new folder for *manual* generation, so
+                         * "nu" will always be true; correct? If so, simplify.
+                         *
+                         * TODO: is there any point in outputting anything here for kind other than vxml and pxml?
+                         */
+                        boolean nu = true;
+                        // boolean nu = this.fileNeedsUpdate(locTime, loc, kind.name());
+                        String background = nu ? "#ff9999" : "green";
+                        String weight = nu ? "regular" : "bold";
+                        String color = nu ? "silver" : "black";
+                        out.write("\n\n\t<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
+                        out.write(kind.toString());
+                        if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
+                            System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
+                            ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
+                            File f = writeManualOutputFile(vetDataDir, loc, kind, commonAndSeed, mainAndAnnotations);
+                            if (f == null) {
+                                out.write("FILE CREATION FAILED: " + loc.toString() + kind.name());
+                                return false;
+                            }
+                            // File f = this.getOutputFile(conn, loc, kind);
+                            // out.write(" x=" + (f != null && f.exists()));
+                            numupd++;
+                            System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
+                        }
+                        out.write("</span>  &nbsp;");
+                    }
+                    out.write("</li>\n");
+                }
+            } finally {
+                // DBUtils.close(conn);
+            }
+            out.write("</ol>\n");
+            out.write("<hr>\n");
+            out.write("Total upd: " + numupd + "/" + (sortSet.size() + 2) + "\n");
+            out.write("Total time: " + overallTimer + " : " + ((System.currentTimeMillis() - start) / (1000.0 * 60)) + "min\n");
+
+            System.err.println(overallTimer + " - updated " + numupd + "/" + (sortSet.size() + 2) +
+                " in " + (System.currentTimeMillis() - start) / (1000.0 * 60) + " min");
+            return true;
+        } catch (Exception e) {
+            System.err.println("Exception in outputAllFiles: " + e);
+            return false;
+        }
+    }
+
+    /**
+     * Write out the specified file(s).
+     *
+     * If kind is vxml (for example) and we may write to both common/main and common/annotations,
+     * or to both seed/main and seed/annotations.
+     *
+     * Note: this is only used for "manually" generated files.
+     * Compare writeOutputFile which is for "automatic" scheduled generation of files.
+     *
+     * @param loc
+     * @param kind
+     * @return
+     */
+    private File writeManualOutputFile(File vetDataDir, CLDRLocale loc, Kind kind, String[] commonAndSeed, String[] mainAndAnnotations) {
+        long st = System.currentTimeMillis();
+        CLDRFile cldrFile;
+        if (kind == Kind.vxml) {
+            cldrFile = sm.getSTFactory().makeVettedFile(loc);
+        } else if (kind == Kind.pxml) {
+            cldrFile = sm.getSTFactory().makeProposedFile(loc);
+        } else {
+            throw new InternalError("Don't know MANUALLY how to make kind " + kind);
+        }
+        try {
+            /*
+             * Does the file belong in common, or in seed? Currently we answer that by
+             * looking for a corresponding xml (not vxml or pxml) file in cldr (trunk/baseline)
+             * in both common and seed, and follow that example. (This is somewhat circular.)
+             */
+            File trunkFile = sm.getDataFile(kind.toString(), loc); // baseline xml (not vxml or pxml)
+            String commonOrSeed = trunkFile.toString().contains(commonAndSeed[1]) ? commonAndSeed[1] : commonAndSeed[0];
+
+            /*
+             * Only create the file in "main" (mainAndAnnotations[0]) here; doWriteFile will then create the file in "annotations"
+             */
+            String outDirName = vetDataDir + "/" + kind.toString() +  "/" + commonOrSeed + "/" + mainAndAnnotations[0];
+            File outDir = new File(outDirName);
+            if (!outDir.exists() && !outDir.mkdirs()) {
+                throw new InternalError("Unable to create directory: " + outDirName);
+            }
+            String outFileName = outDirName + "/" + loc.toString() + ".xml";
+            File outFile = new File(outFileName);
+            doWriteFile(loc, cldrFile, kind.toString(), false /* isFlat */, outFile);
+            SurveyLog.debug("Updater: MANUALLY wrote: " + kind + "/" + loc + " - " + ElapsedTimer.elapsedTime(st));
+            return outFile;
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("IO Exception " + e.toString(), e);
+        }
+    }
+
     /**
      * Remove "empty" VXML files
      *
      * @param out the Writer, to receive HTML output
+     *
+     * Compare RemoveEmptyCLDR.main
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12016
      */
-    private void removeEmptyFiles(Writer out) throws IOException {
-        out.write("<p>⚠️ removeEmptyFiles -- not yet implemented! ⚠️</p>");
+    private void removeEmptyFiles(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations) throws IOException {
+        Set<String> treatAsNonEmpty = new HashSet<>();
+        BiMap<String, File> onlyHasIdentity = HashBiMap.create();
+        int counter = 0;
+        for (String c: commonAndSeed) {
+            for (String m: mainAndAnnotations) {
+                String dirName = vxmlDir + "/" + c + "/" + m;
+                File dirFile = new File(dirName);
+                if (dirFile.exists()) {
+                    for (File f : dirFile.listFiles()) {
+                        List<Pair<String, String>> data = new ArrayList<>();
+                        String canonicalPath = f.getCanonicalPath();
+                        if (canonicalPath.endsWith("root.xml") || !canonicalPath.endsWith(".xml")) {
+                            continue;
+                        }
+                        String name = f.getName();
+                        name = name.substring(0, name.length() - 4); // remove .xml
+                        XMLFileReader.loadPathValues(canonicalPath, data, false);
+                        /*
+                         * Treat a file as "non-empty" if it, or any of its descendants,
+                         * contains items other than "identity"
+                         */
+                        boolean itemHasMoreThanIdentity = false;
+                        for (Pair<String, String> item : data) {
+                            if (!item.getFirst().contains("/identity")) {
+                                System.out.println(++counter + ") NOT-EMPTY: " + canonicalPath);
+                                /*
+                                 * keep this file, and its ancestors (needed for inheritance even if only identity)
+                                 */
+                                addNameAndParents(treatAsNonEmpty, name);
+                                itemHasMoreThanIdentity = true;
+                                break;
+                            }
+                        }
+                        if (!itemHasMoreThanIdentity) {
+                            onlyHasIdentity.put(name, f);
+                        }
+                    }
+                }
+            }
+        }
+        counter = 0;
+        for (Entry<String, File> entry : onlyHasIdentity.entrySet()) {
+            String name = entry.getKey();
+            if (!treatAsNonEmpty.contains(name)) {
+                File file = entry.getValue();
+                System.out.println(++counter + ") Deleting: " + file.getCanonicalPath());
+                file.delete();
+            }
+        }
+    }
+
+    /**
+     * Add the given name, and the names of its ancestors (except root), to the given set
+     *
+     * @param treatAsNonEmpty
+     * @param name the xml file name (without the .xml extension)
+     */
+    private static void addNameAndParents(Set<String> treatAsNonEmpty, String name) {
+        treatAsNonEmpty.add(name);
+        String parent = LocaleIDParser.getParent(name);
+        if (!"root".equals(parent)) {
+            addNameAndParents(treatAsNonEmpty, parent);
+        }
     }
 
     /**
@@ -200,15 +451,7 @@ public class OutputFileManager {
      *         ├── annotations
      *         └── main
      */
-    private void verifyAllFiles(Writer out) throws IOException {
-        File vxmlDir = sm.makeDataDir(Kind.vxml.name());
-
-        /*
-         * CLDRConfig.COMMON_DIR, etc., are private; what's a better way to get them here without hard-coding?
-         */
-        String[] commonAndSeed = {"common" /* CLDRConfig.COMMON_DIR */, "seed" /* CLDRConfig.SEED_DIR */};
-        String[] mainAndAnnotations = {"main" /* CLDRConfig.MAIN_DIR */, "annotations" /* CLDRConfig.ANNOTATIONS_DIR */};
-
+    private void verifyAllFiles(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations) throws IOException {
         int failureCount = 0;
 
         /*
@@ -383,65 +626,10 @@ public class OutputFileManager {
     }
 
     /**
-     * Output all files (VXML, etc.)
-     *
-     * @param out the Writer, to receive HTML output
-     *
-     * This function was created using code moved here from admin-OutputAllFiles.jsp.
-     * Reference: CLDR-12016 and CLDR-11877
-     */
-    private void outputAllFiles(Writer out) {
-        try {
-            long start = System.currentTimeMillis();
-            ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
-            int numupd = 0;
-
-            out.write("<ol>\n");
-
-            Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
-            sortSet.addAll(SurveyMain.getLocalesSet());
-            Connection conn = null;
-            try {
-                conn = sm.dbUtils.getDBConnection();
-                for (CLDRLocale loc : sortSet) {
-                    Timestamp locTime = this.getLocaleTime(conn, loc);
-                    out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
-                    for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
-                        boolean nu = this.fileNeedsUpdate(locTime, loc, kind.name());
-                        String background = nu ? "#ff9999" : "green";
-                        String weight = nu ? "regular" : "bold";
-                        String color = nu ? "silver" : "black";
-                        out.write("\n\n\t<span style=' background-color: " + background + "; font-weight: " + weight + "; color: " + color + ";'>");
-                        out.write(kind.toString());
-                        if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
-                            System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
-                            ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
-                            File f = this.getOutputFile(conn, loc, kind.name());
-                            out.write(" x=" + (f != null && f.exists()));
-                            numupd++;
-                            System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
-                        }
-                        out.write("</span>  &nbsp;");
-                    }
-                    out.write("</li>\n");
-                }
-            } finally {
-                DBUtils.close(conn);
-            }
-            out.write("</ol>\n");
-            out.write("<hr>\n");
-            out.write("Total upd: " + numupd + "/" + (sortSet.size() + 2) + "\n");
-            out.write("Total time: " + overallTimer + " : " + ((System.currentTimeMillis() - start) / (1000.0 * 60)) + "min\n");
-
-            System.err.println(overallTimer + " - updated " + numupd + "/" + (sortSet.size() + 2) +
-                " in " + (System.currentTimeMillis() - start) / (1000.0 * 60) + " min");
-        } catch (Exception e) {
-            System.err.println("Exception in outputAllFiles: " + e);
-        }
-    }
-
-    /**
      * Write out the specified file.
+     *
+     * Note: this is only used for "automatic" scheduled generation of files.
+     * Compare writeManualOutputFile which is for "manually" generated files.
      *
      * @param loc
      * @param kind
@@ -450,7 +638,6 @@ public class OutputFileManager {
     private File writeOutputFile(CLDRLocale loc, String kind) {
         long st = System.currentTimeMillis();
         CLDRFile file;
-        boolean isFlat = false;
         if (kind.equals("vxml")) {
             file = sm.getSTFactory().makeVettedFile(loc);
         } else if (kind.equals("pxml")) {
@@ -466,7 +653,7 @@ public class OutputFileManager {
         try {
             File outFile = sm.getDataFile(kind, loc);
 
-            doWriteFile(loc, file, kind, isFlat, outFile);
+            doWriteFile(loc, file, kind, false /* isFlat */, outFile);
             SurveyLog.debug("Updater: Wrote: " + kind + "/" + loc + " - " + ElapsedTimer.elapsedTime(st));
 
             if (tryCommit && (kind.equals("vxml") || kind.equals("pxml"))) {
@@ -483,7 +670,7 @@ public class OutputFileManager {
                         tryCommit = false;
                     } else if (e.getMessage().contains("E155015")) {
                         svnRemoveAndResolved(outFile);
-                        doWriteFile(loc, file, kind, isFlat, outFile);
+                        doWriteFile(loc, file, kind, false /* isFlat */, outFile);
                         SurveyLog
                             .debug("Updater: Resolved, Re-Wrote: " + kind + "/" + loc + " - " + ElapsedTimer.elapsedTime(st));
                     } else if (!e.getMessage().contains("E150002")) {
@@ -517,10 +704,12 @@ public class OutputFileManager {
         );
 
     /**
+     * Write one or more files. For vxml (at least), write one in "main" and one in "annotations".
+     *
      * @param loc
      * @param file
-     * @param isFlat
-     * @param outFile
+     * @param isFlat always false (unless called by some unidentified jsp?)
+     * @param outFile the File for "main"; another file will be created in "annotations"
      * @throws UnsupportedEncodingException
      * @throws FileNotFoundException
      */
@@ -529,12 +718,12 @@ public class OutputFileManager {
         try (PrintWriter u8out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outFile), "UTF8"))) {
 
             if (!isFlat) {
-                if (kind.equals("vxml") || kind.equals("rxml")) {
+                if (kind.equals("vxml") || kind.equals("rxml")) { // TODO: avoid hard-coding "vxml" and "rxml" here, should have Kind instead of String for parameter
                     file.write(u8out, OPTS_SKIP_ANNOTATIONS);
 
                     // output annotations, too
                     File parentDir = outFile.getParentFile().getParentFile();
-                    File annotationsDir = new File(parentDir, "annotations");
+                    File annotationsDir = new File(parentDir, "annotations"); // TODO: avoid hard-coding "annotations" here
                     annotationsDir.mkdirs();
                     File aFile = new File(annotationsDir, outFile.getName()); // same name, different subdir
 //                    System.out.println("Annotation: " + aFile.getAbsolutePath());
