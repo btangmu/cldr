@@ -372,10 +372,13 @@ public class OutputFileManager {
              * in both common and seed, and follow that example. (This is somewhat circular.)
              * If a baseline file doesn't exist in common or seed, go with common.
              */
-            File bxmlFile = sm.getDataFile(kind.toString(), loc); // baseline xml (not vxml or pxml)
             String commonOrSeed = commonAndSeed[0]; // "common"
-            if (bxmlFile.exists() && bxmlFile.toString().contains(commonAndSeed[1])) {
-                commonOrSeed = commonAndSeed[1]; // "seed"
+            for (String c: commonAndSeed) {
+                String path = CLDRPaths.BASE_DIRECTORY + "/" + c + "/" + mainAndAnnotations[0] /* "main" */ + "/" + loc.toString() + XML_SUFFIX;
+                if (new File(path).exists()) {
+                    commonOrSeed = c;
+                    break;
+                }
             }
             /*
              * Only create the file in "main" (mainAndAnnotations[0]) here; doWriteFile will then create the file in "annotations"
@@ -385,7 +388,7 @@ public class OutputFileManager {
             if (!outDir.exists() && !outDir.mkdirs()) {
                 throw new InternalError("Unable to create directory: " + outDirName);
             }
-            String outFileName = outDirName + "/" + loc.toString() + ".xml";
+            String outFileName = outDirName + "/" + loc.toString() + XML_SUFFIX;
             File outFile = new File(outFileName);
             doWriteFile(loc, cldrFile, kind, outFile);
             SurveyLog.debug("Updater: MANUALLY wrote: " + kind + "/" + loc + " - " + ElapsedTimer.elapsedTime(st));
@@ -397,7 +400,7 @@ public class OutputFileManager {
     }
 
     /**
-     * Remove "empty" VXML files
+     * Remove "empty" VXML files in a set of directories
      *
      * @param out the Writer, to receive HTML output
      *
@@ -406,44 +409,54 @@ public class OutputFileManager {
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-12016
      */
     private void removeEmptyFiles(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations) throws IOException {
+        for (String c: commonAndSeed) {
+            for (String m: mainAndAnnotations) {
+                File dirFile = new File(vxmlDir + "/" + c + "/" + m);
+                if (dirFile.exists()) {
+                    removeEmptyFilesOneDir(out, dirFile);
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove "empty" VXML files in the given directory
+     *
+     * @param out the Writer, to receive HTML output
+     * @param dirFile the given directory
+     * @throws IOException
+     */
+    private void removeEmptyFilesOneDir(Writer out, File dirFile) throws IOException {
         Set<String> treatAsNonEmpty = new HashSet<>();
         BiMap<String, File> onlyHasIdentity = HashBiMap.create();
         int counter = 0;
-        for (String c: commonAndSeed) {
-            for (String m: mainAndAnnotations) {
-                String dirName = vxmlDir + "/" + c + "/" + m;
-                File dirFile = new File(dirName);
-                if (dirFile.exists()) {
-                    for (File f : dirFile.listFiles()) {
-                        List<Pair<String, String>> data = new ArrayList<>();
-                        String canonicalPath = f.getCanonicalPath();
-                        if (canonicalPath.endsWith("root.xml") || !canonicalPath.endsWith(".xml")) {
-                            continue;
-                        }
-                        String name = f.getName();
-                        name = name.substring(0, name.length() - 4); // remove .xml
-                        XMLFileReader.loadPathValues(canonicalPath, data, false);
-                        /*
-                         * Treat a file as "non-empty" if it, or any of its descendants,
-                         * contains items other than "identity"
-                         */
-                        boolean itemHasMoreThanIdentity = false;
-                        for (Pair<String, String> item : data) {
-                            if (!item.getFirst().contains("/identity")) {
-                                System.out.println(++counter + ") NOT-EMPTY: " + canonicalPath);
-                                /*
-                                 * keep this file, and its ancestors (needed for inheritance even if only identity)
-                                 */
-                                addNameAndParents(treatAsNonEmpty, name);
-                                itemHasMoreThanIdentity = true;
-                                break;
-                            }
-                        }
-                        if (!itemHasMoreThanIdentity) {
-                            onlyHasIdentity.put(name, f);
-                        }
-                    }
+        for (File f : dirFile.listFiles()) {
+            List<Pair<String, String>> data = new ArrayList<>();
+            String canonicalPath = f.getCanonicalPath();
+            if (canonicalPath.endsWith("root.xml") || !canonicalPath.endsWith(XML_SUFFIX)) {
+                continue;
+            }
+            String name = f.getName();
+            name = name.substring(0, name.length() - 4); // remove .xml
+            XMLFileReader.loadPathValues(canonicalPath, data, false);
+            /*
+             * Treat a file as "non-empty" if it, or any of its descendants,
+             * contains items other than "identity"
+             */
+            boolean itemHasMoreThanIdentity = false;
+            for (Pair<String, String> item : data) {
+                if (!item.getFirst().contains("/identity")) {
+                    System.out.println(++counter + ") NOT-EMPTY: " + canonicalPath);
+                    /*
+                     * keep this file, and its ancestors (needed for inheritance even if only identity)
+                     */
+                    addNameAndParents(treatAsNonEmpty, name);
+                    itemHasMoreThanIdentity = true;
+                    break;
                 }
+            }
+            if (!itemHasMoreThanIdentity) {
+                onlyHasIdentity.put(name, f);
             }
         }
         counter = 0;
@@ -593,7 +606,7 @@ public class OutputFileManager {
                     CLDRLocale parLoc = childLoc.getParent();
                     if (parLoc != null) {
                         // String parentName = fileName.replaceFirst("_[a-zA-Z]+\\.xml$", "\\.xml");
-                        String parentName = parLoc.toString() + ".xml";
+                        String parentName = parLoc.toString() + XML_SUFFIX;
                         if (!childName.equals(parentName) && !"root.xml".equals(parentName)) {
                             String parentPathName = dirName + "/" + parentName;
                             File fParent = new File(parentPathName);
@@ -842,18 +855,22 @@ public class OutputFileManager {
     }
 
     /**
+     * For a request like ".../cldr-apps/survey/vxml/main/aa.xml", respond with the xml
      *
      * @param request
      * @param response
-     * @return
+     * @return true if request is for a kind of xml we can provide, else false.
      * @throws IOException
      * @throws ServletException
      *
-     * Called by SurveyMain.doGet when?
+     * Called by SurveyMain.doGet when get a request.
      */
     public boolean doRawXml(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        /*
+         * request.getPathInfo returns what follows "survey" in the url.
+         * If the url is ".../cldr-apps/survey/vxml/main/aa.xml", it returns "vxml/main/aa.xml".
+         */
         String s = request.getPathInfo();
-
         if ((s == null)
             || !(s.startsWith(XML_PREFIX) || s.startsWith(ZXML_PREFIX) || s.startsWith(ZVXML_PREFIX)
                 || s.startsWith(VXML_PREFIX) || s.startsWith(PXML_PREFIX)
@@ -864,12 +881,7 @@ public class OutputFileManager {
         if (s.startsWith(FEED_PREFIX)) {
             return sm.fora.doFeed(request, response);
         }
-        return _doRawXml(request, response);
-    }
 
-    private synchronized boolean _doRawXml(HttpServletRequest request, HttpServletResponse response) throws IOException,
-        ServletException {
-        String s = request.getPathInfo();
         CLDRProgressTask p = sm.openProgress("Raw XML");
         try {
 
