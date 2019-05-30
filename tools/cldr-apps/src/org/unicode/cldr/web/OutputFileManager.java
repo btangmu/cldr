@@ -15,6 +15,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -188,7 +189,10 @@ public class OutputFileManager {
                     out.write("File output failed.");
                     return;
                 }
-
+                if (!ofm.copyDtd(manualVetdataDir, commonAndSeed[0])) {
+                    out.write("Copying DTD failed.");
+                    return;
+                }
                 File manualVxmlDir = new File(manualVetdataDir.toString() + "/" + Kind.vxml.name());
                 ofm.removeEmptyFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
                 ofm.verifyAllFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
@@ -221,6 +225,47 @@ public class OutputFileManager {
             return null;
         }
         return manualVetdataDir;
+    }
+
+    /**
+     * Copy the DTD file from trunk into the newly-created manualVetdataDir.
+     *
+     * @param manualVetdataDir the File for the "automatic vetdata" directory,
+     *                         like /.../vetdata-2019-05-29T02-08-33-389Z
+     * @param common the name of the "common" folder
+     * @return true for success, or false for failure
+     *
+     * The dtd is required for removeEmptyFiles when it calls XMLFileReader.loadPathValues.
+     * The xml files all have something like: <!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">,
+     * which for manually-generated vxml and pxml means we need ldml.dtd in locations like:
+     *     vetdata-2019-05-29T02-08-33-389Z/vxml/common/dtd/ldml.dtd
+     *     vetdata-2019-05-29T02-08-33-389Z/pxml/common/dtd/ldml.dtd
+     * They should be copies of "trunk" like cldr/common/dtd/ldml.dtd
+     */
+    private boolean copyDtd(File manualVetdataDir, String common) {
+        /*
+         * getFileBase = .../cldr/common/main
+         */
+        String dtdDirName = "dtd";
+        String dtdFileName = "ldml.dtd";
+        String dtdSourceName = new File(SurveyMain.getFileBase()).getParent().toString() + "/" + dtdDirName + "/" + dtdFileName;
+        File dtdSource = new File(dtdSourceName);
+        if (!dtdSource.exists()) {
+            return false;
+        }
+        String vp[] = { Kind.vxml.toString(), Kind.pxml.toString() };
+        for (String s: vp) {
+            File destDir = new File(manualVetdataDir + "/" + s + "/" + common + "/" + dtdDirName);
+            if (!destDir.exists() && !destDir.mkdirs()) {
+                return false;
+            }
+            try {
+                Files.copy(dtdSource.toPath(), new File(destDir + "/" + dtdFileName).toPath());
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -602,7 +647,8 @@ public class OutputFileManager {
             out.write("<h2>Verification failure, vxml and trunk do not correspond</h2>\n");
             out.write("File(s) present in vxml but not in trunk, or vice-versa:<br>\n");
             for (String name: diff) {
-                out.write(name + "<br>\n");
+                String where = vxmlFiles.contains(name) ? "vxml" : "trunk";
+                out.write(name + " [only in " + where + "]<br>\n");
             }
             return false;
         }
