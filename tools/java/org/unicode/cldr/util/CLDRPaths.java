@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableList;
  * These must not be used by any code destined for the SurveyTool, as this class will not be included.
  * @author srl
  *
+ * TODO: clarify "this class will not be included" comment above -- no longer true?
  */
 
 public class CLDRPaths {
@@ -129,16 +130,5 @@ public class CLDRPaths {
         }
     }
 
-    @Deprecated //use DtdType.ldml.directories
-//    public static final Set<String> LDML_DIRECTORIES = ImmutableSet.of(
-//        "main",
-//        "annotations",
-//        "casing",
-//        "collation",
-//        "rbnf",
-//        "segments",
-//        "subdivisions"
-//        );
-    public static final String UNICODE_VERSION = "10.0.0";
     public static final String TEST_DATA = COMMON_DIRECTORY + "testData/";
 }

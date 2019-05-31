@@ -141,6 +141,26 @@ public class OutputFileManager {
     public String tryCommitWhyNot = null;
 
     /**
+     * Names of directories
+     *
+     * CLDRConfig.COMMON_DIR, etc., are private; TODO what's a better way to
+     * get them here without hard-coding strings? Make this class public and
+     * move it elsewhere?
+     */
+    private static class DirNames {
+        /*
+         * "just" in these names means, for example, that justMain is really just
+         * the string "main", not some path that ends in ".../main".
+         */
+        static final String justCommon = "common"; /* CLDRConfig.COMMON_DIR */
+        static final String justSeed = "seed"; /* CLDRConfig.SEED_DIR */
+        static final String justMain = "main"; /* CLDRConfig.MAIN_DIR */
+        static final String justAnnotations = "annotations"; /* CLDRConfig.ANNOTATIONS_DIR */
+        static final String[] commonAndSeed = { justCommon, justSeed };
+        static final String[] mainAndAnnotations = { justMain, justAnnotations };
+    }
+
+    /**
      * Output all files (VXML, etc.) and verify their consistency
      *
      * @param request the HttpServletRequest, used for "vap"
@@ -163,6 +183,18 @@ public class OutputFileManager {
                 out.write("Not authorized.");
                 return;
             }
+            boolean outputFiles = "true".equals(request.getParameter("output"));
+            boolean makeSeparateDir = "true".equals(request.getParameter("separate"));
+            boolean removeEmpty = "true".equals(request.getParameter("remove"));
+            boolean verifyConsistent = "true".equals(request.getParameter("verify"));
+            if (!(outputFiles || makeSeparateDir || removeEmpty || verifyConsistent)) {
+                out.write("<p>Please specify at least one of the parameters (all false by default):</p>\n");
+                out.write("output=true/false<br>\n");
+                out.write("separate=true/false<br>\n");
+                out.write("remove=true/false<br>\n");
+                out.write("verify=true/false<br>\n");
+                return;
+            }
             synchronized (OutputFileManager.class) {
                 SurveyMain sm = CookieSession.sm;
 
@@ -170,30 +202,36 @@ public class OutputFileManager {
                 // top line is like "Have OFM=org.unicode.cldr.web.OutputFileManager@4d150a19" -- is this still needed?
                 out.write("Have OFM=" + ofm.toString() + "\n");
 
-                File manualVetdataDir = createNewManualVetdataDir(sm.getVetdir());
-                if (manualVetdataDir == null) {
-                    out.write("Directory creation failed.");
-                    return;
+                File vetdataDir = sm.getVetdir();
+                if (makeSeparateDir) {
+                    vetdataDir = createNewManualVetdataDir(vetdataDir);
+                    if (vetdataDir == null) {
+                        out.write("Directory creation for vetting data failed.");
+                        return;
+                    }
+                    out.write("<p>Created new directory: " + vetdataDir.toString() + "</p>");
+                } else {
+                    out.write("<p>Using auto directory: " + vetdataDir.toString() + "</p>");
                 }
-                out.write("<p>Created new directory: " + manualVetdataDir.toString() + "</p>");
 
-                /*
-                 * CLDRConfig.COMMON_DIR, etc., are private; TODO what's a better way to get them here without hard-coding strings?
-                 */
-                String[] commonAndSeed = {"common" /* CLDRConfig.COMMON_DIR */, "seed" /* CLDRConfig.SEED_DIR */};
-                String[] mainAndAnnotations = {"main" /* CLDRConfig.MAIN_DIR */, "annotations" /* CLDRConfig.ANNOTATIONS_DIR */};
-
-                if (!ofm.outputAllFiles(out, manualVetdataDir, commonAndSeed, mainAndAnnotations)) {
+                if (outputFiles && !ofm.outputAllFiles(out, vetdataDir, makeSeparateDir)) {
                     out.write("File output failed.");
                     return;
                 }
-                if (!ofm.copyDtd(manualVetdataDir, commonAndSeed[0])) {
+                if (makeSeparateDir && !ofm.copyDtd(vetdataDir)) {
                     out.write("Copying DTD failed.");
                     return;
                 }
-                File manualVxmlDir = new File(manualVetdataDir.toString() + "/" + Kind.vxml.name());
-                ofm.removeEmptyFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
-                ofm.verifyAllFiles(out, manualVxmlDir, commonAndSeed, mainAndAnnotations);
+                File vxmlDir = null;
+                if (removeEmpty || verifyConsistent) {
+                    vxmlDir = new File(vetdataDir.toString() + "/" + Kind.vxml.name());
+                }
+                if (removeEmpty) {
+                    ofm.removeEmptyFiles(out, vxmlDir);
+                }
+                if (verifyConsistent) {
+                    ofm.verifyAllFiles(out, vxmlDir);
+                }
             }
         } catch (Exception e) {
             System.err.println("Exception in outputAndVerifyAllFiles: " + e);
@@ -240,17 +278,17 @@ public class OutputFileManager {
      *     vetdata-2019-05-29T02-08-33-389Z/pxml/common/dtd/ldml.dtd
      * They should be copies of "trunk" like cldr/common/dtd/ldml.dtd
      */
-    private boolean copyDtd(File manualVetdataDir, String common) {
+    private boolean copyDtd(File manualVetdataDir) {
         String dtdDirName = "dtd";
         String dtdFileName = "ldml.dtd";
-        String dtdSourceName = CLDRPaths.BASE_DIRECTORY + "/" + common + "/" + dtdDirName + "/" + dtdFileName;
+        String dtdSourceName = CLDRPaths.BASE_DIRECTORY + "/" + DirNames.justCommon + "/" + dtdDirName + "/" + dtdFileName;
         File dtdSource = new File(dtdSourceName);
         if (!dtdSource.exists()) {
             return false;
         }
         String vp[] = { Kind.vxml.toString(), Kind.pxml.toString() };
         for (String s: vp) {
-            File destDir = new File(manualVetdataDir + "/" + s + "/" + common + "/" + dtdDirName);
+            File destDir = new File(manualVetdataDir + "/" + s + "/" + DirNames.justCommon + "/" + dtdDirName);
             if (!destDir.exists() && !destDir.mkdirs()) {
                 return false;
             }
@@ -268,12 +306,14 @@ public class OutputFileManager {
      *
      * @param out the Writer, to receive HTML output
      * @param vetDataDir the folder in which to write
+     * @param makeSeparateDir true if vetDataDir is a newly created "manual" folder,
+     *                        false if it's the regular auto folder
      * @return true for success, false for failure
      *
      * This function was first created using code moved here from admin-OutputAllFiles.jsp.
      * Reference: CLDR-12016 and CLDR-11877 and CLDR-11850
      */
-    private boolean outputAllFiles(Writer out, File vetDataDir, String[] commonAndSeed, String[] mainAndAnnotations) {
+    private boolean outputAllFiles(Writer out, File vetDataDir, boolean makeSeparateDir) {
         try {
             long start = System.currentTimeMillis();
             ElapsedTimer overallTimer = new ElapsedTimer("overall update started " + new java.util.Date());
@@ -284,25 +324,28 @@ public class OutputFileManager {
             Set<CLDRLocale> sortSet = new TreeSet<CLDRLocale>();
             sortSet.addAll(SurveyMain.getLocalesSet());
             /*
-             * TODO: we're always creating a new folder for *manual* generation, so we don't need a Connection to
-             * determine whether files need updating; correct? If so, simplify; no try/finally.
+             * If makeSeparateDir is false, only replace files if they need to be updated; use
+             * a database Connection to help determine whether files need to be updated.
+             * If makeSeparateDir is true, all files are new so there's no need for Connection.
              */
-            // Connection conn = null;
+            Connection conn = null;
             try {
-                // conn = sm.dbUtils.getDBConnection();
+                if (!makeSeparateDir) {
+                    conn = sm.dbUtils.getDBConnection();
+                }
                 for (CLDRLocale loc : sortSet) {
-                    // Timestamp locTime = this.getLocaleTime(conn, loc);
-                    // out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
-                    out.write("<li>" + loc.getDisplayName() + "<br/>\n");
+                    Timestamp locTime = null;
+                    if (conn != null) {
+                        locTime = this.getLocaleTime(conn, loc);
+                        out.write("<li>" + loc.getDisplayName() + " - " + locTime.toLocaleString() + "<br/>\n");
+                    } else {
+                        out.write("<li>" + loc.getDisplayName() + "<br/>\n");
+                    }
                     for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
                         /*
-                         * TODO: we're always creating a new folder for *manual* generation, so
-                         * "nu" will always be true; correct? If so, simplify.
-                         *
                          * TODO: is there any point in outputting anything here for kind other than vxml and pxml?
                          */
-                        boolean nu = true;
-                        // boolean nu = this.fileNeedsUpdate(locTime, loc, kind.name());
+                        boolean nu = makeSeparateDir || this.fileNeedsUpdate(locTime, loc, kind.name());
                         String background = nu ? "#ff9999" : "green";
                         String weight = nu ? "regular" : "bold";
                         String color = nu ? "silver" : "black";
@@ -311,13 +354,16 @@ public class OutputFileManager {
                         if (nu && (kind == OutputFileManager.Kind.vxml || kind == OutputFileManager.Kind.pxml)) {
                             System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
                             ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
-                            File f = writeManualOutputFile(vetDataDir, loc, kind, commonAndSeed, mainAndAnnotations);
-                            if (f == null) {
-                                out.write("FILE CREATION FAILED: " + loc.toString() + kind.name());
-                                return false;
+                            if (makeSeparateDir) {
+                                File f = writeManualOutputFile(vetDataDir, loc, kind);
+                                if (f == null) {
+                                    out.write("FILE CREATION FAILED: " + loc.toString() + kind.name());
+                                    return false;
+                                }
+                            } else {
+                                File f = this.getOutputFile(conn, loc, kind.name());
+                                out.write(" x=" + (f != null && f.exists()));
                             }
-                            // File f = this.getOutputFile(conn, loc, kind);
-                            // out.write(" x=" + (f != null && f.exists()));
                             numupd++;
                             System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
                         }
@@ -326,7 +372,9 @@ public class OutputFileManager {
                     out.write("</li>\n");
                 }
             } finally {
-                // DBUtils.close(conn);
+                if (conn != null) {
+                    DBUtils.close(conn);
+                }
             }
             out.write("</ol>\n");
             out.write("<hr>\n");
@@ -355,7 +403,7 @@ public class OutputFileManager {
      * @param kind the Kind, currently Kind.vxml and Kind.pxml are supported
      * @return the File, or null for failure
      */
-    private File writeManualOutputFile(File vetDataDir, CLDRLocale loc, Kind kind, String[] commonAndSeed, String[] mainAndAnnotations) {
+    private File writeManualOutputFile(File vetDataDir, CLDRLocale loc, Kind kind) {
         long st = System.currentTimeMillis();
         CLDRFile cldrFile;
         if (kind == Kind.vxml) {
@@ -372,18 +420,18 @@ public class OutputFileManager {
              * in both common and seed, and follow that example. (This is somewhat circular.)
              * If a baseline file doesn't exist in common or seed, go with common.
              */
-            String commonOrSeed = commonAndSeed[0]; // "common"
-            for (String c: commonAndSeed) {
-                String path = CLDRPaths.BASE_DIRECTORY + "/" + c + "/" + mainAndAnnotations[0] /* "main" */ + "/" + loc.toString() + XML_SUFFIX;
+            String commonOrSeed = DirNames.justCommon;
+            for (String c: DirNames.commonAndSeed) {
+                String path = CLDRPaths.BASE_DIRECTORY + "/" + c + "/" + DirNames.justMain + "/" + loc.toString() + XML_SUFFIX;
                 if (new File(path).exists()) {
                     commonOrSeed = c;
                     break;
                 }
             }
             /*
-             * Only create the file in "main" (mainAndAnnotations[0]) here; doWriteFile will then create the file in "annotations"
+             * Only create the file in "main" here; doWriteFile will then create the file in "annotations"
              */
-            String outDirName = vetDataDir + "/" + kind.toString() +  "/" + commonOrSeed + "/" + mainAndAnnotations[0];
+            String outDirName = vetDataDir + "/" + kind.toString() +  "/" + commonOrSeed + "/" + DirNames.justMain;
             File outDir = new File(outDirName);
             if (!outDir.exists() && !outDir.mkdirs()) {
                 throw new InternalError("Unable to create directory: " + outDirName);
@@ -408,9 +456,12 @@ public class OutputFileManager {
      *
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-12016
      */
-    private void removeEmptyFiles(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations) throws IOException {
-        for (String c: commonAndSeed) {
-            for (String m: mainAndAnnotations) {
+    private void removeEmptyFiles(Writer out, File vxmlDir) throws IOException {
+        for (String c: DirNames.commonAndSeed) {
+            for (String m: DirNames.mainAndAnnotations) {
+                if (c.equals(DirNames.justCommon) && m.equals(DirNames.justMain)) {
+                    continue; // skip common/main since even "empty" files are required in that location
+                }
                 File dirFile = new File(vxmlDir + "/" + c + "/" + m);
                 if (dirFile.exists()) {
                     removeEmptyFilesOneDir(out, dirFile);
@@ -507,26 +558,26 @@ public class OutputFileManager {
      *         ├── annotations
      *         └── main
      */
-    private void verifyAllFiles(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations) throws IOException {
+    private void verifyAllFiles(Writer out, File vxmlDir) throws IOException {
         int failureCount = 0;
 
         /*
          * The same file must not occur in both the common/X and seed/X directories, for any X=main|annotations
          */
-        if (!verifyNoDuplicatesInCommonAndSeed(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+        if (!verifyNoDuplicatesInCommonAndSeed(out, vxmlDir)) {
             ++failureCount;
         }
         /*
          * A parent locale (except for root) must occur in the same directory as the child locale
          */
-        if (!verifyParentChildSameDirectory(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+        if (!verifyParentChildSameDirectory(out, vxmlDir)) {
             ++failureCount;
         }
         /*
          * Every file in trunk (common|seed/X) must have a corresponding vxml file
          * Every file in vxml (common|seed/X) must have a corresponding trunk file
          */
-        if (!verifyVxmlAndBaselineFilesCorrespond(out, vxmlDir, commonAndSeed, mainAndAnnotations)) {
+        if (!verifyVxmlAndBaselineFilesCorrespond(out, vxmlDir)) {
             ++failureCount;
         }
 
@@ -544,12 +595,12 @@ public class OutputFileManager {
      * @return true if verification succeeded, false for failure
      * @throws IOException
      */
-    private boolean verifyNoDuplicatesInCommonAndSeed(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+    private boolean verifyNoDuplicatesInCommonAndSeed(Writer out, File vxmlDir)
             throws IOException {
 
-        for (String m: mainAndAnnotations) {
-            String commonDirName = vxmlDir + "/" + commonAndSeed[0] + "/" + m;
-            String seedDirName = vxmlDir + "/" + commonAndSeed[1] + "/" + m;
+        for (String m: DirNames.mainAndAnnotations) {
+            String commonDirName = vxmlDir + "/" + DirNames.justCommon + "/" + m;
+            String seedDirName = vxmlDir + "/" + DirNames.justSeed + "/" + m;
             File dirFile = new File(commonDirName);
             if (dirFile.exists()) {
                 for (String commonName : dirFile.list()) {
@@ -580,11 +631,11 @@ public class OutputFileManager {
      * @return true if verification succeeded, false for failure
      * @throws IOException
      */
-    private boolean verifyParentChildSameDirectory(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+    private boolean verifyParentChildSameDirectory(Writer out, File vxmlDir)
             throws IOException {
 
-        for (String c: commonAndSeed) {
-            for (String m: mainAndAnnotations) {
+        for (String c: DirNames.commonAndSeed) {
+            for (String m: DirNames.mainAndAnnotations) {
                 String dirName = vxmlDir + "/" + c + "/" + m;
                 File dirFile = new File(dirName);
                 if (!dirFile.exists()) {
@@ -610,7 +661,7 @@ public class OutputFileManager {
                         if (!childName.equals(parentName) && !"root.xml".equals(parentName)) {
                             String parentPathName = dirName + "/" + parentName;
                             File fParent = new File(parentPathName);
-                            if (!fParent.exists() && !otherParentExists(parentPathName, parentName, c, commonAndSeed)) {
+                            if (!fParent.exists() && !otherParentExists(parentPathName, parentName, c)) {
                                 out.write("<h2>Verification failure, child without parent</h2>\n"
                                     + "Child, present: " + childPathName + "<br>\n"
                                     + "Parent, absent: " + parentPathName + "<br>\n");
@@ -637,22 +688,21 @@ public class OutputFileManager {
      * @param parentPathName like ".../seed/main"
      * @param parentName like "el_POLYTON.xml"
      * @param commonOrSeed where we already looked: "common" (give up) or "seed" (try "common")
-     * @param commonAndSeed an array of two strings, "common" and "seed"
      * @return true if the other parent exists
      */
-    private boolean otherParentExists(String parentPathName, String parentName, String commonOrSeed, String[] commonAndSeed) {
+    private boolean otherParentExists(String parentPathName, String parentName, String commonOrSeed) {
         /*
          * Allow "parent in common and child in seed" but not vice-versa
          */
-        if (commonOrSeed.equals(commonAndSeed[0] /* "common" */)) {
+        if (commonOrSeed.equals(DirNames.justCommon)) {
             return false; // give up
         }
         /*
          * Replace "/seed/" with "/common/" in the parent path
          */
         parentPathName = parentPathName.replace(
-                "/" + commonAndSeed[1] + "/" /* "/seed/" */,
-                "/" + commonAndSeed[0] + "/" /* "/common/" */);
+                "/" + DirNames.justSeed + "/",
+                "/" + DirNames.justCommon + "/");
         return new File(parentPathName).exists();
     }
 
@@ -666,14 +716,14 @@ public class OutputFileManager {
      * @return true if verification succeeded, false for failure
      * @throws IOException
      */
-    private boolean verifyVxmlAndBaselineFilesCorrespond(Writer out, File vxmlDir, String[] commonAndSeed, String[] mainAndAnnotations)
+    private boolean verifyVxmlAndBaselineFilesCorrespond(Writer out, File vxmlDir)
             throws IOException {
 
         String bxmlDir = CLDRPaths.BASE_DIRECTORY;
         ArrayList<String> vxmlFiles = new ArrayList<String>();
         ArrayList<String> bxmlFiles = new ArrayList<String>(); /* bxml = baseline cldr xml */
-        for (String c: commonAndSeed) {
-            for (String m: mainAndAnnotations) {
+        for (String c: DirNames.commonAndSeed) {
+            for (String m: DirNames.mainAndAnnotations) {
                 File vxmlDirFile = new File(vxmlDir + "/" + c + "/" + m);
                 File bxmlDirFile = new File(bxmlDir + "/" + c + "/" + m);
                 if (vxmlDirFile.exists()) {
@@ -1001,8 +1051,9 @@ public class OutputFileManager {
             }
             return true;
         } finally {
-            if (p != null)
+            if (p != null) {
                 p.close();
+            }
         }
     }
 
