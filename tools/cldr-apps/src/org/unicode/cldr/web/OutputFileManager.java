@@ -175,6 +175,8 @@ public class OutputFileManager {
      * Compare output-status.jsp which maybe should be linked from here -- user may want to
      * view it at the same time as this. However, that gets complicated if we create a new
      * vetdata folder.
+     *
+     * TODO: link to gear menu and use JavaScript for a front-end.
      */
     public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
         String vap = request.getParameter("vap");
@@ -188,13 +190,18 @@ public class OutputFileManager {
             boolean removeEmpty = "true".equals(request.getParameter("remove"));
             boolean verifyConsistent = "true".equals(request.getParameter("verify"));
             if (!(outputFiles || makeSeparateDir || removeEmpty || verifyConsistent)) {
-                out.write("<p>Please specify at least one of the parameters (all false by default):</p>\n");
+                out.write("<p>Usage: specify at least one of these parameters (all false by default):</p>\n");
                 out.write("output=true/false<br>\n");
                 out.write("separate=true/false<br>\n");
                 out.write("remove=true/false<br>\n");
                 out.write("verify=true/false<br>\n");
                 return;
             }
+            /*
+             * Sync on OutputFileManager.class here prevents re-entrance if invoked repeatedly before completion.
+             * Performance problem if run while Survey Tool has multiple users/requests?
+             * Completion of http request/response may take over ten minutes! TODO: use ajax.
+             */
             synchronized (OutputFileManager.class) {
                 SurveyMain sm = CookieSession.sm;
 
@@ -218,7 +225,7 @@ public class OutputFileManager {
                     out.write("File output failed.");
                     return;
                 }
-                if (makeSeparateDir && !ofm.copyDtd(vetdataDir)) {
+                if ((makeSeparateDir || removeEmpty) && !ofm.copyDtd(vetdataDir)) {
                     out.write("Copying DTD failed.");
                     return;
                 }
@@ -264,21 +271,24 @@ public class OutputFileManager {
     }
 
     /**
-     * Copy the DTD file from trunk into the newly-created manualVetdataDir.
+     * Copy the DTD file from trunk into subfolders of the given vetdata folder ("auto" or "manual")
      *
-     * @param manualVetdataDir the File for the "automatic vetdata" directory,
-     *                         like /.../vetdata-2019-05-29T02-08-33-389Z
+     * @param vetdataDir the File for the vetdata directory
      * @param common the name of the "common" folder
      * @return true for success, or false for failure
      *
      * The dtd is required for removeEmptyFiles when it calls XMLFileReader.loadPathValues.
      * The xml files all have something like: <!DOCTYPE ldml SYSTEM "../../common/dtd/ldml.dtd">,
-     * which for manually-generated vxml and pxml means we need ldml.dtd in locations like:
+     * which for generated vxml and pxml means we need ldml.dtd in locations like:
+     *
+     *     vetdata/vxml/common/dtd/ldml.dtd
+     *     vetdata/pxml/common/dtd/ldml.dtd
      *     vetdata-2019-05-29T02-08-33-389Z/vxml/common/dtd/ldml.dtd
      *     vetdata-2019-05-29T02-08-33-389Z/pxml/common/dtd/ldml.dtd
+     *
      * They should be copies of "trunk" like cldr/common/dtd/ldml.dtd
      */
-    private boolean copyDtd(File manualVetdataDir) {
+    private boolean copyDtd(File vetdataDir) {
         String dtdDirName = "dtd";
         String dtdFileName = "ldml.dtd";
         String dtdSourceName = CLDRPaths.BASE_DIRECTORY + "/" + DirNames.justCommon + "/" + dtdDirName + "/" + dtdFileName;
@@ -288,12 +298,15 @@ public class OutputFileManager {
         }
         String vp[] = { Kind.vxml.toString(), Kind.pxml.toString() };
         for (String s: vp) {
-            File destDir = new File(manualVetdataDir + "/" + s + "/" + DirNames.justCommon + "/" + dtdDirName);
+            File destDir = new File(vetdataDir + "/" + s + "/" + DirNames.justCommon + "/" + dtdDirName);
             if (!destDir.exists() && !destDir.mkdirs()) {
                 return false;
             }
             try {
-                Files.copy(dtdSource.toPath(), new File(destDir + "/" + dtdFileName).toPath());
+                File dtdFile = new File(destDir + "/" + dtdFileName);
+                if (!dtdFile.exists()) {
+                    Files.copy(dtdSource.toPath(), dtdFile.toPath());
+                }
             } catch (Exception e) {
                 return false;
             }
@@ -386,6 +399,7 @@ public class OutputFileManager {
             return true;
         } catch (Exception e) {
             System.err.println("Exception in outputAllFiles: " + e);
+            e.printStackTrace();
             return false;
         }
     }
