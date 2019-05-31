@@ -458,14 +458,12 @@ public class OutputFileManager {
      */
     private void removeEmptyFiles(Writer out, File vxmlDir) throws IOException {
         for (String c: DirNames.commonAndSeed) {
-            for (String m: DirNames.mainAndAnnotations) {
-                if (c.equals(DirNames.justCommon) && m.equals(DirNames.justMain)) {
-                    continue; // skip common/main since even "empty" files are required in that location
-                }
-                File dirFile = new File(vxmlDir + "/" + c + "/" + m);
-                if (dirFile.exists()) {
-                    removeEmptyFilesOneDir(out, dirFile);
-                }
+            /*
+             * Skip main. Only do common/annotations and seed/annotations.
+             */
+            File dirFile = new File(vxmlDir + "/" + c + "/" + DirNames.justAnnotations);
+            if (dirFile.exists()) {
+                removeEmptyFilesOneDir(out, dirFile);
             }
         }
     }
