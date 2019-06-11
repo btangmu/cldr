@@ -3714,8 +3714,17 @@ function loadAdminPanel() {
 					} else {
 						user.appendChild(createChunk("(anonymous)","div","adminUserUser"));
 					}
-					user.appendChild(createChunk("Last: " + cs.last  + "LastAction: " + cs.lastAction + ", IP: " + cs.ip + ", ttk:"
-								+ (parseInt(cs.timeTillKick)/1000).toFixed(1)+"s", "span","adminUserInfo"));
+					/*
+					 * cs.lastCall = time elapsed in millis since server heard from client
+					 * cs.lastAction = time elapsed in millis since user did active action
+					 * cs.timeTillKick = how many millis before user will be kicked if inactive
+					 */
+					user.appendChild(createChunk(
+							"LastCall: " + cs.lastCall
+							+ ", LastAction: " + cs.lastAction
+							+ ", IP: " + cs.ip
+							+ ", ttk:" + (parseInt(cs.timeTillKick)/1000).toFixed(1) + "s",
+						"span","adminUserInfo"));
 
 					var unlinkButton = createChunk(stui.str("admin_users_action_kick"), "button", "admin_users_action_kick");
 					user.appendChild(unlinkButton);

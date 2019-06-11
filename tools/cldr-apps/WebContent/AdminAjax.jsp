@@ -24,7 +24,7 @@
 			}
 			sess.put("id", cs.id);
 			sess.put("ip", cs.ip);
-            sess.put("last", SurveyMain.timeDiff(cs.last));
+            sess.put("lastCall", SurveyMain.timeDiff(cs.getLastBrowserCallTime()));
             sess.put("lastAction", SurveyMain.timeDiff(cs.getLastAction()));
             sess.put("timeTillKick", cs.timeTillKick());
 			//			sess.put("locales",new JSONArray().put(cs.getLocales().keys()));
@@ -46,7 +46,7 @@
 			}
 			sess.put("id", cs.id);
 			sess.put("ip", cs.ip);
-            sess.put("last", SurveyMain.timeDiff(cs.last));
+            sess.put("last", SurveyMain.timeDiff(cs.getLastBrowserCallTime()));
             sess.put("lastAction", SurveyMain.timeDiff(cs.getLastAction()));
             sess.put("timeTillKick", cs.timeTillKick());
 

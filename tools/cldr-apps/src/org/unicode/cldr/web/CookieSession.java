@@ -35,11 +35,28 @@ import org.unicode.cldr.util.StandardCodes;
 public class CookieSession {
     /*
      * If KICK_IF_INACTIVE is true, then we may disconnect a user if they don't perform
-     * an "active" action, triggering userDidAction(), within some length of time. If it
-     * is false, then we try to stay connected as long as there is at least some automatic
-     * client-server communication (such as "SurveyAjax?what=status"). 
+     * an "active" action, triggering userDidAction(), within some length of time.
+     *
+     * If KICK_IF_ABSENT is true, then we may disconnect a user if there is no
+     * client-server communication (such as "SurveyAjax?what=status", which happens
+     * automatically) within some length of time.
+     *
+     * At least one of KICK_IF_INACTIVE and KICK_IF_ABSENT should be true.
+     * Currently we want KICK_IF_INACTIVE true and KICK_IF_ABSENT false. Actually when
+     * KICK_IF_INACTIVE is true, KICK_IF_ABSENT would make no difference unless there
+     * were a shorter time-out for absence than for inactivity.
+     *
+     * Details: There are two ways to time-out: cs.ageSinceLastBrowserCall() and cs.timeTillKick().
+     *  ageSinceLastBrowserCall is based on lastBrowerCall, which is "last time we heard from their browser, at all"
+     *     -- depends on KICK_IF_ABSENT
+     *  timeTillKick is based on lastAction, which is "last active action (last voted, viewed a page, etc)"
+     *     -- depends on KICK_IF_INACTIVE
+     *
+     * Renamed old "age" to "ageSinceLastBrowserCall"
      */
-    private static final boolean KICK_IF_INACTIVE = false;
+    private static final boolean KICK_IF_INACTIVE = true;
+    private static final boolean KICK_IF_ABSENT = false;
+
     static final boolean DEBUG_INOUT = false;
     public String id;
     public String ip;
@@ -55,17 +72,30 @@ public class CookieSession {
     public static SurveyMain sm = null;
 
     private Connection conn = null;
+
     /**
-     * When did the user last take an explicit action?
+     * The time (in millis since 1970) when the user last took an explicit action.
+     *
+     * Compare lastBrowserCall.
      */
     private long lastAction = System.currentTimeMillis();
 
+    /**
+     * Get the time (in millis since 1970) when the user last took an explicit action.
+     *
+     * @return the time
+     *
+     * Called only by AdminAjax.jsp.
+     *
+     * Compare getLastBrowserCall.
+     */
     public long getLastAction() {
         return lastAction;
     }
 
     /**
      * How long, in ms, before we kick?
+     *
      * @return the number of milliseconds remaining before the user will be disconnected
      *         unless the user does something "active" before then.
      * 
@@ -105,13 +135,32 @@ public class CookieSession {
     }
 
     /**
-     * When did the user last touch this session?
+     * The time (in millis since 1970) when the user last touched this session.
+     *
+     * Set only by touch(); returned by getLastBrowserCallTime().
+     *
+     * Compare lastAction.
      */
-    public long last;
+    private long lastBrowserCall;
+
+    /**
+     * Get the time (in millis since 1970) when the user last touched this session.
+     *
+     * Compare getLastAction.
+     *
+     * Called by SurveyMain and AdminAjax.jsp.
+     */
+    public long getLastBrowserCallTime() {
+        return lastBrowserCall;
+    }
 
     public String toString() {
-        return "{CookieSession#" + id + ", user=" + user + ", timeTillKick=" + SurveyMain.durationDiff(timeTillKick()) + ", age=" + age() + ", userActionAge="
-            + userActionAge() + "}";
+        return "{CookieSession#" + id
+            + ", user=" + user
+            + ", timeTillKick=" + SurveyMain.durationDiff(timeTillKick())
+            + ", age=" + ageSinceLastBrowserCall()
+            + ", userActionAge=" + ageSinceLastUserAction()
+            + "}";
     }
 
     static Hashtable<String, CookieSession> gHash = new Hashtable<String, CookieSession>(); // hash by sess ID
@@ -125,9 +174,9 @@ public class CookieSession {
                     CookieSession bb = (CookieSession) b;
                     if (aa == bb)
                         return 0;
-                    if (aa.last > bb.last)
+                    if (aa.lastBrowserCall > bb.lastBrowserCall)
                         return -1;
-                    if (aa.last < bb.last)
+                    if (aa.lastBrowserCall < bb.lastBrowserCall)
                         return 1;
                     return 0; // same age
                 }
@@ -223,7 +272,6 @@ public class CookieSession {
      * @param isGuest
      *            True if the user is a guest.
      */
-
     private CookieSession(boolean isGuest, String ip, String fromId) {
         this.ip = ip;
         if (fromId == null) {
@@ -263,7 +311,7 @@ public class CookieSession {
      * mark this session as recently updated and shouldn't expire
      */
     protected void touch() {
-        last = System.currentTimeMillis();
+        lastBrowserCall = System.currentTimeMillis();
         if (DEBUG_INOUT) System.out.println("S: touch " + id + " - " + user);
     }
 
@@ -290,20 +338,20 @@ public class CookieSession {
     }
 
     /**
-     * How old is this session? (last time we heard from their browser, at all)
+     * How long has it been since last time we heard from the user's browser, at all
      *
-     * @return age of this session, in millis
+     * @return age since the last browser call, in millis
      */
-    protected long age() {
-        return (System.currentTimeMillis() - last);
+    private long ageSinceLastBrowserCall() {
+        return (System.currentTimeMillis() - lastBrowserCall);
     }
 
     /**
      * How old is this session's last active action? (last voted, viewed a page, etc)
      *
-     * @return age of this session, in millis
+     * @return age since the user's last active action, in millis
      */
-    protected long userActionAge() {
+    private long ageSinceLastUserAction() {
         return (System.currentTimeMillis() - lastAction);
     }
 
@@ -671,13 +719,16 @@ public class CookieSession {
             List<CookieSession> toRemove = new LinkedList<CookieSession>();
             for (CookieSession cs : gHash.values()) {
                 if (cs.user == null) { // guest
-                    if (tooManyUsers || cs.age() > (Params.CLDR_GUEST_TIMEOUT.value() * 1000) || (cs.timeTillKick() == 0)) {
+                    if (tooManyUsers
+                            || (KICK_IF_ABSENT && cs.ageSinceLastBrowserCall() > Params.CLDR_GUEST_TIMEOUT.value() * 1000)
+                            || (KICK_IF_INACTIVE && cs.timeTillKick() <= 0)) {
                         toRemove.add(cs);
                     } else {
                         guests++;
                     }
                 } else {
-                    if ((cs.age() > Params.CLDR_USER_TIMEOUT.value() * 1000) || (cs.timeTillKick() <= 0)) {
+                    if ((KICK_IF_ABSENT && cs.ageSinceLastBrowserCall() > Params.CLDR_USER_TIMEOUT.value() * 1000)
+                            || (KICK_IF_INACTIVE && cs.timeTillKick() <= 0)) {
                         toRemove.add(cs);
                     } else {
                         users++;
@@ -782,7 +833,7 @@ public class CookieSession {
                 if (cs.user != null) {
                     return null; // has a user, OK
                 }
-                if ((now - cs.last) < (5 * 60 * 1000)) {
+                if ((now - cs.lastBrowserCall) < (5 * 60 * 1000)) {
                     noSes++;
                 }
             }
