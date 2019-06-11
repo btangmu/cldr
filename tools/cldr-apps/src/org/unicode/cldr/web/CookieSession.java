@@ -51,8 +51,6 @@ public class CookieSession {
      *     -- depends on KICK_IF_ABSENT
      *  timeTillKick is based on lastAction, which is "last active action (last voted, viewed a page, etc)"
      *     -- depends on KICK_IF_INACTIVE
-     *
-     * Renamed old "age" to "ageSinceLastBrowserCall"
      */
     private static final boolean KICK_IF_INACTIVE = true;
     private static final boolean KICK_IF_ABSENT = false;
@@ -94,12 +92,14 @@ public class CookieSession {
     }
 
     /**
-     * How long, in ms, before we kick?
+     * How long, in millis, before we kick due to inactivity?
      *
      * @return the number of milliseconds remaining before the user will be disconnected
      *         unless the user does something "active" before then.
      * 
      * Here, something "active" means anything that causes userDidAction() to be called.
+     *
+     * Called locally and by SurveyAjax.processRequest
      */
     public long timeTillKick() {
         if (!KICK_IF_INACTIVE) {
@@ -109,19 +109,21 @@ public class CookieSession {
         final boolean guest = (user == null);
         long myTimeout; // timeout in seconds.
 
-        if (user != null && UserRegistry.userIsTC(user)) {
-            myTimeout = 60 * 20; // 20 minutes
-        } else if (guest) {
+        if (guest) {
+            myTimeout = Params.CLDR_GUEST_TIMEOUT.value();
+            /*
+             * Allow twice as much time, if there aren't too many guests.
+             */
             if (!tooManyGuests()) {
-                myTimeout = 60 * 10; // 10 minutes
-            } else {
-                myTimeout = Params.CLDR_GUEST_INACTIVITY.value();
+                myTimeout *= 2;
             }
         } else {
+            myTimeout = Params.CLDR_USER_TIMEOUT.value();
+            /*
+             * Allow twice as much time, if there aren't too many users.
+             */
             if (!tooManyUsers()) {
-                myTimeout = 60 * 20; // 20 min
-            } else {
-                myTimeout = Params.CLDR_USER_INACTIVITY.value();
+                myTimeout *= 2;
             }
         }
 
@@ -154,6 +156,9 @@ public class CookieSession {
         return lastBrowserCall;
     }
 
+    /**
+     * TODO: clarify who calls this and why; the usage of durationDiff with timeTillKick appears dubious
+     */
     public String toString() {
         return "{CookieSession#" + id
             + ", user=" + user
@@ -166,6 +171,11 @@ public class CookieSession {
     static Hashtable<String, CookieSession> gHash = new Hashtable<String, CookieSession>(); // hash by sess ID
     static Hashtable<String, CookieSession> uHash = new Hashtable<String, CookieSession>(); // hash by user ID
 
+    /**
+     *
+     * @return the set of CookieSession objects
+     * Called by AdminAjax.jsp
+     */
     public static Set<CookieSession> getAllSet() {
         synchronized (gHash) {
             TreeSet<CookieSession> sessSet = new TreeSet<CookieSession>(new Comparator<Object>() {
@@ -347,7 +357,7 @@ public class CookieSession {
     }
 
     /**
-     * How old is this session's last active action? (last voted, viewed a page, etc)
+     * How long has it been since the user's last active action? (last voted, viewed a page, etc)
      *
      * @return age since the user's last active action, in millis
      */
@@ -582,18 +592,36 @@ public class CookieSession {
     }
 
     /**
-     * Set these from cldr.properties.
+     * Parameters for when to disconnect users.
+     * These defaults can be changed in cldr.properties.
+     * Formerly CLDR_USER_TIMEOUT only related to what's now called KICK_IF_ABSENT,
+     * while CLDR_USER_INACTIVITY only related to what's now called KICK_IF_INACTIVE.
+     * Now "configuration values like CLDR_USER_TIMEOUT should apply to timeTillKick instead of age";
+     * no more distinction _INACTIVITY versus _TIMEOUT, use _TIMEOUT for all.
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11799
      *
      * @author srl
-     *
      */
-    public enum Params {
-        CLDR_MAX_USERS(30), // max logged in user count allowed
-        CLDR_MAX_GUESTS(0), // max guests allowed before guests start getting shut out (should be < CLDR_MAX_USERS)
-        CLDR_GUEST_TIMEOUT(1 * 60), // Guest computers must checkin every minute or they are kicked. (always)
-        CLDR_GUEST_INACTIVITY(1 * 60), // Guests must perform some activity every 5 minutes or they are kicked ( when too many guests)
-        CLDR_USER_TIMEOUT(2 * 60), // Users computer must check in every 2 minutes or kicked (always)
-        CLDR_USER_INACTIVITY(5 * 60); // Users must do something (load a page, vote, etc) or they are kicked (when too many users)
+    private enum Params {
+        /**
+         * max logged in user count allowed before stricter requirements apply to stay connected
+         */
+        CLDR_MAX_USERS(30),
+
+        /**
+         * max guests allowed before guests start getting shut out (should be < CLDR_MAX_USERS)
+         */
+        CLDR_MAX_GUESTS(0), // zero means tooManyGuests == tooManyUsers
+
+        /**
+         * how many seconds guest can be absent/inactive before getting kicked
+         */
+        CLDR_GUEST_TIMEOUT(5 * 60), // 5 minutes
+
+        /**
+         * how many seconds logged-in user can be absent/inactive before getting kicked
+         */
+        CLDR_USER_TIMEOUT(30 * 60); // 30 minutes
 
         private int defVal;
         private Integer value;
