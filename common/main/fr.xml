@@ -7125,7 +7125,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</metazone>
 			<metazone type="Qyzylorda">
 				<long>
-					<generic>foofoo</generic>
+					<generic draft="unconfirmed">heure de Kyzylorda</generic>
 					<standard draft="unconfirmed">heure normale de Kyzylorda</standard>
 					<daylight draft="unconfirmed">heure d’été de Kyzylorda</daylight>
 				</long>
