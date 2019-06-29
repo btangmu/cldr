@@ -281,14 +281,17 @@ public final class CLDRLocale implements Comparable<CLDRLocale> {
     /**
      * Initialize a CLDRLocale from a string.
      *
-     * @param str
+     * @param str the string representing a locale.
+     *
+     * If str is empty, it's equal to ULocale.ROOT.getBaseName(), and we are
+     * initializing a CLDRLocale for root.
      */
     private void init(String str) {
-        // if(str.length()==0) {
-        // str = "root";
-        // }
         str = process(str);
         // System.err.println("bn: " + str);
+        /*
+         * Note: ULocale.ROOT.getBaseName() is "", the empty string, NOT "root".
+         */
         if (str.equals(ULocale.ROOT.getBaseName()) || str.equalsIgnoreCase("root")) {
             fullname = "root";
             parent = null;
@@ -298,7 +301,7 @@ public final class CLDRLocale implements Comparable<CLDRLocale> {
             fullname = parts.toString();
             String parentId = LocaleIDParser.getParent(str);
             if (DEBUG) System.out.println(str + " par = " + parentId);
-            if (parentId != null) {
+            if (parentId != null && parentId.length() > 0) {
                 parent = CLDRLocale.getInstance(parentId);
             } else {
                 parent = null; // probably, we are root or we are supplemental
@@ -383,8 +386,8 @@ public final class CLDRLocale implements Comparable<CLDRLocale> {
      * Public factory function. Allocate a CLDRLocale (could be a singleton). If null is passed in, null will be
      * returned.
      *
-     * @param u
-     * @return
+     * @param u the ULocale
+     * @return the CLDRLocale
      */
     public static CLDRLocale getInstance(ULocale u) {
         synchronized(CLDRLocale.class) {
