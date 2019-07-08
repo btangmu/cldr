@@ -16,7 +16,7 @@ public class ExampleBuilder {
      * CACHING needs to be false until we have a way to invalidate when voting makes it necessary to
      * rebuild examples; maybe implement Listener interface like TestCache
      */
-    final private static boolean CACHING = false;
+    final private static boolean CACHING = true;
     final private static Map<String, ExampleBuilder> cache = CACHING ? new ConcurrentHashMap<String, ExampleBuilder>() : null;
 
     /**

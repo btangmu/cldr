@@ -126,7 +126,8 @@ public class TestAll extends TestGroup {
             TestSTFactory.class.getName(),
             TestUserSettingsData.class.getName(),
             TestImportOldVotes.class.getName(),
-            TestAnnotationVotes.class.getName()
+            TestAnnotationVotes.class.getName(),
+            TestExampleBuilder.class.getName(),
             },
             "All tests in CLDR Web");
     }
