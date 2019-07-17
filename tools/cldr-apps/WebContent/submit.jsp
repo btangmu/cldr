@@ -271,13 +271,11 @@
 				SurveyToolStatus phStatus = ph.getSurveyToolStatus();
 
 				DataSection section = DataSection.make(null, null, cs, loc, base, null);
-				section.setUserAndFileForVotelist(cs.user, null);
+				section.setUserForVotelist(cs.user);
 
 				DataSection.DataRow pvi = section.getDataRow(base);
 				final Level covLev = pvi.getCoverageLevel();
-				//final int coverageValue = covLev.getLevel();
-				CheckCLDR.StatusAction showRowAction = pvi
-						.getStatusAction();
+				CheckCLDR.StatusAction showRowAction = pvi.getStatusAction();
 
 				if (showRowAction.isForbidden()) {
 					result = "Item may not be modified. ("

@@ -2465,7 +2465,7 @@ public class SurveyAjax extends HttpServlet {
 
         DataSection section = DataSection.make(null /* pageId */, null /* ctx */, mySession,
             locale, xp, null /* matcher */);
-        section.setUserAndFileForVotelist(mySession.user, null);
+        section.setUserForVotelist(mySession.user);
 
         DataRow pvi = section.getDataRow(xp);
         final Level covLev = pvi.getCoverageLevel();
@@ -2662,7 +2662,7 @@ public class SurveyAjax extends HttpServlet {
                          * There is no "xpath" parameter.
                          */
                         section = ctx.getDataSection(null /* prefix */, null /* matcher */, pageId);
-                        section.setUserAndFileForVotelist(mySession.user, null); // TODO: what effect does null cldrFile here have on DataSection.getExampleBuilder??
+                        section.setUserForVotelist(mySession.user);
                     } else if (xp != null) {
                         /*
                          * We arrive here when a user votes for an item, invoked by request from survey.js
