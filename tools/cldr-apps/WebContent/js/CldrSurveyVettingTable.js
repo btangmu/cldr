@@ -513,10 +513,15 @@ const cldrSurveyTable = (function() {
 			if (item.value === INHERITANCE_MARKER) {
 				if (!theRow.inheritedValue) {
 					/*
-					 * In earlier implementation, essentially the same error was reported as "... there is no Bailey Target item!")
+					 * In earlier implementation, essentially the same error was reported as "... there is no Bailey Target item!").
+					 * This happens for some timeZoneNames/(meta)zone extra paths, such as:
+					 *     "//ldml/dates/timeZoneNames/metazone[@type=\"Alaska\"]/long/generic".
+					 * Skip the error message if the path matches timeZoneNames/(meta)zone.
 					 * Reference: https://unicode.org/cldr/trac/ticket/11238
 					 */
-					console.error('For ' + theRow.xpstrid + ' - there is INHERITANCE_MARKER without inheritedValue');
+					if (!theRow.xpath.includes('timeZoneNames/zone') && !theRow.xpath.includes('timeZoneNames/metazone')) {
+						console.error('For ' + theRow.xpstrid + ' - there is INHERITANCE_MARKER without inheritedValue');
+					}
 				} else if (!theRow.inheritedLocale && !theRow.inheritedXpid) {
 					/*
 					 * It is probably a bug if item.value === INHERITANCE_MARKER but theRow.inheritedLocale and
