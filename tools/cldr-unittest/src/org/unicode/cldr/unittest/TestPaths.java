@@ -100,62 +100,87 @@ public class TestPaths extends TestFmwkPlus {
         return b.toString();
     }
 
-    public void TestGetFullPath() {
-        Status status = new Status();
-
-        for (String locale : getLocalesToTest()) {
-            CLDRFile file = testInfo.getCLDRFile(locale, true);
-            logln(locale);
-
-            for (Iterator<String> it = file.iterator(); it.hasNext();) {
-                String path = it.next();
-                String fullPath = file.getFullXPath(path);
-                String value = file.getStringValue(path);
-                String source = file.getSourceLocaleID(path, status);
-                if (fullPath == null) {
-                    errln("Locale: " + locale + ",\t FullPath: " + path);
-                }
-                if (value == null) {
-                    errln("Locale: " + locale + ",\t Value: " + path);
-                }
-                if (source == null) {
-                    errln("Locale: " + locale + ",\t Source: " + path);
-                }
-                if (status.pathWhereFound == null) {
-                    errln("Locale: " + locale + ",\t Found Path: " + path);
-                }
-            }
-        }
-    }
-
-    public void TestPathHeaders() {
-
+    /**
+     * For each locale to test, loop through all the paths, including "extra" paths,
+     * checking for each path: checkFullpathValue; checkPrettyPaths
+     */
+    public void TestPathHeadersAndValues() {
+        /*
+         * Use the pathsSeen hash to keep track of which paths have
+         * already been seen. Since the test checkPrettyPaths isn't really
+         * locale-dependent, run it only once for each path, for the first
+         * locale in which the path occurs.
+         */
         Set<String> pathsSeen = new HashSet<String>();
         CLDRFile englishFile = testInfo.getCldrFactory().make("en", true);
         PathHeader.Factory phf = PathHeader.getFactory(englishFile);
-
+        Status status = new Status();
         for (String locale : getLocalesToTest()) {
-            CLDRFile file = testInfo.getCldrFactory().make(locale, true);
-            logln("Testing path headers for locale => " + locale);
-
+            CLDRFile file = testInfo.getCLDRFile(locale, true);
+            logln("Testing path headers and values for locale => " + locale);
             for (Iterator<String> it = file.iterator(); it.hasNext();) {
-                checkPaths(it.next(), pathsSeen, phf, locale);
+                String path = it.next();
+                checkFullpathValue(path, file, locale, status, false /* not extra path */);
+                if (!pathsSeen.contains(path)) {
+                    pathsSeen.add(path);
+                    checkPrettyPaths(path, phf);
+                }
             }
             for (String path : file.getExtraPaths()) {
-                checkPaths(path, pathsSeen, phf, locale);
+                checkFullpathValue(path, file, locale, status, true /* extra path */);
+                if (!pathsSeen.contains(path)) {
+                    pathsSeen.add(path);
+                    checkPrettyPaths(path, phf);
+                }
             }
         }
     }
 
-    private void checkPaths(String path, Set<String> pathsSeen,
-        PathHeader.Factory phf, String locale) {
+    /**
+     * For the given path and CLDRFile, check that fullPath, value, and source are
+     * all non-null. Make an exception to allow null value for some timezone extra paths.
+     *
+     * @param path the path, such as '//ldml/dates/fields/field[@type="tue"]/relative[@type="1"]'
+     * @param file the CLDRFile
+     * @param locale the locale string
+     * @param status the Status to be used/set by getSourceLocaleID
+     * @param isExtraPath true if the path is an "extra" path, else false
+     */
+    private void checkFullpathValue(String path, CLDRFile file, String locale, Status status, boolean isExtraPath) {
+        String fullPath = file.getFullXPath(path);
+        String value = file.getStringValue(path);
+        String source = file.getSourceLocaleID(path, status);
+        if (fullPath == null) {
+            errln("Locale: " + locale + ",\t FullPath: " + path);
+        }
+        if (value == null) {
+            if (isExtraPath && (
+                path.contains("timeZoneNames/metazone") ||
+                path.contains("timeZoneNames/zone"))) {
+                // Allow null value for (meta)zone extra paths
+            } else {
+                errln("Locale: " + locale + ",\t Value: " + path);
+            }
+        }
+        if (source == null) {
+            errln("Locale: " + locale + ",\t Source: " + path);
+        }
+        if (status.pathWhereFound == null) {
+            errln("Locale: " + locale + ",\t Found Path: " + path);
+        }
+    }
+
+    /**
+     * Check that the given path and PathHeader.Factory undergo correct
+     * roundtrip conversion between original and pretty paths.
+     *
+     * @param path the path string
+     * @param phf the PathHeader.Factory
+     */
+    private void checkPrettyPaths(String path, PathHeader.Factory phf) {
         if (path.endsWith("/alias")) {
             return;
         }
-        if (pathsSeen.contains(path)) {
-            return;
-        }
-        pathsSeen.add(path);
         logln("Testing ==> " + path);
         String prettied = phf.fromPath(path).toString();
         String unprettied = phf.fromPath(path).getOriginalPath();
