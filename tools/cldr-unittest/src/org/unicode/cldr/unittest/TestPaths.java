@@ -137,8 +137,9 @@ public class TestPaths extends TestFmwkPlus {
     }
 
     /**
-     * For the given path and CLDRFile, check that fullPath, value, and source are
-     * all non-null. Make an exception to allow null value for some timezone extra paths.
+     * For the given path and CLDRFile, check that fullPath, value, and source are all non-null.
+     *
+     * Allow null value for some exceptional extra paths.
      *
      * @param path the path, such as '//ldml/dates/fields/field[@type="tue"]/relative[@type="1"]'
      * @param file the CLDRFile
@@ -154,11 +155,10 @@ public class TestPaths extends TestFmwkPlus {
             errln("Locale: " + locale + ",\t FullPath: " + path);
         }
         if (value == null) {
-            if (isExtraPath && (
-                path.contains("timeZoneNames/metazone") ||
-                path.contains("timeZoneNames/zone"))) {
-                // Allow null value for (meta)zone extra paths
-            } else {
+            /*
+             * Allow null value for some exceptional extra paths.
+             */
+            if (!isExtraPath || !extraPathAllowsNullValue(path)) {
                 errln("Locale: " + locale + ",\t Value: " + path);
             }
         }
@@ -168,6 +168,36 @@ public class TestPaths extends TestFmwkPlus {
         if (status.pathWhereFound == null) {
             errln("Locale: " + locale + ",\t Found Path: " + path);
         }
+    }
+
+    /**
+     * Is the given extra path exceptional in the sense that null value is allowed?
+     *
+     * @param path the extra path
+     * @return true if null value is allowed for path, else false
+     *
+     * As of 2019-08-09, null values are found for many "metazone" paths like:
+     * //ldml/dates/timeZoneNames/metazone[@type="Galapagos"]/long/standard
+     * for many locales. Also for some "zone" paths like:
+     * //ldml/dates/timeZoneNames/zone[@type="Pacific/Honolulu"]/short/generic
+     * for locales including root, ja, and ar. Also for some "dayPeriods" paths like
+     * //ldml/dates/calendars/calendar[@type="gregorian"]/dayPeriods/dayPeriodContext[@type="stand-alone"]/dayPeriodWidth[@type="wide"]/dayPeriod[@type="midnight"]
+     * only for these six locales: bs_Cyrl, bs_Cyrl_BA, pa_Arab, pa_Arab_PK, uz_Arab, uz_Arab_AF.
+     *
+     * This function is nearly identical to the JavaScript function with the same name.
+     * Keep the two functions consistent with each other. It would be more ideal if this
+     * knowledge were encapsulated on the server and the client didn't need to know about it.
+     * The server could send the client special fallback values instead of null.
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11238
+     */
+    private boolean extraPathAllowsNullValue(String path) {
+        if (path.contains("timeZoneNames/metazone") ||
+            path.contains("timeZoneNames/zone") ||
+            path.contains("dayPeriods/dayPeriodContext")) {
+            return true;
+        }
+        return false;
     }
 
     /**
