@@ -10,8 +10,10 @@ import="org.unicode.cldr.web.*"
 </head>
 <body>
 
-<% request.setAttribute("BULK_STAGE", "upload"); %>
-<%@include file="/WEB-INF/jspf/bulkinfo.jspf" %>
+<%
+request.setAttribute("BULK_STAGE", "upload");
+SurveyAjax.writeBulkInfoHtml(request, out);
+%>
 
 <a href="<%=request.getContextPath()%>/survey">Return to the SurveyTool <img src='STLogo.png' style='float:right;' /></a>
 <hr/>

@@ -99,8 +99,10 @@
 		Verify that there are no errors, then click the NEXT button.
 	</div>
 
-<% request.setAttribute("BULK_STAGE", "check"); %>
-<%@include file="/WEB-INF/jspf/bulkinfo.jspf" %>
+<%
+request.setAttribute("BULK_STAGE", "check");
+SurveyAjax.writeBulkInfoHtml(request, out);
+%>
 
 <div style='padding: 1em;'>
 <%
