@@ -2,6 +2,10 @@
     pageEncoding="UTF-8"%>
 <%
 {
+	if (true) {
+		SurveyAjax.writeBulkInfoHtml(request, out);
+		return;
+	}
 	final String bulkStage = request.getAttribute("BULK_STAGE").toString();
 %>
 	<div class='bulkNextInfo'>

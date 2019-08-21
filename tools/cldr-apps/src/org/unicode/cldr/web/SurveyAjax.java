@@ -29,10 +29,12 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.unicode.cldr.icu.LDMLConstants;
 import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus.Subtype;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
+import org.unicode.cldr.test.TestCache;
 import org.unicode.cldr.test.TestCache.TestResultBundle;
 import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRConfigImpl;
@@ -44,6 +46,7 @@ import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.CoverageInfo;
 import org.unicode.cldr.util.DtdData.IllegalByDtdException;
 import org.unicode.cldr.util.Factory;
+import org.unicode.cldr.util.LDMLUtilities;
 import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.util.PathHeader;
@@ -52,8 +55,10 @@ import org.unicode.cldr.util.SpecialLocales;
 import org.unicode.cldr.util.SupplementalDataInfo;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.util.XMLSource;
+import org.unicode.cldr.util.XPathParts;
 import org.unicode.cldr.web.BallotBox.InvalidXPathException;
 import org.unicode.cldr.web.BallotBox.VoteNotAcceptedException;
+import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 import org.unicode.cldr.web.DataSection.DataRow;
 import org.unicode.cldr.web.SurveyException.ErrorCode;
 import org.unicode.cldr.web.SurveyMain.UserLocaleStuff;
@@ -2732,5 +2737,409 @@ public class SurveyAjax extends HttpServlet {
             // put the name back.
             curThread.setName(threadName);
         }
+    }
+
+    /**
+     * Called when do bulk submission upload?
+     *
+     * Compare submitVoteOrAbstention which is called when make individual vote in SurveyTool.
+     *
+     * @param request
+     * @param response
+     * @param out
+     * @throws IOException
+     * @throws JSONException
+     * @throws VoteNotAcceptedException
+     * @throws InvalidXPathException
+     *
+     * Some code was moved here from submit.jsp
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11877
+     */
+    static public void handleSubmit(HttpServletRequest request, HttpServletResponse response, Writer out)
+            throws IOException, JSONException, InvalidXPathException, VoteNotAcceptedException {
+        String sid = request.getParameter("s");
+        if (!request.getMethod().equals("POST") || (sid == null)) {
+            response.sendRedirect(request.getContextPath() + "/upload.jsp");
+            return;
+        }
+
+        CLDRFile cf = null;
+
+        String email = request.getParameter("email");
+        final CookieSession cs = CookieSession.retrieve(sid);
+        if (cs == null || cs.user == null) {
+            response.sendRedirect(request.getContextPath() + "/survey");
+            return;
+        }
+        cs.userDidAction(); // mark user as not idle
+        UserRegistry.User theirU = cs.sm.reg.get(email.trim());
+        if (theirU == null
+                || (!theirU.equals(cs.user) && !cs.user.isAdminFor(theirU))) {
+            response.sendRedirect(request.getContextPath()
+                    + "/upload.jsp?s=" + sid + "&email=" + email.trim()
+                    + "&emailbad=t");
+            return;
+        }
+        boolean isSubmit = true;
+        final String submitButtonText = "NEXT: Submit as " + theirU.email;
+
+        String ident = "";
+        if (theirU.id != cs.user.id) {
+            ident = "&email=" + theirU.email + "&pw="
+                    + cs.sm.reg.getPassword(null, theirU.id);
+        }
+
+        boolean doFinal = (request.getParameter("dosubmit") != null);
+
+        String title = "Submitted as " + theirU.email;
+
+        if (!doFinal) {
+            title = title + " <i>(Trial)</i>";
+        }
+
+        cf = (CLDRFile) cs.stuff.get("SubmitLocale");
+        out.write("<html>\n<head>\n");
+        out.write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
+        out.write("<title>SurveyTool File Submission | " + title + "</title>\n");
+        out.write("<link rel='stylesheet' type='text/css' href='./surveytool.css' />\n");
+
+        out.write("<script src='" + request.getContextPath() + "/js/survey.js'></script>\n");
+        
+        /***** TODO: include survey.js instead of duplicating code here
+         * 
+         * 
+         * 
+                <script>
+                // TODO: from survey.js
+                    function testsToHtml(tests) {
+                        var newHtml = "";
+                        for ( var i = 0; i < tests.length; i++) {
+                            var testItem = tests[i];
+                            newHtml += "<p class='tr_" + testItem.type + "' title='" + testItem.type
+                                    + "'>";
+                            if (testItem.type == 'Warning') {
+                                newHtml += warnIcon;
+                                // what='warn';
+                            } else if (testItem.type == 'Error') {
+                                //td.className = "tr_err";
+                                newHtml += stopIcon;
+                    //          what = 'error';
+                            }
+                            newHtml += tests[i].message;
+                            newHtml += "</p>";
+                        }
+                        return newHtml;
+                    }
+                
+                // TODO: from ajax_status.jsp
+                var warnIcon = "<%= WebContext.iconHtml(request,"warn","Test Warning") %>";
+                var stopIcon = "<%= WebContext.iconHtml(request,"stop","Test Error") %>";
+                </script>
+        ****/
+
+        out.write("</head>\n<body>\n");
+        out.write("<a href=\"upload.jsp?s=" + sid + "&email=" + theirU.email + "\">Re-Upload File/Try Another</a>");
+        out.write(" | ");
+        out.write("<a href=\"" + request.getContextPath() + "/survey\">Return to the SurveyTool <img src='STLogo.png' style='float: right;' />");
+        out.write("</a>\n");
+        out.write("<hr />");
+        out.write("<h3>\n");
+        out.write("SurveyTool File Submission");
+        out.write(" | ");
+        out.write(title);
+        out.write(" | ");
+        out.write(theirU.name);
+        out.write("</h3>\n");
+
+        out.write("<i>Checking upload...</i>");
+
+        final CLDRLocale loc = CLDRLocale.getInstance(cf.getLocaleID());
+        if (!ident.isEmpty()) {
+            out.write("<div class='fnotebox'>");
+            out.write("Note: Clicking the following links will switch to the user " + theirU.email);
+            out.write("</div>");
+        }
+
+        out.write("<h3>\n");
+        out.write("Locale:" + loc + " - " + loc.getDisplayName(SurveyMain.TRANS_HINT_LOCALE));
+        out.write("</h3>\n");
+
+        CLDRFile baseFile = cs.sm.getSTFactory().make(loc.getBaseName(), false);
+        XMLSource stSource = cs.sm.getSTFactory().makeSource(loc.getBaseName());
+
+        Set<String> all = new TreeSet<String>();
+        for (String x : cf) {
+            if (x.startsWith("//ldml/identity")) {
+                continue;
+            }
+            all.add(x);
+        }
+        int updCnt = 0;
+        out.write("<h4>\n");
+        out.write("Please review these " + all.size() + " entries.");
+        out.write("</h4>\n");
+
+        request.setAttribute("BULK_STAGE", doFinal ? "submit" : "test");
+
+        writeBulkInfoHtml(request, out); // was: include file="/WEB-INF/jspf/bulkinfo.jspf"
+
+        if (!doFinal) {
+            out.write("<div class='helpHtml'>\n");
+            out.write("Please review these items carefully. The \"NEXT\" button will not appear until the page fully loads. Pressing NEXT will submit these votes.\n");
+            out.write("<br>\n");
+            out.write("For help, see: <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/index/survey-tool/upload'>Using Bulk Upload</a>\n"); 
+            out.write("</div>\n");
+        } else {
+            out.write("<div class='bulkNextButton'>\n");
+            out.write("<b>Submitted!</b><br/>\n");
+            out.write("<a href=\"upload.jsp?s=" + sid + "&email=" + theirU.email +"\">Another?</a>\n");
+            out.write("</div>\n");
+            out.write("<div class='helpHtml'>\n");
+            out.write("Items listed have been submitted as " + theirU.email);
+            out.write("<br>\n");
+            out.write("For help, see: <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/index/survey-tool/upload'>Using Bulk Upload</a>\n");
+            out.write("</div>\n");
+        }
+
+        out.write("<table class='data'>\n");
+        out.write("<thead>\n");
+        out.write("<tr>\n");
+        out.write("<th>xpath</th>\n");
+        out.write("<th>My Value</th>\n");
+        out.write("<th>Comment</th>\n");
+        out.write("</tr>\n");
+        out.write("</thead>\n");
+
+        DisplayAndInputProcessor processor = new DisplayAndInputProcessor(loc,false);
+        STFactory stf = CookieSession.sm.getSTFactory();
+        BallotBox<UserRegistry.User> ballotBox = stf.ballotBoxForLocale(loc);
+        SupplementalDataInfo sdi = CookieSession.sm.getSupplementalDataInfo();
+
+        int r = 0;
+        final List<CheckCLDR.CheckStatus> checkResult = new ArrayList<CheckCLDR.CheckStatus>();
+        TestCache.TestResultBundle cc = stf.getTestResult(loc, DataSection.getOptions(null, cs, loc));
+        UserRegistry.User u = theirU;
+        CheckCLDR.Phase cPhase = CLDRConfig.getInstance().getPhase();
+        Set<String> allValidPaths = stf.getPathsForFile(loc);
+        CLDRProgressTask progress = CookieSession.sm.openProgress("Bulk:" + loc, all.size());
+        try {
+            CoverageInfo coverageInfo = CLDRConfig.getInstance().getCoverageInfo();
+            for (String x : all) {
+                String full = cf.getFullXPath(x);
+                XPathParts xppMine = XPathParts.getInstance(full); // not frozen, for xPathPartsToBase
+                String alt = xppMine.getAttributeValue(-1, LDMLConstants.ALT);
+                String valOrig = cf.getStringValue(x);
+                Exception exc[] = new Exception[1];
+                final String val0 = processor.processInput(x, valOrig, exc);
+                String altPieces[] = LDMLUtilities.parseAlt(alt);
+                XPathTable.xPathPartsToBase(xppMine);
+                xppMine.removeAttribute(-1, LDMLConstants.DRAFT);
+                String base = xppMine.toString();
+                int base_xpath_id = CookieSession.sm.xpt.getByXpath(base);
+
+                String valb = baseFile.getWinningValue(base);
+
+                String style = "";
+                String stylea = "";
+                String valm = val0;
+                if (valb == null) {
+                    valb = "(<i>none</i>)";
+                    stylea = "background-color: #fdd";
+                    style = "background-color: #bfb;";
+                } else if (!val0.equals(valb)) {
+                    style = "font-weight: bold; background-color: #bfb;";
+                } else {
+                    style = "opacity: 0.9;";
+                }
+                int vet_type[] = new int[1];
+
+                int j = -1;
+                Set<String> resultPaths = new HashSet<String>();
+                XPathParts xpp = XPathParts.getInstance(base); // not frozen, for removeAttribute
+                xpp.removeAttribute(-1, LDMLConstants.ALT);
+                String baseNoAlt = xpp.toString();
+                int root_xpath_id = CookieSession.sm.xpt.getByXpath(baseNoAlt);
+
+                int coverageValue = 0;
+
+                try {
+                    coverageValue = coverageInfo.getCoverageValue(base,
+                            loc.getBaseName());
+                } catch (Throwable t) {
+                    SurveyLog.warnOnce("getCoverageValue failed for "
+                            + loc.getBaseName() + ": " + t.getMessage());
+                }
+
+                String result = "";
+                String resultStyle = "";
+
+                String resultIcon = "okay";
+
+                PathHeader ph = stf.getPathHeader(base);
+
+                if (!allValidPaths.contains(base)) {
+                    result = "Item is not a valid XPath.";
+                    resultIcon = "stop";
+                } else if (ph == null) {
+                    result = "Item is not a SurveyTool-visible LDML entity.";
+                    resultIcon = "stop";
+                } else {
+                    checkResult.clear();
+                    cc.check(base, checkResult, val0);
+
+                    SurveyToolStatus phStatus = ph.getSurveyToolStatus();
+
+                    DataSection section = DataSection.make(null, null, cs, loc, base, null);
+                    section.setUserForVotelist(cs.user);
+
+                    DataSection.DataRow pvi = section.getDataRow(base);
+                    CheckCLDR.StatusAction showRowAction = pvi.getStatusAction();
+
+                    if (showRowAction.isForbidden()) {
+                        result = "Item may not be modified. ("
+                                + showRowAction + ")";
+                        resultIcon = "stop";
+                    } else {
+                        CandidateInfo ci;
+                        if (val0 == null) {
+                            ci = null; // abstention
+                        } else {
+                            ci = pvi.getItem(val0); // existing
+                                                    // item?
+                            if (ci == null) { // no, new item
+                                ci = new CandidateInfo() {
+                                    @Override
+                                    public String getValue() {
+                                        return val0;
+                                    }
+
+                                    @Override
+                                    public Collection<UserInfo> getUsersVotingOn() {
+                                        return Collections.emptyList(); // No
+                                                                        // users
+                                                                        // voting
+                                                                        // -
+                                                                        // yet.
+                                    }
+
+                                    @Override
+                                    public List<CheckCLDR.CheckStatus> getCheckStatusList() {
+                                        return checkResult;
+                                    }
+                                };
+                            }
+                        }
+                        CheckCLDR.StatusAction status = cPhase
+                                .getAcceptNewItemAction(ci, pvi,
+                                        CheckCLDR.InputMethod.BULK,
+                                        phStatus, cs.user);
+
+                        if (status != CheckCLDR.StatusAction.ALLOW) {
+                            result = "Item will be skipped. (" + status
+                                    + ")";
+                            resultIcon = "stop";
+                        } else {
+                            if (doFinal) {
+                                ballotBox.voteForValue(u, base, val0);
+                                result = "Vote accepted";
+                                resultIcon = "vote";
+                            } else {
+                                result = "Ready to submit.";
+                            }
+                            updCnt++;
+                        }
+                    }
+                }
+
+                out.write("<tr class='r" + (r) % 2 + "'>\n");
+                out.write("<th title='" + base + " #" + base_xpath_id + "'"
+                    + " style='text-align: left; font-size: smaller;'>"
+                    + "<a target='" + WebContext.TARGET_ZOOMED + "'"
+                    + "href='" + request.getContextPath()
+                    + "/survey?_="+ loc + "&strid="
+                    + cs.sm.xpt.getStringIDString(base_xpath_id) + ident + "'>"
+                    + ph.toString() + "</a>");
+                out.write("<br>");
+                /*
+                 * TODO: html isn't well-formed here? why was </tt> doubled?
+                 */
+                out.write("<tt>" +  base + "</tt></tt></th>\n");
+
+                out.write("<td style='" + style + "'>" + valm + "\n");
+                if(!valm.equals(valOrig)) {
+                    out.write("<div class='graybox' title='original text'>" + valOrig + "</div>\n");
+                }
+                out.write("</td>\n");
+                out.write("<td title='vote:' style='" + resultStyle + "'>\n");
+                if(!checkResult.isEmpty()) {
+                    out.write("<script>\n");
+                    out.write("document.write(testsToHtml(" + SurveyAjax.JSONWriter.wrap(checkResult) + ")");
+                    out.write("</script>\n");
+                }
+                out.write(WebContext.iconHtml(request, resultIcon, result) + result);
+                out.write("</tr>\n");
+            }
+        } finally {
+            progress.close();
+        }
+
+        out.write("</table>\n");
+        out.write("<hr />\n");
+        if (doFinal) {
+            out.write("Voted on ");
+        } else {
+            out.write("Ready to submit ");
+        }
+        out.write(updCnt);
+        out.write(" votes.\n");
+        if (!doFinal && updCnt > 0) {
+            out.write("<form action='" + request.getContextPath() + request.getServletPath() + "' method='POST'>\n");
+            out.write("<input type='hidden' name='s' value='" + sid + "' />\n");
+            out.write("<input type='hidden' name='email' value='" + email + "' />");
+            out.write("<input class='bulkNextButton' type='submit' name='dosubmit' value='"
+                + submitButtonText + "' />");
+            out.write("</form>\n");
+        }
+        out.write("</body>\n</html>\n");
+    }
+
+    /**
+     *
+     * @param request
+     * @param out
+     * @throws IOException
+     * 
+     * Some code was moved here from bulkinfo.jspf
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11877
+     */
+    static public void writeBulkInfoHtml(HttpServletRequest request, Writer out) throws IOException {
+        final String bulkStage = request.getAttribute("BULK_STAGE").toString();
+        out.write("<div class='bulkNextInfo'>\n");
+        out.write("<ul>\n");
+        out.write("<li class='header'>Bulk Upload:</li>\n");
+        String stages[] = { "upload", "Upload XML file",
+            "check",  "Verify valid XML",
+            "test",   "Test for CLDR errors",
+            "submit",   "Data submitted into SurveyTool"
+        };
+
+        for (int i = 0; i < stages.length; i += 2) {
+            final String stage = stages[i + 0];
+            final String name = stages[i + 1];
+            final boolean active = bulkStage.equals(stage);
+            final String activeClass = active ? "active" : "inactive";
+
+            out.write("<li class='<%= activeClass %>'>\n");
+            out.write("<h1>" + (i/2) + 1 + ". " + stage + "</h1>\n");
+            out.write("<h2>" + name + "</h2>\n");
+            out.write("</li>\n");
+        }
+        out.write("</ul>\n");
+        if (bulkStage.equals("upload")) {
+            out.write("<p class='helpContent'>");
+            out.write("Click the button in the bottom-right corner to proceed to the next step.");
+            out.write("</p>\n");
+        }
+        out.write("</div>\n");
     }
 }
