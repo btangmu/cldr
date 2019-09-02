@@ -2907,7 +2907,7 @@ public class SurveyAjax extends HttpServlet {
                 } else {
                     style = "opacity: 0.9;";
                 }
- 
+
                 XPathParts xpp = XPathParts.getInstance(base); // not frozen, for removeAttribute
                 xpp.removeAttribute(-1, LDMLConstants.ALT);
 
@@ -3040,7 +3040,7 @@ public class SurveyAjax extends HttpServlet {
      * @param request
      * @param out
      * @throws IOException
-     * 
+     *
      * Some code was moved here from bulkinfo.jspf
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-11877
      */
