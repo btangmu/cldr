@@ -25,9 +25,9 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 		</measurementSystemNames>
 	</localeDisplayNames>
 	<characters>
-		<exemplarCharacters>[𐓘 𐓙 𐓚 𐓛 𐓜 𐓝 𐓞 𐓟 𐓠 𐓡 𐓢 𐓣 𐓤 𐓥 𐓦 𐓧 𐓨 𐓩 𐓪 𐓫 𐓬 𐓭 𐓮 𐓯 𐓰 𐓱 𐓲 𐓳 𐓴 𐓵 𐓶 𐓷 𐓸 𐓹 𐓺 𐓻]</exemplarCharacters>
-		<exemplarCharacters type="auxiliary">[{𐓘͘} {𐓛͘} {𐓣͘} {𐓪͘} {𐓘̄} {𐓟̄} {𐓣̄} {𐓪̄} {𐓶̄} {𐓘̄͘} {𐓣̄͘} {𐓪̄͘} {𐓘́} {𐓟́} {𐓣́} {𐓪́} {𐓶́} {𐓘́͘} {𐓣́͘} {𐓪́͘} {𐓙́} {𐓚́} {𐓠́} {𐓫́} {𐓘̋} {𐓟̋} {𐓣̋} {𐓪̋} {𐓶̋} {𐓘̋͘} {𐓣̋͘} {𐓪̋͘}]</exemplarCharacters>
-		<exemplarCharacters type="index">[𐒰 𐒱 𐒲 𐒳 𐒴 𐒵 𐒶 𐒷 𐒸 𐒹 𐒺 𐒻 𐒼 𐒽 𐒾 𐒿 𐓀 𐓁 𐓂 𐓃 𐓄 𐓅 𐓆 𐓇 𐓈 𐓉 𐓊 𐓋 𐓌 𐓍 𐓎 𐓏 𐓐 𐓑 𐓒 𐓓]</exemplarCharacters>
+		<exemplarCharacters>[𐓘 {𐓘̄} {𐓘́} {𐓘̋} {𐓘͘} {𐓘̄͘} {𐓘́͘} {𐓘̋͘} 𐓙 {𐓙̄} {𐓙́} {𐓙̋} 𐓚 {𐓚̄} {𐓚́} {𐓚̋} 𐓛 {𐓛͘} 𐓜 𐓝 𐓞 𐓟 {𐓟̄} {𐓟́} {𐓟̋} 𐓠 {𐓠̄} {𐓠́} {𐓠̋} 𐓡 𐓢 𐓣 {𐓣̄} {𐓣́} {𐓣̋} {𐓣͘} {𐓣̄͘} {𐓣́͘} {𐓣̋͘} 𐓤 𐓥 𐓦 𐓧 𐓨 𐓩 𐓪 {𐓪̄} {𐓪́} {𐓪̋} {𐓪͘} {𐓪̄͘} {𐓪́͘} {𐓪̋͘} 𐓫 {𐓫̄} {𐓫́} {𐓫̋} 𐓬 𐓭 𐓮 𐓯 𐓰 𐓱 𐓲 𐓳 𐓴 𐓵 𐓶 {𐓶̄} {𐓶́} {𐓶̋} 𐓷 𐓸 𐓹 𐓺 𐓻]</exemplarCharacters>
+		<exemplarCharacters type="auxiliary">[]</exemplarCharacters>
+		<exemplarCharacters type="index">[𐒰 {𐒰͘} 𐒱 𐒲 𐒳 𐒴 𐒵 𐒶 𐒷 𐒸 𐒹 𐒺 𐒻 {𐒻͘} 𐒼 𐒽 𐒾 𐒿 𐓀 𐓁 𐓂 {𐓂͘} 𐓃 𐓄 𐓅 𐓆 𐓇 𐓈 𐓉 𐓊 𐓋 𐓌 𐓍 𐓎 𐓏 𐓐 𐓑 𐓒 𐓓]</exemplarCharacters>
 		<exemplarCharacters type="numbers">[\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
 		<exemplarCharacters type="punctuation">[\- ‐ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
 	</characters>
@@ -92,15 +92,22 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 					<monthContext type="stand-alone">
 						<monthWidth type="wide">
 							<month type="1">𐓀𐓣͘𐓪͘𐓬𐓘 𐓄𐓘𐓡𐓛͘𐓧𐓟</month>
+							<month type="2">𐓀𐓣͘𐓪͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</month>
+							<month type="3">𐓀𐓣͘𐓪͘𐓬𐓘 𐓏𐓟𐓵𐓘𐓜𐓣</month>
+							<month type="4">𐓀𐓣͘𐓪͘𐓬𐓘 𐓏𐓟𐓰𐓪𐓬𐓘</month>
+							<month type="5">𐓀𐓣͘𐓪͘𐓬𐓘 𐓏𐓟𐓮𐓘𐓰𐓘</month>
+							<month type="6">𐓀𐓣͘𐓪͘𐓬𐓘 𐓏𐓟𐓯𐓘𐓬𐓟</month>
+							<month type="7">𐓀𐓣͘𐓪͘𐓬𐓘 𐓄𐓟𐓵𐓪͘𐓬𐓘</month>
+							<month type="8">𐓀𐓣͘𐓪͘𐓬𐓘 𐒼𐓣𐓟𐓰𐓪𐓬𐓘</month>
+							<month type="9">𐓀𐓣͘𐓪͘𐓬𐓘 𐒿𐓟𐓜𐓛𐓲𐓟𐓷𐓣͘𐓤𐓟</month>
+							<month type="10">𐓀𐓣͘𐓪͘𐓬𐓘 𐒿𐓟𐓜𐓛</month>
+							<month type="11">𐓀𐓣͘𐓪͘𐓬𐓘 𐒰𐓧𐓣 𐓏𐓣͘𐓸𐓲𐓣</month>
+							<month type="12">𐓀𐓣͘𐓪͘𐓬𐓘 𐒰𐓧𐓣 𐓍𐓪͘𐓬𐓘</month>
 						</monthWidth>
 					</monthContext>
 				</months>
 				<days>
 					<dayContext type="format">
-						<dayWidth type="abbreviated">
-							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
-							<day type="tue">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</day>
-						</dayWidth>
 						<dayWidth type="narrow">
 							<day type="sun">𐓏</day>
 							<day type="mon">𐓄</day>
@@ -110,10 +117,6 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 							<day type="fri">𐓊</day>
 							<day type="sat">𐓸</day>
 						</dayWidth>
-						<dayWidth type="short">
-							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
-							<day type="tue">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</day>
-						</dayWidth>
 						<dayWidth type="wide">
 							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
 							<day type="mon">𐒹𐓘͘𐓬𐓘 𐓄𐓘𐓡𐓛͘𐓧𐓣</day>
@@ -122,20 +125,6 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 							<day type="thu">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓰𐓪𐓬𐓘</day>
 							<day type="fri">𐒹𐓘͘𐓬𐓘 𐓈𐓘 𐓵𐓘𐓲𐓘 𐓻𐓣͘</day>
 							<day type="sat">𐒹𐓘͘𐓬𐓘 𐓂𐓤𐓘𐓸𐓟 𐓣͘𐓤𐓟</day>
-						</dayWidth>
-					</dayContext>
-					<dayContext type="stand-alone">
-						<dayWidth type="abbreviated">
-							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
-							<day type="tue">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</day>
-						</dayWidth>
-						<dayWidth type="short">
-							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
-							<day type="tue">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</day>
-						</dayWidth>
-						<dayWidth type="wide">
-							<day type="sun">𐒹𐓘͘𐓬𐓘 𐓏𐓘𐓤𐓘͘𐓰𐓘𐓤𐓣</day>
-							<day type="tue">𐒹𐓘͘𐓬𐓘 𐓏𐓟𐓵𐓪͘𐓬𐓘</day>
 						</dayWidth>
 					</dayContext>
 				</days>

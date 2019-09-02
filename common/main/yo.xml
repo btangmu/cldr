@@ -358,7 +358,6 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<territory type="MG">Orílẹ́ède Madasika</territory>
 			<territory type="MH">Orílẹ́ède Etikun Máṣali</territory>
 			<territory type="MK">Àríwá Macedonia</territory>
-			<territory type="MK" alt="variant">↑↑↑</territory>
 			<territory type="ML">Orílẹ́ède Mali</territory>
 			<territory type="MM">Orílẹ́ède Manamari</territory>
 			<territory type="MN">Orílẹ́ède Mogolia</territory>
@@ -504,7 +503,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 		<exemplarCharacters type="auxiliary">[c q v x z]</exemplarCharacters>
 		<exemplarCharacters type="index">[A B D E F G H I J K L M N O P R S T U W Y]</exemplarCharacters>
 		<exemplarCharacters type="numbers" draft="contributed">↑↑↑</exemplarCharacters>
-		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
+		<exemplarCharacters type="punctuation" draft="contributed">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
 		<ellipsis type="final">↑↑↑</ellipsis>
 		<ellipsis type="initial">↑↑↑</ellipsis>
 		<ellipsis type="medial">↑↑↑</ellipsis>
@@ -2881,13 +2880,6 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 					<generic>Chile Time</generic>
 					<standard>Chile Standard Time</standard>
 					<daylight>Chile Summer Time</daylight>
-				</long>
-			</metazone>
-			<metazone type="China">
-				<long>
-					<generic>China Time</generic>
-					<standard>↑↑↑</standard>
-					<daylight>↑↑↑</daylight>
 				</long>
 			</metazone>
 			<metazone type="Choibalsan">

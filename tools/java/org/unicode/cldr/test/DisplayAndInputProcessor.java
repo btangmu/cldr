@@ -295,7 +295,7 @@ public class DisplayAndInputProcessor {
     static final UnicodeSet WHITESPACE = new UnicodeSet("[:whitespace:]").freeze();
     static final DateTimeCanonicalizer dtc = new DateTimeCanonicalizer(FIX_YEARS);
 
-    public static final Splitter SPLIT_BAR = Splitter.on('|').trimResults().omitEmptyStrings();
+    public static final Splitter SPLIT_BAR = Splitter.on(Pattern.compile("(\\||\\s+l\\s+)")).trimResults().omitEmptyStrings();
     static final Splitter SPLIT_SPACE = Splitter.on(' ').trimResults().omitEmptyStrings();
     static final Joiner JOIN_BAR = Joiner.on(" | ");
 
@@ -852,6 +852,16 @@ public class DisplayAndInputProcessor {
             if (string.equals("ß") || string.equals("İ")) {
                 toAdd.add(string);
                 continue;
+            }
+            switch (string) {
+            case "\u2011": toAdd.add("-"); break; // nobreak hyphen
+            case "-": toAdd.add("\u2011"); break; // nobreak hyphen
+            
+            case " ": toAdd.add("\u00a0"); break; // nobreak space
+            case "\u00a0": toAdd.add(" "); break; // nobreak space
+            
+            case "\u202F": toAdd.add("\u2009"); break; // nobreak narrow space
+            case "\u2009": toAdd.add("\u202F"); break; // nobreak narrow space
             }
             if (exemplarType.convertUppercase) {
                 string = UCharacter.toLowerCase(ULocale.ENGLISH, string);

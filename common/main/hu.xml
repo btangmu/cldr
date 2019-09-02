@@ -779,7 +779,6 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			<territory type="CG" alt="variant">Kongó (Köztársaság)</territory>
 			<territory type="CH">Svájc</territory>
 			<territory type="CI">Elefántcsontpart</territory>
-			<territory type="CI" alt="variant">CI</territory>
 			<territory type="CK">Cook-szigetek</territory>
 			<territory type="CL">Chile</territory>
 			<territory type="CM">Kamerun</territory>
@@ -890,7 +889,6 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			<territory type="MG">Madagaszkár</territory>
 			<territory type="MH">Marshall-szigetek</territory>
 			<territory type="MK">Észak-Macedónia</territory>
-			<territory type="MK" alt="variant">↑↑↑</territory>
 			<territory type="ML">Mali</territory>
 			<territory type="MM">Mianmar</territory>
 			<territory type="MN">Mongólia</territory>
@@ -1224,8 +1222,8 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 		<exemplarCharacters>[a á b c {cs} {ccs} d {dz} {ddz} {dzs} {ddzs} e é f g {gy} {ggy} h i í j k l {ly} {lly} m n {ny} {nny} o ó ö ő p r s {sz} {ssz} t {ty} {tty} u ú ü ű v z {zs} {zzs}]</exemplarCharacters>
 		<exemplarCharacters type="auxiliary">[à ă â å ä ã ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ô ø ō œ q ù ŭ û ū w x y ÿ]</exemplarCharacters>
 		<exemplarCharacters type="index">[A Á B C {CS} D {DZ} {DZS} E É F G {GY} H I Í J K L {LY} M N {NY} O Ó Ö Ő P Q R S {SZ} T {TY} U Ú Ü Ű V W X Y Z {ZS}]</exemplarCharacters>
-		<exemplarCharacters type="numbers">[  \- , % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
-		<exemplarCharacters type="punctuation">[\- – , ; \: ! ? . … ' ’ &quot; ” „ « » ( ) \[ \] \{ \} ⟨ ⟩ § @ * / \&amp; # ~ ⁒]</exemplarCharacters>
+		<exemplarCharacters type="numbers">[  \- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="punctuation">[\- ‑ – , ; \: ! ? . … ' ’ &quot; ” „ « » ( ) \[ \] \{ \} ⟨ ⟩ § @ * / \&amp; # ~ ⁒]</exemplarCharacters>
 		<ellipsis type="final">{0}…</ellipsis>
 		<ellipsis type="initial">…{0}</ellipsis>
 		<ellipsis type="medial">{0}…{1}</ellipsis>
@@ -5614,7 +5612,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 		<otherNumberingSystems>
 			<native draft="contributed">latn</native>
 		</otherNumberingSystems>
-		<minimumGroupingDigits draft="contributed">4</minimumGroupingDigits>
+		<minimumGroupingDigits draft="contributed">1</minimumGroupingDigits>
 		<symbols numberSystem="adlm">
 			<timeSeparator draft="contributed">↑↑↑</timeSeparator>
 		</symbols>
@@ -9292,9 +9290,9 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 				<unitPattern count="other" draft="contributed">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-therm-us">
-				<displayName draft="contributed">USA therm</displayName>
-				<unitPattern count="one" draft="contributed">{0} USA therm</unitPattern>
-				<unitPattern count="other" draft="contributed">{0} USA therm</unitPattern>
+				<displayName draft="contributed">↑↑↑</displayName>
+				<unitPattern count="one" draft="contributed">↑↑↑</unitPattern>
+				<unitPattern count="other" draft="contributed">↑↑↑</unitPattern>
 			</unit>
 			<unit type="frequency-gigahertz">
 				<displayName draft="contributed">↑↑↑</displayName>

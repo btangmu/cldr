@@ -59,6 +59,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.ibm.icu.dev.util.CollectionUtilities;
 import com.ibm.icu.impl.Relation;
 import com.ibm.icu.impl.Row;
@@ -601,14 +602,18 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      * Get a string value from an xpath.
      */
     public String getStringValue(String xpath) {
-        String result = dataSource.getValueAtPath(xpath);
-        if (result == null && dataSource.isResolving()) {
-            final String fallbackPath = getFallbackPath(xpath, false);
-            if (fallbackPath != null) {
-                result = dataSource.getValueAtPath(fallbackPath);
+        try {
+            String result = dataSource.getValueAtPath(xpath);
+            if (result == null && dataSource.isResolving()) {
+                final String fallbackPath = getFallbackPath(xpath, false);
+                if (fallbackPath != null) {
+                    result = dataSource.getValueAtPath(fallbackPath);
+                }
             }
+            return result;
+        } catch (Exception e) {
+            throw new UncheckedExecutionException("Bad path: " + xpath, e);
         }
-        return result;
     }
 
     /**
@@ -1375,14 +1380,6 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         }
         if (result == null)
             throw new NoClassDefFoundError("No SAX parser is available, or unable to set validation correctly");
-        try {
-            result.setEntityResolver(new CachingEntityResolver());
-        } catch (Throwable e) {
-            System.err
-            .println("WARNING: Can't set caching entity resolver  -  error "
-                + e.toString());
-            e.printStackTrace();
-        }
         return result;
     }
 
@@ -3296,6 +3293,15 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      * "Raw" refers to the fact that some of the paths may duplicate paths that are
      * already in this CLDRFile (in the xml and/or votes), in which case they will
      * later get filtered by getExtraPaths (removed from toAddTo) rather than re-added.
+     *
+     * NOTE: values may be null for some "extra" paths in locales for which no explicit
+     * values have been submitted. Both unit tests and Survey Tool client code generate
+     * errors or warnings for null value, but allow null value for certain exceptional
+     * extra paths. See the functions named extraPathAllowsNullValue in TestPaths.java
+     * and in the JavaScript client code. Make sure that updates here are reflected there
+     * and vice versa.
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11238
      */
     private Collection<String> getRawExtraPathsPrivate(Collection<String> toAddTo) {
         SupplementalDataInfo supplementalData = CLDRConfig.getInstance().getSupplementalDataInfo();
