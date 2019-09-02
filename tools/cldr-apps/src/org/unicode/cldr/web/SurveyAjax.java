@@ -2846,23 +2846,22 @@ public class SurveyAjax extends HttpServlet {
 
         writeBulkInfoHtml(request, out);
 
-        if (!doFinal) {
-            out.write("<div class='helpHtml'>\n");
-            out.write("Please review these items carefully. The \"NEXT\" button will not appear until the page fully loads. Pressing NEXT will submit these votes.\n");
-            out.write("<br>\n");
-            out.write("For help, see: <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/index/survey-tool/upload'>Using Bulk Upload</a>\n"); 
-            out.write("</div>\n");
-        } else {
+        if (doFinal) {
             out.write("<div class='bulkNextButton'>\n");
             out.write("<b>Submitted!</b><br/>\n");
             out.write("<a href=\"upload.jsp?s=" + sid + "&email=" + theirU.email +"\">Another?</a>\n");
             out.write("</div>\n");
-            out.write("<div class='helpHtml'>\n");
-            out.write("Items listed have been submitted as " + theirU.email);
-            out.write("<br>\n");
-            out.write("For help, see: <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/index/survey-tool/upload'>Using Bulk Upload</a>\n");
-            out.write("</div>\n");
         }
+
+        out.write("<div class='helpHtml'>\n");
+        if (!doFinal) {
+            out.write("Please review these items carefully. The \"NEXT\" button will not appear until the page fully loads. Pressing NEXT will submit these votes.\n");
+        } else {
+            out.write("Items listed have been submitted as " + theirU.email);
+        }
+        out.write("<br>\n");
+        out.write("For help, see: <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/index/survey-tool/upload'>Using Bulk Upload</a>\n");
+        out.write("</div>\n");
 
         out.write("<table class='data'>\n");
         out.write("<thead>\n");
