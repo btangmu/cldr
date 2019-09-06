@@ -54,6 +54,7 @@ import org.unicode.cldr.util.SpecialLocales;
 import org.unicode.cldr.util.SupplementalDataInfo;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.util.XMLSource;
+import org.unicode.cldr.util.XMLUploader;
 import org.unicode.cldr.util.XPathParts;
 import org.unicode.cldr.web.BallotBox.InvalidXPathException;
 import org.unicode.cldr.web.BallotBox.VoteNotAcceptedException;
@@ -2753,19 +2754,24 @@ public class SurveyAjax extends HttpServlet {
      *
      * Some code was moved here from submit.jsp
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-11877
+     *
+     * TODO: separate web-specific code (that uses HttpServletRequest, HttpServletResponse, SurveyMain, ...)
+     * (to keep here in cldr-apps) from html-producing code (to move into util/XMLUploader.java),
+     * for encapsulation and to enable unit testing for html-producing code.
      */
     static public void handleBulkSubmit(HttpServletRequest request, HttpServletResponse response, Writer out)
             throws IOException, JSONException, InvalidXPathException, VoteNotAcceptedException {
+        String contextPath = request.getContextPath();
         String sid = request.getParameter("s");
         if (!request.getMethod().equals("POST") || (sid == null)) {
-            response.sendRedirect(request.getContextPath() + "/upload.jsp");
+            response.sendRedirect(contextPath + "/upload.jsp");
             return;
         }
 
         String email = request.getParameter("email");
         final CookieSession cs = CookieSession.retrieve(sid);
         if (cs == null || cs.user == null) {
-            response.sendRedirect(request.getContextPath() + "/survey");
+            response.sendRedirect(contextPath + "/survey");
             return;
         }
         cs.userDidAction(); // mark user as not idle
@@ -2773,7 +2779,7 @@ public class SurveyAjax extends HttpServlet {
         UserRegistry.User theirU = sm.reg.get(email.trim());
         if (theirU == null
                 || (!theirU.equals(cs.user) && !cs.user.isAdminFor(theirU))) {
-            response.sendRedirect(request.getContextPath()
+            response.sendRedirect(contextPath
                     + "/upload.jsp?s=" + sid + "&email=" + email.trim()
                     + "&emailbad=t");
             return;
@@ -2799,11 +2805,11 @@ public class SurveyAjax extends HttpServlet {
         out.write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n");
         out.write("<title>SurveyTool File Submission | " + title + "</title>\n");
         out.write("<link rel='stylesheet' type='text/css' href='./surveytool.css' />\n");
-        out.write("<script src='" + request.getContextPath() + "/js/survey.js'></script>\n");
+        out.write("<script src='" + contextPath + "/js/survey.js'></script>\n");
         out.write("</head>\n<body>\n");
         out.write("<a href=\"upload.jsp?s=" + sid + "&email=" + theirU.email + "\">Re-Upload File/Try Another</a>");
         out.write(" | ");
-        out.write("<a href=\"" + request.getContextPath() + "/survey\">Return to the SurveyTool <img src='STLogo.png' style='float: right;' />");
+        out.write("<a href=\"" + contextPath + "/survey\">Return to the SurveyTool <img src='STLogo.png' style='float: right;' />");
         out.write("</a>\n");
         out.write("<hr />");
         out.write("<h3>\n");
@@ -2842,9 +2848,8 @@ public class SurveyAjax extends HttpServlet {
         out.write("Please review these " + all.size() + " entries.");
         out.write("</h4>\n");
 
-        request.setAttribute("BULK_STAGE", doFinal ? "submit" : "test");
-
-        writeBulkInfoHtml(request, out);
+        final String bulkStage = doFinal ? "submit" : "test";
+        XMLUploader.writeBulkInfoHtml(bulkStage, out);
 
         if (doFinal) {
             out.write("<div class='bulkNextButton'>\n");
@@ -2989,7 +2994,7 @@ public class SurveyAjax extends HttpServlet {
                 out.write("<th title='" + base + " #" + base_xpath_id + "'"
                     + " style='text-align: left; font-size: smaller;'>"
                     + "<a target='" + WebContext.TARGET_ZOOMED + "'"
-                    + "href='" + request.getContextPath()
+                    + "href='" + contextPath
                     + "/survey?_="+ loc + "&strid="
                     + sm.xpt.getStringIDString(base_xpath_id) + ident + "'>"
                     + ph.toString() + "</a>");
@@ -3024,7 +3029,7 @@ public class SurveyAjax extends HttpServlet {
         out.write(updCnt);
         out.write(" votes.\n");
         if (!doFinal && updCnt > 0) {
-            out.write("<form action='" + request.getContextPath() + request.getServletPath() + "' method='POST'>\n");
+            out.write("<form action='" + contextPath + request.getServletPath() + "' method='POST'>\n");
             out.write("<input type='hidden' name='s' value='" + sid + "' />\n");
             out.write("<input type='hidden' name='email' value='" + email + "' />");
             out.write("<input class='bulkNextButton' type='submit' name='dosubmit' value='"
@@ -3032,45 +3037,5 @@ public class SurveyAjax extends HttpServlet {
             out.write("</form>\n");
         }
         out.write("</body>\n</html>\n");
-    }
-
-    /**
-     *
-     * @param request
-     * @param out
-     * @throws IOException
-     *
-     * Some code was moved here from bulkinfo.jspf
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-11877
-     */
-    static public void writeBulkInfoHtml(HttpServletRequest request, Writer out) throws IOException {
-        final String bulkStage = request.getAttribute("BULK_STAGE").toString();
-        out.write("<div class='bulkNextInfo'>\n");
-        out.write("<ul>\n");
-        out.write("<li class='header'>Bulk Upload:</li>\n");
-        String stages[] = { "upload", "Upload XML file",
-            "check",  "Verify valid XML",
-            "test",   "Test for CLDR errors",
-            "submit",   "Data submitted into SurveyTool"
-        };
-
-        for (int i = 0; i < stages.length; i += 2) {
-            final String stage = stages[i + 0];
-            final String name = stages[i + 1];
-            final boolean active = bulkStage.equals(stage);
-            final String activeClass = active ? "active" : "inactive";
-
-            out.write("<li class='" + activeClass + "'>\n");
-            out.write("<h1>" + (i/2) + 1 + ". " + stage + "</h1>\n");
-            out.write("<h2>" + name + "</h2>\n");
-            out.write("</li>\n");
-        }
-        out.write("</ul>\n");
-        if (bulkStage.equals("upload")) {
-            out.write("<p class='helpContent'>");
-            out.write("Click the button in the bottom-right corner to proceed to the next step.");
-            out.write("</p>\n");
-        }
-        out.write("</div>\n");
     }
 }

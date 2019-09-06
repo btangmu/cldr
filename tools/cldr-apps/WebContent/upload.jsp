@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 import="org.unicode.cldr.web.*"
     pageEncoding="UTF-8"%>
+<%@page import="org.unicode.cldr.util.XMLUploader"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -11,8 +12,7 @@ import="org.unicode.cldr.web.*"
 <body>
 
 <%
-request.setAttribute("BULK_STAGE", "upload");
-SurveyAjax.writeBulkInfoHtml(request, out);
+XMLUploader.writeBulkInfoHtml("upload", out);
 %>
 
 <a href="<%=request.getContextPath()%>/survey">Return to the SurveyTool <img src='STLogo.png' style='float:right;' /></a>
@@ -100,7 +100,7 @@ if(request.getParameter("s")==null) { %>
 <div>
 <label for='file'>XML file to upload:</label>
 <!-- or a ZIP file containing multiple XML files -->
-<input name="file" type="file" size="40"/>
+<input id="file" name="file" type="file" size="40"/>
 </div>
 </div>
 <div class='helpHtml'>
