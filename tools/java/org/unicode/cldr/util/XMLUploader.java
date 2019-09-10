@@ -34,14 +34,15 @@ public class XMLUploader {
         };
 
         for (int i = 0; i < stages.length; i += 2) {
-            final String stage = stages[i + 0];
-            final String name = stages[i + 1];
-            final boolean active = bulkStage.equals(stage);
+            final int stageNumber = (i/2) + 1;
+            final String stageName = stages[i + 0];
+            final String stageDescription = stages[i + 1];
+            final boolean active = bulkStage.equals(stageName);
             final String activeClass = active ? "active" : "inactive";
 
             out.write("<li class='" + activeClass + "'>\n");
-            out.write("<h1>" + (i/2) + 1 + ". " + stage + "</h1>\n");
-            out.write("<h2>" + name + "</h2>\n");
+            out.write("<h1>" + stageNumber + ". " + stageName + "</h1>\n");
+            out.write("<h2>" + stageDescription + "</h2>\n");
             out.write("</li>\n");
         }
         out.write("</ul>\n");
