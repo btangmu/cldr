@@ -1377,10 +1377,11 @@ public class TestUtilities extends TestFmwkPlus {
             errln("Exception for writeBulkInfoHtml in TestBulkUploadHtml: " + e);
         }
         final String expected = "<div class='bulkNextInfo'>\n<ul>\n<li class='header'>Bulk Upload:</li>\n" +
-            "<li class='inactive'>\n<h1>01. upload</h1>\n<h2>Upload XML file</h2>\n</li>\n" +
-            "<li class='inactive'>\n<h1>11. check</h1>\n<h2>Verify valid XML</h2>\n</li>\n" +
-            "<li class='inactive'>\n<h1>21. test</h1>\n<h2>Test for CLDR errors</h2>\n</li>\n<li class='active'>\n" +
-            "<h1>31. submit</h1>\n<h2>Data submitted into SurveyTool</h2>\n</li>\n</ul>\n</div>\n";
+            "<li class='inactive'>\n<h1>1. upload</h1>\n<h2>Upload XML file</h2>\n</li>\n" +
+            "<li class='inactive'>\n<h1>2. check</h1>\n<h2>Verify valid XML</h2>\n</li>\n" +
+            "<li class='inactive'>\n<h1>3. test</h1>\n<h2>Test for CLDR errors</h2>\n</li>\n" +
+            "<li class='active'>\n<h1>4. submit</h1>\n<h2>Data submitted into SurveyTool</h2>\n</li>\n" +
+            "</ul>\n</div>\n";
         assertEquals("writeBulkInfoHtml", expected, out.toString());
     }
 
