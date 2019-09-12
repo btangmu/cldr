@@ -1709,13 +1709,10 @@ public class DataSection implements JSONString {
 
         ourSrc.setSupplementalDirectory(sm.getSupplementalDirectory());
 
-        /*
-         * TODO: clarify whether session is ever null, and if not, whether for consistency
-         * and simplicity we could always use session.user instead of ctx.session.user
-         */
-        if (ctx != null) {
-            section.setUserForVotelist(ctx.session != null ? ctx.session.user : null);
-        } else if (session != null && session.user != null) {
+        if (session == null) {
+            throw new InternalError("session == null");
+        }
+        if (session.user != null) {
             section.setUserForVotelist(session.user);
         }
 
