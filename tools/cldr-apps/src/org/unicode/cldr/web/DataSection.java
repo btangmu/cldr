@@ -951,20 +951,6 @@ public class DataSection implements JSONString {
         }
 
         /**
-         * Does the DataSection, to which this DataRow belongs, have examples?
-         *
-         * @return true or false
-         * 
-         * TODO: Why is this a method of DataRow, when the field of the same name that it returns
-         * is a field of DataSection??
-         * 
-         * Called only by row.jsp
-         */
-        public boolean hasExamples() {
-            return hasExamples;
-        }
-
-        /**
          * Get the status icon for this DataRow
          *
          * @param ctx the WebContext
@@ -1719,8 +1705,6 @@ public class DataSection implements JSONString {
 
         DataSection section = new DataSection(pageId, sm, locale, prefix, matcher);
 
-        section.hasExamples = true;
-
         CLDRFile ourSrc = sm.getSTFactory().make(locale.getBaseName(), true, true);
 
         ourSrc.setSupplementalDirectory(sm.getSupplementalDirectory());
@@ -1802,13 +1786,6 @@ public class DataSection implements JSONString {
 
     // hash of examples
     Hashtable<String, ExampleEntry> exampleHash = new Hashtable<String, ExampleEntry>();
-
-    /**
-     * Does this DataSection have examples?
-     * 
-     * TODO: resolve confusion: this is a field of DataSection, but it's returned by a function with the same name in DataRow
-     */
-    public boolean hasExamples = false;
 
     /*
      * Interest group
@@ -2556,7 +2533,7 @@ public class DataSection implements JSONString {
         ctx.println("<table summary='Data Items for " + ctx.getLocale().toString() + " " + section.xpathPrefix
             + "' class='data' border='0'>");
 
-        int table_width = section.hasExamples ? 13 : 10;
+        int table_width = 13;
         int itemColSpan;
         if (!canModify) {
             table_width -= 4; // No vote, change, or no opinion columns
@@ -2583,19 +2560,18 @@ public class DataSection implements JSONString {
         }
         ctx.print(" <th>Code</th>\n" + // 2
             " <th title='[" + SurveyMain.TRANS_HINT_LOCALE + "]'>" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + "</th>\n");
-        if (section.hasExamples) {
-            ctx.print(" <th title='" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + " [" + SurveyMain.TRANS_HINT_LOCALE
-                + "] Example'><i>Ex</i></th>\n");
-        }
+
+        ctx.print(" <th title='" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + " [" + SurveyMain.TRANS_HINT_LOCALE
+            + "] Example'><i>Ex</i></th>\n");
 
         ctx.print(" <th colspan=" + itemColSpan + ">" + SurveyMain.getProposedName() + "</th>\n");
-        if (section.hasExamples) {
-            ctx.print(" <th title='Proposed Example'><i>Ex</i></th>\n");
-        }
+
+        ctx.print(" <th title='Proposed Example'><i>Ex</i></th>\n");
+
         ctx.print(" <th colspan=" + itemColSpan + ">" + SurveyMain.CURRENT_NAME + "</th>\n");
-        if (section.hasExamples) {
-            ctx.print(" <th title='Current Example'><i>Ex</i></th>\n");
-        }
+
+        ctx.print(" <th title='Current Example'><i>Ex</i></th>\n");
+
         if (canModify) {
             ctx.print(" <th colspan='2' >Change</th>\n"); // 8
             ctx.print("<th width='20' title='No Opinion'>n/o</th>\n"); // 5
@@ -2631,7 +2607,6 @@ public class DataSection implements JSONString {
                 }
             }
             result.put("rows", itemList);
-            result.put("hasExamples", hasExamples);
             result.put("xpathPrefix", xpathPrefix);
             return result.toString();
         } catch (Throwable t) {
