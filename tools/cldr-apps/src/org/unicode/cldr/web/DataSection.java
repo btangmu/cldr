@@ -38,6 +38,7 @@ import org.unicode.cldr.test.CheckCLDR.StatusAction;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
 import org.unicode.cldr.test.ExampleGenerator;
 import org.unicode.cldr.test.ExampleGenerator.ExampleType;
+import org.unicode.cldr.test.TestCache;
 import org.unicode.cldr.test.TestCache.TestResultBundle;
 import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRFile;
@@ -1446,7 +1447,7 @@ public class DataSection implements JSONString {
      *
      * TODO: Determine whether we need DataSection to be user-specific, as userForVotelist implies
      *
-     * Called by getRow, make, submitVoteOrAbstention, and submit.jsp
+     * Called by getRow, make, submitVoteOrAbstention, and handleBulkSubmit
      */
     public void setUserForVotelist(User u) {
         userForVotelist = u;
@@ -1725,15 +1726,8 @@ public class DataSection implements JSONString {
                 throw new InternalError("checkCldr == null");
             }
             section.translationHintsFile = sm.getTranslationHintsFile();
-
             String englishPath = section.translationHintsFile.getSupplementalDirectory().getPath();
-            /*
-             * TODO: get nativeExampleGenerator from a cache, on a per-locale basis.
-             * We shouldn't need to create a new ExampleGenerator every time we create a new DataSection.
-             * However, we will need to refresh it when a vote occurs that might change the examples.
-             * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
-             */
-            section.nativeExampleGenerator = new ExampleGenerator(ourSrc, section.translationHintsFile, englishPath);
+            section.nativeExampleGenerator = TestCache.getExampleGenerator(locale, ourSrc, section.translationHintsFile, englishPath);
 
             section.populateFrom(ourSrc, checkCldr);
             /*

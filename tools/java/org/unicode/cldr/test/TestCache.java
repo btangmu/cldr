@@ -2,6 +2,7 @@ package org.unicode.cldr.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -205,6 +206,28 @@ public class TestCache implements XMLSource.Listener {
                 cache.invalidate(k);
                 System.err.println("BundDel " + k);
             }
+        }
+        updateExampleGeneratorCache(xpath, locale);
+    }
+
+    private static Map<String, ExampleGenerator> exampleGeneratorCache = new ConcurrentHashMap<String, ExampleGenerator>();
+
+    public static ExampleGenerator getExampleGenerator(CLDRLocale locale, CLDRFile ourSrc, CLDRFile translationHintsFile, String englishPath) {
+        String locString = locale.toString();
+        ExampleGenerator eg = exampleGeneratorCache.get(locString);
+        if (eg == null) {
+            eg = new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
+            exampleGeneratorCache.put(locString, eg);
+        }
+        return eg;
+    }
+
+    private void updateExampleGeneratorCache(String xpath, CLDRLocale locale) {
+        String locString = locale.toString();
+        ExampleGenerator eg = exampleGeneratorCache.get(locString);
+        if (eg != null) {
+            // exampleGeneratorCache.remove(locString);
+            eg.updateCache(xpath);
         }
     }
 }

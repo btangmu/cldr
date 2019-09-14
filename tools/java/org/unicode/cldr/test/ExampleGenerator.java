@@ -157,7 +157,28 @@ public class ExampleGenerator {
     private CLDRFile englishFile;
     Matcher URLMatcher = URL_PATTERN.matcher("");
 
+    /*
+     * The cache is accessed only by getExampleHtml and updateCache.
+     * Its key is built from an xpath, a value for that xpath, and a letter to indicate the ExampleType (ENGLISH or NATIVE).
+     * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
+     */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
+
+    /**
+     * For this (locale-specific) ExampleGenerator, clear the cached value for the given xpath,
+     * and for any xpaths whose examples might also depend on this xpath.
+     *
+     * Is cache-clearing ever needed for ExampleType.ENGLISH?
+     *
+     * @param xpath the path
+     */
+    public void updateCache(String xpath) {
+        /*
+         * TODO: instead of removing ALL keys, only remove the paths that may be affected
+         * by this change.
+         */
+        cache.clear();
+    }
 
     private static final String NONE = "\uFFFF";
 

@@ -1166,7 +1166,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!getPathsForFile().contains(distinguishingXpath)) {
                 throw new BallotBox.InvalidXPathException(distinguishingXpath);
             }
-            SurveyLog.debug("V4v: " + locale + " " + distinguishingXpath + " : " + user + " voting for '" + value + "'");
+            if (!skipVoteDebugLog) {
+                SurveyLog.debug("V4v: " + locale + " " + distinguishingXpath + " : " + user + " voting for '" + value + "'");
+            }
             /*
              * this has to do with changing a vote - not counting it.
              */
@@ -1197,7 +1199,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!readonly) {
                 boolean didClearFlag = false;
                 makeSource(false);
-                ElapsedTimer et = !SurveyLog.DEBUG ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
+                ElapsedTimer et = (skipVoteDebugLog || !SurveyLog.DEBUG) ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
                     + distinguishingXpath + " : " + user + " voting for '" + value);
                 Connection conn = null;
                 PreparedStatement saveOld = null; // save off old value
@@ -1282,7 +1284,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 } finally {
                     DBUtils.close(saveOld, rs, ps, ps2, conn);
                 }
-                SurveyLog.debug(et);
+                if (et != null) {
+                    SurveyLog.debug(et);
+                }
 
                 if (didClearFlag) {
                     // now, outside of THAT txn, make a forum post about clearing the flag.
@@ -1623,6 +1627,8 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
     }
 
     boolean dbIsSetup = false;
+
+    public boolean skipVoteDebugLog = false;
 
     /**
      * Test cache against (this)

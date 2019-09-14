@@ -6,11 +6,19 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.unicode.cldr.draft.FileUtilities;
+import org.unicode.cldr.test.ExampleGenerator;
+import org.unicode.cldr.test.ExampleGenerator.ExampleType;
 import org.unicode.cldr.unittest.web.TestAll.WebTestInfo;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRFile.DraftStatus;
@@ -38,6 +46,7 @@ import org.unicode.cldr.web.UserRegistry.User;
 import org.unicode.cldr.web.XPathTable;
 
 import com.ibm.icu.dev.test.TestFmwk;
+import com.ibm.icu.dev.util.CollectionUtilities;
 import com.ibm.icu.dev.util.ElapsedTimer;
 
 public class TestSTFactory extends TestFmwk {
@@ -888,5 +897,188 @@ public class TestSTFactory extends TestFmwk {
     static final Map<String, Object> noDtdPlease = new TreeMap<String, Object>();
     static {
         noDtdPlease.put("DTD_DIR", CLDRPaths.COMMON_DIRECTORY + File.separator + "dtd" + File.separator);
+    }
+
+    /**
+     * Test dependencies where changing the value of one path changes example-generation for another path.
+     *
+     * @throws SQLException
+     * @throws InvalidXPathException
+     * @throws VoteNotAcceptedException
+     * @throws IOException
+     * @throws JSONException
+     */
+    public void TestExampleGeneratorDependencies() throws SQLException, InvalidXPathException, VoteNotAcceptedException, IOException, JSONException {
+        final boolean TEST_DEPENDENCIES = false; // make true to test
+        if (TEST_DEPENDENCIES) {
+            STFactory fac = getFactory();
+            boolean saveSkip = fac.skipVoteDebugLog;
+            fac.skipVoteDebugLog = true;
+            doTestEGDep(fac);
+            fac.skipVoteDebugLog = saveSkip;
+        }
+    }
+
+    /**
+     * Test dependencies where changing the value of one path changes example-generation for another path.
+     *
+     * @param fac the STFactory
+     * @throws IOException
+     * @throws JSONException
+     * @throws InvalidXPathException
+     * @throws VoteNotAcceptedException
+     */
+    private void doTestEGDep(STFactory fac) throws IOException, JSONException, InvalidXPathException, VoteNotAcceptedException {
+        /*
+         * If useHexId is true, use hex path.getStringIDString, like "f3d4397b739b287"; else use
+         * regular path string like "//ldml/localeDisplayNames/localeDisplayPattern/localePattern".
+         */
+        final boolean useHexId = false;
+        /*
+         * If countOnly is true, show only how many paths B are dependent on A;
+         * else show all the paths B.
+         */
+        final boolean countOnly = true;
+        /*
+         * TODO: test whether different localId gives different dependencies.
+         */
+        final String localId = "aa";
+
+        CLDRLocale locale = CLDRLocale.getInstance(localId);
+        CLDRFile cldrFile = fac.make(locale, true);
+        CLDRFile englishFile = fac.make("en", true);
+        BallotBox<User> box = fac.ballotBoxForLocale(locale);
+        UserRegistry.User user = getMyUser();
+        ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+        ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+
+        Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
+        CollectionUtilities.addAll(cldrFile.iterator(), paths);
+
+        /*
+         * Get all the examples so they'll be added to the cache for egBase.
+         */
+        for (String path : paths) {
+            String value = cldrFile.getStringValue(path);
+            if (value == null || path.endsWith("/alias") || path.startsWith("//ldml/identity")) {
+                continue;
+            }
+            egBase.getExampleHtml(path, value, ExampleType.NATIVE);
+        }
+
+        /*
+         * For each path (A), simulate a vote to change its value, and then check every other path (B),
+         * to see whether changing the value for A changed the example for B.
+         */
+        HashMap<String, HashSet<String>> dependencies = new HashMap<String, HashSet<String>>();
+        long count = 0;
+        long skipCount = 0;
+        for (String pathA : paths) {
+            if (skipPathForDependencies(pathA)) {
+                ++skipCount;
+                continue;
+            }
+            String valueA = cldrFile.getStringValue(pathA);
+            if (valueA == null) {
+                continue;
+            }
+            if ((++count % 100) == 0) {
+                System.out.println(count);
+            }
+            // if (count > 5000) {
+            //     break;
+            // }
+            /*
+             * To change values in cldrFile, use box.voteForValue.
+             * (We can't do cldrFile.add since "Resolved CLDRFiles are read-only".
+             * And, ExampleGenerator only works for resolved CLDRFiles.)
+             */
+            box.voteForValue(user, pathA, "test123");
+            HashSet<String> a = null;
+            for (String pathB : paths) {
+                if (pathA.equals(pathB) || skipPathForDependencies(pathB)) {
+                    continue;
+                }
+                String valueB = cldrFile.getStringValue(pathB);
+                if (valueB == null) {
+                    continue;
+                }
+                String exBase = egBase.getExampleHtml(pathB, valueB, ExampleType.NATIVE); // this will come from cache
+                String exTest = egTest.getExampleHtml(pathB, valueB, ExampleType.NATIVE); // this won't come from cache
+                if ((exTest == null) != (exBase == null)) {
+                    System.out.println("One null but not both? " + pathA + " --- " + pathB); // hasn't happened yet
+                } else if (exTest != null && !exTest.equals(exBase)) {
+                    if (a == null) {
+                        a = new HashSet<String>();
+                    }
+                    a.add(useHexId ? XPathTable.getStringIDString(pathB) : pathB);
+                }
+            }
+            if (a != null && !a.isEmpty()) {
+                if (countOnly) {
+                    Integer i = a.size();
+                    HashSet<String> n = new HashSet<String>();
+                    n.add(i.toString());
+                    dependencies.put(useHexId ? XPathTable.getStringIDString(pathA) : pathA, n);
+                } else {
+                    dependencies.put(useHexId ? XPathTable.getStringIDString(pathA) : pathA, a);
+                }
+            }
+            /*
+             * Abstain (undo that vote), so that the changes due to this pathA don't get
+             * carried over to the next pathA.
+             */
+            box.voteForValue(user, pathA, null /* abstain */);
+        }
+        writeDependenciesToFile(dependencies);
+        System.out.println("skipCount = " + skipCount);
+    }
+
+    /**
+     * Should the given path be skipped when testing example-generator path dependencies?
+     *
+     * @param path
+     * @return true to skip, else false
+     */
+    private static boolean skipPathForDependencies(String path) {
+        if (path.endsWith("/alias") || path.startsWith("//ldml/identity")) {
+            return true;
+        }
+        final String[] toSkip = {
+            "//ldml/characters/ellipsis",
+            "//ldml/characters/exemplarCharacters",
+            "//ldml/characters/parseLenients",
+            "//ldml/layout/orientation/lineOrder",
+            "//ldml/localeDisplayNames/codePatterns/codePattern",
+            "//ldml/localeDisplayNames/keys/key",
+            "//ldml/localeDisplayNames/languages/language",
+            "//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern",
+            "//ldml/localeDisplayNames/localeDisplayPattern/localePattern",
+            "//ldml/localeDisplayNames/scripts/script",
+            "//ldml/localeDisplayNames/territories/territory",
+            "//ldml/localeDisplayNames/types/type",
+            "//ldml/localeDisplayNames/variants/variant",
+        };
+        for (String s: toSkip) {
+            if (path.startsWith(s)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Write the map of example-generator path dependencies to a json file.
+     *
+     * @param dependencies the map
+     * @throws IOException
+     * @throws JSONException
+     */
+    private void writeDependenciesToFile(HashMap<String, HashSet<String>> dependencies) throws IOException, JSONException {
+        JSONObject json = new JSONObject(dependencies);
+        final String fileName = "example_dependencies.json";
+        PrintWriter writer = FileUtilities.openUTF8Writer(CLDRPaths.GEN_DIRECTORY + "test/", fileName);
+        json.write(writer);
+        writer.close();
     }
 }
