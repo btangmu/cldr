@@ -1166,7 +1166,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!getPathsForFile().contains(distinguishingXpath)) {
                 throw new BallotBox.InvalidXPathException(distinguishingXpath);
             }
-            if (!skipVoteDebugLog) {
+            if (!isVoteDebugLogSkipping()) {
                 SurveyLog.debug("V4v: " + locale + " " + distinguishingXpath + " : " + user + " voting for '" + value + "'");
             }
             /*
@@ -1199,7 +1199,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!readonly) {
                 boolean didClearFlag = false;
                 makeSource(false);
-                ElapsedTimer et = (skipVoteDebugLog || !SurveyLog.DEBUG) ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
+                ElapsedTimer et = (isVoteDebugLogSkipping() || !SurveyLog.DEBUG) ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
                     + distinguishingXpath + " : " + user + " voting for '" + value);
                 Connection conn = null;
                 PreparedStatement saveOld = null; // save off old value
@@ -1627,8 +1627,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
     }
 
     boolean dbIsSetup = false;
-
-    public boolean skipVoteDebugLog = false;
 
     /**
      * Test cache against (this)
@@ -2374,5 +2372,27 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
     public static final String getLastVoteTable() {
         final String dbName = DBUtils.Table.VOTE_VALUE.forVersion(SurveyMain.getLastVoteVersion(), false).toString();
         return dbName;
+    }
+
+    private boolean skipVoteDebugLog = false;
+
+    /**
+     * Is some voting-related debug logging to be skipped, to avoid excessive
+     * noise in log for certain operations?
+     *
+     * @return true if currently skipping, else false
+     */
+    public boolean isVoteDebugLogSkipping() {
+        return skipVoteDebugLog;
+    }
+
+    /**
+     * Enable or disable some voting-related debug logging, to avoid excessive
+     * noise in log for certain operations
+     *
+     * @param true to skip, else false
+     */
+    public void setVoteDebugLogSkipping(boolean skipVoteDebugLog) {
+        this.skipVoteDebugLog = skipVoteDebugLog;
     }
 }

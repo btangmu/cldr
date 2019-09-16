@@ -912,10 +912,10 @@ public class TestSTFactory extends TestFmwk {
         final boolean TEST_DEPENDENCIES = false; // make true to test
         if (TEST_DEPENDENCIES) {
             STFactory fac = getFactory();
-            boolean saveSkip = fac.skipVoteDebugLog;
-            fac.skipVoteDebugLog = true;
+            boolean saveSkip = fac.isVoteDebugLogSkipping(); // save
+            fac.setVoteDebugLogSkipping(true);
             doTestEGDep(fac);
-            fac.skipVoteDebugLog = saveSkip;
+            fac.setVoteDebugLogSkipping(saveSkip); // restore
         }
     }
 
