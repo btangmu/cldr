@@ -2374,6 +2374,10 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
         return dbName;
     }
 
+    /**
+     * Is some voting-related debug logging to be skipped, to avoid excessive
+     * noise in log for certain operations?
+     */
     private boolean skipVoteDebugLog = false;
 
     /**
