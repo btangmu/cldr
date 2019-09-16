@@ -314,10 +314,11 @@ public class ExampleGenerator {
         }
         if (false && (exType == ExampleType.ENGLISH) != (englishFile == cldrFile)) {
             /*
-             * TODO: this equivalence implies the ExampleType parameter for getExampleHtml is superfluous,
-             * and so is exTypeLetter below as part of cacheKey.
-             * This expectation passes with SurveyTool, and with cldr-apps TestAll.java, but fails
-             * with cldr-unittest TestAll.java ...
+             * TODO: the expected equivalence (exType == ExampleType.ENGLISH) == (englishFile == cldrFile)
+             * implies the ExampleType parameter for getExampleHtml is superfluous, and so is exTypeLetter
+             * as part of cacheKey. This expectation passes with SurveyTool, and with cldr-apps TestAll.java,
+             * but fails with cldr-unittest TestAll.java (multiple test failures) ...
+             *
              * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
              */
             boolean typeIsEnglish = (exType == ExampleType.ENGLISH);
