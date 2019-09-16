@@ -2,7 +2,6 @@ package org.unicode.cldr.test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -81,6 +80,11 @@ public class TestCache implements XMLSource.Listener {
 
     private static final boolean DEBUG = false;
 
+    /*
+     * TODO: document whether CLDR_TESTCACHE_SIZE is set on production server, and if so to what, and why;
+     * evaluate why the fallback 12 for CLDR_TESTCACHE_SIZE is appropriate or too small. Consider not
+     * using maximumSize() at all, depending on softValues() instead to garbage collect only when needed.
+     */
     private Cache<CheckCLDR.Options, TestResultBundle> testResultCache = CacheBuilder.newBuilder().maximumSize(CLDRConfig.getInstance()
         .getProperty("CLDR_TESTCACHE_SIZE", 12)).softValues().build();
 
@@ -248,7 +252,7 @@ public class TestCache implements XMLSource.Listener {
      *
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
      */
-    private static Map<String, ExampleGenerator> exampleGeneratorCache = new ConcurrentHashMap<String, ExampleGenerator>();
+    private static Cache<String, ExampleGenerator> exampleGeneratorCache = CacheBuilder.newBuilder().softValues().build();
 
     /**
      * Get an ExampleGenerator for the given locale, etc.
@@ -269,7 +273,10 @@ public class TestCache implements XMLSource.Listener {
      */
     public static ExampleGenerator getExampleGenerator(CLDRLocale locale, CLDRFile ourSrc, CLDRFile translationHintsFile, String englishPath) {
         String locString = locale.toString();
-        ExampleGenerator eg = exampleGeneratorCache.get(locString);
+        /*
+         * TODO: consider get(locString, Callable) instead of getIfPresent and put.
+         */
+        ExampleGenerator eg = exampleGeneratorCache.getIfPresent(locString);
         if (eg == null) {
             eg = new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
             exampleGeneratorCache.put(locString, eg);
@@ -286,10 +293,10 @@ public class TestCache implements XMLSource.Listener {
      * Called by valueChangedInvalidateRecursively
      */
     private static void updateExampleGeneratorCache(String xpath, CLDRLocale locale) {
-        ExampleGenerator eg = exampleGeneratorCache.get(locale.toString());
+        ExampleGenerator eg = exampleGeneratorCache.getIfPresent(locale.toString());
         if (eg != null) {
             /*
-             * We could call exampleGeneratorCache.remove(locale.toString()) but that would be
+             * We could call exampleGeneratorCache.invalidate(locale.toString()) but that would be
              * too drastic, effectively throwing away the ExampleGenerator for the entire locale.
              * Ideally eg.updateCache will only clear the minimum set of examples required
              * due to dependence on the given xpath.
