@@ -161,6 +161,16 @@ public class ExampleGenerator {
      * The cache is accessed only by getExampleHtml and updateCache.
      * Its key is built from an xpath, a value for that xpath, and a letter to indicate the ExampleType (ENGLISH or NATIVE).
      * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
+     *
+     * TODO: simplify/clarify the ENGLISH/NATIVE distinction, to facilitate performance improvements.
+     * The general-purpose mechanism that currently appears to support both ENGLISH and NATIVE for each
+     * ExampleGenerator doesn't currently appear to be used or needed. If the two types are not really mixed
+     * in the same cache (or even in same ExampleGenerator), then E/N needn't be part of cache key (or
+     * require separate caches). Also, at least within Survey Tool, englishFile == cldrFile if (and only
+     * if) the ExampleGenerator is used for ExampleType.ENGLISH. In Survey Tool, ExampleType.ENGLISH is
+     * only actually used for a single ExampleGenerator, namely sm.getTranslationHintsExample().
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
      */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
@@ -172,7 +182,7 @@ public class ExampleGenerator {
      *
      * @param xpath the path
      */
-    public void updateCache(String xpath) {
+    public void updateCache(@SuppressWarnings("unused") String xpath) {
         /*
          * TODO: instead of removing ALL keys, only remove the paths that may be affected
          * by this change.
@@ -250,6 +260,7 @@ public class ExampleGenerator {
      * Create an Example Generator. If this is shared across threads, it must be synchronized.
      *
      * @param resolvedCldrFile
+     * @param englishFile
      * @param supplementalDataDirectory
      */
     public ExampleGenerator(CLDRFile resolvedCldrFile, CLDRFile englishFile, String supplementalDataDirectory) {
@@ -300,6 +311,20 @@ public class ExampleGenerator {
         }
         if (value == null) {
             return null;
+        }
+        if (false && (exType == ExampleType.ENGLISH) != (englishFile == cldrFile)) {
+            /*
+             * TODO: this equivalence implies the ExampleType parameter for getExampleHtml is superfluous,
+             * and so is exTypeLetter below as part of cacheKey.
+             * This expectation passes with SurveyTool, and with cldr-apps TestAll.java, but fails
+             * with cldr-unittest TestAll.java ...
+             * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+             */
+            boolean typeIsEnglish = (exType == ExampleType.ENGLISH);
+            boolean filesAreSame = (englishFile == cldrFile);
+            String msg = "False expectation in ExampleGenerator.getExampleHtml: typeIsEnglish = "
+                + typeIsEnglish + "; filesAreSame = " + filesAreSame;
+            throw new IllegalArgumentException(msg);
         }
         String cacheKey = null;
         String result = null;
