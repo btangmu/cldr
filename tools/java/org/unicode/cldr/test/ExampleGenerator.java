@@ -92,7 +92,15 @@ public class ExampleGenerator {
     private static SupplementalDataInfo supplementalDataInfo;
     private PathDescription pathDescription;
 
-    private final static boolean CACHING = true;
+    /*
+     * For testing, caching can be disabled for some ExampleGenerators while still
+     * enabled for others.
+     */
+    private boolean cachingIsEnabled = true;
+
+    public void disableCaching() {
+        cachingIsEnabled = false;
+    }
 
     public final static double NUMBER_SAMPLE = 123456.789;
     public final static double NUMBER_SAMPLE_WHOLE = 2345;
@@ -330,7 +338,7 @@ public class ExampleGenerator {
         String cacheKey = null;
         String result = null;
         try {
-            if (CACHING) {
+            if (cachingIsEnabled) {
                 String exTypeLetter = (exType == ExampleType.ENGLISH) ? "E" : "N";
                 cacheKey = exTypeLetter + xpath + "," + value;
                 result = cache.get(cacheKey);
@@ -433,7 +441,7 @@ public class ExampleGenerator {
             result = finalizeBackground(result);
         }
 
-        if (CACHING) {
+        if (cachingIsEnabled) {
             if (result == null) {
                 cache.put(cacheKey, NONE);
             } else {
