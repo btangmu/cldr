@@ -1166,7 +1166,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!getPathsForFile().contains(distinguishingXpath)) {
                 throw new BallotBox.InvalidXPathException(distinguishingXpath);
             }
-            SurveyLog.debug("V4v: " + locale + " " + distinguishingXpath + " : " + user + " voting for '" + value + "'");
+            if (!isVoteDebugLogSkipping()) {
+                SurveyLog.debug("V4v: " + locale + " " + distinguishingXpath + " : " + user + " voting for '" + value + "'");
+            }
             /*
              * this has to do with changing a vote - not counting it.
              */
@@ -1197,7 +1199,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (!readonly) {
                 boolean didClearFlag = false;
                 makeSource(false);
-                ElapsedTimer et = !SurveyLog.DEBUG ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
+                ElapsedTimer et = (isVoteDebugLogSkipping() || !SurveyLog.DEBUG) ? null : new ElapsedTimer("{0} Recording PLD for " + locale + " "
                     + distinguishingXpath + " : " + user + " voting for '" + value);
                 Connection conn = null;
                 PreparedStatement saveOld = null; // save off old value
@@ -1282,7 +1284,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 } finally {
                     DBUtils.close(saveOld, rs, ps, ps2, conn);
                 }
-                SurveyLog.debug(et);
+                if (et != null) {
+                    SurveyLog.debug(et);
+                }
 
                 if (didClearFlag) {
                     // now, outside of THAT txn, make a forum post about clearing the flag.
@@ -2368,5 +2372,31 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
     public static final String getLastVoteTable() {
         final String dbName = DBUtils.Table.VOTE_VALUE.forVersion(SurveyMain.getLastVoteVersion(), false).toString();
         return dbName;
+    }
+
+    /**
+     * Is some voting-related debug logging to be skipped, to avoid excessive
+     * noise in log for certain operations?
+     */
+    private boolean skipVoteDebugLog = false;
+
+    /**
+     * Is some voting-related debug logging to be skipped, to avoid excessive
+     * noise in log for certain operations?
+     *
+     * @return true if currently skipping, else false
+     */
+    public boolean isVoteDebugLogSkipping() {
+        return skipVoteDebugLog;
+    }
+
+    /**
+     * Enable or disable some voting-related debug logging, to avoid excessive
+     * noise in log for certain operations
+     *
+     * @param true to skip, else false
+     */
+    public void setVoteDebugLogSkipping(boolean skipVoteDebugLog) {
+        this.skipVoteDebugLog = skipVoteDebugLog;
     }
 }
