@@ -170,6 +170,9 @@ public class ExampleGenerator {
      * Its key is built from an xpath, a value for that xpath, and a letter to indicate the ExampleType (ENGLISH or NATIVE).
      * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
      *
+     * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
+     * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
+     *
      * TODO: simplify/clarify the ENGLISH/NATIVE distinction, to facilitate performance improvements.
      * The general-purpose mechanism that currently appears to support both ENGLISH and NATIVE for each
      * ExampleGenerator doesn't currently appear to be used or needed. If the two types are not really mixed
@@ -194,6 +197,8 @@ public class ExampleGenerator {
         /*
          * TODO: instead of removing ALL keys, only remove the paths that may be affected
          * by this change.
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
          */
         cache.clear();
     }

@@ -272,14 +272,23 @@ public class TestCache implements XMLSource.Listener {
      * org.unicode.cldr.test.ConsoleCheckCLDR.getExampleGenerator()
      */
     public static ExampleGenerator getExampleGenerator(CLDRLocale locale, CLDRFile ourSrc, CLDRFile translationHintsFile, String englishPath) {
-        String locString = locale.toString();
+        boolean egCacheIsEnabled = false;
+        if (!egCacheIsEnabled) {
+            return new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
+        }
         /*
          * TODO: consider get(locString, Callable) instead of getIfPresent and put.
          */
+        String locString = locale.toString();
         ExampleGenerator eg = exampleGeneratorCache.getIfPresent(locString);
         if (eg == null) {
-            eg = new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
-            exampleGeneratorCache.put(locString, eg);
+            synchronized(exampleGeneratorCache) {
+                eg = exampleGeneratorCache.getIfPresent(locString);
+                if (eg == null) {
+                    eg = new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
+                    exampleGeneratorCache.put(locString, eg);
+                }
+            }
         }
         return eg;
     }
@@ -296,10 +305,13 @@ public class TestCache implements XMLSource.Listener {
         ExampleGenerator eg = exampleGeneratorCache.getIfPresent(locale.toString());
         if (eg != null) {
             /*
+             * Each ExampleGenerator has its own internal cache, which is not the same
+             * as exampleGeneratorCache.
+             *
              * We could call exampleGeneratorCache.invalidate(locale.toString()) but that would be
              * too drastic, effectively throwing away the ExampleGenerator for the entire locale.
-             * Ideally eg.updateCache will only clear the minimum set of examples required
-             * due to dependence on the given xpath.
+             * Ideally eg.updateCache will only clear the minimum set of examples (in its internal
+             * cache) required due to dependence on the given xpath.
              */
             eg.updateCache(xpath);
         }
