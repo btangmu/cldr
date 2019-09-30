@@ -688,7 +688,7 @@ public class TestExampleGenerator extends TestFmwk {
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
-        final boolean TEST_DEPENDENCIES = true; // make true to test
+        final boolean TEST_DEPENDENCIES = false; // make true to test
         if (!TEST_DEPENDENCIES) {
             return;
         }
