@@ -272,7 +272,7 @@ public class TestCache implements XMLSource.Listener {
      * org.unicode.cldr.test.ConsoleCheckCLDR.getExampleGenerator()
      */
     public static ExampleGenerator getExampleGenerator(CLDRLocale locale, CLDRFile ourSrc, CLDRFile translationHintsFile, String englishPath) {
-        boolean egCacheIsEnabled = false;
+        boolean egCacheIsEnabled = true;
         if (!egCacheIsEnabled) {
             return new ExampleGenerator(ourSrc, translationHintsFile, englishPath);
         }
