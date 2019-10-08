@@ -92,7 +92,15 @@ public class ExampleGenerator {
     private static SupplementalDataInfo supplementalDataInfo;
     private PathDescription pathDescription;
 
-    private final static boolean CACHING = true;
+    /*
+     * For testing, caching can be disabled for some ExampleGenerators while still
+     * enabled for others.
+     */
+    private boolean cachingIsEnabled = true;
+
+    public void disableCaching() {
+        cachingIsEnabled = false;
+    }
 
     public final static double NUMBER_SAMPLE = 123456.789;
     public final static double NUMBER_SAMPLE_WHOLE = 2345;
@@ -157,7 +165,43 @@ public class ExampleGenerator {
     private CLDRFile englishFile;
     Matcher URLMatcher = URL_PATTERN.matcher("");
 
+    /*
+     * The cache is accessed only by getExampleHtml and updateCache.
+     * Its key is built from an xpath, a value for that xpath, and a letter to indicate the ExampleType (ENGLISH or NATIVE).
+     * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
+     *
+     * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
+     * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
+     *
+     * TODO: simplify/clarify the ENGLISH/NATIVE distinction, to facilitate performance improvements.
+     * The general-purpose mechanism that currently appears to support both ENGLISH and NATIVE for each
+     * ExampleGenerator doesn't currently appear to be used or needed. If the two types are not really mixed
+     * in the same cache (or even in same ExampleGenerator), then E/N needn't be part of cache key (or
+     * require separate caches). Also, at least within Survey Tool, englishFile == cldrFile if (and only
+     * if) the ExampleGenerator is used for ExampleType.ENGLISH. In Survey Tool, ExampleType.ENGLISH is
+     * only actually used for a single ExampleGenerator, namely sm.getTranslationHintsExample().
+     *
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+     */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
+
+    /**
+     * For this (locale-specific) ExampleGenerator, clear the cached value for the given xpath,
+     * and for any xpaths whose examples might also depend on this xpath.
+     *
+     * Is cache-clearing ever needed for ExampleType.ENGLISH?
+     *
+     * @param xpath the path
+     */
+    public void updateCache(@SuppressWarnings("unused") String xpath) {
+        /*
+         * TODO: instead of removing ALL keys, only remove the paths that may be affected
+         * by this change.
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+         */
+        cache.clear();
+    }
 
     private static final String NONE = "\uFFFF";
 
@@ -226,9 +270,16 @@ public class ExampleGenerator {
     private String creationTime = null; // only used if DEBUG_EXAMPLE_GENERATOR
 
     /**
+     * True if this ExampleGenerator is especially for generating "English" examples,
+     * false if it is for generating "native" examples.
+     */
+    private boolean typeIsEnglish;
+
+    /**
      * Create an Example Generator. If this is shared across threads, it must be synchronized.
      *
      * @param resolvedCldrFile
+     * @param englishFile
      * @param supplementalDataDirectory
      */
     public ExampleGenerator(CLDRFile resolvedCldrFile, CLDRFile englishFile, String supplementalDataDirectory) {
@@ -241,6 +292,7 @@ public class ExampleGenerator {
         this.cldrFile = resolvedCldrFile;
         this.subdivisionIdToName = EmojiSubdivisionNames.getSubdivisionIdToName(cldrFile.getLocaleID());
         this.englishFile = englishFile;
+        this.typeIsEnglish = (resolvedCldrFile == englishFile);
         synchronized (ExampleGenerator.class) {
             if (supplementalDataInfo == null) {
                 supplementalDataInfo = SupplementalDataInfo.getInstance(supplementalDataDirectory);
@@ -256,10 +308,6 @@ public class ExampleGenerator {
         }
     }
 
-    public enum ExampleType {
-        NATIVE, ENGLISH
-    };
-
     /**
      * Get an example string, in html, if there is one for this path,
      * otherwise null. For use in the survey tool, an example might be returned
@@ -270,22 +318,17 @@ public class ExampleGenerator {
      *
      * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
      * @param value the value; e.g., "{1} [{0}]"
-     * @param exType ExampleType.ENGLISH or ExampleType.NATIVE; null is not allowed
      * @return the example HTML, or null
      */
-    public String getExampleHtml(String xpath, String value, ExampleType exType) {
-        if (exType == null) {
-            throw new IllegalArgumentException("ExampleType null in ExampleGenerator.getExampleHtml");
-        }
+    public String getExampleHtml(String xpath, String value) {
         if (value == null) {
             return null;
         }
         String cacheKey = null;
         String result = null;
         try {
-            if (CACHING) {
-                String exTypeLetter = (exType == ExampleType.ENGLISH) ? "E" : "N";
-                cacheKey = exTypeLetter + xpath + "," + value;
+            if (cachingIsEnabled) {
+                cacheKey = xpath + "," + value;
                 result = cache.get(cacheKey);
                 if (result != null) {
                     if (result == NONE) {
@@ -297,11 +340,7 @@ public class ExampleGenerator {
             // If generating examples for an inheritance marker, then we need to find the
             // "real" value to generate from.
             if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
-                if (exType.equals(ExampleType.ENGLISH)) {
-                    value = englishFile.getConstructedBaileyValue(xpath, null, null);
-                } else { // ExampleType.NATIVE
-                    value = cldrFile.getConstructedBaileyValue(xpath, null, null);
-                }
+                value = cldrFile.getConstructedBaileyValue(xpath, null, null);
             }
 
             /*
@@ -318,7 +357,7 @@ public class ExampleGenerator {
             } else if (parts.contains("localeDisplayNames")) {
                 result = handleDisplayNames(xpath, parts, value);
             } else if (parts.contains("currency")) {
-                result = handleCurrency(xpath, parts, value, exType);
+                result = handleCurrency(xpath, parts, value);
             } else if (parts.contains("dayPeriods")) {
                 result = handleDayPeriod(parts, value);
             } else if (parts.contains("pattern") || parts.contains("dateFormatItem")) {
@@ -328,7 +367,7 @@ public class ExampleGenerator {
                     result = handleMiscPatterns(parts, value);
                 } else if (parts.contains("numbers")) {
                     if (parts.contains("currencyFormat")) {
-                        result = handleCurrencyFormat(parts, value, exType);
+                        result = handleCurrencyFormat(parts, value);
                     } else {
                         result = handleDecimalFormat(parts, value);
                     }
@@ -338,7 +377,7 @@ public class ExampleGenerator {
             } else if (parts.contains("defaultNumberingSystem") || parts.contains("otherNumberingSystems")) {
                 result = handleNumberingSystem(value);
             } else if (parts.contains("currencyFormats") && parts.contains("unitPattern")) {
-                result = formatCountValue(xpath, parts, value, exType);
+                result = formatCountValue(xpath, parts, value);
             } else if (parts.getElement(-2).equals("compoundUnit")) {
                 result = handleCompoundUnit(parts);
             } else if (parts.getElement(-1).equals("unitPattern")) {
@@ -380,13 +419,13 @@ public class ExampleGenerator {
 
         if (result != null) {
             // add transliteration if one exists
-            if (exType == ExampleType.NATIVE) {
+            if (!typeIsEnglish) {
                 result = addTransliteration(result, value);
             }
             result = finalizeBackground(result);
         }
 
-        if (CACHING) {
+        if (cachingIsEnabled) {
             if (result == null) {
                 cache.put(cacheKey, NONE);
             } else {
@@ -982,7 +1021,7 @@ public class ExampleGenerator {
         new FixedDecimal(5.67),
         new FixedDecimal(1));
 
-    private String formatCountValue(String xpath, XPathParts parts, String value, ExampleType exType) {
+    private String formatCountValue(String xpath, XPathParts parts, String value) {
         if (!parts.containsAttribute("count")) { // no examples for items that don't format
             return null;
         }
@@ -1048,11 +1087,11 @@ public class ExampleGenerator {
                     }
                     String resultItem;
 
-                    resultItem = formatCurrency(value, exType, unitType, isPattern, isCurrency, count, example);
+                    resultItem = formatCurrency(value, unitType, isPattern, isCurrency, count, example);
                     // now add to list
                     result = addExampleResult(resultItem, result);
                     if (isPattern) {
-                        String territory = getDefaultTerritory(exType);
+                        String territory = getDefaultTerritory();
                         String currency = supplementalDataInfo.getDefaultCurrency(territory);
                         if (currency.equals(unitType)) {
                             currency = "EUR";
@@ -1060,7 +1099,7 @@ public class ExampleGenerator {
                                 currency = "JAY";
                             }
                         }
-                        resultItem = formatCurrency(value, exType, currency, isPattern, isCurrency, count, example);
+                        resultItem = formatCurrency(value, currency, isPattern, isCurrency, count, example);
                         // now add to list
                         result = addExampleResult(resultItem, result);
 
@@ -1082,7 +1121,7 @@ public class ExampleGenerator {
         }
     }
 
-    private String formatCurrency(String value, ExampleType exType, String unitType, final boolean isPattern, final boolean isCurrency, Count count,
+    private String formatCurrency(String value, String unitType, final boolean isPattern, final boolean isCurrency, Count count,
         FixedDecimal example) {
         String resultItem;
         {
@@ -1094,10 +1133,10 @@ public class ExampleGenerator {
             if (isPattern) {
                 // //ldml/numbers/currencies/currency[@type="USD"]/displayName
                 unitName = getUnitName(unitType, isCurrency, count);
-                unitPattern = exType != ExampleType.ENGLISH ? value : getUnitPattern(unitType, isCurrency, count);
+                unitPattern = typeIsEnglish ? getUnitPattern(unitType, isCurrency, count) : value;
             } else {
                 unitPattern = getUnitPattern(unitType, isCurrency, count);
-                unitName = exType != ExampleType.ENGLISH ? value : getUnitName(unitType, isCurrency, count);
+                unitName = typeIsEnglish ? getUnitName(unitType, isCurrency, count) : value;
             }
 
             if (isPattern) {
@@ -1379,9 +1418,9 @@ public class ExampleGenerator {
      * @param value
      * @return
      */
-    private String handleCurrencyFormat(XPathParts parts, String value, ExampleType exType) {
+    private String handleCurrencyFormat(XPathParts parts, String value) {
 
-        String territory = getDefaultTerritory(exType);
+        String territory = getDefaultTerritory();
 
         String currency = supplementalDataInfo.getDefaultCurrency(territory);
         String checkPath = "//ldml/numbers/currencies/currency[@type=\"" + currency + "\"]/symbol";
@@ -1403,10 +1442,10 @@ public class ExampleGenerator {
         return example;
     }
 
-    private String getDefaultTerritory(ExampleType exType) {
+    private String getDefaultTerritory() {
         CLDRLocale loc;
         String territory = "US";
-        if (ExampleType.NATIVE.equals(exType)) {
+        if (!typeIsEnglish) {
             loc = CLDRLocale.getInstance(cldrFile.getLocaleID());
             territory = loc.getCountry();
             if (territory == null || territory.length() == 0) {
@@ -1511,7 +1550,7 @@ public class ExampleGenerator {
         return samples.get(count);
     }
 
-    private String handleCurrency(String xpath, XPathParts parts, String value, ExampleType exType) {
+    private String handleCurrency(String xpath, XPathParts parts, String value) {
         String currency = parts.getAttributeValue(-2, "type");
         String fullPath = cldrFile.getFullXPath(xpath, false);
         if (parts.contains("symbol")) {
@@ -1525,7 +1564,7 @@ public class ExampleGenerator {
             result = setBackground(result).replace(value, backgroundEndSymbol + value + backgroundStartSymbol);
             return result;
         } else if (parts.contains("displayName")) {
-            return formatCountValue(xpath, parts, value, exType);
+            return formatCountValue(xpath, parts, value);
         }
         return null;
     }
