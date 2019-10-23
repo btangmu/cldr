@@ -325,31 +325,11 @@ public class ExampleGenerator {
         if (value == null) {
             return null;
         }
-        if (false && (exType == ExampleType.ENGLISH) != (englishFile == cldrFile)) {
-            /*
-             * TODO: the expected equivalence (exType == ExampleType.ENGLISH) == (englishFile == cldrFile)
-             * implies the ExampleType parameter for getExampleHtml is superfluous, and so is exTypeLetter
-             * as part of cacheKey. This expectation passes with SurveyTool, and with cldr-apps TestAll.java,
-             * but fails with cldr-unittest TestAll.java (multiple test failures) ...
-             *
-             * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
-             */
-            boolean typeIsEnglish = (exType == ExampleType.ENGLISH);
-            boolean filesAreSame = (englishFile == cldrFile);
-            String msg = "False expectation in ExampleGenerator.getExampleHtml: typeIsEnglish = "
-                + typeIsEnglish + "; filesAreSame = " + filesAreSame;
-            throw new IllegalArgumentException(msg);
-        }
         String cacheKey = null;
         String result = null;
         try {
             if (cachingIsEnabled) {
-<<<<<<< HEAD
-                String exTypeLetter = (exType == ExampleType.ENGLISH) ? "E" : "N";
-                cacheKey = exTypeLetter + xpath + "," + value;
-=======
                 cacheKey = xpath + "," + value;
->>>>>>> t13330_extype_a
                 result = cache.get(cacheKey);
                 if (result != null) {
                     if (result == NONE) {
