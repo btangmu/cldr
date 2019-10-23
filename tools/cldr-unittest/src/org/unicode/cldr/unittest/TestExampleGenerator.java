@@ -673,13 +673,68 @@ public class TestExampleGenerator extends TestFmwk {
         checkPathValue(exampleGenerator, path, cldrFile.getStringValue(path), expected);
     }
 
+    /**
+     * This test illustrates what appears to be a bug in getExampleHtml or code on which it it depends.
+     *
+     * Calling getExampleHtml with a particular path and value presumably should NOT depend on the
+     * history of paths and/or values it has been called with previously, but in fact it does.
+     *
+     * We get different examples for SPECIAL_PATH depending on whether LIMIT_PATHS is true.
+     *
+     * With LIMIT_PATHS = true and USE_EVIL_PATH = false:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123 456,79 </span>€</div>
+     *
+     * With LIMIT_PATHS = false and USE_EVIL_PATH = false:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123457 Bn </span>€</div>
+     *
+     * With LIMIT_PATHS = false and USE_EVIL_PATH = true:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123457 k </span>€</div>
+     *
+     * @throws IOException
+     */
+    public void TestExampleGeneratorBug() throws IOException {
+        final boolean LIMIT_PATHS = true;
+        final boolean USE_EVIL_PATH = true;
+        final String SPECIAL_PATH = "//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol";
+        final String EVIL_PATH = "//ldml/numbers/currencyFormats/currencyFormatLength[@type=\"short\"]/currencyFormat[@type=\"standard\"]/pattern[@type=\"10000\"][@count=\"one\"]";
+
+        System.out.println("\nWith LIMIT_PATHS = " + LIMIT_PATHS + "; USE_EVIL_PATH = " + USE_EVIL_PATH + ";");
+
+        final CLDRFile cldrFile = info.getCLDRFile("fr", true);
+        final ExampleGenerator eg = new ExampleGenerator(cldrFile, info.getEnglish(), CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+
+        Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
+
+        if (LIMIT_PATHS) {
+            if (USE_EVIL_PATH) {
+                paths.add(EVIL_PATH);
+            }
+            paths.add(SPECIAL_PATH);
+        } else {
+            CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        }
+        for (String path : paths) {
+            String value = cldrFile.getStringValue(path);
+            if (value == null) {
+                continue;
+            }
+            String exampleHtml = eg.getExampleHtml(path, value);
+            System.out.println("\nPath = " + path + ";");
+            System.out.println("Value = " + value + ";");
+            System.out.println("Example HTML = " + exampleHtml);
+        }
+    }
 
     /**
      * Test dependencies where changing the value of one path changes example-generation for another path.
      *
      * The goal is to optimize example caching by only regenerating examples when necessary.
      *
-     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
+     * Currently blocked by TestExampleGeneratorBug. Reference: https://unicode-org.atlassian.net/browse/CLDR-13375
      *
      * @throws IOException
      */
@@ -690,14 +745,14 @@ public class TestExampleGenerator extends TestFmwk {
         }
 
         /*
-         * TODO: test whether different localId gives different dependencies.
+         * TODO: test whether different localeId gives different dependencies.
          */
-        final String localId = "fr";
+        final String localeId = "fr";
 
         CLDRFile englishFile = info.getEnglish();
 
         Factory factory = CLDRConfig.getInstance().getCldrFactory();
-        CLDRFile cldrFile = makeMutableResolved(factory, localId);
+        CLDRFile cldrFile = makeMutableResolved(factory, localeId);
         cldrFile.disableCaching();
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
@@ -710,17 +765,18 @@ public class TestExampleGenerator extends TestFmwk {
              * ... so far this approach has not been successful at producing the same "bogus" dependencies
              * as the complete set ...
              */
-            paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localePattern");
+            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]");
+            paths.add("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol");
+
+            // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localePattern");
             // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator");
             // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ba\"]");
-            paths.add("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol");
+            // paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ba\"]");
             // paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ary\"]");
-            paths.add("//ldml/units/unitLength[@type=\"long\"]/compoundUnit[@type=\"times\"]/compoundUnitPattern");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"hm\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"Bhm\"]");
+            // paths.add("//ldml/units/unitLength[@type=\"long\"]/compoundUnit[@type=\"times\"]/compoundUnitPattern");
+            // paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]");
+            // paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"hm\"]");
+            // paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"Bhm\"]");
         } else {
             CollectionUtilities.addAll(cldrFile.iterator(), paths);
         }
@@ -764,25 +820,28 @@ public class TestExampleGenerator extends TestFmwk {
             if ((++count % 100) == 0) {
                 System.out.println(count);
             }
-            if (count > 200) {
+            if (count > 200000) {
                  break;
             }
+            /// String newValue = valueA;
             String newValue = modifyValueRandomly(valueA);
             /*
              * cldrFile.add would lead to UnsupportedOperationException("Resolved CLDRFiles are read-only");
              * Instead do top.add(), which works since top.dataSource = cldrFile.dataSource.currentSource.
              * First, need to do valueChanged to clear getSourceLocaleIDCache.
              */
-            cldrFile.valueChanged(pathA);
-            top.add(pathA, newValue);
+            if (true) {
+                cldrFile.valueChanged(pathA);
+                top.add(pathA, newValue);
 
-            String valueAX = cldrFile.getStringValue(pathA);
-            if (valueAX.equals(newValue)) {
-                // System.out.println("Changing top changed cldrFile: newValue = " + newValue
-                //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
-            } else {
-                System.out.println("Changing top did not change cldrFile: newValue = " + newValue
-                    + "; valueAX = " + valueAX + "; valueA = " + valueA);
+                String valueAX = cldrFile.getStringValue(pathA);
+                if (valueAX.equals(newValue)) {
+                    // System.out.println("Changing top changed cldrFile: newValue = " + newValue
+                    //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
+                } else {
+                    System.out.println("Changing top did not change cldrFile: newValue = " + newValue
+                        + "; valueAX = " + valueAX + "; valueA = " + valueA);
+                }
             }
             HashSet<String> a = null;
             for (String pathB : paths) {
@@ -834,17 +893,19 @@ public class TestExampleGenerator extends TestFmwk {
              * Restore the original value, so that the changes due to this pathA don't get
              * carried over to the next pathA. Again call valueChanged to clear getSourceLocaleIDCache.
              */
-            top.add(pathA, valueA);
-            cldrFile.valueChanged(pathA);
-            String valueAXX = cldrFile.getStringValue(pathA);
-            if (!valueAXX.equals(valueA)) {
-                System.out.println("Failed to restore original value: valueAXX = " + valueAXX
-                    + "; valueA = " + valueA);
+            if (true) {
+                top.add(pathA, valueA);
+                cldrFile.valueChanged(pathA);
+                String valueAXX = cldrFile.getStringValue(pathA);
+                if (!valueAXX.equals(valueA)) {
+                    System.out.println("Failed to restore original value: valueAXX = " + valueAXX
+                        + "; valueA = " + valueA);
+                }
             }
         }
         final boolean countOnly = true;
-        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localId, countOnly);
-        writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localId, countOnly);
+        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localeId, countOnly);
+        writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localeId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
 
@@ -899,7 +960,7 @@ public class TestExampleGenerator extends TestFmwk {
     }
 
     /**
-     * Get the parent sources for the given localID
+     * Get the parent sources for the given localeId
      *
      * @param factory
      * @param localeID
