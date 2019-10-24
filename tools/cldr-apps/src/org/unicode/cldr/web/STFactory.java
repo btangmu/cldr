@@ -916,15 +916,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
          * This function is called by getResolver, and may also call itself recursively.
          */
         private VoteResolver<String> getResolverInternal(PerXPathData perXPathData, String path, VoteResolver<String> r) {
-            if (path == null)
+            if (path == null) {
                 throw new IllegalArgumentException("path must not be null");
-
-
-            if ("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"wide\"]/month[@type=\"3\"]".equals(path)
-                    || "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"wide\"]/month[@type=\"4\"]".equals(path)) {
-                System.out.println("In getResolverInternal, got " + path);
             }
-
             if (r == null) {
                 r = new VoteResolver<String>(); // create
             } else {
@@ -942,21 +936,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
              */
             r.setUsingKeywordAnnotationVoting(path.startsWith("//ldml/annotations/annotation") && !path.contains(Emoji.TYPE_TTS));
 
-            // Workaround (workaround what?)
-            CLDRFile.Status status = new CLDRFile.Status();
-            diskFile.getSourceLocaleID(path, status); // ask disk file
-
-            /*
-             * TODO: Fix bug: the baileyValue set here is not, in general, the same as the one in updateInheritedValue
-             * in DataSection.java! There,
-             * inheritedValue = ourSrc.getConstructedBaileyValue(xpath, inheritancePathWhereFound, localeWhereFound);
-             * For example, here we get baileyValue = "Veräifachts Chineesisch",
-             * but in updateInheritedValue we get inheritedValue = "Chineesisch (Veräifachti Chineesischi Schrift)".
-             * That's for http://localhost:8080/cldr-apps/v#/gsw_FR/Languages_A_D/3f16ed8804cebb7d
-             * Reference https://unicode.org/cldr/trac/ticket/11420
-             */
-            String baileyValue = getBaileyForResolver(path, locale);
-
             final ValueChecker vc = ERRORS_ALLOWED_IN_VETTING ? null : new ValueChecker(path);
 
             // Set established locale
@@ -970,7 +949,8 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 r.add(currentValue);
             }
 
-            r.setBaileyValue(baileyValue);
+            r.setBaileyValue(getBaileyForResolver(path, locale));
+
             // add each vote
             if (perXPathData != null && !perXPathData.isEmpty()) {
                 for (Entry<User, PerLocaleData.PerXPathData.PerUserData> e : perXPathData.getVotes()) {
