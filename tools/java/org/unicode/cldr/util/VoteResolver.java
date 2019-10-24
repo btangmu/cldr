@@ -818,9 +818,6 @@ public class VoteResolver<T> {
          * Return negative to favor o1, positive to favor o2.
          */
         public int compare(T o1, T o2) {
-            if ("Mart".equals(trunkValue) || "Aprel".equals(trunkValue)) {
-                System.out.println("Got " + trunkValue + " in compare");
-            }
             long v1 = organizationToValueAndVote.totalVotes.get(o1);
             long v2 = organizationToValueAndVote.totalVotes.get(o2);
             if (v1 != v2) {
@@ -846,9 +843,6 @@ public class VoteResolver<T> {
      *  and many others.
      */
     private void resolveVotes() {
-        if ("Aprel".equals(trunkValue)) {
-            System.out.println("In resolveVotes, trunkValue:" + trunkValue);
-        }
         resolved = true;
         // get the votes for each organization
         valuesWithSameVotes.clear();
