@@ -58,7 +58,6 @@ import org.unicode.cldr.web.UserRegistry.User;
 
 import com.ibm.icu.dev.util.ElapsedTimer;
 import com.ibm.icu.text.NumberFormat;
-import com.ibm.icu.util.Output;
 import com.ibm.icu.util.VersionInfo;
 
 /**
@@ -949,7 +948,8 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 r.add(currentValue);
             }
 
-            r.setBaileyValue(getBaileyForResolver(path, locale));
+            CLDRFile cf = make(locale, true);
+            r.setBaileyValue(cf.getConstructedBaileyValue(path, null, null));
 
             // add each vote
             if (perXPathData != null && !perXPathData.isEmpty()) {
@@ -963,26 +963,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 }
             }
             return r;
-        }
-
-        /**
-         * Get the George Bailey value: that is, what the value would be if it were not directly found at the given
-         * path and locale. A vote for inheritance means a vote for this value.
-         *
-         * @param path the path string
-         * @param locale the CLDRLocale
-         * @return the Bailey value
-         *
-         * Called by getResolverInternal
-         *
-         * This method matches the way DataSection gets the Bailey value.
-         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13390
-         */
-        private String getBaileyForResolver(String path, CLDRLocale locale) {
-            Output<String> inheritancePathWhereFound = new Output<String>();
-            Output<String> localeWhereFound = new Output<String>();
-            CLDRFile cf = make(locale, true);
-            return cf.getConstructedBaileyValue(path, inheritancePathWhereFound, localeWhereFound);
         }
 
         public VoteResolver<String> getResolver(PerXPathData perXPathData, String path, VoteResolver<String> r) {
