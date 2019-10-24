@@ -919,6 +919,12 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (path == null)
                 throw new IllegalArgumentException("path must not be null");
 
+
+            if ("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"wide\"]/month[@type=\"3\"]".equals(path)
+                    || "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"wide\"]/month[@type=\"4\"]".equals(path)) {
+                System.out.println("In getResolverInternal, got " + path);
+            }
+
             if (r == null) {
                 r = new VoteResolver<String>(); // create
             } else {
@@ -997,7 +1003,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             }
 
             r.setBaileyValue(baileyValue);
-
             // add each vote
             if (perXPathData != null && !perXPathData.isEmpty()) {
                 for (Entry<User, PerLocaleData.PerXPathData.PerUserData> e : perXPathData.getVotes()) {

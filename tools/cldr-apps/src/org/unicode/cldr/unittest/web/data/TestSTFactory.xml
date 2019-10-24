@@ -3,6 +3,27 @@
 <TestSTFactory>
     	<!--  these items are read sequentially.  -->
 
+    <echo>test CLDR-13390</echo>
+	<user name="F1" org="facebook" level="vetter" locales="*"/>
+	<user name="G1" org="google" level="vetter" locales="*"/>
+	<user name="G2" org="google" level="vetter" locales="*"/>
+	<user name="M1" org="microsoft" level="vetter" locales="*"/>
+
+		<!-- Aprel  G1
+			 Aprel  M1
+			 ↑↑↑    G2
+			 aprel  F1
+			Baseline was Aprel; Bailey was aprel; winner was Aprel -->
+    <user name="TC1" org="afrigen" level="tc" locales="*"/>
+	<vote name="TC1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='format']/monthWidth[@type='wide']/month[@type='4']">aprel</vote>
+
+	<vote name="G1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">Aprel</vote>
+	<vote name="M1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">Aprel</vote>
+	<vote name="G2" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">↑↑↑</vote>
+	<vote name="F1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">aprel</vote>
+
+	<verify status="approved" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']" >Aprel</verify>
+
     <echo> test permission  </echo>
     <setvar id="af_fr" locale="af" xpath="//ldml/localeDisplayNames/languages/language[@type='fr']" />
     <setvar id="en_fr" locale="en" xpath="//ldml/localeDisplayNames/languages/language[@type='fr']" />
