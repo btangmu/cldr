@@ -13,7 +13,7 @@
 			 Aprel  M1
 			 ↑↑↑    G2
 			 aprel  F1
-			Baseline was Aprel; Bailey was aprel; winner was Aprel -->
+			Baseline is Aprel; Bailey is aprel; winner should be ↑↑↑, which gets changed to aprel (Bailey) by cf.getStringValue -->
     <user name="TC1" org="afrigen" level="tc" locales="*"/>
 	<vote name="TC1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='format']/monthWidth[@type='wide']/month[@type='4']">aprel</vote>
 
@@ -22,7 +22,7 @@
 	<vote name="G2" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">↑↑↑</vote>
 	<vote name="F1" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']">aprel</vote>
 
-	<verify status="approved" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']" >Aprel</verify>
+	<verify status="approved" locale="az" xpath="//ldml/dates/calendars/calendar[@type='gregorian']/months/monthContext[@type='stand-alone']/monthWidth[@type='wide']/month[@type='4']" >aprel</verify>
 
     <echo> test permission  </echo>
     <setvar id="af_fr" locale="af" xpath="//ldml/localeDisplayNames/languages/language[@type='fr']" />
