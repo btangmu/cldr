@@ -677,6 +677,60 @@ public class TestExampleGenerator extends TestFmwk {
         checkPathValue(exampleGenerator, path, cldrFile.getStringValue(path), expected);
     }
 
+    /**
+     * This test illustrates what appears to be a bug in getExampleHtml or code on which it it depends.
+     *
+     * Calling getExampleHtml with a particular path and value presumably should NOT depend on the
+     * history of paths and/or values it has been called with previously, but in fact it does.
+     *
+     * We get different examples for SPECIAL_PATH depending on whether LIMIT_PATHS is true.
+     *
+     * With LIMIT_PATHS = true and USE_EVIL_PATH = false:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123 456,79 </span>€</div>
+     *
+     * With LIMIT_PATHS = false and USE_EVIL_PATH = false:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123457 Bn </span>€</div>
+     *
+     * With LIMIT_PATHS = false and USE_EVIL_PATH = true:
+     * Path = //ldml/numbers/currencies/currency[@type="EUR"]/symbol; value = €;
+     * Example HTML = <div class='cldr_example'><span class='cldr_substituted'>123457 k </span>€</div>
+     *
+     * @throws IOException
+     */
+    public void TestExampleGeneratorBug() throws IOException {
+        final boolean LIMIT_PATHS = true;
+        final boolean USE_EVIL_PATH = true;
+        final String SPECIAL_PATH = "//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol";
+        final String EVIL_PATH = "//ldml/numbers/currencyFormats/currencyFormatLength[@type=\"short\"]/currencyFormat[@type=\"standard\"]/pattern[@type=\"10000\"][@count=\"one\"]";
+
+        System.out.println("\nWith LIMIT_PATHS = " + LIMIT_PATHS + "; USE_EVIL_PATH = " + USE_EVIL_PATH + ";");
+
+        final CLDRFile cldrFile = info.getCLDRFile("fr", true);
+        final ExampleGenerator eg = new ExampleGenerator(cldrFile, info.getEnglish(), CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+
+        Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
+
+        if (LIMIT_PATHS) {
+            if (USE_EVIL_PATH) {
+                paths.add(EVIL_PATH);
+            }
+            paths.add(SPECIAL_PATH);
+        } else {
+            CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        }
+        for (String path : paths) {
+            String value = cldrFile.getStringValue(path);
+            if (value == null) {
+                continue;
+            }
+            String exampleHtml = eg.getExampleHtml(path, value, ExampleType.NATIVE);
+            System.out.println("\nPath = " + path + ";");
+            System.out.println("Value = " + value + ";");
+            System.out.println("Example HTML = " + exampleHtml);
+        }
+    }
 
     /**
      * Test dependencies where changing the value of one path changes example-generation for another path.
