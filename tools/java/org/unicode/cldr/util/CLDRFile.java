@@ -1303,13 +1303,19 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         return getNondraftNonaltXPath(path1).equals(getNondraftNonaltXPath(path2));
     }
 
-    static XPathParts nondraftParts = new XPathParts();
+    /*
+     * TODO: clarify the need for syncObject.
+     * Formerly, an XPathParts object named "nondraftParts" was used for this purpose, but
+     * there was no evident reason for it to be an XPathParts object rather than any other
+     * kind of object.
+     */
+    private static Object syncObject = new Object();
 
     public static String getNondraftNonaltXPath(String xpath) {
         if (xpath.indexOf("draft=\"") < 0 && xpath.indexOf("alt=\"") < 0) {
             return xpath;
         }
-        synchronized (nondraftParts) {
+        synchronized (syncObject) {
             XPathParts parts = XPathParts.getInstance(xpath); // can't be frozen since we call removeAttributes
             String restore;
             HashSet<String> toRemove = new HashSet<String>();
