@@ -51,10 +51,6 @@ public final class XPathParts implements Freezable<XPathParts> {
         // this.suppressionMap = null;
     }
 
-    public XPathParts(Map<String, Map<String, String>> suppressionMap) {
-        // this.suppressionMap = suppressionMap;
-    }
-
     /**
      * See if the xpath contains an element
      */
@@ -84,18 +80,20 @@ public final class XPathParts implements Freezable<XPathParts> {
      *
      * @param pw
      * @param filteredXPath
-     * @param lastFullXPath
+     * @param lastFullXPath the last XPathParts (not filtered), or null (to be treated same as empty)
      * @param v
      * @param xpath_comments
      * @return this XPathParts
      */
     public XPathParts writeDifference(PrintWriter pw, XPathParts filteredXPath, XPathParts lastFullXPath,
         String v, Comments xpath_comments) {
-        int limit = findFirstDifference(lastFullXPath);
-        // write the end of the last one
-        for (int i = lastFullXPath.size() - 2; i >= limit; --i) {
-            pw.print(Utility.repeat("\t", i));
-            pw.println(lastFullXPath.elements.get(i).toString(XML_CLOSE));
+        int limit = (lastFullXPath == null) ? 0 : findFirstDifference(lastFullXPath);
+        if (lastFullXPath != null) {
+            // write the end of the last one
+            for (int i = lastFullXPath.size() - 2; i >= limit; --i) {
+                pw.print(Utility.repeat("\t", i));
+                pw.println(lastFullXPath.elements.get(i).toString(XML_CLOSE));
+            }
         }
         if (v == null) {
             return this; // end
