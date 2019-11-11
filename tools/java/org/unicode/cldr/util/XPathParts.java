@@ -43,16 +43,16 @@ public final class XPathParts implements Freezable<XPathParts> {
 
     private DtdData dtdData = null;
 
-    private Map<String, Map<String, String>> suppressionMap;
+    // private Map<String, Map<String, String>> suppressionMap;
 
     private static final Map<String, XPathParts> cache = new ConcurrentHashMap<String, XPathParts>();
 
     public XPathParts() {
-        this.suppressionMap = null;
+        // this.suppressionMap = null;
     }
 
     public XPathParts(Map<String, Map<String, String>> suppressionMap) {
-        this.suppressionMap = suppressionMap;
+        // this.suppressionMap = suppressionMap;
     }
 
     /**
@@ -817,14 +817,18 @@ public final class XPathParts implements Freezable<XPathParts> {
             if (getAttributeCount() == 0) {
                 return this;
             }
+            Map<String, Map<String, String>> suppressionMap = null;
+            if (removeLDMLExtras) {
+                suppressionMap = CLDRFile.getDefaultSuppressionMap();
+            }
             for (Entry<String, String> attributesAndValues : attributes.entrySet()) {
                 String attribute = attributesAndValues.getKey();
                 String value = attributesAndValues.getValue();
                 if (removeLDMLExtras && suppressionMap != null) {
-                    if (skipAttribute(element, attribute, value)) {
+                    if (skipAttribute(element, attribute, value, suppressionMap)) {
                         continue;
                     }
-                    if (skipAttribute("*", attribute, value)) {
+                    if (skipAttribute("*", attribute, value, suppressionMap)) {
                         continue;
                     }
                 }
@@ -851,7 +855,8 @@ public final class XPathParts implements Freezable<XPathParts> {
          *
          * Assume suppressionMap isn't null.
          */
-        private boolean skipAttribute(String element, String attribute, String value) {
+        private boolean skipAttribute(String element, String attribute, String value,
+            Map<String, Map<String, String>> suppressionMap) {
             Map<String, String> attribute_value = suppressionMap.get(element);
             boolean skip = false;
             if (attribute_value != null) {
@@ -1224,7 +1229,7 @@ public final class XPathParts implements Freezable<XPathParts> {
          * Reference: https://unicode.org/cldr/trac/ticket/12007
          */
         xppClone.dtdData = this.dtdData;
-        xppClone.suppressionMap = this.suppressionMap;
+        // xppClone.suppressionMap = this.suppressionMap;
         for (Element e : this.elements) {
             xppClone.elements.add(e.cloneAsThawed());
         }        
