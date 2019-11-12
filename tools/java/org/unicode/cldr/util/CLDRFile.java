@@ -479,10 +479,8 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
 
         XPathParts.Comments tempComments = (XPathParts.Comments) dataSource.getXpathComments().clone();
 
-        XPathParts last = new XPathParts(defaultSuppressionMap);
-        XPathParts current = new XPathParts(defaultSuppressionMap);
-        XPathParts lastFiltered = new XPathParts(defaultSuppressionMap);
-        XPathParts currentFiltered = new XPathParts(defaultSuppressionMap);
+        XPathParts last = null;
+        XPathParts lastFiltered = null;
 
         boolean isResolved = dataSource.isResolving();
 
@@ -493,26 +491,16 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             if (isResolved && xpath.contains("/alias")) {
                 continue;
             }
-            currentFiltered.setForWritingWithSuppressionMap(xpath);
-            current.setForWritingWithSuppressionMap(xpath);
-            current.writeDifference(pw, currentFiltered, last, "", tempComments);
             /*
-             * Exchange pairs of parts:
-             *     swap current with last
-             *     swap currentFiltered with lastFiltered
-             * However, current and currentFiltered both get "set" next, so the effect should be the same as
-             *     last = current
-             *     lastFiltered = currentFiltered
-             *     current = getInstance
-             *     currentFiltered = getInstance
-             *     ??
+             * TODO: explain difference between "filtered" (currentFiltered) and "not filtered" (current) here.
+             * No difference in this loop?
              */
-            XPathParts temp = current;
-            current = last;
-            last = temp;
-            temp = currentFiltered;
-            currentFiltered = lastFiltered;
-            lastFiltered = temp;
+            XPathParts current = XPathParts.getInstance(xpath);
+            XPathParts currentFiltered = XPathParts.getInstance(xpath);
+
+            current.writeDifference(pw, currentFiltered, last, "", tempComments);
+            last = current;
+            lastFiltered = currentFiltered;
         }
 
         boolean wroteAtLeastOnePath = false;
@@ -528,20 +516,22 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             if (suppressInheritanceMarkers && CldrUtility.INHERITANCE_MARKER.equals(v)) {
                 continue;
             }
-            currentFiltered.setForWritingWithSuppressionMap(xpath);
+            XPathParts currentFiltered = XPathParts.getInstance(xpath);
             if (currentFiltered.size() >= 2
                 && currentFiltered.getElement(1).equals("identity")) {
                 continue;
             }
-            current.setForWritingWithSuppressionMap(getFullXPath(xpath));
+            /*
+             * TODO: explain difference between "filtered" (currentFiltered) and "not filtered" (current) here.
+             * Only difference seems to be current uses getFullXPath...
+             */
+            XPathParts current = XPathParts.getInstance(getFullXPath(xpath));
+
             current.writeDifference(pw, currentFiltered, last, v, tempComments);
-            // exchange pairs of parts
-            XPathParts temp = current;
-            current = last;
-            last = temp;
-            temp = currentFiltered;
-            currentFiltered = lastFiltered;
-            lastFiltered = temp;
+
+            last = current;
+            lastFiltered = currentFiltered;
+
             wroteAtLeastOnePath = true;
         }
         /*
@@ -557,7 +547,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         if (!wroteAtLeastOnePath && options.containsKey("SKIP_FILE_IF_SKIP_ALL_PATHS")) {
             return false;
         }
-        current.clear().writeDifference(pw, null, last, null, tempComments);
+
+        last.writeLast(pw);
+
         String finalComment = dataSource.getXpathComments().getFinalComment();
 
         if (WRITE_COMMENTS_THAT_NO_LONGER_HAVE_BASE) {
@@ -1303,13 +1295,19 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         return getNondraftNonaltXPath(path1).equals(getNondraftNonaltXPath(path2));
     }
 
-    static XPathParts nondraftParts = new XPathParts();
+    /*
+     * TODO: clarify the need for syncObject.
+     * Formerly, an XPathParts object named "nondraftParts" was used for this purpose, but
+     * there was no evident reason for it to be an XPathParts object rather than any other
+     * kind of object.
+     */
+    private static Object syncObject = new Object();
 
     public static String getNondraftNonaltXPath(String xpath) {
         if (xpath.indexOf("draft=\"") < 0 && xpath.indexOf("alt=\"") < 0) {
             return xpath;
         }
-        synchronized (nondraftParts) {
+        synchronized (syncObject) {
             XPathParts parts = XPathParts.getInstance(xpath); // can't be frozen since we call removeAttributes
             String restore;
             HashSet<String> toRemove = new HashSet<String>();

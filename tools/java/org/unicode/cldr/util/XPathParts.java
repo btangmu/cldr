@@ -43,16 +43,12 @@ public final class XPathParts implements Freezable<XPathParts> {
 
     private DtdData dtdData = null;
 
-    private Map<String, Map<String, String>> suppressionMap;
+    // private Map<String, Map<String, String>> suppressionMap;
 
     private static final Map<String, XPathParts> cache = new ConcurrentHashMap<String, XPathParts>();
 
     public XPathParts() {
-        this.suppressionMap = null;
-    }
-
-    public XPathParts(Map<String, Map<String, String>> suppressionMap) {
-        this.suppressionMap = suppressionMap;
+        // this.suppressionMap = null;
     }
 
     /**
@@ -82,20 +78,35 @@ public final class XPathParts implements Freezable<XPathParts> {
      * Write out the difference from this xpath and the last, putting the value in the right place. Closes up the
      * elements that were not closed, and opens up the new.
      *
-     * @param pw
-     * @param filteredXPath
-     * @param lastFullXPath
-     * @param v
+     * @param pw the PrintWriter to receive output
+     * @param filteredXPath used for calling filteredXPath.writeComment
+     * @param lastFullXPath the last XPathParts (not filtered), or null (to be treated same as empty)
+     * @param v getStringValue(xpath); or empty string
      * @param xpath_comments
      * @return this XPathParts
+     *
+     * TODO: clarify (1) why this method gets THREE XPathParts objects: this, filteredXPath, and lastFullXPath;
+     * and (2) what "filtered" means. Also, there should be a unit test that calls this function directly.
+     *
+     * Called only by XMLModify.main and CLDRFile.write, as follows:
+     *
+     * CLDRFile.write:
+     *    current.writeDifference(pw, currentFiltered, last, "", tempComments);
+     *    current.writeDifference(pw, currentFiltered, last, v, tempComments);
+     *    current.clear().writeDifference(pw, null, last, null, tempComments); [now last.writeLast(pw)]
+     *
+     * XMLModify.main:
+     *    parts.writeDifference(out, parts, lastParts, value, null);
      */
     public XPathParts writeDifference(PrintWriter pw, XPathParts filteredXPath, XPathParts lastFullXPath,
         String v, Comments xpath_comments) {
-        int limit = findFirstDifference(lastFullXPath);
-        // write the end of the last one
-        for (int i = lastFullXPath.size() - 2; i >= limit; --i) {
-            pw.print(Utility.repeat("\t", i));
-            pw.println(lastFullXPath.elements.get(i).toString(XML_CLOSE));
+        int limit = (lastFullXPath == null) ? 0 : findFirstDifference(lastFullXPath);
+        if (lastFullXPath != null) {
+            // write the end of the last one
+            for (int i = lastFullXPath.size() - 2; i >= limit; --i) {
+                pw.print(Utility.repeat("\t", i));
+                pw.println(lastFullXPath.elements.get(i).toString(XML_CLOSE));
+            }
         }
         if (v == null) {
             return this; // end
@@ -132,6 +143,20 @@ public final class XPathParts implements Freezable<XPathParts> {
         }
         pw.flush();
         return this;
+    }
+
+    /**
+     * Write the last xpath.
+     *
+     * last.writeLast(pw) is equivalent to current.clear().writeDifference(pw, null, last, null, tempComments).
+     *
+     * @param pw the PrintWriter to receive output
+     */
+    public void writeLast(PrintWriter pw) {
+        for (int i = this.size() - 2; i >= 0; --i) {
+            pw.print(Utility.repeat("\t", i));
+            pw.println(elements.get(i).toString(XML_CLOSE));
+        }
     }
 
     private String untrim(String eValue, int count) {
@@ -817,14 +842,18 @@ public final class XPathParts implements Freezable<XPathParts> {
             if (getAttributeCount() == 0) {
                 return this;
             }
+            Map<String, Map<String, String>> suppressionMap = null;
+            if (removeLDMLExtras) {
+                suppressionMap = CLDRFile.getDefaultSuppressionMap();
+            }
             for (Entry<String, String> attributesAndValues : attributes.entrySet()) {
                 String attribute = attributesAndValues.getKey();
                 String value = attributesAndValues.getValue();
                 if (removeLDMLExtras && suppressionMap != null) {
-                    if (skipAttribute(element, attribute, value)) {
+                    if (skipAttribute(element, attribute, value, suppressionMap)) {
                         continue;
                     }
-                    if (skipAttribute("*", attribute, value)) {
+                    if (skipAttribute("*", attribute, value, suppressionMap)) {
                         continue;
                     }
                 }
@@ -851,7 +880,8 @@ public final class XPathParts implements Freezable<XPathParts> {
          *
          * Assume suppressionMap isn't null.
          */
-        private boolean skipAttribute(String element, String attribute, String value) {
+        private boolean skipAttribute(String element, String attribute, String value,
+            Map<String, Map<String, String>> suppressionMap) {
             Map<String, String> attribute_value = suppressionMap.get(element);
             boolean skip = false;
             if (attribute_value != null) {
@@ -1224,7 +1254,7 @@ public final class XPathParts implements Freezable<XPathParts> {
          * Reference: https://unicode.org/cldr/trac/ticket/12007
          */
         xppClone.dtdData = this.dtdData;
-        xppClone.suppressionMap = this.suppressionMap;
+        // xppClone.suppressionMap = this.suppressionMap;
         for (Element e : this.elements) {
             xppClone.elements.add(e.cloneAsThawed());
         }        
