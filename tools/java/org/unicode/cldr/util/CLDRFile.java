@@ -548,11 +548,8 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             return false;
         }
 
-        /*
-         * TODO: explain this usage of null for two writeDifference args; avoid new XPathParts() here; it stays empty...
-         */
-        XPathParts current = new XPathParts();
-        current.clear().writeDifference(pw, null, last, null, tempComments);
+        last.writeLast(pw);
+
         String finalComment = dataSource.getXpathComments().getFinalComment();
 
         if (WRITE_COMMENTS_THAT_NO_LONGER_HAVE_BASE) {

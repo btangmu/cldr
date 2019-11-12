@@ -78,12 +78,25 @@ public final class XPathParts implements Freezable<XPathParts> {
      * Write out the difference from this xpath and the last, putting the value in the right place. Closes up the
      * elements that were not closed, and opens up the new.
      *
-     * @param pw
-     * @param filteredXPath
+     * @param pw the PrintWriter to receive output
+     * @param filteredXPath used for calling filteredXPath.writeComment
      * @param lastFullXPath the last XPathParts (not filtered), or null (to be treated same as empty)
-     * @param v
+     * @param v getStringValue(xpath); or empty string
      * @param xpath_comments
      * @return this XPathParts
+     *
+     * TODO: clarify (1) why this method gets THREE XPathParts objects: this, filteredXPath, and lastFullXPath;
+     * and (2) what "filtered" means. Also, there should be a unit test that calls this function directly.
+     *
+     * Called only by XMLModify.main and CLDRFile.write, as follows:
+     *
+     * CLDRFile.write:
+     *    current.writeDifference(pw, currentFiltered, last, "", tempComments);
+     *    current.writeDifference(pw, currentFiltered, last, v, tempComments);
+     *    current.clear().writeDifference(pw, null, last, null, tempComments); [now last.writeLast(pw)]
+     *
+     * XMLModify.main:
+     *    parts.writeDifference(out, parts, lastParts, value, null);
      */
     public XPathParts writeDifference(PrintWriter pw, XPathParts filteredXPath, XPathParts lastFullXPath,
         String v, Comments xpath_comments) {
@@ -130,6 +143,20 @@ public final class XPathParts implements Freezable<XPathParts> {
         }
         pw.flush();
         return this;
+    }
+
+    /**
+     * Write the last xpath.
+     *
+     * last.writeLast(pw) is equivalent to current.clear().writeDifference(pw, null, last, null, tempComments).
+     *
+     * @param pw the PrintWriter to receive output
+     */
+    public void writeLast(PrintWriter pw) {
+        for (int i = this.size() - 2; i >= 0; --i) {
+            pw.print(Utility.repeat("\t", i));
+            pw.println(elements.get(i).toString(XML_CLOSE));
+        }
     }
 
     private String untrim(String eValue, int count) {
