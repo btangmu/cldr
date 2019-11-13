@@ -6,6 +6,7 @@
  */
 package org.unicode.cldr.util;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -84,21 +85,22 @@ public final class XPathParts implements Freezable<XPathParts> {
      * elements that were not closed, and opens up the new.
      *
      * @param pw the PrintWriter to receive output
-     * @param filteredXPath used for calling filteredXPath.writeComment
+     * @param filteredXPath used for calling filteredXPath.writeComment; may or may not be same as "this";
+     *        "filtered" is from xpath, while "this" may be from getFullXPath(xpath)
      * @param lastFullXPath the last XPathParts (not filtered), or null (to be treated same as empty)
      * @param v getStringValue(xpath); or empty string
-     * @param xpath_comments
+     * @param xpath_comments the Comments object; or null
      * @return this XPathParts
      *
-     * TODO: clarify (1) why this method gets THREE XPathParts objects: this, filteredXPath, and lastFullXPath;
-     * and (2) what "filtered" means. Also, there should be a unit test that calls this function directly.
+     * Note: this method gets THREE XPathParts objects: this, filteredXPath, and lastFullXPath.
+     *
+     * TODO: create a unit test that calls this function directly.
      *
      * Called only by XMLModify.main and CLDRFile.write, as follows:
      *
      * CLDRFile.write:
-     *    current.writeDifference(pw, currentFiltered, last, "", tempComments);
+     *    current.writeDifference(pw, current, last, "", tempComments);
      *    current.writeDifference(pw, currentFiltered, last, v, tempComments);
-     *    current.clear().writeDifference(pw, null, last, null, tempComments); [now last.writeLast(pw)]
      *
      * XMLModify.main:
      *    parts.writeDifference(out, parts, lastParts, value, null);
@@ -478,7 +480,8 @@ public final class XPathParts implements Freezable<XPathParts> {
                  * The first element should match one of the DtdType enum values.
                  * Use it to set dtdData.
                  */
-                dtdData = DtdData.getInstance(DtdType.valueOf(element));
+                File dir = CLDRConfig.getInstance().getCldrBaseDirectory();
+                dtdData = DtdData.getInstance(DtdType.valueOf(element), dir);
             } catch (Exception e) {
                 dtdData = null;
             }
