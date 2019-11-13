@@ -424,7 +424,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      * TODO: shorten this method (over 170 lines) using subroutines.
      */
     public boolean write(PrintWriter pw, Map<String, ?> options) {
-        pw = new DebugPrintWriter(pw);
+        /// pw = new DebugPrintWriter(pw);
         Set<String> orderedSet = new TreeSet<String>(getComparator());
         CollectionUtilities.addAll(dataSource.iterator(), orderedSet);
 
@@ -500,34 +500,27 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         XPathParts.Comments tempComments = (XPathParts.Comments) dataSource.getXpathComments().clone();
 
         XPathParts last = null;
-        XPathParts lastFiltered = null;
 
         boolean isResolved = dataSource.isResolving();
 
         java.util.function.Predicate<String> skipTest = (java.util.function.Predicate<String>) options.get("SKIP_PATH");
 
         /*
-         * First loop: call writeDifference for each xpath, with empty string "" for value
+         * First loop: call writeDifference for each xpath in identitySet, with empty string "" for value.
+         * There is no difference between "filtered" and "not filtered" in this loop.
          */
         for (Iterator<String> it2 = identitySet.iterator(); it2.hasNext();) {
             String xpath = (String) it2.next();
             if (isResolved && xpath.contains("/alias")) {
                 continue;
             }
-            /*
-             * TODO: explain difference between "filtered" (currentFiltered) and "not filtered" (current) here.
-             * No difference in this loop?
-             */
             XPathParts current = XPathParts.getInstance(xpath);
-            XPathParts currentFiltered = XPathParts.getInstance(xpath);
-
-            current.writeDifference(pw, currentFiltered, last, "", tempComments);
+            current.writeDifference(pw, current, last, "", tempComments);
             last = current;
-            lastFiltered = currentFiltered;
         }
 
         /*
-         * Second loop: call writeDifference for each xpath, with v = getStringValue(xpath)
+         * Second loop: call writeDifference for each xpath in orderedSet, with v = getStringValue(xpath)
          */
         boolean wroteAtLeastOnePath = false;
         for (String xpath : orderedSet) {
@@ -542,26 +535,22 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             if (suppressInheritanceMarkers && CldrUtility.INHERITANCE_MARKER.equals(v)) {
                 continue;
             }
+            /*
+             * The difference between "filtered" (currentFiltered) and "not filtered" (current) is that
+             * current uses getFullXPath, while currentFiltered uses xpath.
+             */
             XPathParts currentFiltered = XPathParts.getInstance(xpath);
             if (currentFiltered.size() >= 2
                 && currentFiltered.getElement(1).equals("identity")) {
                 continue;
             }
-            /*
-             * TODO: explain difference between "filtered" (currentFiltered) and "not filtered" (current) here.
-             * Only difference seems to be current uses getFullXPath...
-             */
             String fullXPath = getFullXPath(xpath);
-            if (!fullXPath.equals(xpath) && !fullXPath.contains("@draft")) {
+            if (false && !fullXPath.equals(xpath) && !fullXPath.contains("@draft")) {
                 System.out.println("Different: fullXPath = " + fullXPath + "; xpath = " + xpath);
             }
             XPathParts current = XPathParts.getInstance(fullXPath);
-
             current.writeDifference(pw, currentFiltered, last, v, tempComments);
-
             last = current;
-            lastFiltered = currentFiltered;
-
             wroteAtLeastOnePath = true;
         }
         /*
