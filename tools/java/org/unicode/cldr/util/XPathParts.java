@@ -43,12 +43,17 @@ public final class XPathParts implements Freezable<XPathParts> {
 
     private DtdData dtdData = null;
 
-    // private Map<String, Map<String, String>> suppressionMap;
-
     private static final Map<String, XPathParts> cache = new ConcurrentHashMap<String, XPathParts>();
 
+    /**
+     * Construct a new empty XPathParts object.
+     *
+     * Note: for faster performance, call getFrozenInstance or getInstance instead of this constructor.
+     * This constructor remains public for special cases in which individual elements are added with
+     * addElement rather than using a complete path string.
+     */
     public XPathParts() {
-        // this.suppressionMap = null;
+
     }
 
     /**
@@ -520,25 +525,6 @@ public final class XPathParts implements Freezable<XPathParts> {
     public XPathParts removeAttributes(int elementIndex, Collection<String> attributeNames) {
         elements.get(elementIndex >= 0 ? elementIndex : elementIndex + size()).removeAttributes(attributeNames);
         return this;
-    }
-
-    /**
-     * Parse out an xpath, and pull in the elements and attributes.
-     *
-     * @param xPath
-     * @return this XPathParts
-     *
-     * This is only for use by CLDRFile.write(), which is for generating vxml, etc., using defaultSuppressionMap.
-     *
-     * All other functions that would have called XPathParts.set() in the past should now use getInstance or getFrozenInstance
-     * instead, to take advantage of caching.
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12007
-     */
-    public XPathParts setForWritingWithSuppressionMap(String xPath) {
-        if (frozen) {
-            throw new UnsupportedOperationException("Can't modify frozen Element");
-        }
-        return addInternal(xPath, true);
     }
 
     /**
@@ -1254,7 +1240,6 @@ public final class XPathParts implements Freezable<XPathParts> {
          * Reference: https://unicode.org/cldr/trac/ticket/12007
          */
         xppClone.dtdData = this.dtdData;
-        // xppClone.suppressionMap = this.suppressionMap;
         for (Element e : this.elements) {
             xppClone.elements.add(e.cloneAsThawed());
         }        

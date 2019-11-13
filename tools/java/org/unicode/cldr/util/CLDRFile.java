@@ -14,6 +14,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -393,6 +394,22 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
         write(pw, nullOptions);
     }
 
+    class DebugPrintWriter extends PrintWriter {
+        public DebugPrintWriter(Writer out) {
+            super(out);
+        }
+
+        public void print(String x) {
+            System.out.println("DebugPrintWriter.print: " + x);
+            super.print(x);
+        }
+
+        public void println(String x) {
+            System.out.println("DebugPrintWriter.println: " + x);
+            super.println(x);
+        }
+    }
+
     /**
      * Write the corresponding XML file out, with the normal formatting and indentation.
      * Will update the identity element, including version, and other items.
@@ -403,8 +420,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
      * @param options
      *            map of options for writing
      * @return true if we write the file, false if we cancel due to skipping all paths
+     *
+     * TODO: shorten this method (over 170 lines) using subroutines.
      */
     public boolean write(PrintWriter pw, Map<String, ?> options) {
+        pw = new DebugPrintWriter(pw);
         Set<String> orderedSet = new TreeSet<String>(getComparator());
         CollectionUtilities.addAll(dataSource.iterator(), orderedSet);
 
@@ -486,6 +506,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
 
         java.util.function.Predicate<String> skipTest = (java.util.function.Predicate<String>) options.get("SKIP_PATH");
 
+        /*
+         * First loop: call writeDifference for each xpath, with empty string "" for value
+         */
         for (Iterator<String> it2 = identitySet.iterator(); it2.hasNext();) {
             String xpath = (String) it2.next();
             if (isResolved && xpath.contains("/alias")) {
@@ -503,6 +526,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
             lastFiltered = currentFiltered;
         }
 
+        /*
+         * Second loop: call writeDifference for each xpath, with v = getStringValue(xpath)
+         */
         boolean wroteAtLeastOnePath = false;
         for (String xpath : orderedSet) {
             if (skipTest != null
@@ -525,7 +551,11 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
              * TODO: explain difference between "filtered" (currentFiltered) and "not filtered" (current) here.
              * Only difference seems to be current uses getFullXPath...
              */
-            XPathParts current = XPathParts.getInstance(getFullXPath(xpath));
+            String fullXPath = getFullXPath(xpath);
+            if (!fullXPath.equals(xpath) && !fullXPath.contains("@draft")) {
+                System.out.println("Different: fullXPath = " + fullXPath + "; xpath = " + xpath);
+            }
+            XPathParts current = XPathParts.getInstance(fullXPath);
 
             current.writeDifference(pw, currentFiltered, last, v, tempComments);
 
@@ -684,7 +714,18 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String> {
     }
 
     /**
-     * Get the full path from a distinguished path
+     * Get the full path from a distinguished path.
+     *
+     * @param xpath the distinguished path
+     * @return the full path
+     *
+     * Examples:
+     *
+     * xpath  = //ldml/localeDisplayNames/scripts/script[@type="Adlm"]
+     * result = //ldml/localeDisplayNames/scripts/script[@type="Adlm"][@draft="unconfirmed"]
+     *
+     * xpath  = //ldml/dates/calendars/calendar[@type="hebrew"]/dateFormats/dateFormatLength[@type="full"]/dateFormat[@type="standard"]/pattern[@type="standard"]
+     * result = //ldml/dates/calendars/calendar[@type="hebrew"]/dateFormats/dateFormatLength[@type="full"]/dateFormat[@type="standard"]/pattern[@type="standard"][@numbers="hebr"]
      */
     public String getFullXPath(String xpath) {
         if (xpath == null) {
