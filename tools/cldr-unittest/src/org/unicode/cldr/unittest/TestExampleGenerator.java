@@ -718,12 +718,12 @@ public class TestExampleGenerator extends TestFmwk {
      *
      * The goal is to optimize example caching by only regenerating examples when necessary.
      *
-     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
      *
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
-        final boolean TEST_DEPENDENCIES = false; // make true to test
+        final boolean TEST_DEPENDENCIES = true; // make true to test
         if (!TEST_DEPENDENCIES) {
             return;
         }
@@ -775,11 +775,14 @@ public class TestExampleGenerator extends TestFmwk {
             if (value == null) {
                 continue;
             }
-            if (path.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
+            if (false && path.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                 System.out.println("Got " + path + " in first loop ...");
             }
             egBase.getExampleHtml(path, value);
         }
+
+        ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+        egTest.disableCaching();
 
         /*
          * For each path (A), temporarily change its value, and then check each other path (B),
@@ -803,7 +806,7 @@ public class TestExampleGenerator extends TestFmwk {
             if ((++count % 100) == 0) {
                 System.out.println(count);
             }
-            if (count > 200) {
+            if (count > 5000000) {
                  break;
             }
             String newValue = modifyValueRandomly(valueA);
@@ -832,17 +835,11 @@ public class TestExampleGenerator extends TestFmwk {
                 if (valueB == null) {
                     continue;
                 }
-                if (pathA.equals("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]")
+                if (false && pathA.equals("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]")
                     && pathB.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                     System.out.println("Got our paths in inner loop...");
                 }
 
-                /*
-                 * Allocating new ExampleGenerator in inner loop is expensive and is intended to avoid "bogus"
-                 * dependencies, but it still doesn't avoid them all.
-                 */
-                ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-                egTest.disableCaching();
                 // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
                 String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache
                 String exTest = egTest.getExampleHtml(pathB, valueB); // this won't come from cache
@@ -881,9 +878,9 @@ public class TestExampleGenerator extends TestFmwk {
                     + "; valueA = " + valueA);
             }
         }
-        final boolean countOnly = true;
+        final boolean countOnly = false;
         writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localId, countOnly);
-        writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localId, countOnly);
+        // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
 
@@ -995,14 +992,14 @@ public class TestExampleGenerator extends TestFmwk {
     /**
      * Write the given map of example-generator path dependencies to a json file.
      *
-     * TODO: use JSONObject, or write a format other than json.
+     * If this function is to be used and revised long-term, it would be better to use JSONObject,
+     * or write a format other than json.
      * JSONObject isn't currently linked to cldr-unittest TestAll, package org.unicode.cldr.unittest.
      *
      * @param dependencies the map of example-generator path dependencies
      * @param fileName the name of the file to create, without path or extension
      * @param countOnly true to show only the count of the set for each key path in the map
      *                  false to include all the paths
-     *                  (countOnly should be true; countOnly == false is not yet implemented correctly)
      *
      * @throws IOException
      */
@@ -1016,23 +1013,37 @@ public class TestExampleGenerator extends TestFmwk {
 
         ArrayList<String> list = new ArrayList<String>(dependencies.keySet());
         Collections.sort(list);
+        boolean firstPathA = true;
         int keysWritten = 0;
-        for (String path : list) {
-            HashSet<String> set = dependencies.get(path);
-            writer.print("\"");
-            writer.print(path.replaceAll("\"", "\\\\\""));
-            writer.print("\"");
-            writer.print(":");
+        for (String pathA : list) {
+            if (firstPathA) {
+                firstPathA = false;
+            } else {
+                writer.println(",");
+            }
+            HashSet<String> set = dependencies.get(pathA);
+            writer.print("  " + "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"" + ": ");
             if (countOnly) {
                 Integer count = set.size();
-                writer.println(count.toString() + ",");
+                writer.println(count.toString());
             } else {
-                String val = set.toString();
-                writer.println(val + ","); // TODO: format as valid json
+                writer.println("[");
+                boolean firstPathB = true;
+                for (String pathB : set) {
+                    if (firstPathB) {
+                        firstPathB = false;
+                    } else {
+                        writer.println(",");
+                    }
+                    writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
+                }
+                writer.println("");
+                writer.print("  ]");
             }
             ++keysWritten;
         }
 
+        writer.println("");
         writer.println("}");
         writer.close();
         System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
