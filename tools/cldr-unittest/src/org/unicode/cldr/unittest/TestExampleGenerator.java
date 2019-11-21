@@ -731,13 +731,13 @@ public class TestExampleGenerator extends TestFmwk {
         /*
          * TODO: test whether different localId gives different dependencies.
          */
-        final String localId = "fr";
+        final String localId = "de";
 
         CLDRFile englishFile = info.getEnglish();
 
         Factory factory = CLDRConfig.getInstance().getCldrFactory();
         CLDRFile cldrFile = makeMutableResolved(factory, localId);
-        cldrFile.disableCaching();
+        // cldrFile.disableCaching();
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
         ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
