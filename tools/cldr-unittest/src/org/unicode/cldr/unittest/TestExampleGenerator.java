@@ -727,41 +727,39 @@ public class TestExampleGenerator extends TestFmwk {
         if (!TEST_DEPENDENCIES) {
             return;
         }
+        final boolean JUST_LIST_PATHS = true;
 
         /*
-         * TODO: test whether different localId gives different dependencies.
+         * Different localeId gives different dependencies.
+         * So far, have tested with these locales:
+         *   "fr": 650 "type A"
+         *   "de": 652 "type A"
+         *   "am": 618 "type A"
          */
-        final String localId = "de";
+        final String localeId = "am";
 
         CLDRFile englishFile = info.getEnglish();
 
         Factory factory = CLDRConfig.getInstance().getCldrFactory();
-        CLDRFile cldrFile = makeMutableResolved(factory, localId);
-        // cldrFile.disableCaching();
+        CLDRFile cldrFile = makeMutableResolved(factory, localeId);
+        cldrFile.disableCaching();
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
         ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
-        if (false) {
-            /*
-             * try simplifying by using a much smaller set of paths that still generates false dependencies
-             * ... so far this approach has not been successful at producing the same "bogus" dependencies
-             * as the complete set ...
-             */
-            paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localePattern");
-            // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator");
-            // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ba\"]");
-            paths.add("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol");
-            // paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ary\"]");
-            paths.add("//ldml/units/unitLength[@type=\"long\"]/compoundUnit[@type=\"times\"]/compoundUnitPattern");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"hm\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"Bhm\"]");
-        } else {
-            CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        if (JUST_LIST_PATHS) {
+            String dir = CLDRPaths.GEN_DIRECTORY + "test/";
+            String name = "allpaths_" + localeId + ".txt";
+            PrintWriter writer = FileUtilities.openUTF8Writer(dir, name);
+            ArrayList<String> list = new ArrayList<String>(paths);
+            Collections.sort(list);
+            for (String path : list) {
+                // writer.println(path);
+                writer.println(path.replaceAll("\"", "\\\\\""));
+            }
+            return;
         }
 
         /*
@@ -879,8 +877,8 @@ public class TestExampleGenerator extends TestFmwk {
             }
         }
         final boolean countOnly = false;
-        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localId, countOnly);
-        // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localId, countOnly);
+        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localeId, countOnly);
+        // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localeId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
 
@@ -935,7 +933,7 @@ public class TestExampleGenerator extends TestFmwk {
     }
 
     /**
-     * Get the parent sources for the given localID
+     * Get the parent sources for the given localeId
      *
      * @param factory
      * @param localeID
