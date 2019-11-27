@@ -11,7 +11,8 @@ import com.google.common.collect.ImmutableSet;
 public final class SubmissionLocales {
     /**
      * NEW_CLDR_LOCALES is a set of locales that are sufficiently "new" that
-     * submissions will be allowed for ALL paths in these locales. They may be (for v37):
+     * submissions will be allowed for ALL paths in these locales, even during limited submission.
+     * They may be (for v37):
      * (1) completely new to CLDR ("pcm" and "mai");
      * (2) new for Basic coverage level ("kok", "mni", "sat", "snd", "su"); or
      * (3) otherwise sufficiently new ("ceb").
@@ -31,7 +32,7 @@ public final class SubmissionLocales {
 
     /**
      * HIGH_LEVEL_LOCALES is a set of locales for which submission will be allowed for a limited
-     * set of paths.
+     * set of paths, even during limited submission.
      *
      * TODO: Is this HIGH_LEVEL_LOCALES correct for v37 or not? Leaving unchanged for now.
      *
@@ -42,41 +43,19 @@ public final class SubmissionLocales {
     private static Set<String> HIGH_LEVEL_LOCALES = ImmutableSet.of("chr", "gd", "fo");
 
     /**
-     * CLDR_LOCALES is the union of NEW_CLDR_LOCALES, HIGH_LEVEL_LOCALES,
-     * and all the locales for Organization.cldr (per Locales.txt).
+     * CLDR_LOCALES will be the union of HIGH_LEVEL_LOCALES and all the locales for Organization.cldr (per Locales.txt).
      *
-     * NOTE: there's currently no real need for CLDR_LOCALES to include NEW_CLDR_LOCALES,
-     * since these sets are only accessed by allowEvenIfLimited, which returns true
-     * immediately for locales in NEW_CLDR_LOCALES.
+     * Use lazy evaluation for CLDR_LOCALES to avoid calling CLDRConfig too soon, and also to avoid evaluation
+     * at all if LIMITED_SUBMISSION is false (in which case allowEvenIfLimited won't be called).
      */
-    private static Set<String> CLDR_LOCALES = ImmutableSet.<String>builder()
-        .addAll(HIGH_LEVEL_LOCALES)
-        .addAll(NEW_CLDR_LOCALES)
-        .addAll(StandardCodes.make().getLocaleToLevel(Organization.cldr).keySet()).build();
+    private static Set<String> CLDR_LOCALES = null;
 
-    // have to have a lazy eval because otherwise CLDRConfig is called too early in the boot process
-    /*
-     * TODO: clarify the above comment about "lazy eval", and the commented-out code below
-     * starting with synchronized (SUBMISSION).
-     *
-     * Evidently lazy eval was used before this commit on Nov 26, 2018, in which the code was
-     * moved here from CheckCLDR.java:
-     *
-     * https://github.com/unicode-org/cldr/commit/91ab858aa15ace00d09012b5bf45474cb071b7bd#diff-cf05ad8eb22d4a7b053ac1cb38e433cb
-     *
-     * The commented-out code below starting with synchronized (SUBMISSION) was lazy eval.
-     * The current code is NOT lazy eval. Should it be? Maybe it wouldn't hurt, just in case.
-     * The set, if null, could be built inside allowEvenIfLimited.
+    /**
+     * Submission is allowed for paths matching this pattern, even during limited submission.
+     * TODO: update for v37.
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
      */
-//            synchronized (SUBMISSION) {
-//                if (CLDR_LOCALES == null) {
-//                    CLDR_LOCALES = ImmutableSet.<String>builder()
-//                        .addAll(HIGH_LEVEL_LOCALES)
-//                        .addAll(StandardCodes.make().getLocaleToLevel(Organization.cldr).keySet()).build();
-//                }
-//            }
-
-    public static final Pattern ALLOWED_IN_LIMITED_PATHS = Pattern.compile(
+    private static final Pattern ALLOWED_IN_LIMITED_PATHS = Pattern.compile(
         "//ldml/"
             + "(listPatterns/listPattern\\[@type=\"standard"
             + "|annotations/annotation\\[@cp=\"([©®‼⁉☑✅✔✖✨✳✴❇❌❎❓-❕❗❣ ➕-➗👫-👭👱🥰🧩🧔😸😺😹😼😻🦊😽😼⭕😺😿😾😻😸😹🐺⭕🦄😽🐼🐸😿🤖🐹🐻🙀🦁]|👱‍♀|👱‍♂)\""
@@ -100,49 +79,54 @@ public final class SubmissionLocales {
 
 
     /**
-     * Only call this if LIMITED_SUBMISSION
-     * @param localeString
-     * @param path
-     * @param isError
-     * @param missingInLastRelease
-     * @return
+     * Should submission be allowed for the given locale, path, and status (error/missing)?
+     *
+     * Only call this if LIMITED_SUBMISSION.
+     *
+     * @param localeString the given locale
+     * @param path the given path
+     * @param isError does the current winning value have an error?
+     * @param missingInLastRelease was it missing in the last release?
+     * @return true to allow, or false to disallow
      */
     public static boolean allowEvenIfLimited(String localeString, String path, boolean isError, boolean missingInLastRelease) {
-
-        // don't limit new locales or errors
-
-        if (SubmissionLocales.NEW_CLDR_LOCALES.contains(localeString) || isError) {
-            return true; 
-        } else {
-            int debug = 0; // for debugging
+        /*
+         * Don't limit paths that have errors, or any paths for "new" locales. 
+         */
+        if (isError || SubmissionLocales.NEW_CLDR_LOCALES.contains(localeString)) {
+            return true; // allow
         }
 
-        // all but CLDR locales are otherwise locked
-
-        if (!SubmissionLocales.CLDR_LOCALES.contains(localeString)) {
+        /*
+         * Otherwise, lock all but CLDR locales.
+         */
+        if (CLDR_LOCALES == null) {
+            /*
+             * CLDR_LOCALES need not include NEW_CLDR_LOCALES, since we will already have
+             * returned true if NEW_CLDR_LOCALES.contains(localeString).
+             */
+            CLDR_LOCALES = ImmutableSet.<String>builder()
+                .addAll(HIGH_LEVEL_LOCALES)
+                .addAll(StandardCodes.make().getLocaleToLevel(Organization.cldr).keySet()).build();
+        }
+        if (!CLDR_LOCALES.contains(localeString)) {
             return false;
-        } else {
-            int debug = 0; // for debugging
         }
 
-        // in those locales, lock all paths except missing and special
-
+        /*
+         * localeString is in CLDR_LOCALES, but not in NEW_CLDR_LOCALES.
+         * Lock all paths except missingInLastRelease and pathAllowedInLimitedSubmission.
+         */
         if (missingInLastRelease) {
             return true;
-        } else {
-            int debug = 0; // for debugging
         }
-
         if (pathAllowedInLimitedSubmission(path)) {
             return true;
-        } else {
-            int debug = 0; // for debugging
         }
-
-        return false; // skip
+        return false; // disallow
     }
 
     public static boolean pathAllowedInLimitedSubmission(String path) {
-        return SubmissionLocales.ALLOWED_IN_LIMITED_PATHS.matcher(path).lookingAt();
+        return ALLOWED_IN_LIMITED_PATHS.matcher(path).lookingAt();
     }
 }
