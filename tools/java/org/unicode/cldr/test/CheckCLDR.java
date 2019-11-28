@@ -192,7 +192,7 @@ abstract public class CheckCLDR {
             /*
              * If limited submission, and winner doesn't have an error, limit the values.
              *
-             * If allowEvenIfLimited would always return when LIMITED_SUBMISSION is false,
+             * If allowEvenIfLimited would always return true when LIMITED_SUBMISSION is false,
              * then the dependence on LIMITED_SUBMISSION here is logically redundant, yet
              * may improve performance by not gathering parameters for allowEvenIfLimited.
              */

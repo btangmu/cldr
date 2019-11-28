@@ -618,7 +618,7 @@ public class VettingViewer<T> {
                 final String oldValue = baselineFile == null ? null : baselineFile.getWinningValue(path);
 
                 /*
-                 * If allowEvenIfLimited would always return when LIMITED_SUBMISSION is false,
+                 * If allowEvenIfLimited would always return true when LIMITED_SUBMISSION is false,
                  * then the dependence on LIMITED_SUBMISSION here is logically redundant, yet
                  * may improve performance by not gathering parameters for allowEvenIfLimited.
                  */
