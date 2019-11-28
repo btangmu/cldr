@@ -9,6 +9,9 @@ import org.unicode.cldr.util.StandardCodes;
 import com.google.common.collect.ImmutableSet;
 
 public final class SubmissionLocales {
+
+    public static final boolean LIMITED_SUBMISSION = true;
+
     /**
      * NEW_CLDR_LOCALES is a set of locales that are sufficiently "new" that
      * submissions will be allowed for ALL paths in these locales, even during limited submission.
@@ -46,42 +49,19 @@ public final class SubmissionLocales {
      * CLDR_LOCALES will be the union of HIGH_LEVEL_LOCALES and all the locales for Organization.cldr (per Locales.txt).
      *
      * Use lazy evaluation for CLDR_LOCALES to avoid calling CLDRConfig too soon, and also to avoid evaluation
-     * at all if LIMITED_SUBMISSION is false (in which case allowEvenIfLimited won't be called).
+     * at all if LIMITED_SUBMISSION is false.
      */
     private static Set<String> CLDR_LOCALES = null;
 
     /**
      * Submission is allowed for paths matching this pattern, even during limited submission.
-     * TODO: update for v37.
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
+     *
+     * Use lazy evaluation to avoid evaluation if LIMITED_SUBMISSION is false.
      */
-    private static final Pattern ALLOWED_IN_LIMITED_PATHS = Pattern.compile(
-        "//ldml/"
-            + "(listPatterns/listPattern\\[@type=\"standard"
-            + "|annotations/annotation\\[@cp=\"([©®‼⁉☑✅✔✖✨✳✴❇❌❎❓-❕❗❣ ➕-➗👫-👭👱🥰🧩🧔😸😺😹😼😻🦊😽😼⭕😺😿😾😻😸😹🐺⭕🦄😽🐼🐸😿🤖🐹🐻🙀🦁]|👱‍♀|👱‍♂)\""
-            + "|localeDisplayNames/"
-            +   "(scripts/script\\[@type=\"(Elym|Hmnp|Nand|Wcho)\""
-            +    "|territories/territory\\[@type=\"(MO|SZ)\"](\\[@alt=\"variant\"])?"
-            +    "|types/type\\[@key=\"numbers\"]\\[@type=\"(hmnp|wcho)\"]"
-            +   ")"
-            + "|dates/timeZoneNames/(metazone\\[@type=\"Macau\"]"
-            +   "|zone\\[@type=\"Asia/Macau\"]"
-            +   ")"
-            + ")"
-            );
-    
-//ldml/dates/timeZoneNames/metazone[@type="Macau"]/long/daylight, old: Macau Summer Time, new: Macao Summer Time
-//ldml/dates/timeZoneNames/metazone[@type="Macau"]/long/standard, old: Macau Standard Time, new: Macao Standard Time
-//ldml/localeDisplayNames/territories/territory[@type="SZ"][@alt="variant"], old: SZ, new: Swaziland
-//ldml/dates/timeZoneNames/zone[@type="Asia/Macau"]/exemplarCity, old: Macau, new: Macao
-//ldml/dates/timeZoneNames/metazone[@type="Macau"]/long/generic, old: Macau Time, new: Macao Time
-//ldml/localeDisplayNames/territories/territory[@type="SZ"], old: Swaziland, new: Eswatini
-
+    private static Pattern ALLOWED_IN_LIMITED_PATHS = null;
 
     /**
      * Should submission be allowed for the given locale, path, and status (error/missing)?
-     *
-     * Only call this if CheckCLDR.LIMITED_SUBMISSION.
      *
      * @param localeString the given locale
      * @param path the given path
@@ -90,8 +70,8 @@ public final class SubmissionLocales {
      * @return true to allow, or false to disallow
      */
     public static boolean allowEvenIfLimited(String localeString, String path, boolean isError, boolean missingInLastRelease) {
-        if (!CheckCLDR.LIMITED_SUBMISSION) {
-            throw new IllegalArgumentException("allowEvenIfLimited called when !LIMITED_SUBMISSION");
+        if (!LIMITED_SUBMISSION) {
+            return true; // allow
         }
 
         /*
@@ -119,25 +99,46 @@ public final class SubmissionLocales {
 
         /*
          * localeString is in CLDR_LOCALES, but not in NEW_CLDR_LOCALES.
-         * Lock all paths except missingInLastRelease and pathAllowedInLimitedSubmission.
+         * Lock all paths except missingInLastRelease and pathAllowedInCurrentSubmission.
          */
-        if (missingInLastRelease || pathAllowedInLimitedSubmission(path)) {
+        if (missingInLastRelease || pathAllowedInCurrentSubmission(path)) {
             return true; // allow
         }
         return false; // disallow
     }
 
     /**
-     * Is submission for the given path allowed during limited submission?
-     *
-     * Only call this if CheckCLDR.LIMITED_SUBMISSION.
+     * Is submission for the given path allowed during current (possibly limited or unlimited) submission?
      *
      * @param path the given path
      * @return true to allow, false to disallow
      */
-    public static boolean pathAllowedInLimitedSubmission(String path) {
-        if (!CheckCLDR.LIMITED_SUBMISSION) {
-            throw new IllegalArgumentException("pathAllowedInLimitedSubmission called when !LIMITED_SUBMISSION");
+    public static boolean pathAllowedInCurrentSubmission(String path) {
+        /*
+         * If submission is not limited, always allow.
+         */
+        if (!LIMITED_SUBMISSION) {
+            return true;
+        }
+         if (ALLOWED_IN_LIMITED_PATHS == null) {
+             /*
+              * TODO: update for v37.
+              * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
+              */
+           ALLOWED_IN_LIMITED_PATHS = Pattern.compile(
+                "//ldml/"
+                    + "(listPatterns/listPattern\\[@type=\"standard"
+                    + "|annotations/annotation\\[@cp=\"([©®‼⁉☑✅✔✖✨✳✴❇❌❎❓-❕❗❣ ➕-➗👫-👭👱🥰🧩🧔😸😺😹😼😻🦊😽😼⭕😺😿😾😻😸😹🐺⭕🦄😽🐼🐸😿🤖🐹🐻🙀🦁]|👱‍♀|👱‍♂)\""
+                    + "|localeDisplayNames/"
+                    +   "(scripts/script\\[@type=\"(Elym|Hmnp|Nand|Wcho)\""
+                    +    "|territories/territory\\[@type=\"(MO|SZ)\"](\\[@alt=\"variant\"])?"
+                    +    "|types/type\\[@key=\"numbers\"]\\[@type=\"(hmnp|wcho)\"]"
+                    +   ")"
+                    + "|dates/timeZoneNames/(metazone\\[@type=\"Macau\"]"
+                    +   "|zone\\[@type=\"Asia/Macau\"]"
+                    +   ")"
+                    + ")"
+                    );
         }
         return ALLOWED_IN_LIMITED_PATHS.matcher(path).lookingAt();
     }

@@ -11,7 +11,6 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.SubmissionLocales;
 import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRFile;
@@ -79,20 +78,26 @@ private static final boolean TRIAL = false;
             }
         }
 
+        int errorCount = 0;
         /*
-         * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION
+         * TODO: confirm dependence on SubmissionLocales.LIMITED_SUBMISSION.
+         * If pathAllowedInCurrentSubmission always returns true when
+         * LIMITED_SUBMISSION is false, the loop would be a waste of time when
+         * LIMITED_SUBMISSION is false.
+         * Is it still useful to print "Errors: 0" when LIMITED_SUBMISSION is false?
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
          */
-        if (CheckCLDR.LIMITED_SUBMISSION) {
-            int errorCount = 0;
+        if (SubmissionLocales.LIMITED_SUBMISSION) {
             for (String path : abbreviatedPaths) {
-                if (!SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
+                if (!SubmissionLocales.pathAllowedInCurrentSubmission(path)) {
                     System.out.println("Failed to match: " + path);
                     errorCount++;
                 }
             }
-            System.out.println("Errors: " + errorCount);
         }
-        
+        System.out.println("Errors: " + errorCount);
+
         if (TRIAL) {
             String multipath = "(";
 

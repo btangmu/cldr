@@ -66,11 +66,14 @@ public class CheckNew extends FactoryCheckCLDR {
         if (modified != null) return this;
 
         /*
-         * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION. This looks suspicious.
-         * What does pathAllowedInLimitedSubmission have to do with being "outdated"?
+         * TODO: confirm SubmissionLocales.pathAllowedInCurrentSubmission gives the appropriate
+         * result here, for CheckCLDR.LIMITED_SUBMISSION true and false. This looks suspicious.
+         * What does pathAllowedInCurrentSubmission have to do with being "outdated"? If it's only
+         * that they both get skipped here, maybe rename the boolean? Add explanatory comments?
+         * Assume pathAllowedInCurrentSubmission returns true if LIMITED_SUBMISSION false?
          */
         boolean isOutdated = outdatedPaths.isOutdated(cldrFileToCheck.getLocaleID(), path)
-            || (!CheckCLDR.LIMITED_SUBMISSION || SubmissionLocales.pathAllowedInLimitedSubmission(path));
+            || SubmissionLocales.pathAllowedInCurrentSubmission(path);
 
         if (!isOutdated) {
             return this;

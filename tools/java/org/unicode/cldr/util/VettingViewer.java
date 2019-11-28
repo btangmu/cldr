@@ -617,7 +617,12 @@ public class VettingViewer<T> {
                 htmlMessage.setLength(0);
                 final String oldValue = baselineFile == null ? null : baselineFile.getWinningValue(path);
 
-                if (CheckCLDR.LIMITED_SUBMISSION) {
+                /*
+                 * If allowEvenIfLimited would always return when LIMITED_SUBMISSION is false,
+                 * then the dependence on LIMITED_SUBMISSION here is logically redundant, yet
+                 * may improve performance by not gathering parameters for allowEvenIfLimited.
+                 */
+                if (SubmissionLocales.LIMITED_SUBMISSION) {
                     if (!SubmissionLocales.allowEvenIfLimited(localeID, path, errorStatus == ErrorChecker.Status.error, oldValue == null)) {
                         continue;
                     };
@@ -640,14 +645,17 @@ public class VettingViewer<T> {
                         problemCounter.increment(Choice.missingCoverage);
                     }
                     /*
-                     * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION. This looks suspicious.
-                     * What does pathAllowedInLimitedSubmission have to do with englishChanged?
+                     * TODO: confirm dependence on pathAllowedInCurrentSubmission here, is it correct
+                     * for SubmissionLocales.LIMITED_SUBMISSION true and false? This looks suspicious.
+                     * What does pathAllowedInCurrentSubmission have to do with englishChanged?
+                     *
+                     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
                      */
-                    if (!CheckCLDR.LIMITED_SUBMISSION || SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
+                    if (SubmissionLocales.pathAllowedInCurrentSubmission(path)) {
                         problems.add(Choice.englishChanged);
                         problemCounter.increment(Choice.englishChanged);
                     }
-                    if (!CheckCLDR.LIMITED_SUBMISSION && !itemsOkIfVoted && outdatedPaths.isOutdated(localeID, path)) {
+                    if (!SubmissionLocales.LIMITED_SUBMISSION && !itemsOkIfVoted && outdatedPaths.isOutdated(localeID, path)) {
                         // the outdated paths compares the base value, before
                         // data submission,
                         // so see if the value changed.
