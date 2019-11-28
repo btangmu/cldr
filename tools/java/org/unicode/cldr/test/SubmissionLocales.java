@@ -120,7 +120,7 @@ public final class SubmissionLocales {
         if (!LIMITED_SUBMISSION) {
             return true;
         }
-         if (ALLOWED_IN_LIMITED_PATHS == null) {
+        if (ALLOWED_IN_LIMITED_PATHS == null) {
              /*
               * TODO: update for v37.
               * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
