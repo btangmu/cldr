@@ -11,6 +11,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.SubmissionLocales;
 import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRFile;
@@ -78,14 +79,19 @@ private static final boolean TRIAL = false;
             }
         }
 
-        int errorCount = 0;
-        for (String path : abbreviatedPaths) {
-            if (!SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
-                System.out.println("Failed to match: " + path);
-                errorCount++;
+        /*
+         * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION
+         */
+        if (CheckCLDR.LIMITED_SUBMISSION) {
+            int errorCount = 0;
+            for (String path : abbreviatedPaths) {
+                if (!SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
+                    System.out.println("Failed to match: " + path);
+                    errorCount++;
+                }
             }
+            System.out.println("Errors: " + errorCount);
         }
-        System.out.println("Errors: " + errorCount);
         
         if (TRIAL) {
             String multipath = "(";

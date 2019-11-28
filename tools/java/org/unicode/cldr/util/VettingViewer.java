@@ -639,7 +639,11 @@ public class VettingViewer<T> {
                         problems.add(Choice.missingCoverage);
                         problemCounter.increment(Choice.missingCoverage);
                     }
-                    if (SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
+                    /*
+                     * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION. This looks suspicious.
+                     * What does pathAllowedInLimitedSubmission have to do with englishChanged?
+                     */
+                    if (!CheckCLDR.LIMITED_SUBMISSION || SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
                         problems.add(Choice.englishChanged);
                         problemCounter.increment(Choice.englishChanged);
                     }

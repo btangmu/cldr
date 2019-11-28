@@ -81,7 +81,7 @@ public final class SubmissionLocales {
     /**
      * Should submission be allowed for the given locale, path, and status (error/missing)?
      *
-     * Only call this if LIMITED_SUBMISSION.
+     * Only call this if CheckCLDR.LIMITED_SUBMISSION.
      *
      * @param localeString the given locale
      * @param path the given path
@@ -90,6 +90,10 @@ public final class SubmissionLocales {
      * @return true to allow, or false to disallow
      */
     public static boolean allowEvenIfLimited(String localeString, String path, boolean isError, boolean missingInLastRelease) {
+        if (!CheckCLDR.LIMITED_SUBMISSION) {
+            throw new IllegalArgumentException("allowEvenIfLimited called when !LIMITED_SUBMISSION");
+        }
+
         /*
          * Don't limit paths that have errors, or any paths for "new" locales. 
          */
@@ -110,23 +114,31 @@ public final class SubmissionLocales {
                 .addAll(StandardCodes.make().getLocaleToLevel(Organization.cldr).keySet()).build();
         }
         if (!CLDR_LOCALES.contains(localeString)) {
-            return false;
+            return false; // disallow
         }
 
         /*
          * localeString is in CLDR_LOCALES, but not in NEW_CLDR_LOCALES.
          * Lock all paths except missingInLastRelease and pathAllowedInLimitedSubmission.
          */
-        if (missingInLastRelease) {
-            return true;
-        }
-        if (pathAllowedInLimitedSubmission(path)) {
-            return true;
+        if (missingInLastRelease || pathAllowedInLimitedSubmission(path)) {
+            return true; // allow
         }
         return false; // disallow
     }
 
+    /**
+     * Is submission for the given path allowed during limited submission?
+     *
+     * Only call this if CheckCLDR.LIMITED_SUBMISSION.
+     *
+     * @param path the given path
+     * @return true to allow, false to disallow
+     */
     public static boolean pathAllowedInLimitedSubmission(String path) {
+        if (!CheckCLDR.LIMITED_SUBMISSION) {
+            throw new IllegalArgumentException("pathAllowedInLimitedSubmission called when !LIMITED_SUBMISSION");
+        }
         return ALLOWED_IN_LIMITED_PATHS.matcher(path).lookingAt();
     }
 }

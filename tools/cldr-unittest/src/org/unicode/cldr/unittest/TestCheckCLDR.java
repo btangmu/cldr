@@ -796,7 +796,14 @@ public class TestCheckCLDR extends TestFmwk {
         if (logKnownIssue("cldrbug:11583", "Comment out test until last release data is available for unit tests")) {
             return;
         }
-        
+
+        /*
+         * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION
+         */
+        if (!CheckCLDR.LIMITED_SUBMISSION) {
+            return;
+        }
+
         CLDRConfig conf = testInfo;
         Factory factory = conf.getMainAndAnnotationsFactory();
         File[] paths = {

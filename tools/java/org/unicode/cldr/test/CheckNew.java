@@ -65,8 +65,12 @@ public class CheckNew extends FactoryCheckCLDR {
         Date modified = cldrFileToCheck.getLastModifiedDate(path);
         if (modified != null) return this;
 
+        /*
+         * TODO: confirm dependence on CheckCLDR.LIMITED_SUBMISSION. This looks suspicious.
+         * What does pathAllowedInLimitedSubmission have to do with being "outdated"?
+         */
         boolean isOutdated = outdatedPaths.isOutdated(cldrFileToCheck.getLocaleID(), path)
-            || SubmissionLocales.pathAllowedInLimitedSubmission(path);
+            || (!CheckCLDR.LIMITED_SUBMISSION || SubmissionLocales.pathAllowedInLimitedSubmission(path));
 
         if (!isOutdated) {
             return this;
