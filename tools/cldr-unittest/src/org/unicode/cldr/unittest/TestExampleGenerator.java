@@ -727,7 +727,8 @@ public class TestExampleGenerator extends TestFmwk {
         if (!TEST_DEPENDENCIES) {
             return;
         }
-        final boolean JUST_LIST_PATHS = true;
+        final boolean JUST_LIST_PATHS = false;
+        final boolean USE_STARRED_PATHS = true;
 
         /*
          * Different localeId gives different dependencies.
@@ -735,8 +736,10 @@ public class TestExampleGenerator extends TestFmwk {
          *   "fr": 650 "type A"
          *   "de": 652 "type A"
          *   "am": 618 "type A"
+         *   "zh": 12521 "type A"!
+         *   "ar": ?
          */
-        final String localeId = "am";
+        final String localeId = "ar";
 
         CLDRFile englishFile = info.getEnglish();
 
@@ -761,6 +764,7 @@ public class TestExampleGenerator extends TestFmwk {
             }
             return;
         }
+        final PathStarrer pathStarrer = USE_STARRED_PATHS ? null : new PathStarrer();
 
         /*
          * Get all the examples so they'll be added to the cache for egBase.
@@ -787,7 +791,7 @@ public class TestExampleGenerator extends TestFmwk {
          * to see whether changing the value for A changed the example for B.
          */
         HashMap<String, HashSet<String>> dependenciesA = new HashMap<String, HashSet<String>>();
-        HashMap<String, HashSet<String>> dependenciesB = new HashMap<String, HashSet<String>>();
+        // HashMap<String, HashSet<String>> dependenciesB = new HashMap<String, HashSet<String>>();
         long count = 0;
         long skipCount = 0;
         long dependencyCount = 0;
@@ -824,7 +828,9 @@ public class TestExampleGenerator extends TestFmwk {
                 System.out.println("Changing top did not change cldrFile: newValue = " + newValue
                     + "; valueAX = " + valueAX + "; valueA = " + valueA);
             }
-            HashSet<String> a = null;
+            pathA = pathA.intern();
+            String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
+            HashSet<String> a = USE_STARRED_PATHS ? dependenciesA.get(starredA) : null;
             for (String pathB : paths) {
                 if (pathA.equals(pathB) || skipPathForDependencies(pathB, false)) {
                     continue;
@@ -837,6 +843,7 @@ public class TestExampleGenerator extends TestFmwk {
                     && pathB.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                     System.out.println("Got our paths in inner loop...");
                 }
+                pathB = pathB.intern();
 
                 // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
                 String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache
@@ -847,22 +854,22 @@ public class TestExampleGenerator extends TestFmwk {
                     if (a == null) {
                         a = new HashSet<String>();
                     }
-                    pathA = pathA.intern();
-                    pathB = pathB.intern();
-                    a.add(pathB);
+                    a.add(USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
 
+                    /***
                     HashSet<String> b = dependenciesB.get(pathB);
                     if (b == null) {
                         b = new HashSet<String>();
                     }
                     b.add(pathA);
                     dependenciesB.put(pathB, b);
+                    ***/
 
                     ++dependencyCount;
                 }
             }
             if (a != null && !a.isEmpty()) {
-                dependenciesA.put(pathA.intern(), a);
+                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
             }
             /*
              * Restore the original value, so that the changes due to this pathA don't get
