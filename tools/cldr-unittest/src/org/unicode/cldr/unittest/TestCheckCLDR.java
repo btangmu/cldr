@@ -652,7 +652,7 @@ public class TestCheckCLDR extends TestFmwk {
 
                         if (surveyToolStatus == SurveyToolStatus.HIDE) {
                             assertEquals("HIDE ==> FORBID_READONLY", StatusAction.FORBID_READONLY, action);
-                        } else if (CheckCLDR.LIMITED_SUBMISSION) {
+                        } else if (SubmissionLocales.LIMITED_SUBMISSION) {
                             if (status == CheckStatus.Type.Error) {
                                 assertEquals("ERROR ==> ALLOW", StatusAction.ALLOW, action);
                             } else if (locale.equalsIgnoreCase("vo")) {
@@ -796,7 +796,17 @@ public class TestCheckCLDR extends TestFmwk {
         if (logKnownIssue("cldrbug:11583", "Comment out test until last release data is available for unit tests")) {
             return;
         }
-        
+
+        /*
+         * TODO: confirm dependence on SubmissionLocales.LIMITED_SUBMISSION,
+         * see call below to pathAllowedInCurrentSubmission
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
+         */
+        if (!SubmissionLocales.LIMITED_SUBMISSION) {
+            return;
+        }
+
         CLDRConfig conf = testInfo;
         Factory factory = conf.getMainAndAnnotationsFactory();
         File[] paths = {
@@ -828,7 +838,7 @@ public class TestCheckCLDR extends TestFmwk {
                 diffValues.add(path);
                 isDiff = true;
             }
-            boolean regexMatch = SubmissionLocales.pathAllowedInLimitedSubmission(path);
+            boolean regexMatch = SubmissionLocales.pathAllowedInCurrentSubmission(path);
             if (isDiff && !regexMatch) {
                 errln((firstFail ? "Add these to regex in SubmissionLocales OR filter from this test if unimportant:\n\t\t\t" : "")
                     + "Match fails with " + path + ", old: " + valueOld + ", new: " + value);

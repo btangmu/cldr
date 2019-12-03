@@ -69,8 +69,6 @@ import com.ibm.icu.util.ICUUncheckedIOException;
  */
 abstract public class CheckCLDR {
 
-    public static final boolean LIMITED_SUBMISSION = false; // TODO represent differently
-
     private static CLDRFile displayInformation;
 
     private CLDRFile cldrFileToCheck;
@@ -191,10 +189,17 @@ abstract public class CheckCLDR {
             CandidateInfo winner = pathValueInfo.getCurrentItem();
             ValueStatus valueStatus = getValueStatus(winner, ValueStatus.NONE, null);
 
-            // if limited submission, and winner doesn't have an error, limit the values
-
-            if (LIMITED_SUBMISSION && !SubmissionLocales.allowEvenIfLimited(pathValueInfo.getLocale().toString(), pathValueInfo.getXpath(), valueStatus == ValueStatus.ERROR, pathValueInfo.getBaselineStatus() == Status.missing)) {
-                return StatusAction.FORBID_READONLY;
+            /*
+             * If limited submission, and winner doesn't have an error, limit the values.
+             *
+             * If allowEvenIfLimited would always return true when LIMITED_SUBMISSION is false,
+             * then the dependence on LIMITED_SUBMISSION here is logically redundant, yet
+             * may improve performance by not gathering parameters for allowEvenIfLimited.
+             */
+            if (SubmissionLocales.LIMITED_SUBMISSION) {
+                if (!SubmissionLocales.allowEvenIfLimited(pathValueInfo.getLocale().toString(), pathValueInfo.getXpath(), valueStatus == ValueStatus.ERROR, pathValueInfo.getBaselineStatus() == Status.missing)) {
+                    return StatusAction.FORBID_READONLY;
+                }
             }
 
             if (this == Phase.SUBMISSION) {

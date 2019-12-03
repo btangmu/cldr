@@ -79,14 +79,25 @@ private static final boolean TRIAL = false;
         }
 
         int errorCount = 0;
-        for (String path : abbreviatedPaths) {
-            if (!SubmissionLocales.pathAllowedInLimitedSubmission(path)) {
-                System.out.println("Failed to match: " + path);
-                errorCount++;
+        /*
+         * TODO: confirm dependence on SubmissionLocales.LIMITED_SUBMISSION.
+         * If pathAllowedInCurrentSubmission always returns true when
+         * LIMITED_SUBMISSION is false, the loop would be a waste of time when
+         * LIMITED_SUBMISSION is false.
+         * Is it still useful to print "Errors: 0" when LIMITED_SUBMISSION is false?
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
+         */
+        if (SubmissionLocales.LIMITED_SUBMISSION) {
+            for (String path : abbreviatedPaths) {
+                if (!SubmissionLocales.pathAllowedInCurrentSubmission(path)) {
+                    System.out.println("Failed to match: " + path);
+                    errorCount++;
+                }
             }
         }
         System.out.println("Errors: " + errorCount);
-        
+
         if (TRIAL) {
             String multipath = "(";
 
