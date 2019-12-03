@@ -17,7 +17,7 @@ public final class SubmissionLocales {
      * submissions will be allowed for ALL paths in these locales, even during limited submission.
      * They may be (for v37):
      * (1) completely new to CLDR ("pcm" and "mai");
-     * (2) new for Basic coverage level ("kok", "mni", "sat", "snd", "su"); or
+     * (2) new for Basic coverage level ("kok", "mni", "sat", "sd", "su"); or
      * (3) otherwise sufficiently new ("ceb").
      *
      * ceb = Cebuano
@@ -26,12 +26,12 @@ public final class SubmissionLocales {
      * mni = Manipuri
      * pcm = Nigerian Pidgin
      * sat = Santali
-     * snd = Sindhi
+     * sd = Sindhi
      * su = Sundanese
      *
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13386
      */
-    private static Set<String> NEW_CLDR_LOCALES = ImmutableSet.of ("ceb", "kok", "mai", "mni", "pcm", "sat", "snd", "su");
+    private static Set<String> NEW_CLDR_LOCALES = ImmutableSet.of ("ceb", "kok", "mai", "mni", "pcm", "sat", "sd", "su");
 
     /**
      * HIGH_LEVEL_LOCALES is a set of locales for which submission will be allowed for a limited
