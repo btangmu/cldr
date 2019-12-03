@@ -739,7 +739,7 @@ public class TestExampleGenerator extends TestFmwk {
          *   "zh": 12521 "type A"!
          *   "ar": ?
          */
-        final String localeId = "ar";
+        final String localeId = "fr";
 
         CLDRFile englishFile = info.getEnglish();
 
@@ -764,7 +764,7 @@ public class TestExampleGenerator extends TestFmwk {
             }
             return;
         }
-        final PathStarrer pathStarrer = USE_STARRED_PATHS ? null : new PathStarrer();
+        final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
         /*
          * Get all the examples so they'll be added to the cache for egBase.
@@ -884,7 +884,8 @@ public class TestExampleGenerator extends TestFmwk {
             }
         }
         final boolean countOnly = false;
-        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localeId, countOnly);
+        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localeId
+                + (USE_STARRED_PATHS ? "_star" : ""), countOnly);
         // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localeId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
