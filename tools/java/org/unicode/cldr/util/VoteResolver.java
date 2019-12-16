@@ -111,6 +111,9 @@ public class VoteResolver<T> {
      */
     public enum Level {
         locked(0, 999), street(1, 10), anonymous(0, 8), vetter(4, 5), expert(8, 3), manager(4, 2), tc(20, 1), admin(100, 0);
+
+        static int PERMANENT_VOTE_COUNT = 1000;
+
         private int votes;
         private int stlevel;
 
@@ -174,15 +177,21 @@ public class VoteResolver<T> {
         }
 
         /**
-         * Can this user vote at a reduced level?
-         * @return the vote count this user can vote at, or null if it must vote at its assigned level
+         * Can this user vote at multiple levels?
+         * @return the array of vote counts this user can vote at, or null if it must vote at its assigned level
          */
-        public Integer canVoteAtReducedLevel() {
-            if (this.getSTLevel() <= tc.getSTLevel()) {
-                return vetter.votes;
-            } else {
+        public Integer[] getMultipleVotingLevels() {
+            /*
+             * Only TC (1) and Admin (0) have userlevel less than or equal to tc.getSTLevel() == 1.
+             */
+            if (this.getSTLevel() > tc.getSTLevel()) {
                 return null;
             }
+            Integer tcVotingLevels[] = new Integer[3];
+            tcVotingLevels[0] = vetter.votes;
+            tcVotingLevels[1] = this.getVotes(); // 20 (TC) or 100 (Admin)
+            tcVotingLevels[2] = PERMANENT_VOTE_COUNT;
+            return tcVotingLevels;
         }
 
         /**
