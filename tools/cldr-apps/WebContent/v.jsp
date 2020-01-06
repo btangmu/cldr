@@ -308,8 +308,10 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
 	              	 int regularVote = ctx.session.user.getLevel().getVotes(); %>
 	              <% if (multipleVotingLevels != null) { %>
 					<select title="vote with a different number of votes" id="voteLevelChanged" name="voteLevelChanged">
-					<% for (Integer voteLevel: multipleVotingLevels) { %>
-						<option value="<%= voteLevel %>"><%= voteLevel %> votes</option>
+					<% for (Integer voteLevel: multipleVotingLevels) {
+						String selectedOrNot = (regularVote == voteLevel) ? " selected=\"selected\"" : "";
+						%>
+						<option value="<%= voteLevel %>"<%= selectedOrNot %>><%= voteLevel %> votes</option>
 					<% } %>
 					</select>
 				<% } %>
