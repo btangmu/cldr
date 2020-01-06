@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.HashMap;
@@ -1131,8 +1132,11 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             if (withVote != null) {
                 if (withVote == user.getLevel().getVotes()) {
                     withVote = null; // not an override
-                } else if (withVote != user.getLevel().canVoteAtReducedLevel()) {
-                    throw new VoteNotAcceptedException(ErrorCode.E_NO_PERMISSION, "User " + user + " cannot vote at " + withVote + " level ");
+                } else {
+                    Integer[] multipleVotingLevels = user.getLevel().getMultipleVotingLevels();
+                    if (multipleVotingLevels == null || !Arrays.asList(multipleVotingLevels).contains(withVote)) {
+                        throw new VoteNotAcceptedException(ErrorCode.E_NO_PERMISSION, "User " + user + " cannot vote at " + withVote + " level ");
+                    }
                 }
             }
 
