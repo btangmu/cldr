@@ -13,7 +13,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.HashMap;
@@ -47,6 +46,7 @@ import org.unicode.cldr.util.Pair;
 import org.unicode.cldr.util.PathHeader;
 import org.unicode.cldr.util.SimpleXMLSource;
 import org.unicode.cldr.util.VoteResolver;
+import org.unicode.cldr.util.VoteResolver.Level;
 import org.unicode.cldr.util.VoteResolver.Status;
 import org.unicode.cldr.util.XMLFileReader;
 import org.unicode.cldr.util.XMLSource;
@@ -1130,13 +1130,11 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             }
 
             if (withVote != null) {
-                if (withVote == user.getLevel().getVotes()) {
+                Level level = user.getLevel();
+                if (withVote == level.getVotes()) {
                     withVote = null; // not an override
-                } else {
-                    Integer[] multipleVotingLevels = user.getLevel().getMultipleVotingLevels();
-                    if (multipleVotingLevels == null || !Arrays.asList(multipleVotingLevels).contains(withVote)) {
-                        throw new VoteNotAcceptedException(ErrorCode.E_NO_PERMISSION, "User " + user + " cannot vote at " + withVote + " level ");
-                    }
+                } else if (!level.canVoteWithCount(withVote)){
+                    throw new VoteNotAcceptedException(ErrorCode.E_NO_PERMISSION, "User " + user + " cannot vote at " + withVote + " level ");
                 }
             }
 

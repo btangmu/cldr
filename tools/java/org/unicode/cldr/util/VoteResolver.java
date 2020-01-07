@@ -2,6 +2,7 @@ package org.unicode.cldr.util;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -110,16 +111,57 @@ public class VoteResolver<T> {
      * weight.
      */
     public enum Level {
-        locked(0, 999), street(1, 10), anonymous(0, 8), vetter(4, 5), expert(8, 3), manager(4, 2), tc(20, 1), admin(100, 0);
+        locked(VC.ZERO /* votes */, 999 /* stlevel */),
+        street(VC.STREET, 10),
+        anonymous(VC.ZERO, 8),
+        vetter(VC.VETTER, 5),
+        expert(VC.EXPERT, 3),
+        manager(VC.MANAGER, 2),
+        tc(VC.TC, 1),
+        admin(VC.ADMIN, 0);
 
-        static int PERMANENT_VOTE_COUNT = 1000;
+        static private class VC { // constants for vote counts
+            static int ZERO = 0; // for both Level.locked and Level.anonymous
+            static int STREET = 1;
+            static int VETTER = 4;
+            static int MANAGER = 4; // same as VETTER
+            static int EXPERT = 8;
+            static int TC = 20;
+            static int ADMIN = 100;
+            static int PERMANENT = 1000;
+        }
 
+        /**
+         * The vote count a user of this level normally votes with (e.g., VC.STREET = 1)
+         */
         private int votes;
+
+        /**
+         * The level as an integer, where 0 = admin, ..., 999 = locked
+         */
         private int stlevel;
+
+        /**
+         * If not null, an array of different vote counts a user of this level is
+         * allowed to choose from. Integer[] not int[], to enable use of Arrays.asList.
+         */
+        private Integer[] voteCountMenu;
 
         private Level(int votes, int stlevel) {
             this.votes = votes;
             this.stlevel = stlevel;
+            if (votes == VC.ADMIN) {
+                voteCountMenu = new Integer[2];
+                voteCountMenu[0] = VC.VETTER;
+                voteCountMenu[1] = VC.ADMIN;
+            } else if (votes == VC.TC) {
+                voteCountMenu = new Integer[3];
+                voteCountMenu[0] = VC.VETTER;
+                voteCountMenu[1] = VC.TC;
+                voteCountMenu[2] = VC.PERMANENT;
+            } else {
+                voteCountMenu = null;
+            }
         }
 
         /**
@@ -140,7 +182,7 @@ public class VoteResolver<T> {
          * Find the Level, given ST Level
          *
          * @param stlevel
-         * @return
+         * @return the Level corresponding to the integer
          */
         public static Level fromSTLevel(int stlevel) {
             for (Level l : Level.values()) {
@@ -177,21 +219,25 @@ public class VoteResolver<T> {
         }
 
         /**
-         * Can this user vote at multiple levels?
-         * @return the array of vote counts this user can vote at, or null if it must vote at its assigned level
+         * Can a user with this level vote with the given vote count?
+         *
+         * @param withVote the given vote count
+         * @return true if the user can vote with the given vote count, else false
          */
-        public Integer[] getMultipleVotingLevels() {
-            /*
-             * Only TC (1) and Admin (0) have userlevel less than or equal to tc.getSTLevel() == 1.
-             */
-            if (this.getSTLevel() > tc.getSTLevel()) {
-                return null;
+        public boolean canVoteWithCount(int withVotes) {
+            if (voteCountMenu != null) {
+                return Arrays.asList(voteCountMenu).contains((Integer) withVotes);
+            } else {
+                return withVotes == this.votes;
             }
-            Integer tcVotingLevels[] = new Integer[3];
-            tcVotingLevels[0] = vetter.votes;
-            tcVotingLevels[1] = this.getVotes(); // 20 (TC) or 100 (Admin)
-            tcVotingLevels[2] = PERMANENT_VOTE_COUNT;
-            return tcVotingLevels;
+        }
+
+        /**
+         * Get the array of different vote counts a user of this level can vote with
+         * @return the array, or null if the user has no choice of vote count
+         */
+        public Integer[] getVoteCountMenu() {
+            return voteCountMenu;
         }
 
         /**
@@ -310,7 +356,6 @@ public class VoteResolver<T> {
          */
         public MaxCounter<T> add(T obj, long countValue, long time) {
             long value = getCount(obj);
-            long timeValue = getTime(obj);
             if ((value <= countValue)) {
                 super.add(obj, countValue - value, time); // only add the difference!
             }
@@ -376,7 +421,7 @@ public class VoteResolver<T> {
          *
          * @param value
          * @param voter
-         * @param withVotes optionally, vote at a reduced voting level. May not exceed voter's typical level. null = use default level.
+         * @param withVotes optionally, vote at a non-typical voting level. May not exceed voter's maximum allowed level. null = use default level.
          * @param date 
          */
         public void add(T value, int voter, Integer withVotes, Date date) {
@@ -384,26 +429,23 @@ public class VoteResolver<T> {
             if (info == null) {
                 throw new UnknownVoterException(voter);
             }
-            final int maxVotes = info.getLevel().getVotes(); // max votes available for user
-            if (withVotes == null) {
-                withVotes = maxVotes; // use max (default)
-            } else {
-                withVotes = Math.min(withVotes, maxVotes); // override to lower vote count
+            Level level = info.getLevel();
+            if (withVotes == null || !level.canVoteWithCount(withVotes)) {
+                withVotes = level.getVotes();
             }
-            addInternal(value, voter, info, withVotes, date); // do the add
+            addInternal(value, info, withVotes, date); // do the add
         }
 
         /**
          * Called by add(T,int,Integer) to actually add a value.
          *
          * @param value
-         * @param voter
          * @param info
          * @param votes
          * @param date 
          * @see #add(Object, int, Integer)
          */
-        private void addInternal(T value, int voter, final VoterInfo info, final int votes, Date time) {
+        private void addInternal(T value, final VoterInfo info, final int votes, Date time) {
             if (baileySet == false) {
                 throw new IllegalArgumentException("setBaileyValue must be called before add");
             }

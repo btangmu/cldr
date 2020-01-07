@@ -304,12 +304,14 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
 	               <span class='glyphicon glyphicon-user tip-log' title='<%= ctx.session.user.org %>'></span>
 	              
 	              <%
-	              Integer[] multipleVotingLevels = ctx.session.user.getLevel().getMultipleVotingLevels();
-	              	 int regularVote = ctx.session.user.getLevel().getVotes(); %>
-	              <% if (multipleVotingLevels != null) { %>
+	              VoteResolver.Level userLevel = ctx.session.user.getLevel();
+	              Integer[] voteCountMenu = userLevel.getVoteCountMenu();
+	              if (voteCountMenu != null) {
+		              Integer regularVote = (Integer) userLevel.getVotes();
+					%>
 					<select title="vote with a different number of votes" id="voteLevelChanged" name="voteLevelChanged">
-					<% for (Integer voteLevel: multipleVotingLevels) {
-						String selectedOrNot = (regularVote == voteLevel) ? " selected=\"selected\"" : "";
+					<% for (Integer voteLevel: voteCountMenu) {
+						String selectedOrNot = regularVote.equals(voteLevel) ? " selected=\"selected\"" : "";
 						%>
 						<option value="<%= voteLevel %>"<%= selectedOrNot %>><%= voteLevel %> votes</option>
 					<% } %>
