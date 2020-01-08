@@ -1277,12 +1277,12 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
 
         /**
          * A voter has just made a "Permanent" vote for an item, or to abstain.
-         * Only TC voters are allowed to do make "Permanent" votes.
+         * Only certain voters (TC) are allowed to make "Permanent" votes.
          * If two voters make permanent votes for the same locale, path, and value, and there is
          * a forum entry by one of those voters, the locale+path becomes "locked".
          * If a voter makes a permanent vote to Abstain, the locale+path becomes "unlocked".
          *
-         * @param user the TC voter
+         * @param user the voter
          * @param distinguishingXpath the path
          * @param value the value voted for, or null for Abstain
          */

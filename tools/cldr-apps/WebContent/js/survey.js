@@ -3365,7 +3365,6 @@ function handleWiredClick(tr,theRow,vHash,box,button,what) {
 
 	var ourUrl = contextPath + "/SurveyAjax";
 
-	// vote reduced
 	var voteLevelChanged = document.getElementById("voteLevelChanged");
 	if (voteLevelChanged) {
 		ourContent.voteLevelChanged = voteLevelChanged.value;

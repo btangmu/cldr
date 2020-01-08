@@ -497,7 +497,8 @@ public class UserRegistry {
         @Override
         public String toJSONString() throws JSONException {
             return new JSONObject().put("email", email)
-                .put("emailHash", getEmailHash()).put("name", name)
+                .put("emailHash", getEmailHash())
+                .put("name", name)
                 .put("userlevel", userlevel)
                 .put("votecount", getLevel().getVotes())
                 .put("userlevelName", UserRegistry.levelAsStr(userlevel))
