@@ -107,6 +107,25 @@ public class VoteResolver<T> {
     public static final int HIGH_BAR = Level.tc.votes;
 
     /**
+     * Constants for vote counts. These are mostly private since only needed inside enum Level.
+     */
+    public static class VC {
+        private static final int ZERO = 0; // for both Level.locked and Level.anonymous
+        private static final int STREET = 1;
+        private static final int VETTER = 4;
+        private static final int MANAGER = 4; // same as VETTER
+        private static final int EXPERT = 8;
+        private static final int TC = 20;
+        private static final int ADMIN = 100;
+
+        /**
+         * VC.PERMANENT needs to be public for STFactory.java.
+         * It is used by TC voters to "lock" locale+path permanently (including future versions, until unlocked).
+         */
+        public static final int PERMANENT = 1000;
+    }
+
+    /**
      * This is the level at which a vote counts. Each level also contains the
      * weight.
      */
@@ -120,17 +139,6 @@ public class VoteResolver<T> {
         tc(VC.TC, 1),
         admin(VC.ADMIN, 0);
 
-        static private class VC { // constants for vote counts
-            static int ZERO = 0; // for both Level.locked and Level.anonymous
-            static int STREET = 1;
-            static int VETTER = 4;
-            static int MANAGER = 4; // same as VETTER
-            static int EXPERT = 8;
-            static int TC = 20;
-            static int ADMIN = 100;
-            static int PERMANENT = 1000;
-        }
-
         /**
          * The vote count a user of this level normally votes with (e.g., VC.STREET = 1)
          */
@@ -142,8 +150,8 @@ public class VoteResolver<T> {
         private int stlevel;
 
         /**
-         * If not null, an array of different vote counts a user of this level is
-         * allowed to choose from. Integer[] not int[], to enable use of Arrays.asList.
+         * If not null, an array of different vote counts from which a user of this
+         * level is allowed to choose. Integer[] not int[], to enable use of Arrays.asList.
          */
         private Integer[] voteCountMenu;
 
@@ -219,9 +227,19 @@ public class VoteResolver<T> {
         }
 
         /**
+         * Policy: can this user create or set a user to the specified level?
+         */
+        public boolean canCreateOrSetLevelTo(Level otherLevel) {
+            return (this == admin) || // admin can set any level
+                (otherLevel != expert && // expert can't be set by any users but admin
+                    canManageSomeUsers() && // must be some sort of manager
+                    otherLevel.getSTLevel() >= getSTLevel()); // can't gain higher privs
+        }
+
+        /**
          * Can a user with this level vote with the given vote count?
          *
-         * @param withVote the given vote count
+         * @param withVotes the given vote count
          * @return true if the user can vote with the given vote count, else false
          */
         public boolean canVoteWithCount(int withVotes) {
@@ -234,20 +252,11 @@ public class VoteResolver<T> {
 
         /**
          * Get the array of different vote counts a user of this level can vote with
+         *
          * @return the array, or null if the user has no choice of vote count
          */
         public Integer[] getVoteCountMenu() {
             return voteCountMenu;
-        }
-
-        /**
-         * Policy: can this user create or set a user to the specified level?
-         */
-        public boolean canCreateOrSetLevelTo(Level otherLevel) {
-            return (this == admin) || // admin can set any level
-                (otherLevel != expert && // expert can't be set by any users but admin
-                    canManageSomeUsers() && // must be some sort of manager
-                    otherLevel.getSTLevel() >= getSTLevel()); // can't gain higher privs
         }
 
     };

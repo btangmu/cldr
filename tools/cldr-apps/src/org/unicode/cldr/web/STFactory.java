@@ -1133,7 +1133,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 Level level = user.getLevel();
                 if (withVote == level.getVotes()) {
                     withVote = null; // not an override
-                } else if (!level.canVoteWithCount(withVote)){
+                } else if (!level.canVoteWithCount(withVote)) {
                     throw new VoteNotAcceptedException(ErrorCode.E_NO_PERMISSION, "User " + user + " cannot vote at " + withVote + " level ");
                 }
             }
@@ -1261,6 +1261,91 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
 
             internalSetVoteForValue(user, distinguishingXpath, value, withVote, new Date());
             xmlsource.setValueFromResolver(distinguishingXpath, null, false /* resolveMorePaths */);
+
+            if (withVote != null && (int) withVote == VoteResolver.VC.PERMANENT) {
+                handlePermanentVote(user, distinguishingXpath, value);
+            }
+            /*
+             * TODO: "Remove from the table when a TC makes a Permanent vote to Abstain,
+             * or when a TC in any other mode votes for any value"
+             * -- here "any other mode" means even if the vote isn't Permanent, if it's
+             * by a TC, then it unlocks...
+             *
+             * Reference: https://docs.google.com/document/d/1VsJ2y7dp2kq_Iu-zLTjOvCooX4kRfVPui6WO51aFGzE/edit#
+             */
+        }
+
+        /**
+         * A voter has just made a "Permanent" vote for an item, or to abstain.
+         * Only TC voters are allowed to do make "Permanent" votes.
+         * If two voters make permanent votes for the same locale, path, and value, and there is
+         * a forum entry by one of those voters, the locale+path becomes "locked".
+         * If a voter makes a permanent vote to Abstain, the locale+path becomes "unlocked".
+         *
+         * @param user the TC voter
+         * @param distinguishingXpath the path
+         * @param value the value voted for, or null for Abstain
+         */
+        private void handlePermanentVote(User user, String distinguishingXpath, String value) {
+            int xpathId = sm.xpt.getByXpath(distinguishingXpath);
+            if (value != null && twoPermanentVotesExist(xpathId, value)) {
+                // TODO: require forum post
+                lockPath(xpathId);
+            }
+            // TODO: if value is null (Abstain), then unlock
+         }
+
+        /**
+         * Do at least two permanent votes exist for the given path in this locale?
+         *
+         * @param xpathId the path id
+         * @param value the value voted for (not null)
+         * @return true or false
+         */
+        private boolean twoPermanentVotesExist(int xpathId, String value) {
+            /*
+             * Example:
+             * SELECT COUNT(*) FROM cldr_vote_value_37 WHERE vote_override = 1000 AND locale = 'fr' AND xpath = 683828 AND value = 'signe de la main'
+             */
+            String tableName = DBUtils.Table.VOTE_VALUE.toString();
+            String sql = "SELECT COUNT(*) FROM " + tableName
+                + " WHERE " + VOTE_OVERRIDE + " = " + VoteResolver.VC.PERMANENT
+                + " AND locale = '" + locale.getBaseName() + "'"
+                + " AND xpath = " + xpathId
+                + " AND value = '" + value + "'";
+            int count = DBUtils.sqlCount(sql);
+            return count >= 2;
+        }
+
+        /**
+         * Add a "lock" to the locked_xpaths table for this locale and the given path id
+         *
+         * @param xpathId the path id
+         *
+         * TODO: IMPLEMENT THE ENFORCEMENT OF THE LOCK -- as it stands, the TC votes are not imported
+         * into the next vetting session, so the item may no longer be winning even though it has an
+         * entry in the table! To make that locking easier, better include the value and user(s) in
+         * the table as well?
+         * How to enforce? Basically, cldr_locked_xpaths needs to be part of vote resolution, and it
+         *  overrides any other votes...
+         */
+        private void lockPath(int xpathId) {
+            String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
+            Connection conn = null;
+            PreparedStatement ps = null;
+            String sql = "INSERT INTO " + tableName + "(locale,xpath,last_mod) VALUES(?,?,CURRENT_TIMESTAMP)";
+            try {
+                conn = DBUtils.getInstance().getDBConnection();
+                ps = DBUtils.prepareForwardReadOnly(conn, sql);
+                ps.setString(1, locale.getBaseName());
+                ps.setInt(2, xpathId);
+                ps.executeUpdate();
+                conn.commit();
+            } catch (SQLException e) {
+                SurveyLog.logException(e);
+            } finally {
+                DBUtils.close(ps, conn);
+            }
         }
 
         /**
@@ -1940,7 +2025,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s = null; // don't close twice.
                 conn.commit();
                 System.err.println("Created table " + DBUtils.Table.IMPORT);
-             }
+            }
             if (!DBUtils.hasTable(conn, DBUtils.Table.IMPORT_AUTO.toString())) {
                 /*
                  * Create the IMPORT_AUTO table, for keeping track of which users have auto-imported old winning votes.
@@ -1958,6 +2043,24 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s = null; // don't close twice.
                 conn.commit();
                 System.err.println("Created table " + DBUtils.Table.IMPORT_AUTO);
+            }
+            String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
+            if (!DBUtils.hasTable(conn, tableName)) {
+                /*
+                 * Create the LOCKED_XPATHS table, for keeping track of paths that have been "locked" for specific locales.
+                 * Reference: https://unicode-org.atlassian.net/browse/CLDR-11677
+                 * Use DB_SQL_BINCOLLATE for compatibility with existing vote tables, which
+                 * (on st.unicode.org as of 2020-01-07) have "DEFAULT CHARSET=latin1 COLLATE=latin1_bin".
+                 */
+                s = conn.createStatement();
+                sql = "CREATE TABLE " + tableName
+                    + "(locale VARCHAR(20), xpath INT NOT NULL, " + DBUtils.DB_SQL_LAST_MOD + ", PRIMARY KEY (locale,xpath))"
+                    + DBUtils.DB_SQL_BINCOLLATE;
+                s.execute(sql);
+                s.close();
+                s = null; // don't close twice.
+                conn.commit();
+                System.err.println("Created table " + tableName);
              }
         } catch (SQLException se) {
             SurveyLog.logException(se, "SQL: " + sql);
