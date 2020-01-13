@@ -17,13 +17,13 @@ import org.unicode.cldr.util.VoteResolver;
  *
  * Reference: https://docs.google.com/document/d/1VsJ2y7dp2kq_Iu-zLTjOvCooX4kRfVPui6WO51aFGzE/edit?skip_itp2_check=true#heading=h.trc1g4nsvdb8 
  *
- * This class could be moved elsewhere. Currently it uses locale from its parent class PerLocaleData.
- *
  * TODO: IMPLEMENT THE ENFORCEMENT OF THE LOCK -- as it stands, the TC votes are not imported
  * into the next vetting session, so the item may no longer be winning even though it has an
  * entry in the table!
  * How to enforce? Basically, cldr_locked_xpaths needs to be part of vote resolution, and it
- * overrides any other votes...
+ * overrides any other votes... See STFactory.PerLocaleData.loadVoteValues(), which might need
+ * to call a new method in PermanentVote... openQueryByLocaleRW reads from DBUtils.Table.VOTE_VALUE;
+ * new similar code will read from DBUtils.Table.LOCKED_XPATHS...
  */
 public class PermanentVote {
     String localeName;
@@ -93,6 +93,8 @@ public class PermanentVote {
 
     /**
      * Add a "lock" to the locked_xpaths table for this locale+path
+     *
+     * TODO: also write to log!
      */
     private void lock() {
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
@@ -168,5 +170,3 @@ public class PermanentVote {
         }
     }
 }
-
-

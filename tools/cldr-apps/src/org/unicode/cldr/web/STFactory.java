@@ -735,12 +735,11 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                         String xpath = sm.xpt.getById(xp);
                         int submitter = rs.getInt(2);
                         String value = DBUtils.getStringUTF8(rs, 3);
-                        // 4 = locale -- unused; TODO: remove from openQueryByLocaleRW
-                        Integer voteOverride = rs.getInt(5); // 5 override
+                        Integer voteOverride = rs.getInt(4); // 4 override
                         if (voteOverride == 0 && rs.wasNull()) { // if override was a null..
                             voteOverride = null;
                         }
-                        Timestamp last_mod = rs.getTimestamp(6); // last mod
+                        Timestamp last_mod = rs.getTimestamp(5); // last mod
                         User theSubmitter = sm.reg.getInfo(submitter);
                         if (theSubmitter == null) {
                             SurveyLog.warnOnce("Ignoring votes for deleted user #" + submitter);
@@ -763,6 +762,22 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                     if (del > 0) {
                         System.out.println("Committing delete of " + del + " invalid votes from " + locale);
                         conn.commit();
+                    }
+                    DBUtils.close(rs, ps);
+                    ps = openPermVoteQuery(conn);
+                    ps.setString(1, locale.getBaseName());
+                    rs = ps.executeQuery();
+                    while (rs.next()) {
+                        int xp = rs.getInt(1);
+                        String xpath = sm.xpt.getById(xp);
+                        String value = DBUtils.getStringUTF8(rs, 2);
+                        Timestamp last_mod = rs.getTimestamp(3);
+                        try {
+                            internalSetVoteForValue(null, xpath, value, VoteResolver.VC.PERMANENT, last_mod);
+                            n++;
+                        } catch (BallotBox.InvalidXPathException e) {
+                            System.err.println("InvalidXPathException: Ignoring permanent vote for:" + locale + ":" + xpath);
+                        }
                     }
                 } catch (SQLException e) {
                     SurveyLog.logException(e);
@@ -1846,11 +1861,15 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
      */
     private PreparedStatement openQueryByLocaleRW(Connection conn) throws SQLException {
         setupDB();
-        /*
-         * TODO: remove unused locale from SELECT (not from WHERE)
-         */
         return DBUtils
-            .prepareForwardUpdateable(conn, "SELECT xpath,submitter,value,locale," + VOTE_OVERRIDE + ",last_mod FROM " + DBUtils.Table.VOTE_VALUE
+            .prepareForwardUpdateable(conn, "SELECT xpath,submitter,value," + VOTE_OVERRIDE + ",last_mod FROM " + DBUtils.Table.VOTE_VALUE
+                + " WHERE locale = ?");
+    }
+
+    private PreparedStatement openPermVoteQuery(Connection conn) throws SQLException {
+        setupDB();
+        return DBUtils
+            .prepareForwardUpdateable(conn, "SELECT xpath,value,last_mod FROM " + DBUtils.Table.LOCKED_XPATHS
                 + " WHERE locale = ?");
     }
 
