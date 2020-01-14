@@ -32,6 +32,11 @@ public class PermanentVote {
 
     /**
      * A voter has just made a "Permanent" vote for an item, or to abstain.
+     * Construct a PermanentVote object and use it to process the vote for
+     * purposes of locking/unlocking.
+     *
+     * The caller (voteForValue) will already have processed this vote in ways
+     * similar to ordinary non-permanent votes, e.g., adding it to the VOTE_VALUE table.
      *
      * @param localeName the locale name
      * @param xpathId the path id
@@ -42,12 +47,15 @@ public class PermanentVote {
         this.xpathId = xpathId;
         this.value = value;
         if (value == null) {
-            if (isLocked() && gotTwo()) {
+            if (isLockedAnyValue() && gotTwo()) {
                 unlock();
                 cleanSlate();
             }
         } else {
-            if (!isLocked() && gotTwo()) {
+            if (!isLockedThisValue() && gotTwo()) {
+                if (isLockedAnyValue()) {
+                    unlock();
+                }
                 lock();
                 cleanSlate();
             }
@@ -55,11 +63,11 @@ public class PermanentVote {
     }
 
     /**
-     * Does a lock exist for this locale+path?
+     * Does a lock exist for this locale+path and any value?
      *
      * @return true or false
      */
-    private boolean isLocked() {
+    private boolean isLockedAnyValue() {
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
         String sql = "SELECT COUNT(*) FROM " + tableName
             + " WHERE locale = '" + localeName + "'"
@@ -69,7 +77,23 @@ public class PermanentVote {
     }
 
     /**
-     * Do at least two permanent votes exist for this locale+path+value?
+     * Does a lock exist for this locale+path+value?
+     *
+     * @return true or false
+     */
+    private boolean isLockedThisValue() {
+        String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
+        String sql = "SELECT COUNT(*) FROM " + tableName
+            + " WHERE locale = '" + localeName + "'"
+            + " AND xpath = " + xpathId
+            + ((value == null) ? "IS NULL" : "= '" + value + "'");
+        int count = DBUtils.sqlCount(sql);
+        return count >= 1;
+    }
+
+    /**
+     * Do at least two permanent votes exist for this locale+path+value
+     * in the VOTE_VALUE table?
      *
      * These are Abstain votes if value is null.
      *
@@ -86,13 +110,13 @@ public class PermanentVote {
             + " AND locale = '" + localeName + "'"
             + " AND xpath = " + xpathId
             + " AND value "
-            + ((value == null) ? "is null" : "= '" + value + "'");
+            + ((value == null) ? "IS NULL" : "= '" + value + "'");
         int count = DBUtils.sqlCount(sql);
         return count >= 2;
     }
 
     /**
-     * Add a "lock" to the locked_xpaths table for this locale+path
+     * Add a "lock" to the LOCKED_XPATHS table for this locale+path+value
      *
      * TODO: also write to log!
      */
@@ -118,15 +142,15 @@ public class PermanentVote {
     }
 
     /**
-     * Remove a "lock" from the locked_xpaths table for this locale+path
+     * Remove a "lock" from the LOCKED_XPATHS table for this locale+path
      */
     private void unlock() {
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
         Connection conn = null;
         PreparedStatement ps = null;
         String sql = "DELETE FROM " + tableName
-            + " WHERE locale = '" + localeName + "'"
-            + " AND xpath = " + xpathId;
+            + " WHERE locale = ?"
+            + " AND xpath = ?";
         try {
             conn = DBUtils.getInstance().getDBConnection();
             ps = DBUtils.prepareForwardReadOnly(conn, sql);
@@ -144,17 +168,15 @@ public class PermanentVote {
     /**
      * Clean slate for TC “permanent” votes when lock or unlock
      *
-     * Remove all permanent votes for this locale+path 
-     * 
-     * @param xpathId
+     * Remove all permanent votes from the VOTE_VALUE table for this locale+path
      */
     private void cleanSlate() {
         String tableName = DBUtils.Table.VOTE_VALUE.toString();
         Connection conn = null;
         PreparedStatement ps = null;
         String sql = "DELETE FROM " + tableName
-            + " WHERE locale = " + localeName
-            + " AND xpath = " + xpathId
+            + " WHERE locale = ?"
+            + " AND xpath = ?"
             + " AND vote_override = " + VoteResolver.VC.PERMANENT;
         try {
             conn = DBUtils.getInstance().getDBConnection();

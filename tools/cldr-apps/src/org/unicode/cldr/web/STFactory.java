@@ -773,7 +773,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                         String value = DBUtils.getStringUTF8(rs, 2);
                         Timestamp last_mod = rs.getTimestamp(3);
                         try {
-                            internalSetVoteForValue(null, xpath, value, VoteResolver.VC.PERMANENT, last_mod);
+                            internalSetVoteForValue(sm.reg.getInfo(UserRegistry.ADMIN_ID), xpath, value, VoteResolver.VC.PERMANENT, last_mod);
                             n++;
                         } catch (BallotBox.InvalidXPathException e) {
                             System.err.println("InvalidXPathException: Ignoring permanent vote for:" + locale + ":" + xpath);
