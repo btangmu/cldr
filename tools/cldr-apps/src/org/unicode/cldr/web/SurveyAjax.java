@@ -2518,7 +2518,7 @@ public class SurveyAjax extends HttpServlet {
                     System.err.println("Voting for::  " + val);
                 Integer withVote = null;
                 try {
-                    withVote = Integer.parseInt(request.getParameter("voteReduced"));
+                    withVote = Integer.parseInt(request.getParameter("voteLevelChanged"));
                 } catch (Throwable t) {
                     withVote = null;
                 }

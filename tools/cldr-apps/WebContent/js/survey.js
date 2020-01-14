@@ -3383,10 +3383,9 @@ function handleWiredClick(tr,theRow,vHash,box,button,what) {
 
 	var ourUrl = contextPath + "/SurveyAjax";
 
-	// vote reduced
-	var voteReduced = document.getElementById("voteReduced");
-	if(voteReduced) {
-		ourContent.voteReduced = voteReduced.value;
+	var voteLevelChanged = document.getElementById("voteLevelChanged");
+	if (voteLevelChanged) {
+		ourContent.voteLevelChanged = voteLevelChanged.value;
 	}
 
 	tr.className = 'tr_checking1';
