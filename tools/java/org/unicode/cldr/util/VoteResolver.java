@@ -681,6 +681,7 @@ public class VoteResolver<T> {
     private Status trunkStatus;
 
     private boolean resolved;
+    private boolean locked;
     private int requiredVotes;
     private SupplementalDataInfo supplementalDataInfo = SupplementalDataInfo.getInstance();
 
@@ -754,16 +755,6 @@ public class VoteResolver<T> {
     }
 
     /**
-     * Is this an established locale? If so, the requiredVotes is higher.
-     * @return
-     * @deprecated use {@link #getRequiredVotes()}
-     */
-    @Deprecated
-    public boolean isEstablished() {
-        return (requiredVotes == 8);
-    }
-
-    /**
      * What are the required votes for this item?
      * @return the number of votes (as of this writing: usually 4, 8 for established locales)
      */
@@ -780,7 +771,7 @@ public class VoteResolver<T> {
         this.trunkStatus = Status.missing;
         this.setUsingKeywordAnnotationVoting(false);
         organizationToValueAndVote.clear();
-        resolved = false;
+        resolved = locked = false;
         values.clear();
     }
 
@@ -824,6 +815,9 @@ public class VoteResolver<T> {
     public void add(T value, int voter, Integer withVotes, Date date) {
         if (resolved) {
             throw new IllegalArgumentException("Must be called after clear, and before any getters.");
+        }
+        if (withVotes != null && withVotes == VC.LOCKING) {
+            locked = true;
         }
         organizationToValueAndVote.add(value, voter, withVotes, date);
         values.add(value);
@@ -1931,5 +1925,9 @@ public class VoteResolver<T> {
      */
     public void setUsingKeywordAnnotationVoting(boolean usingKeywordAnnotationVoting) {
         this.usingKeywordAnnotationVoting = usingKeywordAnnotationVoting;
+    }
+
+    public boolean isLocked() {
+        return locked;
     }
 }

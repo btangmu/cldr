@@ -21,9 +21,7 @@ public class PermanentVote {
     private String localeName;
     private int xpathId;
     private String value;
-    private boolean didLock = false;
-    private boolean didUnlock = false;
-    private boolean didClean = false;
+    private boolean didLock, didUnlock, didClean;
 
     /**
      * A voter has just made a "Permanent" vote for an item, or to abstain.
@@ -47,6 +45,7 @@ public class PermanentVote {
         this.localeName = localeName;
         this.xpathId = xpathId;
         this.value = value;
+        didLock = didUnlock = didClean = false;
         if (value == null) {
             if (isLockedAnyValue() && gotTwo()) {
                 unlock();
@@ -87,9 +86,23 @@ public class PermanentVote {
     private boolean isLockedAnyValue() {
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
         String sql = "SELECT COUNT(*) FROM " + tableName
-            + " WHERE locale = '" + localeName + "'"
-            + " AND xpath = " + xpathId;
-        int count = DBUtils.sqlCount(sql);
+            + " WHERE locale=?"
+            + " AND xpath=?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        int count = 0;
+        try {
+            conn = DBUtils.getInstance().getDBConnection();
+            ps = DBUtils.prepareForwardReadOnly(conn, sql);
+            ps.setString(1, localeName);
+            ps.setInt(2, xpathId);
+            count = DBUtils.sqlCount(conn, ps);
+        } catch (SQLException e) {
+            SurveyLog.logException(e);
+        } finally {
+            DBUtils.close(ps, conn);
+        }
         return count >= 1;
     }
 
@@ -99,12 +112,30 @@ public class PermanentVote {
      * @return true or false
      */
     private boolean isLockedThisValue() {
+        if (value == null) {
+            return false;
+        }
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
         String sql = "SELECT COUNT(*) FROM " + tableName
-            + " WHERE locale = '" + localeName + "'"
-            + " AND xpath = " + xpathId
-            + ((value == null) ? "IS NULL" : "= '" + value + "'");
-        int count = DBUtils.sqlCount(sql);
+            + " WHERE locale=?"
+            + " AND xpath=?"
+            + " AND value=?";
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        int count = 0;
+        try {
+            conn = DBUtils.getInstance().getDBConnection();
+            ps = DBUtils.prepareForwardReadOnly(conn, sql);
+            ps.setString(1, localeName);
+            ps.setInt(2, xpathId);
+            DBUtils.setStringUTF8(ps, 3, value);
+            count = DBUtils.sqlCount(conn, ps);
+        } catch (SQLException e) {
+            SurveyLog.logException(e);
+        } finally {
+            DBUtils.close(ps, conn);
+        }
         return count >= 1;
     }
 
@@ -123,12 +154,29 @@ public class PermanentVote {
          */
         String tableName = DBUtils.Table.VOTE_VALUE.toString();
         String sql = "SELECT COUNT(*) FROM " + tableName
-            + " WHERE vote_override = " + VoteResolver.VC.PERMANENT
-            + " AND locale = '" + localeName + "'"
-            + " AND xpath = " + xpathId
-            + " AND value "
-            + ((value == null) ? "IS NULL" : "= '" + value + "'");
-        int count = DBUtils.sqlCount(sql);
+            + " WHERE vote_override=" + VoteResolver.VC.PERMANENT
+            + " AND locale=?"
+            + " AND xpath=?"
+            + " AND value"
+            + ((value == null) ? " IS NULL" : "=?");
+
+        Connection conn = null;
+        PreparedStatement ps = null;
+        int count = 0;
+        try {
+            conn = DBUtils.getInstance().getDBConnection();
+            ps = DBUtils.prepareForwardReadOnly(conn, sql);
+            ps.setString(1, localeName);
+            ps.setInt(2, xpathId);
+            if (value != null) {
+                DBUtils.setStringUTF8(ps, 3, value);
+            }
+            count = DBUtils.sqlCount(null, conn, ps);
+        } catch (SQLException e) {
+            SurveyLog.logException(e);
+        } finally {
+            DBUtils.close(ps, conn);
+        }
         return count >= 2;
     }
 
@@ -146,7 +194,7 @@ public class PermanentVote {
             ps = DBUtils.prepareForwardReadOnly(conn, sql);
             ps.setString(1, localeName);
             ps.setInt(2, xpathId);
-            ps.setString(3, value);
+            DBUtils.setStringUTF8(ps, 3, value);
             ps.executeUpdate();
             conn.commit();
         } catch (SQLException e) {
@@ -164,8 +212,8 @@ public class PermanentVote {
         Connection conn = null;
         PreparedStatement ps = null;
         String sql = "DELETE FROM " + tableName
-            + " WHERE locale = ?"
-            + " AND xpath = ?";
+            + " WHERE locale=?"
+            + " AND xpath=?";
         try {
             conn = DBUtils.getInstance().getDBConnection();
             ps = DBUtils.prepareForwardReadOnly(conn, sql);
@@ -190,9 +238,9 @@ public class PermanentVote {
         Connection conn = null;
         PreparedStatement ps = null;
         String sql = "DELETE FROM " + tableName
-            + " WHERE locale = ?"
-            + " AND xpath = ?"
-            + " AND vote_override = " + VoteResolver.VC.PERMANENT;
+            + " WHERE locale=?"
+            + " AND xpath=?"
+            + " AND vote_override=" + VoteResolver.VC.PERMANENT;
         try {
             conn = DBUtils.getInstance().getDBConnection();
             ps = DBUtils.prepareForwardReadOnly(conn, sql);

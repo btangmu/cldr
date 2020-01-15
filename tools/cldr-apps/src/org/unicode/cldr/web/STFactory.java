@@ -517,7 +517,8 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 if (userToData != null) {
                     HashSet<User> toDelete = new HashSet<User>();
                     userToData.forEach((k, v) -> {
-                        if (v.getOverride() == overrideVoteCount) {
+                        Integer override = v.getOverride();
+                        if (override != null && override == overrideVoteCount) {
                             toDelete.add(k);
                         }
                     });
