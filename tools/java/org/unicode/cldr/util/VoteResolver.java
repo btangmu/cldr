@@ -245,7 +245,8 @@ public class VoteResolver<T> {
          * @return true if the user can vote with the given vote count, else false
          */
         public boolean canVoteWithCount(int withVotes) {
-            /* ADMIN is allowed to vote as VC.LOCKING, but not directly in the GUI, only
+            /*
+             * ADMIN is allowed to vote as VC.LOCKING, but not directly in the GUI, only
              * by two TC voting together as VC.PERMANENT. Therefore VC.LOCKING is omitted
              * from the GUI menu (voteCountMenu), but included in canVoteWithCount.
              */

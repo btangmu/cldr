@@ -365,7 +365,6 @@ define({
 		E_NOT_LOGGED_IN: "That operation cannot be done without being logged in.",
 		E_BAD_VALUE: "The vote was not accepted: ${err_data.message}",
 		E_BAD_XPATH: "This item does not exist in this locale.",
-		E_PERMANENT_VOTE_NO_FORUM: "A forum entry is required to make a Permanent vote.",
 		"": ""})
 //		"mt-MT": false
 
