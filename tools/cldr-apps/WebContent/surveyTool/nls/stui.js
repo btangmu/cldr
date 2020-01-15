@@ -160,6 +160,7 @@ define({
 		flag_desc: "This item has been flagged for review by the CLDR Technical Committee.",
 		flag_d_desc: "Losing items may be flagged for CLDR Committee review.",
 		explainRequiredVotes: "Changes to this item require ${requiredVotes} votes.",
+		pathIsLocked: "This item has been locked by the CLDR committee. See Forum post.",
 		xpath_desc: "This is the XPath denoting the currently clicked item. For more information, see http://cldr.unicode.org (click to select)",
 
 		winningStatus_disputed: "Disputed",
@@ -207,6 +208,7 @@ define({
 		StatusAction_FORBID_READONLY:  "The item is read-only.",
 		StatusAction_FORBID_NULL:      "The item has no value.",
 		StatusAction_FORBID_ROOT:      "The item is a root annotation code.",
+		StatusAction_FORBID_PERMANENT_WITHOUT_FORUM: "A forum entry is required to make a Permanent vote.",
 
 		// v.jsp
 		"v-title2_desc": "Locale title",
@@ -363,6 +365,7 @@ define({
 		E_NOT_LOGGED_IN: "That operation cannot be done without being logged in.",
 		E_BAD_VALUE: "The vote was not accepted: ${err_data.message}",
 		E_BAD_XPATH: "This item does not exist in this locale.",
+		E_PERMANENT_VOTE_NO_FORUM: "A forum entry is required to make a Permanent vote.",
 		"": ""})
 //		"mt-MT": false
 
