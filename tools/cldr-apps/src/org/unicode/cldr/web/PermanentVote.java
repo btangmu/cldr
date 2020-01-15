@@ -16,27 +16,28 @@ import org.unicode.cldr.util.VoteResolver;
  * If two voters make permanent votes to Abstain for the same locale and path, the locale+path becomes "unlocked".
  *
  * Reference: https://docs.google.com/document/d/1VsJ2y7dp2kq_Iu-zLTjOvCooX4kRfVPui6WO51aFGzE/edit?skip_itp2_check=true#heading=h.trc1g4nsvdb8 
- *
- * TODO: IMPLEMENT THE ENFORCEMENT OF THE LOCK -- as it stands, the TC votes are not imported
- * into the next vetting session, so the item may no longer be winning even though it has an
- * entry in the table!
- * How to enforce? Basically, cldr_locked_xpaths needs to be part of vote resolution, and it
- * overrides any other votes... See STFactory.PerLocaleData.loadVoteValues(), which might need
- * to call a new method in PermanentVote... openQueryByLocaleRW reads from DBUtils.Table.VOTE_VALUE;
- * new similar code will read from DBUtils.Table.LOCKED_XPATHS...
  */
 public class PermanentVote {
-    String localeName;
-    int xpathId;
-    String value;
+    private String localeName;
+    private int xpathId;
+    private String value;
+    private boolean didLock = false;
+    private boolean didUnlock = false;
+    private boolean didClean = false;
 
     /**
      * A voter has just made a "Permanent" vote for an item, or to abstain.
      * Construct a PermanentVote object and use it to process the vote for
      * purposes of locking/unlocking.
      *
-     * The caller (voteForValue) will already have processed this vote in ways
-     * similar to ordinary non-permanent votes, e.g., adding it to the VOTE_VALUE table.
+     * The caller will already have partially processed this vote in ways
+     * similar to ordinary non-permanent votes. In particular, we assume
+     * that the caller will have added the vote to the VOTE_VALUE table.
+     *
+     * We take care of updating the database here, both VOTE_VALUE and LOCKED_XPATHS tables.
+     *
+     * The caller, however, is responsible for updating the PerXPathData depending on
+     * what we return for didLock(), didUnlock(), and didCleanSlate().
      *
      * @param localeName the locale name
      * @param xpathId the path id
@@ -50,16 +51,32 @@ public class PermanentVote {
             if (isLockedAnyValue() && gotTwo()) {
                 unlock();
                 cleanSlate();
+                didUnlock = didClean = true;
+                SurveyLog.logger.warning("PermanentVote: unlocked " + localeName + ", " + xpathId);
             }
         } else {
             if (!isLockedThisValue() && gotTwo()) {
                 if (isLockedAnyValue()) {
-                    unlock();
+                    unlock(); // do not make didUnlock true!
                 }
                 lock();
                 cleanSlate();
+                didLock = didClean = true;
+                SurveyLog.logger.warning("PermanentVote: locked " + localeName + ", " + xpathId + ", " + value);
             }
         }
+    }
+
+    public boolean didLock() {
+        return this.didLock;
+    }
+
+    public boolean didUnlock() {
+        return this.didUnlock;
+    }
+
+    public boolean didCleanSlate() {
+        return this.didClean;
     }
 
     /**
@@ -117,8 +134,6 @@ public class PermanentVote {
 
     /**
      * Add a "lock" to the LOCKED_XPATHS table for this locale+path+value
-     *
-     * TODO: also write to log!
      */
     private void lock() {
         String tableName = DBUtils.Table.LOCKED_XPATHS.toString();

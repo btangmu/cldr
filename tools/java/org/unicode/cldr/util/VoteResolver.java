@@ -119,10 +119,17 @@ public class VoteResolver<T> {
         private static final int ADMIN = 100;
 
         /**
-         * VC.PERMANENT needs to be public for STFactory.java.
-         * It is used by TC voters to "lock" locale+path permanently (including future versions, until unlocked).
+         * VC.PERMANENT is used by TC voters to "lock" locale+path permanently (including future versions, until unlocked),
+         * in the current VOTE_VALUE table. It is public for STFactory.java and PermanentVote.java.
          */
         public static final int PERMANENT = 1000;
+
+        /**
+         * VC.LOCKING is used (nominally by ADMIN voter, but not really by someone logged in as ADMIN, instead
+         * by combination of two PERMANENT votes) to "lock" locale+path permanently in the LOCKED_XPATHS table.
+         * It is public for STFactory.PerLocaleData.loadVoteValues.
+         */
+        public static final int LOCKING = 2000;
     }
 
     /**
@@ -159,14 +166,9 @@ public class VoteResolver<T> {
             this.votes = votes;
             this.stlevel = stlevel;
             if (votes == VC.ADMIN) {
-                voteCountMenu = new Integer[2];
-                voteCountMenu[0] = VC.VETTER;
-                voteCountMenu[1] = VC.ADMIN;
+                voteCountMenu = new Integer[] {VC.VETTER, VC.ADMIN}; /* Not VC.LOCKING; see canVoteWithCount */
             } else if (votes == VC.TC) {
-                voteCountMenu = new Integer[3];
-                voteCountMenu[0] = VC.VETTER;
-                voteCountMenu[1] = VC.TC;
-                voteCountMenu[2] = VC.PERMANENT;
+                voteCountMenu = new Integer[] {VC.VETTER, VC.TC, VC.PERMANENT};
             } else {
                 voteCountMenu = null;
             }
@@ -243,11 +245,17 @@ public class VoteResolver<T> {
          * @return true if the user can vote with the given vote count, else false
          */
         public boolean canVoteWithCount(int withVotes) {
+            /* ADMIN is allowed to vote as VC.LOCKING, but not directly in the GUI, only
+             * by two TC voting together as VC.PERMANENT. Therefore VC.LOCKING is omitted
+             * from the GUI menu (voteCountMenu), but included in canVoteWithCount.
+             */
+            if (withVotes == VC.LOCKING && this == admin) {
+                return true;
+            }
             if (voteCountMenu != null) {
                 return Arrays.asList(voteCountMenu).contains((Integer) withVotes);
-            } else {
-                return withVotes == this.votes;
             }
+            return withVotes == this.votes;
         }
 
         /**

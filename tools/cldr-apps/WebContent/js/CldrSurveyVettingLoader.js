@@ -468,6 +468,9 @@ function showV() {
 					showLoader(null,"Error while  loading "+subkey+":  <br><div style='border: 1px solid red;'>" + "no data!" + "</div>");
 					return false;
 				} else if(json.err_code) {
+					/*
+					 * TODO: handle some err_code values more gracefully here, such as E_PERMANENT_VOTE_NO_FORUM
+					 */
 					var msg_fmt = formatErrMsg(json, subkey);
 					var loadingChunk;
 					flipper.flipTo(pages.loading, loadingChunk = createChunk(msg_fmt, "p", "errCodeMsg"));

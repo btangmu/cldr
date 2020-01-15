@@ -1330,6 +1330,9 @@ function trySurveyLoad() {
 
 var lastJsonStatus = null;
 
+/*
+ * TODO: formatErrMsg is called only in CldrSurveyVettingLoader.js, so move it there
+ */
 function formatErrMsg(json, subkey) {
 	if(!subkey) {
 		subkey = "unknown";
@@ -3393,11 +3396,23 @@ function handleWiredClick(tr,theRow,vHash,box,button,what) {
 	var loadHandler = function(json){
 		try {
 			if(json.err && json.err.length >0) {
-				tr.className='tr_err';
-				handleDisconnect('Error submitting a vote', json);
-				tr.innerHTML = "<td colspan='4'>"+stopIcon + " Could not check value. Try reloading the page.<br>"+json.err+"</td>";
-				myUnDefer();
-				handleDisconnect('Error submitting a vote', json);
+				if (json.err_code && json.err_code === 'E_PERMANENT_VOTE_NO_FORUM') {
+					tr.className = 'tr_err';
+					tr.innerHTML = "<td colspan='5'>" + stui.str(json.err_code) + "</td>";
+					if (box) {
+						box.value= "";
+					}
+					button.className = 'ichoice-o';
+					button.checked = false;
+					hideLoader(tr.theTable.theDiv.loader);
+					myUnDefer();
+				} else {
+					tr.className='tr_err';
+					handleDisconnect('Error submitting a vote', json);
+					tr.innerHTML = "<td colspan='4'>"+stopIcon + " Could not check value. Try reloading the page.<br>"+json.err+"</td>";
+					myUnDefer();
+					handleDisconnect('Error submitting a vote', json);
+				}
 			} else {
 				if(json.submitResultRaw) { // if submitted..
 					tr.className='tr_checking2';
