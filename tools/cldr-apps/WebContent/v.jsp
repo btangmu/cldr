@@ -213,7 +213,7 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
 <body lang='<%=SurveyMain.TRANS_HINT_LOCALE.toLanguageTag()%>' data-spy="scroll" data-target="#itemInfo">
 
 <div data-dojo-type="dijit/Dialog" data-dojo-id="ariDialog" title="CLDR Survey Tool"
-    execute="" data-dojo-props="onHide: function(){ariReload.style.display='';ariRetry.style.display='none';   if(disconnected) { unbust();}}">
+    data-dojo-props="onHide: function(){ariReload.style.display='';ariRetry.style.display='none';   if(disconnected) { unbust();}}">
 
     <div id='ariContent' class="dijitDialogPaneContentArea">
     	<div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>

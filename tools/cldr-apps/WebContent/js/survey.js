@@ -1122,6 +1122,10 @@ function handleChangedLocaleStamp(stamp,name) {
 		return;
 	}
 	if(Object.keys(showers).length==0) {
+		/*
+		 * TODO: explain this code. When, if ever, is it executed, and why?
+		 * Typically Object.keys(showers).length != 0.
+		 */
         updateIf('stchanged_loc',name);
         var locDiv = document.getElementById('stchanged');
         if(locDiv) {

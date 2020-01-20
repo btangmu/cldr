@@ -1107,6 +1107,10 @@ function showV() {
 				$('#nav-page').hide();
 				$('#nav-page-footer').hide();
 				isLoading = false;
+
+				/*
+				 * TODO: explain code related to "showers".
+				 */
 				showers[flipper.get(pages.data).id]=function(){ console.log("reloadV()'s shower - ignoring reload request, we are in the middle of a load!"); };
 
 				// assume parseHash was already called, if we are taking input from the hash
@@ -1656,7 +1660,14 @@ function showV() {
 
 				shower(); // first load
 
-				// set up the "show-er" function so that if this locale gets reloaded, the page will load again - execept for the dashboard, where only the row get updated
+				// set up the "show-er" function so that if this locale gets reloaded,
+				// the page will load again - except for the dashboard, where only the
+				// row get updated
+				/*
+				 * TODO: clarify the above comment, and relate it to the usage of "showers" in survey.js
+				 * What does "this locale gets reloaded" mean?
+				 * Typically (always?) id = "DynamicDataSection" here.
+				 */
 				if(!isDashboard()) {
 					showers[flipper.get(pages.data).id]=shower;
 				}

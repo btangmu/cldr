@@ -446,7 +446,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     public static final String RAW_MENU_ITEM = "raw";
     public static final String TEST_MENU_ITEM = "test";
 
-    public static final String SHOWHIDE_SCRIPT = "<script type='text/javascript'><!-- \n"
+    public static final String SHOWHIDE_SCRIPT = "<script><!-- \n"
         + "function show(what)\n"
         + "{document.getElementById(what).style.display=\"block\";\ndocument.getElementById(\"h_\"+what).style.display=\"none\";}\n"
         + "function hide(what)\n"
