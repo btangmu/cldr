@@ -239,11 +239,11 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 	background:none;
 	text-align:left;
 }
-.data-vertical #statuscell {
+.data-vertical .d-dr-status {
 	display :inline-block;
 }
 
-.data-vertical #nocell {
+.data-vertical .d-no {
 	padding-top: 9px;
 	padding-bottom: 3px;
 }
@@ -376,11 +376,12 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 	min-width:0px;
 }
 
-.data #statuscell {
+.data .d-dr-status {
 	background-position:center center;
 	display:table-cell;
 	left:0px;
 }
+
 #othercell hr {
 	border-top:1px solid white;
 }
@@ -400,7 +401,7 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 	right: 9px;
 }
 
-.data #comparisoncell {
+.data .d-disp {
 	cursor:pointer;
 }
 

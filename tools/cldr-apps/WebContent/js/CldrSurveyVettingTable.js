@@ -228,6 +228,12 @@ const cldrSurveyTable = (function() {
 			var tr = reuseTable ? document.getElementById("r@" + theRow.xpstrid) : null;
 			if (!tr) {
 				tr = cloneAnon(toAdd);
+				if (true && !isDashboard()) {
+					for (var cell of tr.cells) {
+						// console.log(cell.id);
+						cell.removeAttribute('id');
+					}
+				}
 				tbody.appendChild(tr);
 				// console.log("🦞 make new table row");
 			} else {
@@ -575,7 +581,6 @@ const cldrSurveyTable = (function() {
 	function updateRowStatusCell(tr, theRow, cell) {
 		const statusClass = getRowApprovalStatusClass(theRow);
 		cell.className = "d-dr-" + statusClass + " d-dr-status";
-
 		if (!cell.isSetup) {
 			listenToPop("", tr, cell);
 			cell.isSetup = true;
