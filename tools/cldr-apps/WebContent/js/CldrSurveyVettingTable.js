@@ -228,11 +228,12 @@ const cldrSurveyTable = (function() {
 			var tr = reuseTable ? document.getElementById("r@" + theRow.xpstrid) : null;
 			if (!tr) {
 				tr = cloneAnon(toAdd);
-				if (true && !isDashboard()) {
-					for (var cell of tr.cells) {
-						// console.log(cell.id);
-						cell.removeAttribute('id');
-					}
+				/*
+				 * Remove the id attributes ('statuscell', etc.). The cloning, and the re-use
+				 * for multiple rows, would otherwise result in duplicate id values and invalid HTML.
+				 */
+				for (var cell of tr.cells) {
+					cell.removeAttribute('id');
 				}
 				tbody.appendChild(tr);
 				// console.log("🦞 make new table row");
@@ -379,8 +380,8 @@ const cldrSurveyTable = (function() {
 
 		/*
 		 * config = surveyConfig has fields indicating which cells (columns) to display. It might look like this: 
-		 * 
-		 * Object {codecell: "0", comparisoncell: "1", nocell: "2", votedcell: "3", statuscell: "4", errcell: "5", proposedcell: "6", addcell: "7", othercell: "8"}
+		 *
+		 * Object {codecell: "0", comparisoncell: "1", nocell: "2", statuscell: "3", proposedcell: "4", addcell: "5", othercell: "6"}
 		 *
 		 * Or, like this for Dashboard:
 		 * 
@@ -403,10 +404,10 @@ const cldrSurveyTable = (function() {
 		 */
 		if (theRow.hasVoted) {
 			children[config.nocell].title = stui.voTrue;
-			children[config.nocell].className = "d-no-vo-true";
+			children[config.nocell].className = "d-no-vo-true nocell";
 		} else {
 			children[config.nocell].title = stui.voFalse;
-			children[config.nocell].className = "d-no-vo-false";
+			children[config.nocell].className = "d-no-vo-false nocell";
 		}
 
 		/*
@@ -430,17 +431,6 @@ const cldrSurveyTable = (function() {
 		 * TODO: are we going out of order here, from English to Winning, skipping Abstain and A?
 		 */
 		updateRowProposedWinningCell(tr, theRow, children[config.proposedcell], protoButton);
-
-		/*
-		 * Set up the "err cell"
-		 * 
-		 * TODO: is this something that's normally hidden? Clarify.
-		 * 
-		 * "config.errcell" doesn't occur anywhere else so this may be dead code.
-		 */
-		if (config.errcell) {
-			listenToPop(null, tr, children[config.errcell], children[config.proposedcell].showFn);
-		}
 
 		/*
 		 *  add button

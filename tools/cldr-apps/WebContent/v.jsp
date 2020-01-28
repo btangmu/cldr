@@ -198,7 +198,7 @@ if(false) { // if we need to redirect for some reason..
 	// TODO: when v.jsp includes ajax_status.js, avoid redundant links for bootstrap, surveytool.css, redesign.css
 %>
 <%@include file="/WEB-INF/tmpl/ajax_status.jsp" %>
-<script type="text/javascript">
+<script>
 // set from incoming session
 surveySessionId = '<%=ctx.session.id%>';
 survURL = '<%=survURL%>';
@@ -313,10 +313,10 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
 	              	 
 	              <% } %>
 	               | <a class='navbar-link' href='<%= survURL + "?do=logout" %>'><span class='glyphicon glyphicon-log-out tip-log' title='Logout'></span><%= cookieMessage %></a>
-	                <script type="text/javascript">var isVisitor = 0</script>
+	                <script>var isVisitor = 0</script>
 	        <% } else { %>
                    | (<a href='<%= request.getContextPath() %>/login.jsp' class='navbar-link'>Login…</a>)
-      		        <script type="text/javascript">var isVisitor = 1</script>
+                   <script>var isVisitor = 1</script>
             		
             <% } %>
           </p>

@@ -3276,16 +3276,11 @@ function refreshSingleRow(tr,theRow,onSuccess, onFailure) {
 
     var loadHandler = function(json){
         try {
-	    		if(json&&json.dataLoadTime) {
-	    			//updateIf("dynload", json.dataLoadTime);
-	    		}
         		if(json.section.rows[tr.rowHash]) {
         			theRow = json.section.rows[tr.rowHash];
         			tr.theTable.json.section.rows[tr.rowHash] = theRow;
         			cldrSurveyTable.updateRow(tr, theRow);
 
-        			//style the radios
-        			//wrapRadios(tr);
         			hideLoader(tr.theTable.theDiv.loader);
         			onSuccess(theRow);
         			if(isDashboard()) {
