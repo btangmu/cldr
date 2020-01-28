@@ -571,6 +571,7 @@ const cldrSurveyTable = (function() {
 	function updateRowStatusCell(tr, theRow, cell) {
 		const statusClass = getRowApprovalStatusClass(theRow);
 		cell.className = "d-dr-" + statusClass + " d-dr-status";
+
 		if (!cell.isSetup) {
 			listenToPop("", tr, cell);
 			cell.isSetup = true;

@@ -791,19 +791,17 @@ function designFixPanel() {
 	}
 
 	var comparisoncell = $('.fix-parent #popover-vote .data-vertical .comparisoncell');
-	if (comparisoncell.length) {
-		comparisoncell.find('.btn').remove();
-		if(!comparisoncell.find('.subSpan').length) {
-			comparisoncell.contents()
-			  .filter(function(){
-			    return this.nodeType === 3;
-			  })
-			  .wrap('<span class="subSpan"></span>');
-		}
-		var exampleButton = $('<button title="Show examples" class="btn btn-default show-examples"><span class="glyphicon glyphicon-list"></span></button>');
-		comparisoncell.prepend(exampleButton);
-		exampleButton.tooltip();
+	comparisoncell.find('.btn').remove();
+	if(!comparisoncell.find('.subSpan').length) {
+		comparisoncell.contents()
+		  .filter(function(){
+		    return this.nodeType === 3;
+		  })
+		  .wrap('<span class="subSpan"></span>');
 	}
+	var exampleButton = $('<button title="Show examples" class="btn btn-default show-examples"><span class="glyphicon glyphicon-list"></span></button>');
+	comparisoncell.prepend(exampleButton);
+	exampleButton.tooltip();
 
 	//clean 
 	if(!idnocell) {

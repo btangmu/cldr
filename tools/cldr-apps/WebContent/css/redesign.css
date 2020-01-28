@@ -376,7 +376,7 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 	min-width:0px;
 }
 
-.data .d-dr-status {
+.data .statuscell {
 	background-position:center center;
 	display:table-cell;
 	left:0px;
@@ -401,7 +401,7 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 	right: 9px;
 }
 
-.data .d-disp {
+.data .comparisoncell {
 	cursor:pointer;
 }
 
