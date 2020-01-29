@@ -718,20 +718,13 @@ function insertFixInfo(theDiv,xpath,session,json) {
 		var k = theTable.json.displaySets[theTable.curSortMode].rows[0];
 		var theRow = theTable.json.section.rows[k];
 		removeAllChildNodes(tbody);
+		/*
+		 * Caution: in spite of the name here in the JavaScript, "tr" isn't a
+		 * table row, it's a div. Each element it contains is also a div, not a td.
+		 */
 		var tr = theTable.myTRs[k];
 		if(!tr) {
 			tr = cloneAnon(theTable.toAdd);
-			/*
-			 * Remove the id attributes ('comparisoncell', etc.). The cloning would otherwise
-			 * result in duplicate id values and invalid HTML.
-			 * Caution: in spite of the name here in the JavaScript, "tr" isn't a
-			 * table row, it's a div. Each element it contains is also a div, not
-			 * a td. Therefore, we can't use tr.cells here for Dashboard-Fix the way
-			 * we might for the non-Dashboard tr elements.
-			 */
-			for (var child of tr.children) {
-			    child.removeAttribute('id');
-			}
 			theTable.myTRs[k]=tr; // save for later use
 		}
 		tr.rowHash = k;

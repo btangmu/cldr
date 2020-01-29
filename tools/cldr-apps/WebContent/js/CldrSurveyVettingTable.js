@@ -230,13 +230,6 @@ const cldrSurveyTable = (function() {
 			var tr = reuseTable ? document.getElementById("r@" + theRow.xpstrid) : null;
 			if (!tr) {
 				tr = cloneAnon(toAdd);
-				/*
-				 * Remove the id attributes ('statuscell', etc.). The cloning, and the re-use
-				 * for multiple rows, would otherwise result in duplicate id values and invalid HTML.
-				 */
-				for (var cell of tr.cells) {
-					cell.removeAttribute('id');
-				}
 				tbody.appendChild(tr);
 				// console.log("🦞 make new table row");
 			} else {
