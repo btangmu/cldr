@@ -688,26 +688,8 @@ function insertFixInfo(theDiv,xpath,session,json) {
 		var theTable = cloneLocalizeAnon(document.getElementById("proto-datafix"));
 			theTable.className = 'data dashboard';
 			updateCoverage(theDiv);
-			localizeFlyover(theTable);
+			localizeFlyover(theTable); // Replace titles starting with $ with strings from stui
 			var toAdd = cloneLocalizeAnon(document.getElementById("proto-datarowfix"));  // loaded from "hidden.html", which see.
-			/*if(!surveyConfig)*/ {
-				var rowChildren = getTagChildren(toAdd);
-				theTable.config = surveyConfig ={};
-				for(var c in rowChildren) {
-					if(rowChildren[c].id) {
-						surveyConfig[rowChildren[c].id] = c;
-						stdebug("  config."+rowChildren[c].id+" = children["+c+"]");
-						if(false&&stdebug_enabled) {
-							removeAllChildNodes(rowChildren[c]);
-							rowChildren[c].appendChild(createChunk("config."+rowChildren[c].id+"="+c));
-						}
-						//rowChildren[c].id=null;
-					} else {
-						stdebug("(proto-datarow #"+c+" has no id");
-					}
-				}
-				if(stdebug_enabled) stdebug("Table Config: " + JSON.stringify(theTable.config));
-			}
 			theTable.toAdd = toAdd;
 			theTable.myTRs = [];
 			theDiv.theTable = theTable;
