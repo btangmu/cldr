@@ -1663,7 +1663,7 @@ function cloneAnon(i) {
 	if(i==null) return null;
 	var o = i.cloneNode(true);
 	if(o.id) {
-		o.id = null;
+		o.removeAttribute('id');
 	}
 	return o;
 }
@@ -1682,7 +1682,7 @@ function localizeAnon(o) {
 				if(stui.str(key)) {
 					k.innerHTML=stui.str(key);
 				}
-				k.id=null;
+				k.removeAttribute('id');
 			} else {
 				localizeAnon(k);
 			}
