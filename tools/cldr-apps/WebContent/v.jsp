@@ -427,7 +427,7 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
     <div class="row" id="main-row" style="padding-top:147px;">
     	<div class="col-md-9">
 		    <div data-dojo-type="dijit/layout/ContentPane" id="MainContentPane" data-dojo-props="splitter:true, region:'center'" >
-		        <div id="LoadingMessageSection"><%-- Loading messages --%>Please Wait<img src='loader.gif'></div>
+		        <div id="LoadingMessageSection"><%-- Loading messages --%>Please Wait<img src='loader.gif' alt='Please Wait'></div>
 		        <div id="DynamicDataSection" ><%-- the actual scrolling table --%></div>
  			    <div id='nav-page-footer'>
 					<p class='nav-button'>
@@ -451,7 +451,7 @@ surveyUser =  <%=ctx.session.user.toJSONString()%>;
 	</div>
 </div>
 <div id="overlay"></div>
-<div class="modal fade" id="post-modal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+<div class="modal fade" id="post-modal" tabindex="-1" role="dialog" aria-hidden="true">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">

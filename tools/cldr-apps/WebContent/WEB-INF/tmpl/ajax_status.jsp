@@ -12,7 +12,7 @@
 <link href="<%= request.getContextPath() %>/css/redesign.css" rel="stylesheet">
 <%= VettingViewer.getHeaderStyles() %>
 
-<script type='text/javascript'>
+<script>
 dojoConfig = {
 		parseOnLoad: true,
 		};</script>
