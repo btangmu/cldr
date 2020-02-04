@@ -111,9 +111,9 @@ function showReviewPage(json, showFn) {
 					var subCatName = index;
 					$.each(element, function(index, element) {
 						if(index != 'null')
-							html += '<tr class="info"><td colspan="7"><b>'+catName+' - '+subCatName+'</b> : '+index+'</td></tr>';//blue banner
+							html += '<tr class="info"><td colspan="5"><b>'+catName+' - '+subCatName+'</b> : '+index+'</td></tr>';//blue banner
 						else
-							html += '<tr class="info"><td colspan="7"><b>'+catName+' - '+subCatName+'</b></td></tr>';//blue banner
+							html += '<tr class="info"><td colspan="5"><b>'+catName+' - '+subCatName+'</b></td></tr>';//blue banner
 						
 						$.each(element, function(index, element){
 							var oldElement;
@@ -136,12 +136,9 @@ function showReviewPage(json, showFn) {
 								html += '<button class="btn btn-default help-comment" data-html="true" data-toggle="popover" data-content="'+element.comment+'"><span class="glyphicon glyphicon-info-sign"></span></button>';
 							
 							html +=	'</td></tr>';
-							
-							//fix content tr
-							//html += '<tr class="fix-info" data-toggle="popover"><td colspan="7"><div class="fix-content well well-sm"></div></td></tr>';
 						});
 					});
-					html += '<tr class="empty"><td colspan="7"></td></tr>';
+					html += '<tr class="empty"><td colspan="5"></td></tr>';
 				});
 				
 			});
@@ -422,7 +419,7 @@ function checkLineFix() {
 			
 			
 			if(!found) {
-				var html = '<tr class="info">'+info.html()+'</tr>'+newLine.wrap('<div>').parent().html()+'<tr class="empty"><td colspan="7"></td></tr>';
+				var html = '<tr class="info">'+info.html()+'</tr>'+newLine.wrap('<div>').parent().html()+'<tr class="empty"><td colspan="5"></td></tr>';
 				var toInsert = $('div[data-type='+elementRaw+'] > table > tbody');
 				toInsert.prepend(html);
 			}

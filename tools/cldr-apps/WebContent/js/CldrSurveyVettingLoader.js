@@ -616,6 +616,9 @@ function showV() {
 					    {divider: true},
 					    {title: 'My Votes'}, // My Votes section
 
+					    /*
+					     * This indirectly references "special_oldvotes" in stui.js
+					     */
 					    {special: 'oldvotes', level: 2, display: surveyUserPerms.userCanImportOldVotes },
 					    {title: 'See My Recent Activity', level: 2, url: surveyUserURL.recentActivity },
 					    {title: 'Upload XML', level: 2, url: surveyUserURL.xmlUpload },
@@ -703,9 +706,17 @@ function showV() {
 										if(item.level){ // append it to appropriate levels
 											var level = item.level;
 											for(var i=0; i< level-1; i++){
-												var sublevel = document.createElement("ul");
-												sublevel.appendChild(subA);
-												subA = sublevel;
+												/*
+												 * Indent by creating lists within lists, each list containing only one item.
+												 * TODO: indent by a better method. Note that for valid html, ul should contain li;
+												 * ul directly containing element other than li is generally invalid. 
+												 */
+												let ul = document.createElement("ul");
+												let li = document.createElement("li");
+												ul.setAttribute('style', 'list-style-type:none');
+												ul.appendChild(li);
+												li.appendChild(subA);
+												subA = ul;
 											}
 										}
 										subLi.appendChild(subA);
@@ -726,9 +737,12 @@ function showV() {
 
 											var level = item.level;
 											for(var i=0; i< level-1; i++){
-												var sublevel = document.createElement("ul");
-												sublevel.appendChild(subA);
-												subA = sublevel;
+												let ul = document.createElement("ul");
+												let li = document.createElement("li");
+												ul.setAttribute('style', 'list-style-type:none');
+												ul.appendChild(li);
+												li.appendChild(subA);
+												subA = ul;
 											}
 											subLi.appendChild(subA);
 										}
