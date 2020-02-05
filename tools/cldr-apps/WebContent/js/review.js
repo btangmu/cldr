@@ -658,13 +658,7 @@ function submitPost(event) {
                         post.show('highlight', {color : "#d9edf7"});
                         $('#post-form textarea').val('');
                 		$('#post-form textarea').fadeOut();
-
-                        if (surveyCurrentId != '') {
-                            let tr = dojo.byId('r@' + surveyCurrentId);
-                            if (tr) {
-                                updateInfoPanelForumPosts(tr);
-                            }
-                        }
+                        updateInfoPanelForumPosts(null);
                 	} else {
                 		post.before("<i>Your post was added, #"+data.postId+" but could not be shown.</i>");
                 	}

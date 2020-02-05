@@ -926,6 +926,12 @@ var processXhrQueue = function() {
 
 		top.load2 = top.load;
 		top.err2 = top.err;
+		/*
+		 * Note: I think "return" is superfluous here, but I'm leaving it as-is for now
+		 * in case I'm wrong.
+		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
+		 * Our own code is inconsistent about whether load/error handlers have return values.
+		 */
 		top.load=function(){return myLoad0(top,arguments); };
 		top.err=function(){return myErr0(top,arguments); };
 		top.startTime = new Date().getTime();
@@ -2157,15 +2163,36 @@ function showForumStuff(frag, forumDiv, tr) {
 	}, 1900);
 }
 
+/**
+ * Update the forum posts in the Info Panel
+ *
+ * @param tr the table-row element with which the forum posts are associated,
+ *        and whose info is shown in the Info Panel; or null, to get the
+ *        tr from surveyCurrentId
+ */
 function updateInfoPanelForumPosts(tr) {
+	if (!tr) {
+		if (surveyCurrentId === '') {
+			return;
+		}
+		tr = dojo.byId('r@' + surveyCurrentId);
+    }
+	if (!tr || !tr.forumDiv || !tr.forumDiv.url) {
+		return;
+	}
 	var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 	var errorHandler = function(err, ioArgs) {
-		console.log('Error in showForumStuff: ' + err + ' response '
-				+ ioArgs.xhr.responseText);
+		console.log('Error in showForumStuff: ' + err + ' response ' + ioArgs.xhr.responseText);
 		showInPop(stopIcon
-						+ " Couldn't load forum post for this row- please refresh the page. <br>Error: "
-						+ err + "</td>", tr, null);
+			+ " Couldn't load forum post for this row- please refresh the page. <br>Error: "
+			+ err + "</td>", tr, null);
 		handleDisconnect("Could not showForumStuff:"+err, null);
+		/*
+		 * Note: I think "return true" is superfluous here, but I'm leaving it as-is for now
+		 * in case I'm wrong. Compare loadHandler below with undefined return value.
+		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
+		 * See processXhrQueue.
+		 */
 		return true;
 	};
 	var loadHandler = function(json) {
@@ -2175,7 +2202,7 @@ function updateInfoPanelForumPosts(tr) {
 					replyButton: true,
 					noItemLink: true});
 				// tr.forumDiv.appendChild(content);
-				$('.forumDiv').html(content);
+				$('.forumDiv').first().html(content);
 			}
 		} catch (e) {
 			console.log("Error in ajax forum read ", e.message);
@@ -2184,10 +2211,10 @@ function updateInfoPanelForumPosts(tr) {
 		}
 	};
 	var xhrArgs = {
-		url : ourUrl,
-		handleAs : "json",
-		load : loadHandler,
-		error : errorHandler
+		url: ourUrl,
+		handleAs: "json",
+		load: loadHandler,
+		error: errorHandler
 	};
 	queueXhr(xhrArgs);
 }
