@@ -2130,41 +2130,7 @@ function showForumStuff(frag, forumDiv, tr) {
 
 		var theListen = function(e) {
 			setDisplayed(showButton, false);
-
-			// callback.
-			var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
-			var errorHandler = function(err, ioArgs) {
-				console.log('Error in showForumStuff: ' + err + ' response '
-						+ ioArgs.xhr.responseText);
-				showInPop(
-						stopIcon
-								+ " Couldn't load forum post for this row- please refresh the page. <br>Error: "
-								+ err + "</td>", tr, null);
-				handleDisconnect("Could not showForumStuff:"+err, null);
-				return true;
-			};
-			var loadHandler = function(json) {
-				try {
-					if (json) {
-						if(json.ret) {
-							forumDiv.appendChild(parseForumContent({ret: json.ret,
-											replyButton: true,
-											noItemLink: true}));
-						}
-					}
-				} catch (e) {
-					console.log("Error in ajax forum read ", e.message);
-					console.log(" response: " + json);
-					showInPop(stopIcon + " exception in ajax forum read: " + e.message, tr, null, true);
-				}
-			};
-			var xhrArgs = {
-				url : ourUrl,
-				handleAs : "json",
-				load : loadHandler,
-				error : errorHandler
-			};
-			queueXhr(xhrArgs);
+			updateInfoPanelForumPosts(tr);
 			stStopPropagation(e);
 			return false;
 		};
@@ -2189,6 +2155,41 @@ function showForumStuff(frag, forumDiv, tr) {
 		};
 		queueXhr(xhrArgs);
 	}, 1900);
+}
+
+function updateInfoPanelForumPosts(tr) {
+	var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
+	var errorHandler = function(err, ioArgs) {
+		console.log('Error in showForumStuff: ' + err + ' response '
+				+ ioArgs.xhr.responseText);
+		showInPop(stopIcon
+						+ " Couldn't load forum post for this row- please refresh the page. <br>Error: "
+						+ err + "</td>", tr, null);
+		handleDisconnect("Could not showForumStuff:"+err, null);
+		return true;
+	};
+	var loadHandler = function(json) {
+		try {
+			if (json && json.ret) {
+				let content = parseForumContent({ret: json.ret,
+					replyButton: true,
+					noItemLink: true});
+				// tr.forumDiv.appendChild(content);
+				$('.forumDiv').html(content);
+			}
+		} catch (e) {
+			console.log("Error in ajax forum read ", e.message);
+			console.log(" response: " + json);
+			showInPop(stopIcon + " exception in ajax forum read: " + e.message, tr, null, true);
+		}
+	};
+	var xhrArgs = {
+		url : ourUrl,
+		handleAs : "json",
+		load : loadHandler,
+		error : errorHandler
+	};
+	queueXhr(xhrArgs);
 }
 
 /**

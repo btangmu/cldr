@@ -619,6 +619,7 @@ function generateHTMLPost(post) {
 }
 
 //submit the post
+// TODO: unlike much review.js code, this function is not Dashboard-specific. Move it to forum.js?
 function submitPost(event) {
 	var locale = surveyCurrentLocale;
 	var url = contextPath + "/SurveyAjax";
@@ -647,7 +648,6 @@ function submitPost(event) {
                     if(data.err) {
                 		post.before("<p class='warn'>error: " + data.err+ "</p>");
                     } else if(data.ret && data.ret.length>0) {
-//                        post.before(generateHTMLPost(data.ret[0])); // show the new single post
                     	var postModal = $('#post-modal');
                 		var postHolder = postModal.find('.modal-body').find('.post');
                 		var forumDiv = postHolder[0];
@@ -658,6 +658,13 @@ function submitPost(event) {
                         post.show('highlight', {color : "#d9edf7"});
                         $('#post-form textarea').val('');
                 		$('#post-form textarea').fadeOut();
+
+                        if (surveyCurrentId != '') {
+                            let tr = dojo.byId('r@' + surveyCurrentId);
+                            if (tr) {
+                                updateInfoPanelForumPosts(tr);
+                            }
+                        }
                 	} else {
                 		post.before("<i>Your post was added, #"+data.postId+" but could not be shown.</i>");
                 	}
