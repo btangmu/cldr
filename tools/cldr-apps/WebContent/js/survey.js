@@ -2130,12 +2130,14 @@ function showForumStuff(frag, forumDiv, tr) {
 
 		if(nrPosts == 0) return; // nothing to do,
 
+		console.log("havePosts: creating showButton");
 		var showButton = createChunk("Show " + tr.forumDiv.forumPosts  + " posts", "button", "forumShow");
 
 		forumDiv.appendChild(showButton);
 
 		var theListen = function(e) {
 			setDisplayed(showButton, false);
+			console.log("havePosts, theListen: calling updateInfoPanelForumPosts");
 			updateInfoPanelForumPosts(tr);
 			stStopPropagation(e);
 			return false;
@@ -2173,11 +2175,14 @@ function showForumStuff(frag, forumDiv, tr) {
 function updateInfoPanelForumPosts(tr) {
 	if (!tr) {
 		if (surveyCurrentId === '') {
+			console.log("updateInfoPanelForumPosts: tr was null, surveyCurrentId was empty");
 			return;
 		}
+		console.log("updateInfoPanelForumPosts: tr was null, getting tr from surveyCurrentId");
 		tr = dojo.byId('r@' + surveyCurrentId);
     }
 	if (!tr || !tr.forumDiv || !tr.forumDiv.url) {
+		console.log("updateInfoPanelForumPosts: !tr || !tr.forumDiv || !tr.forumDiv.url");
 		return;
 	}
 	var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
@@ -2201,8 +2206,10 @@ function updateInfoPanelForumPosts(tr) {
 				let content = parseForumContent({ret: json.ret,
 					replyButton: true,
 					noItemLink: true});
-				// tr.forumDiv.appendChild(content);
-				$('.forumDiv').first().html(content);
+				console.log("updateInfoPanelForumPosts, loadHandler: calling appendChild");
+				tr.forumDiv.appendChild(content);
+				// console.log("updateInfoPanelForumPosts, loadHandler: calling first.html");
+				// $('.forumDiv').first().html(content);
 			}
 		} catch (e) {
 			console.log("Error in ajax forum read ", e.message);
