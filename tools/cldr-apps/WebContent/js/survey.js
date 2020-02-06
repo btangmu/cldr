@@ -2225,7 +2225,7 @@ function updateInfoPanelForumPosts(tr) {
 					content = "Please reload";
 				}
 				/*
-				 * Update the element with class 'forumDiv'.
+				 * Update the element whose class is 'forumDiv'.
 				 * Note: When updateInfoPanelForumPosts is called by the mouseover event handler for
 				 * the "Show n posts" button set up by havePosts, a clone of tr.forumDiv is created
 				 * (for mysterious reasons) by that event handler, and we could pass forumDivClone
