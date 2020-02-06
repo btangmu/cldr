@@ -618,8 +618,15 @@ function generateHTMLPost(post) {
 	return html;
 }
 
-//submit the post
-// TODO: unlike much review.js code, this function is not Dashboard-specific. Move it to forum.js?
+/**
+ * Submit a forum post
+ *
+ * @param event
+ *
+ * TODO: Move this and other forum-specific functions to forum.js?
+ * Unlike much review.js code, this function is not Dashboard-specific; it is used
+ * for submitting posts both in the Dashboard and not in the Dashboard.
+ */
 function submitPost(event) {
 	var locale = surveyCurrentLocale;
 	var url = contextPath + "/SurveyAjax";
@@ -650,15 +657,14 @@ function submitPost(event) {
                     } else if(data.ret && data.ret.length>0) {
                     	var postModal = $('#post-modal');
                 		var postHolder = postModal.find('.modal-body').find('.post');
-                		var forumDiv = postHolder[0];
-                        forumDiv.insertBefore(parseForumContent({ret: data.ret, noItemLink: true}), forumDiv.firstChild);
+                        let firstPostHolder = postHolder[0];
+                        firstPostHolder.insertBefore(parseForumContent({ret: data.ret, noItemLink: true}), firstPostHolder.firstChild);
                         //reset
                         post = $('.post').first();
                         post.hide();
                         post.show('highlight', {color : "#d9edf7"});
                         $('#post-form textarea').val('');
                 		$('#post-form textarea').fadeOut();
-                		console.log("submitPost, success: calling updateInfoPanelForumPosts(null)");
                         updateInfoPanelForumPosts(null);
                 	} else {
                 		post.before("<i>Your post was added, #"+data.postId+" but could not be shown.</i>");
