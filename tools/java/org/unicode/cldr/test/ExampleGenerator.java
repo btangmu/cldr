@@ -169,40 +169,86 @@ public class ExampleGenerator {
 
     /*
      * The cache is accessed only by getExampleHtml and updateCache.
-     * Its key is built from an xpath, a value for that xpath, and a letter to indicate the ExampleType (ENGLISH or NATIVE).
+     * Its key is built from an xpath, and a value for that xpath.
      * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
      *
      * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
      * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
-     *
-     * TODO: simplify/clarify the ENGLISH/NATIVE distinction, to facilitate performance improvements.
-     * The general-purpose mechanism that currently appears to support both ENGLISH and NATIVE for each
-     * ExampleGenerator doesn't currently appear to be used or needed. If the two types are not really mixed
-     * in the same cache (or even in same ExampleGenerator), then E/N needn't be part of cache key (or
-     * require separate caches). Also, at least within Survey Tool, englishFile == cldrFile if (and only
-     * if) the ExampleGenerator is used for ExampleType.ENGLISH. In Survey Tool, ExampleType.ENGLISH is
-     * only actually used for a single ExampleGenerator, namely sm.getTranslationHintsExample().
-     *
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
      */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
     /**
-     * For this (locale-specific) ExampleGenerator, clear the cached value for the given xpath,
-     * and for any xpaths whose examples might also depend on this xpath.
+     * For this (locale-specific) ExampleGenerator, clear the cached examples for
+     * any paths whose examples might depend on the winning value of the given path,
+     * since the winning value of the given path has (or may have?) changed.
      *
-     * Is cache-clearing ever needed for ExampleType.ENGLISH?
+     * There is no need to update the example(s) for the given path itself, since
+     * the cache key includes path+value and therefore each path+value has its own
+     * example, regardless of which value is winning. There is a need to update
+     * the examples for OTHER paths whose examples depend on the winning value
+     * of the given path.
      *
-     * @param xpath the path
+     * For example, let pathA = "//ldml/localeDisplayNames/languages/language[@type=\"aa\"]"
+     * and pathB = "//ldml/localeDisplayNames/territories/territory[@type=\"DJ\"]". The values,
+     * in locale fr, might be "afar" for pathA and "Djibouti" for pathB. The example for pathB
+     * might include "afar (Djibouti)", which depends on the values of both pathA and pathB.
+     *
+     * @param xpath the path whose winning value has (may have?) changed
+     *
+     * TODO: make sure we're only called if the winning value really HAS changed.
+     * Looking at the callers, it's not obvious if that's the case, or if this
+     * function may sometimes be called when a vote has been made without actually
+     * changing the winning value.
+     *
+     * Called by TestCache.updateExampleGeneratorCache
      */
     public void updateCache(@SuppressWarnings("unused") String xpath) {
         /*
-         * TODO: instead of removing ALL keys, only remove the paths that may be affected
-         * by this change.
+         * TODO: instead of removing ALL keys, only remove keys for which the examples
+         * may be affected by this change.
          *
-         * Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+         * It appears (based on incomplete evidence), that all paths of type “A”
+         * (i.e., all that have dependencies) start with one of these seven strings:
+         * //ldml/characterLabels
+         * //ldml/dates
+         * //ldml/delimiters
+         * //ldml/listPatterns
+         * //ldml/localeDisplayNames
+         * //ldml/numbers
+         * //ldml/units
+         *
+         * Problem: that's something like 98% of all paths! Need to narrow it down much further.
+         *
+         * For any other path given as the argument to this function, there should be no need to clear the cache.
+         * Also, when there are dependencies, ideally only the keys for paths that are dependent on this path
+         * should be removed. It might be slow to loop through the cache testing each path to see if it's affected.
+         * Ideally we might maintain a complete mapping of dependencies, so given pathA we could quickly loop
+         * through the pre-existing set of paths B that depend on pathA.
+         *
+         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
          */
+        if (!pathIsTypeA(xpath)) {
+            return;
+        }
         cache.clear();
+    }
+
+    static private boolean pathIsTypeA(String xpath) {
+        final String pathAStarts[] = {
+            "//ldml/characterLabels",
+            "//ldml/dates",
+            "//ldml/delimiters",
+            "//ldml/listPatterns",
+            "//ldml/localeDisplayNames",
+            "//ldml/numbers",
+            "//ldml/units"
+        };
+        for (String s : pathAStarts) {
+            if (xpath.startsWith(s)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static final String NONE = "\uFFFF";

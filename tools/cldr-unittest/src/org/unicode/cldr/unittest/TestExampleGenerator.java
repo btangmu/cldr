@@ -803,51 +803,53 @@ public class TestExampleGenerator extends TestFmwk {
      *
      * The goal is to optimize example caching by only regenerating examples when necessary.
      *
-     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-12020
+     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
      *
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
-        final boolean TEST_DEPENDENCIES = false; // make true to test
+        final boolean TEST_DEPENDENCIES = true; // make true to test
         if (!TEST_DEPENDENCIES) {
             return;
         }
+        final boolean JUST_LIST_PATHS = false;
+        final boolean USE_STARRED_PATHS = true;
 
         /*
-         * TODO: test whether different localId gives different dependencies.
+         * Different localeId gives different dependencies.
+         * So far, have tested with these locales:
+         *   "fr": 650 "type A"
+         *   "de": 652 "type A"
+         *   "am": 618 "type A"
+         *   "zh": 12521 "type A"!
+         *   "ar": ?
          */
-        final String localId = "fr";
+        final String localeId = "fr";
 
         CLDRFile englishFile = info.getEnglish();
 
         Factory factory = CLDRConfig.getInstance().getCldrFactory();
-        CLDRFile cldrFile = makeMutableResolved(factory, localId);
+        CLDRFile cldrFile = makeMutableResolved(factory, localeId);
         cldrFile.disableCaching();
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
         ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
-        if (false) {
-            /*
-             * try simplifying by using a much smaller set of paths that still generates false dependencies
-             * ... so far this approach has not been successful at producing the same "bogus" dependencies
-             * as the complete set ...
-             */
-            paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localePattern");
-            // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator");
-            // paths.add("//ldml/localeDisplayNames/localeDisplayPattern/localeKeyTypePattern");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]");
-            paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ba\"]");
-            paths.add("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol");
-            // paths.add("//ldml/localeDisplayNames/languages/language[@type=\"ary\"]");
-            paths.add("//ldml/units/unitLength[@type=\"long\"]/compoundUnit[@type=\"times\"]/compoundUnitPattern");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"hm\"]");
-            paths.add("//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"Bhm\"]");
-        } else {
-            CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        if (JUST_LIST_PATHS) {
+            String dir = CLDRPaths.GEN_DIRECTORY + "test/";
+            String name = "allpaths_" + localeId + ".txt";
+            PrintWriter writer = FileUtilities.openUTF8Writer(dir, name);
+            ArrayList<String> list = new ArrayList<String>(paths);
+            Collections.sort(list);
+            for (String path : list) {
+                // writer.println(path);
+                writer.println(path.replaceAll("\"", "\\\\\""));
+            }
+            return;
         }
+        final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
         /*
          * Get all the examples so they'll be added to the cache for egBase.
@@ -860,18 +862,21 @@ public class TestExampleGenerator extends TestFmwk {
             if (value == null) {
                 continue;
             }
-            if (path.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
+            if (false && path.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                 System.out.println("Got " + path + " in first loop ...");
             }
             egBase.getExampleHtml(path, value);
         }
+
+        ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+        egTest.disableCaching();
 
         /*
          * For each path (A), temporarily change its value, and then check each other path (B),
          * to see whether changing the value for A changed the example for B.
          */
         HashMap<String, HashSet<String>> dependenciesA = new HashMap<String, HashSet<String>>();
-        HashMap<String, HashSet<String>> dependenciesB = new HashMap<String, HashSet<String>>();
+        // HashMap<String, HashSet<String>> dependenciesB = new HashMap<String, HashSet<String>>();
         long count = 0;
         long skipCount = 0;
         long dependencyCount = 0;
@@ -908,7 +913,9 @@ public class TestExampleGenerator extends TestFmwk {
                 System.out.println("Changing top did not change cldrFile: newValue = " + newValue
                     + "; valueAX = " + valueAX + "; valueA = " + valueA);
             }
-            HashSet<String> a = null;
+            pathA = pathA.intern();
+            String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
+            HashSet<String> a = USE_STARRED_PATHS ? dependenciesA.get(starredA) : null;
             for (String pathB : paths) {
                 if (pathA.equals(pathB) || skipPathForDependencies(pathB, false)) {
                     continue;
@@ -917,17 +924,12 @@ public class TestExampleGenerator extends TestFmwk {
                 if (valueB == null) {
                     continue;
                 }
-                if (pathA.equals("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]")
+                if (false && pathA.equals("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]")
                     && pathB.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                     System.out.println("Got our paths in inner loop...");
                 }
+                pathB = pathB.intern();
 
-                /*
-                 * Allocating new ExampleGenerator in inner loop is expensive and is intended to avoid "bogus"
-                 * dependencies, but it still doesn't avoid them all.
-                 */
-                ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-                egTest.disableCaching();
                 // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
                 String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache
                 String exTest = egTest.getExampleHtml(pathB, valueB); // this won't come from cache
@@ -937,22 +939,22 @@ public class TestExampleGenerator extends TestFmwk {
                     if (a == null) {
                         a = new HashSet<String>();
                     }
-                    pathA = pathA.intern();
-                    pathB = pathB.intern();
-                    a.add(pathB);
+                    a.add(USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
 
+                    /***
                     HashSet<String> b = dependenciesB.get(pathB);
                     if (b == null) {
                         b = new HashSet<String>();
                     }
                     b.add(pathA);
                     dependenciesB.put(pathB, b);
+                    ***/
 
                     ++dependencyCount;
                 }
             }
             if (a != null && !a.isEmpty()) {
-                dependenciesA.put(pathA.intern(), a);
+                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
             }
             /*
              * Restore the original value, so that the changes due to this pathA don't get
@@ -966,9 +968,10 @@ public class TestExampleGenerator extends TestFmwk {
                     + "; valueA = " + valueA);
             }
         }
-        final boolean countOnly = true;
-        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localId, countOnly);
-        writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localId, countOnly);
+        final boolean countOnly = false;
+        writeDependenciesToFile(dependenciesA, "example_dependencies_A_" + localeId
+                + (USE_STARRED_PATHS ? "_star" : ""), countOnly);
+        // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localeId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
 
@@ -1023,7 +1026,7 @@ public class TestExampleGenerator extends TestFmwk {
     }
 
     /**
-     * Get the parent sources for the given localID
+     * Get the parent sources for the given localeId
      *
      * @param factory
      * @param localeID
@@ -1080,14 +1083,14 @@ public class TestExampleGenerator extends TestFmwk {
     /**
      * Write the given map of example-generator path dependencies to a json file.
      *
-     * TODO: use JSONObject, or write a format other than json.
+     * If this function is to be used and revised long-term, it would be better to use JSONObject,
+     * or write a format other than json.
      * JSONObject isn't currently linked to cldr-unittest TestAll, package org.unicode.cldr.unittest.
      *
      * @param dependencies the map of example-generator path dependencies
      * @param fileName the name of the file to create, without path or extension
      * @param countOnly true to show only the count of the set for each key path in the map
      *                  false to include all the paths
-     *                  (countOnly should be true; countOnly == false is not yet implemented correctly)
      *
      * @throws IOException
      */
@@ -1101,23 +1104,37 @@ public class TestExampleGenerator extends TestFmwk {
 
         ArrayList<String> list = new ArrayList<String>(dependencies.keySet());
         Collections.sort(list);
+        boolean firstPathA = true;
         int keysWritten = 0;
-        for (String path : list) {
-            HashSet<String> set = dependencies.get(path);
-            writer.print("\"");
-            writer.print(path.replaceAll("\"", "\\\\\""));
-            writer.print("\"");
-            writer.print(":");
+        for (String pathA : list) {
+            if (firstPathA) {
+                firstPathA = false;
+            } else {
+                writer.println(",");
+            }
+            HashSet<String> set = dependencies.get(pathA);
+            writer.print("  " + "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"" + ": ");
             if (countOnly) {
                 Integer count = set.size();
-                writer.println(count.toString() + ",");
+                writer.println(count.toString());
             } else {
-                String val = set.toString();
-                writer.println(val + ","); // TODO: format as valid json
+                writer.println("[");
+                boolean firstPathB = true;
+                for (String pathB : set) {
+                    if (firstPathB) {
+                        firstPathB = false;
+                    } else {
+                        writer.println(",");
+                    }
+                    writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
+                }
+                writer.println("");
+                writer.print("  ]");
             }
             ++keysWritten;
         }
 
+        writer.println("");
         writer.println("}");
         writer.close();
         System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
