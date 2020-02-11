@@ -824,19 +824,17 @@ public class TestExampleGenerator extends TestFmwk {
          *   "zh": 12521 "type A"!
          *   "ar": ?
          */
-        final String localeId = "fr";
+        final String localeId = "am";
 
         CLDRFile englishFile = info.getEnglish();
 
         Factory factory = CLDRConfig.getInstance().getCldrFactory();
-        CLDRFile cldrFile = makeMutableResolved(factory, localeId);
+        CLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
         cldrFile.disableCaching();
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
-        ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
-        CollectionUtilities.addAll(cldrFile.iterator(), paths);
+        CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
         if (JUST_LIST_PATHS) {
             String dir = CLDRPaths.GEN_DIRECTORY + "test/";
             String name = "allpaths_" + localeId + ".txt";
@@ -851,6 +849,10 @@ public class TestExampleGenerator extends TestFmwk {
         }
         final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
+        ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+
+        HashMap<String, String> originalValues = new HashMap<String, String>();
+
         /*
          * Get all the examples so they'll be added to the cache for egBase.
          */
@@ -862,14 +864,22 @@ public class TestExampleGenerator extends TestFmwk {
             if (value == null) {
                 continue;
             }
+            originalValues.put(path, value);
             if (false && path.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
                 System.out.println("Got " + path + " in first loop ...");
             }
             egBase.getExampleHtml(path, value);
         }
+        /*
+         * Make egBase "cacheOnly" so that getExampleHtml will throw an exception if future queries
+         * are not found in the cache. Alternatively, could just make a local hashmap originalExamples,
+         * similar to originalValues. That might be more robust, require more memory, faster or slower?
+         * Should try both ways.
+         */
+        egBase.makeCacheOnly();
 
         ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-        egTest.disableCaching();
+        egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
 
         /*
          * For each path (A), temporarily change its value, and then check each other path (B),
@@ -893,9 +903,12 @@ public class TestExampleGenerator extends TestFmwk {
             if ((++count % 100) == 0) {
                 System.out.println(count);
             }
-            if (count > 200) {
+            if (count > 500000) {
                 break;
             }
+            /*
+             * Modify the value for pathA in some random way
+             */
             String newValue = modifyValueRandomly(valueA);
             /*
              * cldrFile.add would lead to UnsupportedOperationException("Resolved CLDRFiles are read-only");
@@ -905,22 +918,36 @@ public class TestExampleGenerator extends TestFmwk {
             cldrFile.valueChanged(pathA);
             top.add(pathA, newValue);
 
+            /*
+             * Reality check, did we really change the value returned by cldrFile.getStringValue?
+             */
             String valueAX = cldrFile.getStringValue(pathA);
             if (valueAX.equals(newValue)) {
+                // Good, expected
                 // System.out.println("Changing top changed cldrFile: newValue = " + newValue
                 //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
             } else {
+                // Bad, didn't work as expected
                 System.out.println("Changing top did not change cldrFile: newValue = " + newValue
                     + "; valueAX = " + valueAX + "; valueA = " + valueA);
             }
-            pathA = pathA.intern();
             String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
             HashSet<String> a = USE_STARRED_PATHS ? dependenciesA.get(starredA) : null;
+            boolean maybeTypeA = ExampleGenerator.pathMightBeTypeA(pathA);
+
             for (String pathB : paths) {
                 if (pathA.equals(pathB) || skipPathForDependencies(pathB, false)) {
                     continue;
                 }
-                String valueB = cldrFile.getStringValue(pathB);
+                /*
+                 * For valueB, use originalValues.get(pathB), not cldrFile.getStringValue(pathB).
+                 * They could be different if changing valueA changes valueB (probably due to aliasing).
+                 * In that case, we're not interested in whether changing valueA changes valueB. We need
+                 * to know whether changing valueA changes an example that was already cached, keyed by
+                 * pathB and the original valueB.
+                 */
+                String valueB = originalValues.get(pathB);
+                // String valueB = cldrFile.getStringValue(pathB);
                 if (valueB == null) {
                     continue;
                 }
@@ -931,11 +958,14 @@ public class TestExampleGenerator extends TestFmwk {
                 pathB = pathB.intern();
 
                 // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
-                String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache
+                String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache (or throw cacheOnly exception)
                 String exTest = egTest.getExampleHtml(pathB, valueB); // this won't come from cache
                 if ((exTest == null) != (exBase == null)) {
-                    System.out.println("One null but not both? " + pathA + " --- " + pathB); // hasn't happened yet
+                    throw new InternalError("One null but not both? " + pathA + " --- " + pathB);
                 } else if (exTest != null && !exTest.equals(exBase)) {
+                    if (!maybeTypeA) {
+                        System.out.println("Warning: !maybeTypeA: " + pathA);
+                    }
                     if (a == null) {
                         a = new HashSet<String>();
                     }

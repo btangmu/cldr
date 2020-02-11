@@ -104,6 +104,17 @@ public class ExampleGenerator {
         cachingIsEnabled = false;
     }
 
+    /*
+     * For testing, we can switch some ExampleGenerators into a special "cache only"
+     * mode, where they will throw an exception if queried for a path+value that isn't
+     * already in the cache. See TestExampleGeneratorDependencies.
+     */
+    private boolean cacheOnly = false;
+
+    public void makeCacheOnly() {
+        cacheOnly = true;
+    }
+
     public final static double NUMBER_SAMPLE = 123456.789;
     public final static double NUMBER_SAMPLE_WHOLE = 2345;
 
@@ -177,6 +188,8 @@ public class ExampleGenerator {
      */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
+    private static boolean AVOID_CLEARING_CACHE = true;
+
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
      * any paths whose examples might depend on the winning value of the given path,
@@ -227,14 +240,63 @@ public class ExampleGenerator {
          *
          * Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
          */
-        if (!pathIsTypeA(xpath)) {
-            return;
+        if (AVOID_CLEARING_CACHE) {
+            if (!pathMightBeTypeA(xpath)) {
+                return;
+            }
         }
         cache.clear();
     }
 
-    static private boolean pathIsTypeA(String xpath) {
+    static long typeACount = 0, notTypeACount = 0;
+
+    /**
+     * Does changing the winning value for the given path potentially have side-effect of changing the example
+     * html for other paths? In other words, might this be a path of type "A"?
+     *
+     * We say "might be", since this function is meant to be fast rather than exact. It should never return
+     * false for a path that really is type "A", but it may return true for some paths that aren't really type "A".
+     *
+     * @param xpath
+     * @return true or false
+     */
+    static public boolean pathMightBeTypeA(String xpath) {
         final String pathAStarts[] = {
+            "//ldml/characterLabels/characterLabelPattern",
+            "//ldml/characterLabels/characterLabel",
+            "//ldml/dates/calendars",
+            "//ldml/dates/fields",
+            "//ldml/dates/timeZoneNames",
+            "//ldml/delimiters/alternateQuotationEnd",
+            "//ldml/delimiters/alternateQuotationStart",
+            "//ldml/delimiters/quotationEnd",
+            "//ldml/delimiters/quotationStart",
+            "//ldml/listPatterns/listPattern",
+            "//ldml/localeDisplayNames/codePatterns",
+            "//ldml/localeDisplayNames/keys",
+            "//ldml/localeDisplayNames/languages",
+            "//ldml/localeDisplayNames/localeDisplayPattern",
+            "//ldml/localeDisplayNames/scripts",
+            "//ldml/localeDisplayNames/territories",
+            "//ldml/localeDisplayNames/types",
+            "//ldml/numbers/currencies",
+            "//ldml/numbers/currencyFormats",
+            "//ldml/numbers/decimalFormats",
+            "//ldml/numbers/defaultNumberingSystem",
+            "//ldml/numbers/minimalPairs",
+            "//ldml/numbers/minimumGroupingDigits",
+            "//ldml/numbers/miscPatterns",
+            "//ldml/numbers/otherNumberingSystems",
+            "//ldml/numbers/percentFormats",
+            "//ldml/numbers/scientificFormats",
+            "//ldml/numbers/symbols",
+            "//ldml/posix/messages",
+            "//ldml/typographicNames",
+            "//ldml/units/durationUnit",
+            "//ldml/units/unitLength",
+        };
+        /***
+        final String pathAStartsShorter[] = {
             "//ldml/characterLabels",
             "//ldml/dates",
             "//ldml/delimiters",
@@ -243,12 +305,22 @@ public class ExampleGenerator {
             "//ldml/numbers",
             "//ldml/units"
         };
+        ***/
+        boolean maybeTypeA = false;
         for (String s : pathAStarts) {
             if (xpath.startsWith(s)) {
-                return true;
+                maybeTypeA = true;
+                break;
             }
         }
-        return false;
+        if (maybeTypeA) {
+             ++typeACount;
+        } else {
+             ++notTypeACount; // e.g., //ldml/localeDisplayNames/subdivisions/subdivision[@type="gbeng"] or //ldml/localeDisplayNames/variants/variant[@type="1901"] or //ldml/localeDisplayNames/measurementSystemNames/measurementSystemName[@type="US"]
+        }
+        System.out.println("type A percent = " + ((100 * typeACount) / (typeACount + notTypeACount))
+            + " [" + typeACount + ", " + notTypeACount + "]");
+        return maybeTypeA;
     }
 
     private static final String NONE = "\uFFFF";
@@ -365,7 +437,7 @@ public class ExampleGenerator {
      * The result is valid HTML.
      *
      * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
-     * @param value the value; e.g., "{1} [{0}]"
+     * @param value the value; e.g., "{1} [{0}]"; not necessarily the winning value
      * @return the example HTML, or null
      */
     public String getExampleHtml(String xpath, String value) {
@@ -384,6 +456,8 @@ public class ExampleGenerator {
                     }
                     return result;
                 }
+            } else if (cacheOnly ) {
+                throw new InternalError("getExampleHtml cacheOnly not found: " + cacheKey);
             }
             // If generating examples for an inheritance marker, then we need to find the
             // "real" value to generate from.
@@ -1134,7 +1208,7 @@ public class ExampleGenerator {
         if (!parts.containsAttribute("count")) { // no examples for items that don't format
             return null;
         }
-        final PluralInfo plurals = supplementalDataInfo.getPlurals(cldrFile.getLocaleID());
+        final PluralInfo plurals = supplementalDataInfo.getPlurals(PluralType.cardinal, cldrFile.getLocaleID());
         PluralRules pluralRules = plurals.getPluralRules();
 
         String unitType = parts.getAttributeValue(-2, "type");
