@@ -708,7 +708,7 @@ function generateHTMLPost(post) {
 		'<span class="label label-info" style="margin-left:5px;">' + post.posterInfo.userlevelName + '</span>' +
 		'<span class="label label-primary pull-right">' + post.date + '</span></h4>' +
 		'<div class="content">' + post.text.replace(/\n/g, '<br />') + '</div>' +
-		< /div>';
+		'</div>';
 
 	return html;
 }
