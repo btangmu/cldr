@@ -142,7 +142,7 @@ function Flipper(ids) {
 	this._map = {};
 	for (var k in ids) {
 		var id = ids[k];
-		var node = dojo.byId(id);
+		var node = document.getElementById(id);
 		// TODO if node==null throw
 		if (this._panes.length > 0) {
 			setDisplayed(node, false); // hide it
@@ -905,6 +905,8 @@ function parseForumContent(json) {
  *
  * @param e event
  * @returns true or false
+ *
+ * Called from numerous js files
  */
 function stStopPropagation(e) {
 	if (!e) {
@@ -920,20 +922,28 @@ function stStopPropagation(e) {
 }
 
 /**
- * is the ST disconnected
+ * Is the ST disconnected?
+ *
  * @property disconnected
+ *
+ * TODO: move "disconnected" from global "window" namespace to our own object, and encapsulate
+ * with getter and setter
  */
 var disconnected = false;
 
 /**
  * Is debugging enabled?
+ *
  * @property stdebug_enabled
  */
 var stdebug_enabled = (window.location.search.indexOf('&stdebug=') > -1);
 
 /**
  * Queue of XHR requests waiting to go out
+ *
  * @property queueOfXhr
+ *
+ * Accessed only in this file. TODO: encapsulate, outside global "window" namespace
  */
 var queueOfXhr=[];
 
@@ -1199,8 +1209,8 @@ var specialHeader = null;
  * Update the 'status' if need be.
  */
 function showWord() {
-	var p = dojo.byId("progress");
-	var oneword = dojo.byId("progress_oneword");
+	var p = document.getElementById("progress");
+	var oneword = document.getElementById("progress_oneword");
 	if (oneword == null) { // nowhere to show
 		return;
 	}
@@ -1295,11 +1305,11 @@ function handleDisconnect(why, json, word, what) {
 			why = why + "\n The error message was: \n" + json.err;
 		}
 		console.log("Disconnect: " + why);
-		var oneword = dojo.byId("progress_oneword");
+		var oneword = document.getElementById("progress_oneword");
 		if (oneword) {
 			oneword.title = "Disconnected: " + why;
 			oneword.onclick = function() {
-				var p = dojo.byId("progress");
+				var p = document.getElementById("progress");
 				var subDiv = document.createElement('div');
 				var chunk0 = document.createElement("i");
 				chunk0.appendChild(document.createTextNode(stui_str("error_restart")));
@@ -1317,7 +1327,7 @@ function handleDisconnect(why, json, word, what) {
 				oneword.onclick = null;
 				return false;
 			};
-			var p = dojo.byId("progress");
+			var p = document.getElementById("progress");
 			var subDiv = document.createElement('div');
 			var detailsButton = document.createElement("button");
 			detailsButton.type = "button";
@@ -1450,7 +1460,7 @@ function updateStatusBox(json) {
 	if (json.status) {
 		lastJsonStatus = json.status;
 		if (!updateParts) {
-			var visitors = dojo.byId("visitors");
+			var visitors = document.getElementById("visitors");
 			updateParts = {
 				visitors: visitors,
 				ug: document.createElement("span"),
@@ -2278,7 +2288,7 @@ function updateInfoPanelForumPosts(tr) {
 			/*
 			 * TODO: encapsulate this usage of 'r@' somewhere
 			 */
-			tr = dojo.byId('r@' + surveyCurrentId);
+			tr = document.getElementById('r@' + surveyCurrentId);
 		} else {
 			console.log("updateInfoPanelForumPosts: tr was null, surveyCurrentId was empty");
 			return;
@@ -2396,7 +2406,7 @@ window.updateCurrentId = function updateCurrentId(id) {
 // window loader stuff
 dojo.ready(function() {
 	var unShow = null;
-	var pucontent = dojo.byId("itemInfo");
+	var pucontent = document.getElementById("itemInfo");
 	if (!pucontent) {
 		return;
 	}
@@ -2713,7 +2723,7 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
 		 * from the server like "Input Processor Error: DAIP returned a 0 length string"
 		 */
 		ourDiv = document.createElement("div");
-		var newButton = cloneAnon(dojo.byId('proto-button'));
+		var newButton = cloneAnon(document.getElementById('proto-button'));
 		const otherCell = tr.querySelector('.othercell');
 		if (otherCell && tr.myProposal) {
 			otherCell.removeChild(tr.myProposal);
@@ -3230,7 +3240,7 @@ function appendInputBox(parent, which) {
 function scrollToItem() {
 	if (surveyCurrentId != null && surveyCurrentId != '') {
 		require(["dojo/window"], function(win) {
-			var xtr = dojo.byId("r@" + surveyCurrentId);
+			var xtr = document.getElementById("r@" + surveyCurrentId);
 			if (xtr != null) {
 				console.log("Scrolling to " + surveyCurrentId);
 				win.scrollIntoView("r@" + surveyCurrentId);
@@ -3680,7 +3690,7 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 function loadAdminPanel() {
 	if (!vap) return;
 	loadStui();
-	var adminStuff = dojo.byId("adminStuff");
+	var adminStuff = document.getElementById("adminStuff");
 	if (!adminStuff) return;
 
 	var content = document.createDocumentFragment();
@@ -4440,7 +4450,7 @@ function createLocLink(loc, locName, className) {
 function showAllItems(divName, user) {
 	dojo.ready(function() {
 		loadStui();
-		var div = dojo.byId(divName);
+		var div = document.getElementById(divName);
 		div.className = "recentList";
 		div.update = function() {
 			var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
@@ -4524,7 +4534,7 @@ function showRecent(divName, locale, user) {
 		if (divName.nodeType > 0) {
 			div = divName;
 		} else {
-			div = dojo.byId(divName);
+			div = document.getElementById(divName);
 		}
 		div.className = "recentList";
 		div.update = function() {

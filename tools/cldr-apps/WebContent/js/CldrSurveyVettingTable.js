@@ -11,7 +11,7 @@
  */
 'use strict';
 
-// TODO: replace with AMD [?] loading
+// TODO: replace with AMD [?] loading -- actually it's doubtful whether dojo is needed for this file
 dojo.require("dojo.i18n");
 dojo.require("dojo.string");
 
@@ -67,7 +67,7 @@ const cldrSurveyTable = (function() {
 			 * Re-create the table from scratch
 			 */
 			// console.log("🦞🦞🦞 make new table");
-			theTable = cloneLocalizeAnon(dojo.byId('proto-datatable'));
+			theTable = cloneLocalizeAnon(document.getElementById('proto-datatable'));
 			/*
 			 * Note: isDashboard() is currently never true here; see comments in insertRowsIntoTbody and updateRow
 			 */
@@ -93,7 +93,7 @@ const cldrSurveyTable = (function() {
 			 */
 			localizeFlyover(theTable); // Replace titles starting with $ with strings from stui
 			const headChildren = getTagChildren(theTable.getElementsByTagName("tr")[0]);
-			var toAdd = dojo.byId('proto-datarow'); // loaded from "hidden.html", which see.
+			var toAdd = document.getElementById('proto-datarow'); // loaded from "hidden.html", which see.
 			var rowChildren = getTagChildren(toAdd);
 			for (var c in rowChildren) {
 				rowChildren[c].title = headChildren[c].title;
@@ -176,7 +176,7 @@ const cldrSurveyTable = (function() {
 		var tbody = theTable.getElementsByTagName("tbody")[0];
 		var theRows = theTable.json.section.rows;
 		var toAdd = theTable.toAdd;
-		var parRow = dojo.byId('proto-parrow');
+		var parRow = document.getElementById('proto-parrow');
 
 		if (ALWAYS_REMOVE_ALL_CHILD_NODES) {
 			removeAllChildNodes(tbody);
@@ -378,7 +378,7 @@ const cldrSurveyTable = (function() {
 
 		var protoButton = null; // no voting at all, unless tr.canModify
 		if (tr.canModify) {
-			protoButton = dojo.byId('proto-button');
+			protoButton = document.getElementById('proto-button');
 		}
 
 		const statusCell = tr.querySelector('.statuscell');
@@ -1109,7 +1109,7 @@ const cldrSurveyTable = (function() {
 		/*
 		 * Add the other vote info -- that is, vote info for the "Others" column.
 		 */
-		for (k in theRow.items) {
+		for (let k in theRow.items) {
 			if (k === theRow.winningVhash) { // skip vote for winner
 				continue;
 			}

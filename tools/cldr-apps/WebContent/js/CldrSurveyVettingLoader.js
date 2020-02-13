@@ -122,7 +122,7 @@ function showV() {
 				};
 				var flipper = new Flipper([pages.loading, pages.data, pages.other]);
 
-				var pucontent = dojo.byId("itemInfo");
+				var pucontent = document.getElementById("itemInfo");
 				var theDiv = flipper.get(pages.data);
 				theDiv.pucontent = pucontent;
 				theDiv.stui = loadStui();
@@ -141,7 +141,7 @@ function showV() {
 
 					set: function(x, y) {
 						stdebug("menuset " + x + " = " + y);
-						var cnode = dojo.byId(x + "-container");
+						var cnode = document.getElementById(x + "-container");
 						var wnode = this.getRegistry(x);
 						var dnode = this.getDom(x);
 						if (!cnode) {
@@ -164,13 +164,13 @@ function showV() {
 						}
 					},
 					getDom: function(x) {
-						return dojo.byId(x);
+						return document.getElementById(x);
 					},
 					getRegistry: function(x) {
 						return registry.byId(x);
 					},
 					getContainer: function(x) {
-						return dojo.byId(x + "-container");
+						return document.getElementById(x + "-container");
 					}
 				};
 
@@ -441,7 +441,7 @@ function showV() {
 
 				// (back to showV) some setup.
 				// click on the title to copy (permalink)
-				clickToSelect(dojo.byId("ariScroller"));
+				clickToSelect(document.getElementById("ariScroller"));
 				updateIf("title-dcontent-link", stui.str("defaultContent_titleLink"));
 
 				// TODO - rewrite using AMD
@@ -521,7 +521,7 @@ function showV() {
 						otherSpecial.handleIdChanged(surveyCurrentSpecial, showCurrentId);
 					} else {
 						if (surveyCurrentId != '') {
-							var xtr = dojo.byId('r@' + surveyCurrentId);
+							var xtr = document.getElementById('r@' + surveyCurrentId);
 							if (!xtr) {
 								console.log("Warning could not load id " + surveyCurrentId + " does not exist");
 								window.updateCurrentId(null);
@@ -569,7 +569,7 @@ function showV() {
 					hideOverlayAndSidebar();
 
 					ariDialog.show();
-					var oneword = dojo.byId("progress_oneword");
+					var oneword = document.getElementById("progress_oneword");
 					oneword.onclick = function() {
 						if (disconnected) {
 							ariDialog.show();
@@ -783,7 +783,7 @@ function showV() {
 						}
 						return; // nothing to do.
 					}
-					var titlePageContainer = dojo.byId("title-page-container");
+					var titlePageContainer = document.getElementById("title-page-container");
 
 					/**
 					 * Just update the titles of the menus. Internal to updateHashAndMenus
@@ -793,7 +793,7 @@ function showV() {
 							menubuttons.lastspecial = null;
 
 							// Set up the menu here?
-							var parMenu = dojo.byId("manage-list");
+							var parMenu = document.getElementById("manage-list");
 							for (var k = 0; k < specialItems.length; k++) {
 								var item = specialItems[k];
 								(function(item) {
@@ -1950,7 +1950,7 @@ function showV() {
 							// setup coverage level
 							window.surveyLevels = json.menus.levels;
 
-							var titleCoverage = dojo.byId("title-coverage"); // coverage label
+							var titleCoverage = document.getElementById("title-coverage"); // coverage label
 
 							var levelNums = []; // numeric levels
 							for (var k in window.surveyLevels) {
