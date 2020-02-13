@@ -401,7 +401,7 @@ function XpathMap() {
 
 /**
  * This function will do a search and then call the onResult function.
- * Priority order for search:  hex, id, then path.
+ * Priority order for search: hex, id, then path.
  * @function get
  * @param search {Object} the object to search for
  * @param search.hex {String} optional - search by hex id
@@ -577,6 +577,8 @@ if (!stuidebug_enabled) {
  *
  * TODO: clarify dependence on "dijitInp"; is that still used here, and if so, when?
  * Add automated regression testing to anticipate future changes to bootstrap/dojo/dijit/etc.
+ *
+ * Called only from CldrSurveyVettingLoader.js
  */
 function isInputBusy() {
 	if (!window.getSelection) {
@@ -2564,7 +2566,7 @@ dojo.ready(function() {
 		}
 		td = null;
 
-		//for the voter
+		// for the voter
 		$('.voteInfo_voterInfo').hover(function() {
 			var email = $(this).data('email').replace(' (at) ', '@');
 			if (email !== '') {

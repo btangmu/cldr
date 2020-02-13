@@ -144,7 +144,9 @@ function showV() {
 						var cnode = dojo.byId(x + "-container");
 						var wnode = this.getRegistry(x);
 						var dnode = this.getDom(x);
-						if (!cnode) cnode = dnode; // for Elements that do their own stunts
+						if (!cnode) {
+							cnode = dnode; // for Elements that do their own stunts
+						}
 						if (y && y !== '-' && y !== '') {
 							if (wnode != null) {
 								wnode.set('label', y);
@@ -291,9 +293,9 @@ function showV() {
 				var otherSpecial = new OtherSpecial();
 
 				/**
-				 * parse the hash string into surveyCurrent___ variables.
+				 * Parse the hash string into surveyCurrent___ variables.
 				 * Expected to update document.title also.
-				 * @method parseHash
+				 *
 				 * @param {String} id
 				 */
 				window.parseHash = function parseHash(hash) {
@@ -393,20 +395,34 @@ function showV() {
 				};
 
 				/**
-				 * update hash (and title)
-				 * @method replaceHash
+				 * Update hash (and title)
+				 *
 				 * @param doPush {Boolean} if true, do a push (instead of replace)
+				 *
+				 * Called by parseForumContent in survey.js, as well as locally.
+				 *
+				 * TODO: avoid attaching this, or anything, to "window"! Define our own objects instead.
 				 */
 				window.replaceHash = function replaceHash(doPush) {
-					if (!doPush) doPush = false; // by default -replace.
+					if (!doPush) {
+						doPush = false; // by default -replace.
+					}
 					var theId = window.surveyCurrentId;
-					if (theId == null) theId = '';
+					if (theId == null) {
+						theId = '';
+					}
 					var theSpecial = window.surveyCurrentSpecial;
-					if (theSpecial == null) theSpecial = '';
+					if (theSpecial == null) {
+						theSpecial = '';
+					}
 					var thePage = window.surveyCurrentPage;
-					if (thePage == null) thePage = '';
+					if (thePage == null) {
+						thePage = '';
+					}
 					var theLocale = window.surveyCurrentLocale;
-					if (theLocale == null) theLocale = '';
+					if (theLocale == null) {
+						theLocale = '';
+					}
 					var newHash = '#' + theSpecial + '/' + theLocale + '/' + thePage + '/' + theId;
 					if (newHash != dojoHash()) {
 						dojoHash(newHash, !doPush);
@@ -414,10 +430,12 @@ function showV() {
 				};
 
 				window.updateCurrentId = function updateCurrentId(id) {
-					if (id == null) id = '';
+					if (id == null) {
+						id = '';
+					}
 					if (surveyCurrentId != id) { // don't set if already set.
 						surveyCurrentId = id;
-						replaceHash(false); // usually dont want to save
+						replaceHash(false); // usually don't want to save
 					}
 				};
 
@@ -463,7 +481,7 @@ function showV() {
 
 				/**
 				 * Verify that the JSON returned is as expected.
-				 * @method verifyJson
+				 *
 				 * @param json the returned json
 				 * @param subkey the key to look for,  json.subkey
 				 * @return true if OK, false if bad
@@ -603,7 +621,7 @@ function showV() {
 
 				/**
 				 * Update the #hash and menus to the current settings.
-				 * @method updateHashAndMenus
+				 *
 				 * @param doPush {Boolean} if false, do not add to history
 				 */
 				function updateHashAndMenus(doPush) {
@@ -769,7 +787,6 @@ function showV() {
 
 					/**
 					 * Just update the titles of the menus. Internal to updateHashAndMenus
-					 * @method updateMenuTitles
 					 */
 					function updateMenuTitles(menuMap) {
 						if (menubuttons.lastspecial === undefined) {
@@ -889,7 +906,7 @@ function showV() {
 					}
 
 					/**
-					 * @method updateMenus
+					 * Update the menus
 					 */
 					function updateMenus(menuMap) {
 						// initialize menus
@@ -1185,7 +1202,6 @@ function showV() {
 
 				/**
 				 * Show the "possible problems" section which has errors for the locale
-				 * @method showPossibleProblems
 				 */
 				function showPossibleProblems(flipper, flipPage, loc, session, effectiveCov, requiredCov) {
 					surveyCurrentLocale = loc;
@@ -1230,7 +1246,7 @@ function showV() {
 
 				/**
 				 * This is the main entrypoint to the 'new' view system, based in /v.jsp
-				 * @method reloadV
+				 * TODO: don't attach it to "window"!
 				 */
 				window.reloadV = function reloadV() {
 					if (disconnected) {
@@ -1270,7 +1286,7 @@ function showV() {
 						}
 					}
 
-					// todo dont even flip if it's quick.
+					// TODO: don't even flip if it's quick.
 					var loadingChunk;
 					flipper.flipTo(pages.loading, loadingChunk = createChunk(stui_str("loading"), "i", "loadingMsg"));
 

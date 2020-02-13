@@ -4,6 +4,8 @@
 
 /**
  * Bind the event only on the review (Dashboard) page
+ *
+ * Called by showReviewPage and checkLineFix, both in this file 
  */
 function bindReviewEvents() {
 	$('.help-comment').popover({placement: 'right'}); // show the comment column
@@ -45,22 +47,12 @@ $(function() {
 });
 
 /**
- * Show the right menu in the review page
- *
- * @param numbers
- */
-function showReviewMenu(numbers) {
-	var info = $('#itemInfo');
-	var menu = $('#navspy');
-	info.html(menu.html());
-	refreshAffix();
-}
-
-/**
  * Handle the review (Dashboard) page with the json
  *
  * @param json
  * @param showFn
+ *
+ * Called only from CldrSurveyVettingLoader.js
  */
 function showReviewPage(json, showFn) {
 	var notificationsRoot = $('#OtherSection');
@@ -229,6 +221,8 @@ function showReviewPage(json, showFn) {
  *
  * @param id
  * @returns the url as a string
+ *
+ * Called only by showReviewPage in this file
  */
 function getUrlReview(id) {
 	return contextPath + '/v#/' + surveyCurrentLocale + '//' + id;
@@ -236,6 +230,8 @@ function getUrlReview(id) {
 
 /**
  * Save the hide line
+ *
+ * Called only by the Startup function at the top of this file
  */
 function toggleReview() {
 	var url = contextPath + "/SurveyAjax?what=review_hide&s=" + surveySessionId;
@@ -249,6 +245,8 @@ function toggleReview() {
 
 /**
  * Refresh the counter
+ *
+ * Called from several places in this file.
  *
  * TODO to optimize, do not update every label, only one need to -> refresh the counter from the review page
  */
@@ -275,6 +273,8 @@ function refreshCounter() {
 
 /**
  * Toggle the notifications type
+ *
+ * Called only by the Startup function at the top of this file
  */
 function togglePart() {
 	var table = $(this).next();
@@ -290,6 +290,8 @@ function togglePart() {
  * Open a slide with the fix button
  *
  * @param event
+ *
+ * Called only by the Startup function at the top of this file
  */
 function toggleFix(event) {
 	var tr = $(this).closest('tr');
@@ -364,6 +366,8 @@ function toggleFix(event) {
 
 /**
  * Hide or show line for the review (Dashboard) page
+ *
+ * Called only by the Startup function at the top of this file
  */
 function toggleReviewLine() {
 	var line = $(this).closest('tr');
@@ -417,6 +421,8 @@ function toggleReviewLine() {
  * Force to show the actual hidden line
  *
  * @param event
+ *
+ * Called only by the Startup function at the top of this file
  */
 function toggleItems(event) {
 	var input = $(this).children('button');
@@ -439,6 +445,8 @@ function toggleItems(event) {
 
 /**
  * Refresh affix (right menu).
+ *
+ * Called from several places in this file.
  */
 function refreshAffix() {
 	$('[data-spy="scroll"]').each(function() {
@@ -451,6 +459,8 @@ function refreshAffix() {
 
 /**
  * Add or remove line depending if we solved the issue or created new
+ *
+ * Called only by toggleFix in this file.
  */
 function checkLineFix() {
 	var line = $(this).closest('tr');
@@ -507,6 +517,9 @@ function checkLineFix() {
  * Refresh the Dashboard "Fix" panel
  *
  * @param json
+ *
+ * Called only by the loadHandler for refreshSingleRow in survey.js,
+ * only if isDashboard() is true
  */
 function refreshFixPanel(json) {
 	var issues = json.issues;
@@ -545,6 +558,8 @@ function refreshFixPanel(json) {
  * Show the vote summary part of the Fix panel
  *
  * @param cont
+ *
+ * Called only by showInPop2 in survey.js, only if isDashboard() is true
  */
 function showHelpFixPanel(cont) {
 	$('.fix-parent .data-vote').html('');
@@ -573,6 +588,8 @@ var formDidChange = false;
  *
  * @param postModal
  * @param onClose
+ *
+ * Called only by openPost and openReply, in this file
  */
 function showPost(postModal, onClose) {
 	formDidChange = false;
@@ -589,6 +606,8 @@ function showPost(postModal, onClose) {
 
 /**
  * Open a thread of posts concerning this xpath
+ *
+ * Called only by the Startup function at the top of this file
  */
 function openPost() {
 	var path = $(this).closest(".data-review").data('path');
@@ -642,9 +661,9 @@ function openPost() {
 }
 
 /**
- * Allow an in-line reply.
+ * Allow an in-line reply to a forum post.
  *
- * Called by forum.js.
+ * Called from forum.js and survey.js
  */
 function openReply(params) {
 	var postModal = $('#post-modal');
@@ -700,27 +719,13 @@ function openReply(params) {
 }
 
 /**
- * Generate the HTML for a given post
- *
- * @param post
- * @return the html
- */
-function generateHTMLPost(post) {
-	var html = '<div class="well well-sm post">' +
-		'<h4>' + post.posterInfo.name + ' (' + post.posterInfo.org + ')' +
-		'<span class="label label-info" style="margin-left:5px;">' + post.posterInfo.userlevelName + '</span>' +
-		'<span class="label label-primary pull-right">' + post.date + '</span></h4>' +
-		'<div class="content">' + post.text.replace(/\n/g, '<br />') + '</div>' +
-		'</div>';
-
-	return html;
-}
-/**
  * Submit a forum post
  *
  * @param event
  *
- * TODO: Move this and other forum-specific functions to forum.js?
+ * Called by openPost and openReply, in this file
+ *
+ * TODO: Move this and other forum-specific functions to forum.js or other forum-specific file?
  * Unlike much review.js code, this function is not Dashboard-specific; it is used
  * for submitting posts both in the Dashboard and not in the Dashboard.
  */
@@ -790,6 +795,8 @@ function submitPost(event) {
  * @param xpath
  * @param session
  * @param json
+ *
+ * Called by toggleFix and refreshFixPanel, both in this file
  */
 function insertFixInfo(theDiv, xpath, session, json) {
 	removeAllChildNodes(theDiv);
@@ -860,6 +867,8 @@ function insertFixInfo(theDiv, xpath, session, json) {
 
 /**
  * Update the "Fix" window
+ *
+ * Called by toggleFix and refreshFixPanel, both in this file
  */
 function designFixPanel() {
 	var nocell = $('.fix-parent #popover-vote .data-vertical .nocell');
@@ -929,6 +938,8 @@ function designFixPanel() {
 
 /**
  * Reposition the "Fix" popover manually
+ *
+ * Called locally and also by showInPop2 in survey.js
  */
 function fixPopoverVotePos() {
 	var button = $('.fix-parent #popover-vote').closest('.fix-parent').find('.fix');
@@ -944,6 +955,10 @@ function fixPopoverVotePos() {
  *
  * @param button
  * @returns a newly created label element
+ *
+ * Note: this is not only for Dashboard.
+ *
+ * Called from survey.js and CldrSurveyVettinTable.js
  */
 function wrapRadio(button) {
 	var label = document.createElement('label');
@@ -959,6 +974,8 @@ function wrapRadio(button) {
  *
  * @param issues the array
  * @returns the string
+ *
+ * Called by toggleFix and refreshFixPanel, both in this file
  */
 function showAllProblems(issues) {
 	var string = '';
