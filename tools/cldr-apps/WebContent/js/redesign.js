@@ -1,17 +1,21 @@
-// startup function
-$(function() {
+/*
+ * TODO: rename this file to reflect its current role rather than its history.
+ * Its history presumably involved redesigning some aspect(s) of Survey Tool.
+ * Its current role, relative to survey.js and other source files, isn't very clear.
+ * Possibly its functions should all move into other source files.
+ */
 
+/*
+ * Startup function
+ */
+$(function() {
 	// for locale search
-	$('body').on('click', '#show-locked', {
-		type: "lock"
-	}, toggleLockedRead);
-	$('body').on('click', '#show-read', {
-		type: "read"
-	}, toggleLockedRead);
+	$('body').on('click', '#show-locked', {type: "lock"}, toggleLockedRead);
+	$('body').on('click', '#show-read', {type: "read"}, toggleLockedRead);
 	$('#locale-info .local-search').keyup(filterAllLocale);
 	$('.pull-menu > a').click(interceptPulldownLink);
 
-	// local chooser intercept
+	// locale chooser intercept
 	$('body').on('click', '.locName', interceptLocale);
 
 	// handle sidebar
@@ -46,12 +50,13 @@ $(function() {
 	// example on hover
 	$('body').on('mouseenter', '.vetting-page .infos-code, .vetting-page .subSpan', function() {
 		var example = $(this).closest('.d-disp,.d-item,.d-item-err,.d-item-warn').find('.d-example');
-		if (example)
+		if (example) {
 			$(this).popover({
 				html: true,
 				placement: "top",
 				content: example.html()
 			}).popover('show');
+		}
 	});
 
 	$('body').on('mouseleave', '.vetting-page .infos-code, .vetting-page .subSpan', function() {
@@ -81,7 +86,13 @@ $(function() {
 	})
 });
 
-// size the sidebar relative to the header
+/**
+ * Size the sidebar relative to the header
+ *
+ * Called by: the Startup function at the top of this file;
+ * 			the Startup function in review.js;
+ *          updateMenus in CldrSurveyVettingLoader.js
+ */
 function resizeSidebar() {
 	var sidebar = $('#left-sidebar');
 	var header = $('.navbar-fixed-top');
@@ -93,12 +104,13 @@ function resizeSidebar() {
 var sentenceFilter;
 
 /**
- * Filter all the locales (first son, then parent so we can build the tree, and let the parent displayed if a son is matched)
+ * Filter all the locales (first child, then parent so we can build the tree,
+ * and let the parent displayed if a child is matched)
  *
  * @param event
- * @returns false
+ * @returns false (return value is ignored by all callers)
  *
- * This function is used in CldrSurveyVettingLoader.js.
+ * This function is called from elsewhere in this file, and from CldrSurveyVettingLoader.js.
  */
 function filterAllLocale(event) {
 	if ($(this).hasClass('local-search')) {
@@ -106,8 +118,8 @@ function filterAllLocale(event) {
 		$('#locale-list,#locale-menu').removeClass('active');
 	}
 	sentenceFilter = $('input.local-search').val().toLowerCase();
-	$('.subLocaleList .locName').each(filterLocale); //filtersublocale
-	$('.topLocale .locName').each(filterLocale); //filtertolocale
+	$('.subLocaleList .locName').each(filterLocale); // filtersublocale
+	$('.topLocale .locName').each(filterLocale); // filtertolocale
 
 	if (event) {
 		event.preventDefault();
@@ -116,7 +128,13 @@ function filterAllLocale(event) {
 	return false;
 }
 
-// filter (locked and read-only) with locale
+/**
+ * Filter (locked and read-only) with locale
+ *
+ * @param event
+ *
+ * Called only by the Startup function at the top of this file
+ */
 function toggleLockedRead(event) {
 	var type = event.data.type;
 	if ($(this).is(':checked')) {
@@ -135,11 +153,16 @@ function toggleLockedRead(event) {
 	filterAllLocale();
 }
 
-// hide/show the locale matching the pattern and the checkbox
+/**
+ * Hide/show the locale matching the pattern and the checkbox
+ *
+ * Called only by filterAllLocale
+ */
 function filterLocale() {
 	var text = $(this).text().toLowerCase();
 	var parent = $(this).parent();
-	if (text.indexOf(sentenceFilter) == 0 && (checkLocaleShow($(this), sentenceFilter.length) || sentenceFilter === text)) {
+	if (text.indexOf(sentenceFilter) == 0 &&
+			(checkLocaleShow($(this), sentenceFilter.length) || sentenceFilter === text)) {
 		parent.removeClass('hide');
 		if (parent.hasClass('topLocale')) {
 			parent.parent().removeClass('hide');
@@ -159,9 +182,17 @@ function filterLocale() {
 			parent.addClass('hide');
 		}
 	}
-};
+}
 
-// should we show this locale considering the checkbox ?
+/**
+ * Should we show this locale considering the checkbox?
+ *
+ * @param element
+ * @param size
+ * @return true or false
+ *
+ * Called only by filterLocale
+ */
 function checkLocaleShow(element, size) {
 	if (size > 0) {
 		return true;
@@ -176,7 +207,11 @@ function checkLocaleShow(element, size) {
 	return false;
 }
 
-// intercept the click of the locale name ->
+/**
+ * Intercept the click of the locale name
+ *
+ * Called only by the Startup function at the top of this file
+ */
 function interceptLocale() {
 	var name = $(this).text();
 	var source = $(this).attr('title');
@@ -189,10 +224,15 @@ function interceptLocale() {
 	$('#locale-menu').addClass('active');
 }
 
-
 var cachedJson; // use a cache because the coverage can change, so we might need to update the menu
 
-//sidebar constructor
+/**
+ * Sidebar constructor
+ *
+ * @param json
+ *
+ * Called only from CldrSurveyVettingLoader.js
+ */
 function unpackMenuSideBar(json) {
 	if (json.menus) {
 		cachedJson = json;
@@ -215,10 +255,11 @@ function unpackMenuSideBar(json) {
 	var levels = json.menus.levels;
 	var reports = json.reports;
 
-	//get the level number
+	// get the level number
 	$.each(levels, function(index, element) {
-		if (element.name == levelName)
+		if (element.name == levelName) {
 			level = parseInt(element.level);
+		}
 	});
 
 	if (level === 0) {
@@ -227,8 +268,9 @@ function unpackMenuSideBar(json) {
 
 		//get the level number
 		$.each(levels, function(index, element) {
-			if (element.name == levelName)
+			if (element.name == levelName) {
 				level = parseInt(element.level);
+			}
 		});
 
 		if (level === 0) {
@@ -243,11 +285,12 @@ function unpackMenuSideBar(json) {
 		var tmp = null;
 		var reportHtml = '';
 		$.each(reports, function(index, element) {
-			if (element.url != "r_vetting_json")
+			if (element.url != "r_vetting_json") {
 				reportHtml += '<li class="list-unstyled review-link" data-query="' + element.hasQuery +
 					'" data-url="' + element.url + '"><div>' + element.display + '</div></li>';
-			else
+			} else {
 				tmp = element;
+			}
 		});
 
 		if (tmp) {
@@ -256,7 +299,8 @@ function unpackMenuSideBar(json) {
 				'<span class="pull-right glyphicon glyphicon-home" style="position:relative;top:2px;right:1px;"></span></div></li>';
 		}
 
-		html += '<li class="list-unstyled open-menu"><div>Reports<span class="pull-right glyphicon glyphicon-chevron-right"></span></div><ul class="second-level">';
+		html += '<li class="list-unstyled open-menu"><div>Reports<span class="pull-right glyphicon glyphicon-chevron-right"></span></div>';
+		html += '<ul class="second-level">';
 		html += reportHtml;
 		html += '</ul></li>';
 	}
@@ -266,21 +310,21 @@ function unpackMenuSideBar(json) {
 	html += '<ul>';
 	$.each(menus, function(index, element) {
 		var menuName = element.name;
-		html += '<li class="list-unstyled open-menu"><div>' + menuName + '<span class="pull-right glyphicon glyphicon-chevron-right"></span></div><ul class="second-level">';
+		html += '<li class="list-unstyled open-menu"><div>' + menuName +
+			'<span class="pull-right glyphicon glyphicon-chevron-right"></span></div><ul class="second-level">';
 		$.each(element.pages, function(index, element) {
 			var pageName = element.name;
 			var pageId = element.id;
 			$.each(element.levs, function(index, element) {
-				if (parseInt(element) <= level)
+				if (parseInt(element) <= level) {
 					html += '<li class="sidebar-chooser list-unstyled" id="' + pageId + '"><div>' + pageName + '</div></li>';
-
+				}
 			});
 		});
 		html += '</ul></li>';
 	});
 
 	html += '</ul>';
-
 
 	menuRoot.html(html);
 	menuRoot.find('.second-level').hide();
@@ -344,21 +388,33 @@ function unpackMenuSideBar(json) {
 	}
 }
 
-// force to open the sidebar
+/**
+ * Force the sidebar to open
+ *
+ * Called only from CldrSurveyVettingLoader.js
+ */
 function forceSidebar() {
 	searchRefresh();
 	$('#left-sidebar').mouseenter();
 }
 
-// refresh the search field
+/**
+ * Refresh the search field
+ *
+ * Called from CldrSurveyVettingLoader.js and locally from redesign.js
+ */
 function searchRefresh() {
 	$('.local-search').val('');
 	$('.local-search').keyup();
 }
 
-// toggle the overlay of the menu
 var toToggleOverlay;
 
+/**
+ * Toggle the overlay of the menu
+ *
+ * Called from elsewhere in this file, and also by toggleFix in review.js
+ */
 function toggleOverlay() {
 	var overlay = $('#overlay');
 	var sidebar = $('#left-sidebar');
@@ -367,8 +423,9 @@ function toggleOverlay() {
 		toToggleOverlay = true;
 
 		setTimeout(function() {
-			if (toToggleOverlay)
+			if (toToggleOverlay) {
 				overlay.css('z-index', '-10');
+			}
 		}, 500 /* half a second */ );
 	} else {
 		toToggleOverlay = false;
@@ -378,7 +435,9 @@ function toggleOverlay() {
 }
 
 /**
- * Hide both the overlay ahd sidebar
+ * Hide both the overlay and sidebar
+ *
+ * Called only from CldrSurveyVettingLoader.js
  */
 function hideOverlayAndSidebar() {
 	var sidebar = $('#left-sidebar');
@@ -386,9 +445,19 @@ function hideOverlayAndSidebar() {
 	toggleOverlay();
 }
 
-// show the help popup in the center of the screen
 var oldTypePopup = '';
 
+/**
+ * Show the help popup in the center of the screen
+ *
+ * @param type
+ * @param content
+ * @param head
+ * @param aj
+ * @param dur
+ *
+ * Called from both survey.js and review.js
+ */
 function popupAlert(type, content, head, aj, dur) {
 	var ajax = (typeof aj === "undefined") ? "" : aj;
 	var header = (typeof aj === "undefined") ? "" : head;
@@ -418,20 +487,27 @@ function popupAlert(type, content, head, aj, dur) {
 	}
 }
 
-// set the content for the instruction menu
+/**
+ * Set the content for the instruction menu
+ *
+ * @param content
+ *
+ * Called only by showInPop2 in survey.js
+ */
 function setHelpContent(content) {
 	$('#help-content').html(content);
 }
 
-function setManageContent(content) {
-	$('#manage-content').html(content);
-}
-
-// create/update the pull down menu popover
+/**
+ * Create/update the pull-down menu popover
+ *
+ * @param event
+ *
+ * Called only by the Startup function at the top of this file
+ */
 function interceptPulldownLink(event) {
 	var menu = $(this).closest('.pull-menu');
-	menu.popover('destroy').
-	popover({
+	menu.popover('destroy').popover({
 		placement: "bottom",
 		html: true,
 		content: menu.children('ul').html(),
@@ -440,7 +516,6 @@ function interceptPulldownLink(event) {
 		template: '<div class="popover" onmouseover="$(this).mouseleave(function() {$(this).fadeOut(); });">' +
 			'<div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3>' +
 			'<div class="popover-content"><p></p></div></div></div>'
-
 	}).click(function(e) {
 		e.preventDefault();
 	}).popover('show');
@@ -449,20 +524,40 @@ function interceptPulldownLink(event) {
 	event.stopPropagation();
 }
 
-// test if we are in the dashboard
+/**
+ * Are we in the Dashboard or not?
+ *
+ * @return true or false
+ *
+ * Called a lot from several js files
+ */
 function isDashboard() {
 	return surveyCurrentSpecial == "r_vetting_json";
 }
 
-// handle new value submission
+/**
+ * Handle new value submission
+ *
+ * @param td
+ * @param tr
+ * @param theRow
+ * @param newValue
+ * @param newButton
+ *
+ * Called twice, only from CldrSurveyVettingTable.js
+ */
 function addValueVote(td, tr, theRow, newValue, newButton) {
 	tr.inputTd = td; // cause the proposed item to show up in the right box
-	handleWiredClick(tr, theRow, "", {
-		value: newValue
-	}, newButton);
+	handleWiredClick(tr, theRow, "", {value: newValue}, newButton);
 }
 
-// transform input + submit button to the add button for the "add translation"
+/**
+ * Transform input + submit button to the add button for the "add translation"
+ *
+ * @param btn
+ *
+ * Called only from CldrSurveyVettingTable.js
+ */
 function toAddVoteButton(btn) {
 	btn.className = "btn btn-primary";
 	btn.title = "Add";
@@ -471,24 +566,31 @@ function toAddVoteButton(btn) {
 	$(btn).parent().popover('destroy');
 	$(btn).tooltip('destroy').tooltip();
 	$(btn).closest('form').next('.subSpan').show();
-
 	$(btn).parent().children('input').remove();
 }
 
-// transform the add button to a submit
+/**
+ * Transform the add button to a submit
+ *
+ * @param btn the button
+ * @return the transformed button (return value is ignored by caller)
+ *
+ * Called only from CldrSurveyVettingTable.js
+ */
 function toSubmitVoteButton(btn) {
 	btn.innerHTML = '<span class="glyphicon glyphicon-ok-circle"></span>';
 	btn.className = "btn btn-success vote-submit";
 	btn.title = "Submit";
-
-
 	$(btn).tooltip('destroy').tooltip();
-
 	$(btn).closest('form').next('.subSpan').hide();
 	return btn;
 }
 
-// add some label with a tooltip to every icon
+/**
+ * Add some label with a tooltip to every icon
+ *
+ * Called only from review.js
+ */
 function labelizeIcon() {
 
 	var icons = [{
@@ -543,45 +645,20 @@ function labelizeIcon() {
 
 	$.each(icons, function(index, element) {
 		$(element.selector).each(function() {
-			if ($(this).next('.label').length !== 0)
+			if ($(this).next('.label').length !== 0) {
 				$(this).next().remove();
+			}
 			$(this).after('<div class="label label-' + element.type + ' label-icon">' + element.text + '</div>');
-			$(this).next().tooltip({
-				title: element.title
-			});
+			$(this).next().tooltip({title: element.title});
 		});
 	});
 }
 
-function initFeedBack() {
-	var url = contextPath + '/feedback';
-	$('#feedback > div').click(function() {
-		$(this).hide();
-		$(this).next().show();
-		$('#feedback input').focus();
-	});
-
-	$('#closebutton').click(function() {
-		var parent = $(this).parent();
-		parent.hide();
-		parent.prev().show();
-		parent.prev().text('Feedback ?');
-	});
-
-	$('#feedback [type=submit]').click(function(event) {
-		if ($('#feedback textarea').val()) {
-			$.post(url, $('#feedback form').serializeArray(), function(data) {
-				$('#feedback textarea').val('');
-				$('#feedback > div').text('Thank you !').show();
-				$('#feedback > form').hide();
-			});
-		}
-		event.stopPropagation();
-		event.preventDefault();
-		return false;
-	});
-}
-
+/**
+ * Show or hide the right panel
+ *
+ * Called only by the Startup function at the top of this file
+ */
 function toggleRightPanel() {
 	var main = $('#main-row > .col-md-9');
 	if (!main.length) {
@@ -591,29 +668,22 @@ function toggleRightPanel() {
 	}
 }
 
+/**
+ * Show the right panel
+ *
+ * Called only by toggleRightPanel
+ */
 function showRightPanel() {
 	$('#main-row > .col-md-12, #nav-page > .col-md-12').addClass('col-md-9').removeClass('col-md-12');
 	$('#main-row #itemInfo').show();
 }
 
+/**
+ * Hide the right panel
+ *
+ * Called only by toggleRightPanel
+ */
 function hideRightPanel() {
 	$('#main-row > .col-md-9, #nav-page > .col-md-9').addClass('col-md-12').removeClass('col-md-9');
 	$('#main-row #itemInfo').hide();
-}
-
-function toggleHeader() {
-	if ($('.menu-position:visible').length)
-		hideHeader();
-	else
-		showHeader();
-}
-
-function showHeader() {
-	$('#main-row').css('padding-top', '147px');
-	$('.menu-position').show();
-}
-
-function hideHeader() {
-	$('#main-row').css('padding-top', '100px');
-	$('.menu-position').hide();
 }

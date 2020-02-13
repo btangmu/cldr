@@ -13,6 +13,9 @@ function bindReviewEvents() {
 	refreshAffix(); // refresh the review menu
 }
 
+/*
+ * Startup function
+ */
 $(function() {
 	var dynamic = $('#main-container');
 	dynamic.on('click', '.collapse-review', togglePart);
@@ -27,16 +30,16 @@ $(function() {
 		if (left != 0) {
 			$('#itemInfo').css('left', 1020 - left);
 		} else {
-			$('#itemInfo').css('left',"");
+			$('#itemInfo').css('left', "");
 		}
 		$('.navbar-fixed-top').css('left', 0 - left);
 	});
 	$(window).resize(function() {
-		$('#itemInfo').css('left',"");
+		$('#itemInfo').css('left', "");
 		resizeSidebar()
 	});
 
-	$('body').on('click','.show-examples', function() { // toggle the examples
+	$('body').on('click', '.show-examples', function() { // toggle the examples
 		$('.d-example, .vote-help').slideToggle();
 	});
 });

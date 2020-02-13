@@ -1,4 +1,6 @@
-// survey.js -Copyright (C) 2012,2016 IBM Corporation and Others. All Rights Reserved.
+/*
+ * survey.js - Copyright (C) 2012,2016 IBM Corporation and Others. All Rights Reserved.
+ */
 
 /**
  * @module survey.js - SurveyTool main JavaScript stuff
@@ -42,14 +44,13 @@ function fmtDateTime(x) {
  *
  * This function is only actually used locally in survey.js.
  */
-
 function isReport(str) {
 	return (str[0] == 'r' && str[1] == '_');
 }
 
 /**
- * @method removeClass
- * remove a CSS class from a node
+ * Remove a CSS class from a node
+ *
  * @param {Node} obj
  * @param {String} className
  */
@@ -64,8 +65,8 @@ function removeClass(obj, className) {
 }
 
 /**
- * @method addClass
- * add a CSS class from a node
+ * Add a CSS class from a node
+ *
  * @param {Node} obj
  * @param {String} className
  */
@@ -80,7 +81,7 @@ function addClass(obj, className) {
 }
 
 /**
- * @method post2text
+ *
  */
 function post2text(text) {
 	if (text === undefined || text === null) {
@@ -98,7 +99,7 @@ function post2text(text) {
 
 /**
  * Remove all subnodes
- * @method removeAllChildNodes
+ *
  * @param {Node} td
  */
 function removeAllChildNodes(td) {
@@ -111,8 +112,7 @@ function removeAllChildNodes(td) {
 }
 
 /**
- * set/remove style.display
- * @method setDIsplayed
+ * Set/remove style.display
  */
 function setDisplayed(div, visible) {
 	if (div === null) {
@@ -155,7 +155,6 @@ function Flipper(ids) {
 }
 
 /**
- * @method flipTo
  * @param {String} id
  * @param {Node} node - if non null - replace new page with this
  */
@@ -188,7 +187,6 @@ Flipper.prototype.flipTo = function(id, node) {
 };
 
 /**
- * @method get
  * @param id page id or null for current
  * @returns
  */
@@ -201,7 +199,6 @@ Flipper.prototype.get = function(id) {
 };
 
 /**
- * @method flipToEmpty
  * @param id
  */
 Flipper.prototype.flipToEmpty = function(id) {
@@ -210,8 +207,8 @@ Flipper.prototype.flipToEmpty = function(id) {
 
 /**
  * killFn is called on next flip
- * @method addKillFn
- * @param killFn the functino to call. No params.
+ *
+ * @param killFn the function to call. No params.
  */
 Flipper.prototype.addKillFn = function(killFn) {
 	this._killfn.push(killFn);
@@ -219,7 +216,7 @@ Flipper.prototype.addKillFn = function(killFn) {
 
 /**
  * showfn is called, result is added to the div.  killfn is called when page is flipped.
- * @method addUntilFlipped
+ *
  * @param showFn
  * @param killFn
  */
@@ -555,7 +552,6 @@ var stuidebug_enabled = (window.location.search.indexOf('&stui_debug=') > -1);
 if (!stuidebug_enabled) {
 	/**
 	 * SurveyToolUI string loading function
-	 * @method stui_str
 	 */
 	stui_str = function(x) {
 		if (stui) {
@@ -573,7 +569,6 @@ if (!stuidebug_enabled) {
 /**
  * Is the keyboard or input widget 'busy'? i.e., it's a bad time to change the DOM
  *
- * @method isInputBusy
  * @return true if window.getSelection().anchorNode.className contains "dijitInp" or "popover-content",
  *		 else false
  *
@@ -669,7 +664,7 @@ function createGravitar(user) {
 
 /**
  * Create a DOM object referring to a user.
- * @method createUser
+ *
  * @param {JSON} user - user struct
  * @return {Object} new DOM object
  */
@@ -1103,7 +1098,7 @@ function listenFor(whatArray, event, fn, ievent) {
 
 /**
  * On click, select all
- * @method clickToSelect
+ *
  * @param {Node} obj to listen to
  * @param {Node} targ to select
  */
@@ -1130,7 +1125,6 @@ var surveyNextLocaleStampId = '';
 
 /**
  * Mark the page as busted. Don't do any more requests.
- * @method busted
  */
 function busted() {
 	disconnected = true;
@@ -1201,7 +1195,6 @@ var specialHeader = null;
 
 /**
  * Update the 'status' if need be.
- * @method showWord
  */
 function showWord() {
 	var p = dojo.byId("progress");
@@ -1231,7 +1224,7 @@ function showWord() {
 
 /**
  * Update our progress
- * @method updateProgressWord
+ *
  * @param {String} prog the status to update
  */
 function updateProgressWord(prog) {
@@ -1241,7 +1234,7 @@ function updateProgressWord(prog) {
 
 /**
  * Update ajax loading status
- * @method updateAjaxWord
+ *
  * @param {String} ajax
  */
 function updateAjaxWord(ajax) {
@@ -1540,7 +1533,6 @@ var surveyVersion = 'Current';
 
 /**
  * This is called periodically to fetch latest ST status
- * @method updateStatus
  */
 function updateStatus() {
 	if (disconnected) {
@@ -1856,7 +1848,6 @@ function hideLoader(loaderDiv) {
 /**
  * Wire up the button to perform a submit
  *
- * @method wireUpButton
  * @param button
  * @param tr
  * @param theRow
@@ -1948,8 +1939,8 @@ var gPopStatus = {
 function showInPop(str, tr, theObj, fn, immediate) {}
 
 /**
- * @method listenToPop
  * Make the object "theObj" cause the infowindow to show when clicked.
+ *
  * @param {String} str
  * @param {Node} tr the TR element that is clicked
  * @param {Node} theObj to listen to
@@ -2223,7 +2214,6 @@ function showForumStuff(frag, forumDivClone, tr) {
 	frag.appendChild(loader2);
 
 	/**
-	 * @method havePosts
 	 * @param {Integer} nrPosts
 	 */
 	function havePosts(nrPosts) {
@@ -2387,7 +2377,6 @@ function appendForumStuff(tr, theRow, forumDiv) {
 /**
  * Change the current id
  *
- * @method updateCurrentId
  * @param id the id to set
  */
 window.updateCurrentId = function updateCurrentId(id) {
@@ -2440,9 +2429,9 @@ dojo.ready(function() {
 	var deferHelp = {};
 
 	/**
-	 * @method showInPop2
 	 * This is the actual function called to display the right-hand "info" panel.
 	 * It is defined dynamically because it depends on variables that aren't available at startup time.
+	 *
 	 * @param {String} str the string to show at the top
 	 * @param {Node} tr the <TR> of the row
 	 * @param {Boolean} hideIfLast
@@ -2628,7 +2617,7 @@ function checkLRmarker(field, dir, value) {
 
 /**
  * Append just an editable span representing a candidate voting item
- * @method appendItem
+ *
  * @param div {DOM} div to append to
  * @param value {String} string value
  * @param pClass {String} html class for the voting item
@@ -3219,7 +3208,6 @@ function appendInputBox(parent, which) {
 
 /**
  * Show the surveyCurrentId row
- * @method scrollToItem
  */
 function scrollToItem() {
 	if (surveyCurrentId != null && surveyCurrentId != '') {
