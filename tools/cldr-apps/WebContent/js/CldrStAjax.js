@@ -38,7 +38,7 @@ const cldrStAjax = (function() {
 	function queueXhr(xhr) {
 		queueOfXhr.push(xhr);
 		if (ST_DEBUG_AJAX) {
-			console.log("pushed:  PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);			
+			console.log("pushed: PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);			
 		}
 		if (!queueOfXhrTimeout) {
 			queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
@@ -61,7 +61,7 @@ const cldrStAjax = (function() {
 		if (!queueOfXhr || queueOfXhr.length == 0) {
 			queueOfXhr = [];
 			if (ST_DEBUG_AJAX) {
-        		console.log("PXQ: 0");
+				console.log("PXQ: 0");
 			}
 			queueOfXhrTimeout = null;
 			return; // nothing to do, reset.
@@ -95,17 +95,17 @@ const cldrStAjax = (function() {
 			/*
 			 * Old, deprecated way
 			 */
-            if (top.postData || top.content) {
-            	if (ST_DEBUG_AJAX) {
-            		console.log("PXQ(" + queueOfXhr.length + "): dispatch POST " + top.url);
-            	}
-            	dojo.xhrPost(top);
-            } else {
-            	if (ST_DEBUG_AJAX) {
-            		console.log("PXQ(" + queueOfXhr.length + "): dispatch GET " + top.url);
-            	}
-            	dojo.xhrGet(top);
-            }
+			if (top.postData || top.content) {
+				if (ST_DEBUG_AJAX) {
+					console.log("PXQ(" + queueOfXhr.length + "): dispatch POST " + top.url);
+				}
+				dojo.xhrPost(top);
+			} else {
+				if (ST_DEBUG_AJAX) {
+					console.log("PXQ(" + queueOfXhr.length + "): dispatch GET " + top.url);
+				}
+				dojo.xhrGet(top);
+			}
 		} else {
 			/*
 			 * Newer way
@@ -119,7 +119,7 @@ const cldrStAjax = (function() {
 				}, function(err) {
 					top.error(err);
 				}, function(evt) {
-				    // handle a progress event
+					// handle a progress event
 				});
 			});
 		}
