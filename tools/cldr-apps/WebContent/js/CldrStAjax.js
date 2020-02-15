@@ -91,7 +91,7 @@ const cldrStAjax = (function() {
 		};
 		top.startTime = new Date().getTime();
 
-		if (true) {
+		if (false) {
 			/*
 			 * Old, deprecated way
 			 */
@@ -115,9 +115,9 @@ const cldrStAjax = (function() {
 			}
 			require(["dojo/request"], function(request) {
 				request(top.url).then(function(data) {
-					top.load(data);
+					top.load2(data);
 				}, function(err) {
-					top.error(err);
+					top.error2(err);
 				}, function(evt) {
 					// handle a progress event
 				});
@@ -149,7 +149,7 @@ const cldrStAjax = (function() {
 		}
 		top.err2.call(args[0], args[1]);
 		queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	};
+	}
 
 	/*
 	 * Make only these functions accessible from other files:

@@ -938,102 +938,6 @@ var disconnected = false;
  */
 var stdebug_enabled = (window.location.search.indexOf('&stdebug=') > -1);
 
-/**
- * Queue of XHR requests waiting to go out
- *
- * @property queueOfXhr
- *
- * Accessed only in this file. TODO: encapsulate, outside global "window" namespace
- */
-var queueOfXhr=[];
-
-/**
- * The current timeout for processing XHRs
- * (Returned by setTimer: a number, representing the ID value of the timer that is set.
- * Use this value with the clearTimeout() method to cancel the timer.)
- * @property queueOfXhrTimeout
- */
-var queueOfXhrTimeout = null;
-
-var myLoad0 = null;
-var myErr0 = null;
-
-var processXhrQueue = function() {
-	if (disconnected) {
-		return;
-	}
-	if (!queueOfXhr || queueOfXhr.length == 0) {
-		queueOfXhr = [];
-		stdebug("PXQ: 0");
-		queueOfXhrTimeout = null;
-		return; // nothing to do, reset.
-	} else {
-		var top = queueOfXhr.shift();
-
-		top.load2 = top.load;
-		top.err2 = top.err;
-		/*
-		 * Note: I think "return" is superfluous here, but I'm leaving it as-is for now
-		 * in case I'm wrong.
-		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
-		 * Our own code is inconsistent about whether load/error handlers have return values.
-		 */
-		top.load = function() {
-			return myLoad0(top, arguments);
-		};
-		top.err = function() {
-			return myErr0(top, arguments);
-		};
-		top.startTime = new Date().getTime();
-		if (top.postData || top.content) {
-			stdebug("PXQ(" + queueOfXhr.length + "): dispatch POST " + top.url);
-			dojo.xhrPost(top);
-		} else {
-			stdebug("PXQ(" + queueOfXhr.length + "): dispatch GET " + top.url);
-			dojo.xhrGet(top);
-		}
-	}
-};
-
-function xhrSetTime(top) {
-	top.stopTime = new Date().getTime();
-	top.tookTime = top.stopTime - top.startTime;
-	stdebug("PXQ(" + queueOfXhr.length + "): time took= " + top.tookTime);
-}
-
-/*
- * xhrQueueTimeout is a constant, 3 milliseconds, used only by
- * myLoad0, myErr0, and queueXhr, in calls to setTimeout for processXhrQueue.
- * TODO: explain, why 3 milliseconds?
- */
-const xhrQueueTimeout = 3;
-myLoad0 = function(top, args) {
-	xhrSetTime(top);
-	stdebug("myLoad0!:" + top.url + " - a=" + args.length);
-	var r = top.load2(args[0], args[1]);
-	queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	return r;
-};
-
-myErr0 = function(top, args) {
-	stdebug("myErr0!:" + top.url + " - a=" + args.toString());
-	var r = top.err2.call(args[0], args[1]);
-	queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	return r;
-};
-
-/**
- * Queue the XHR request.  It will be a GET *unless* either postData or content are set.
- * @param xhr
- */
-function queueXhr(xhr) {
-	queueOfXhr.push(xhr);
-	stdebug("pushed:  PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);
-	if (!queueOfXhrTimeout) {
-		queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	}
-}
-
 function stdebug(x) {
 	if (stdebug_enabled) {
 		console.log(x);
@@ -1154,9 +1058,7 @@ function unbust() {
 	saidDisconnect = false;
 	removeClass(document.getElementsByTagName("body")[0], "disconnected");
 	wasBusted = false;
-	queueOfXhr = []; // clear queue
-	clearTimeout(queueOfXhrTimeout);
-	queueOfXhrTimeout = null;
+	cldrStAjax.clearXhr();
 	hideLoader();
 	saidDisconnect = false;
 	updateStatus(); // will restart regular status updates
@@ -2268,7 +2170,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 				}
 			},
 		};
-		queueXhr(xhrArgs);
+		cldrStAjax.queueXhr(xhrArgs);
 	}, 1900);
 }
 
@@ -2361,7 +2263,7 @@ function updateInfoPanelForumPosts(tr) {
 		load: loadHandler,
 		error: errorHandler
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -2503,7 +2405,7 @@ dojo.ready(function() {
 							}
 						},
 					};
-					queueXhr(xhrArgs);
+					cldrStAjax.queueXhr(xhrArgs);
 					// loader.
 				}
 
@@ -3521,7 +3423,7 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		error: errorHandler,
 		timeout: ajaxTimeout
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -3679,7 +3581,7 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 		load: loadHandler,
 		error: errorHandler
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -4265,7 +4167,7 @@ function showstats(hname) {
 			load: loadHandler,
 			error: errorHandler
 		};
-		queueXhr(xhrArgs);
+		cldrStAjax.queueXhr(xhrArgs);
 	}));
 }
 
@@ -4514,7 +4416,7 @@ function showAllItems(divName, user) {
 				load: loadHandler,
 				error: errorHandler
 			};
-			queueXhr(xhrArgs);
+			cldrStAjax.queueXhr(xhrArgs);
 		};
 		div.update();
 	});
@@ -4603,7 +4505,7 @@ function showRecent(divName, locale, user) {
 				load: loadHandler,
 				error: errorHandler
 			};
-			queueXhr(xhrArgs);
+			cldrStAjax.queueXhr(xhrArgs);
 		};
 		div.update();
 	});

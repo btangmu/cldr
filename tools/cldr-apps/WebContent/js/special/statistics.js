@@ -190,7 +190,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 					(function(theSection,subDiv,params){
 						var loading = createChunk(stui.str("loading"), "p", "helpContent");
 						subDiv.appendChild(loading);
-						queueXhr({
+						cldrStAjax.queueXhr({
 							url: theSection.url,
 							handleAs: 'json',
 							load: function(json) {

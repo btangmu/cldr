@@ -476,7 +476,7 @@ function showV() {
 						postData: postData,
 						headers: headers
 					};
-					queueXhr(xhrArgs);
+					cldrStAjax.queueXhr(xhrArgs);
 				};
 
 				/**
