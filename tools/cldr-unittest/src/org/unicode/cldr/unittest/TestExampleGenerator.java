@@ -824,7 +824,7 @@ public class TestExampleGenerator extends TestFmwk {
          *   "zh": 12521 "type A"!
          *   "ar": ?
          */
-        final String localeId = "am";
+        final String localeId = "ar";
 
         CLDRFile englishFile = info.getEnglish();
 
