@@ -32,7 +32,7 @@ define("js/special/tc-emaillist.js", ["js/special/SpecialPage.js"], function(Spe
 		// Flip to the new DIV
 		params.flipper.flipTo(params.pages.other, ourDiv);
 		var xurl = contextPath + "/SurveyAjax?&s="+surveySessionId+"&what=participating_users"; // allow cache
-	    queueXhr({
+		cldrStAjax.queueXhr({
 	        url:xurl, // allow cache
  	        handleAs:"json",
  	        load: function(h){

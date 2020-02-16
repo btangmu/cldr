@@ -452,8 +452,8 @@ function showV() {
 					var otime = new Date().getTime();
 					console.log("MyLoad: " + url + " for " + message);
 					var errorHandler = function(err, ioArgs) {
-						console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
-						handleDisconnect("Could not fetch " + message + " - error " + err.name + " / " + err.message + "\n" + ioArgs.xhr.responseText + "\n url: " + url + "\n", null, "disconnect");
+						console.log('Error: ' + err + ' response ' + ioArgs /* responseText */);
+						handleDisconnect("Could not fetch " + message + " - error " + err.name + " / " + err.message + "\n" + ioArgs /* responseText */ + "\n url: " + url + "\n", null, "disconnect");
 					};
 					var loadHandler = function(json) {
 						console.log("        " + url + " loaded in " + (new Date().getTime() - otime) + "ms");
@@ -476,7 +476,7 @@ function showV() {
 						postData: postData,
 						headers: headers
 					};
-					queueXhr(xhrArgs);
+					cldrStAjax.queueXhr(xhrArgs);
 				};
 
 				/**
