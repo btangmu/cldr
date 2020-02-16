@@ -2203,7 +2203,7 @@ function updateInfoPanelForumPosts(tr) {
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 
 	let errorHandler = function(err, ioArgs) {
-		console.log('Error in showForumStuff: ' + err + ' response ' + ioArgs.xhr.responseText);
+		console.log('Error in showForumStuff: ' + err + ' response ' + ioArgs /* responseText */);
 		showInPop(stopIcon +
 			" Couldn't load forum post for this row- please refresh the page. <br>Error: " +
 			err + "</td>", tr, null);
@@ -3409,11 +3409,11 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		}
 	};
 	var errorHandler = function(err, ioArgs) {
-		console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
+		console.log('Error: ' + err + ' response ' + ioArgs /* responseText */);
 		tr.className = "ferrbox";
 		tr.innerHTML = "Error while  loading: " + err.name + " <br> " +
 			err.message + "<div style='border: 1px solid red;'>" +
-			ioArgs.xhr.responseText + "</div>";
+			ioArgs /* responseText */ + "</div>";
 		onFailure("err", err, ioArgs);
 	};
 	var xhrArgs = {
@@ -3562,11 +3562,11 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 		 * any response. It may change again below, such as to 'tr_err'.
 		 */
 		tr.className = originalTrClassName;
-		console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
-		handleDisconnect('Error: ' + err + ' response ' + ioArgs.xhr.responseText, null);
+		console.log('Error: ' + err + ' response ' + ioArgs /* responseText */);
+		handleDisconnect('Error: ' + err + ' response ' + ioArgs /* responseText */, null);
 		theRow.className = "ferrbox";
 		theRow.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message +
-			"<div style='border: 1px solid red;'>" + ioArgs.xhr.responseText + "</div>";
+			"<div style='border: 1px solid red;'>" + ioArgs /* responseText */ + "</div>";
 		myUnDefer();
 	};
 	if (box) {
@@ -3604,9 +3604,9 @@ function loadAdminPanel() {
 	function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
 		var ourUrl = contextPath + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
 		var errorHandler = function(err, ioArgs) {
-			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + ioArgs.xhr.responseText);
+			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + ioArgs /* responseText */);
 			theDiv.className = "ferrbox";
-			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message + "<div style='border: 1px solid red;'>" + ioArgs.xhr.responseText + "</div>";
+			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message + "<div style='border: 1px solid red;'>" + ioArgs /* responseText */ + "</div>";
 		};
 		var xhrArgs = {
 			url: ourUrl + cacheKill(),
@@ -4085,7 +4085,7 @@ function showstats(hname) {
 		var ourUrl = contextPath + "/SurveyAjax?what=stats_byday";
 		var errorHandler = function(err, ioArgs) {
 			handleDisconnect('Error in showstats: ' + err + ' response ' +
-				ioArgs.xhr.responseText);
+					ioArgs /* responseText */);
 		};
 		showLoader(null, "Loading statistics");
 		var loadHandler = function(json) {
@@ -4358,7 +4358,7 @@ function showAllItems(divName, user) {
 			var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
 			var errorHandler = function(err, ioArgs) {
 				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-					ioArgs.xhr.responseText);
+						ioArgs /* responseText */);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {
@@ -4443,7 +4443,7 @@ function showRecent(divName, locale, user) {
 			var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
 			var errorHandler = function(err, ioArgs) {
 				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-					ioArgs.xhr.responseText);
+						ioArgs /* responseText */);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {
