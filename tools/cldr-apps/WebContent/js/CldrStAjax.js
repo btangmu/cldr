@@ -126,7 +126,7 @@ const cldrStAjax = (function() {
 			 */
 			require(["dojo/request"], function(request) {
 				let options = {};
-				if (top.handleAs)
+				if (top.handleAs) {
 					options.handleAs = top.handleAs;
 				}
 				if (top.postData || top.content) {
