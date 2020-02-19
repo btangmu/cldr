@@ -318,8 +318,8 @@ public class ExampleGenerator {
         } else {
              ++notTypeACount; // e.g., //ldml/localeDisplayNames/subdivisions/subdivision[@type="gbeng"] or //ldml/localeDisplayNames/variants/variant[@type="1901"] or //ldml/localeDisplayNames/measurementSystemNames/measurementSystemName[@type="US"]
         }
-        System.out.println("type A percent = " + ((100 * typeACount) / (typeACount + notTypeACount))
-            + " [" + typeACount + ", " + notTypeACount + "]");
+        // System.out.println("type A percent = " + ((100 * typeACount) / (typeACount + notTypeACount))
+        //    + " [" + typeACount + ", " + notTypeACount + "]");
         return maybeTypeA;
     }
 
