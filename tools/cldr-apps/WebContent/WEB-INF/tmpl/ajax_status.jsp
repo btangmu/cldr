@@ -161,8 +161,7 @@ var TRANS_HINT_LOCALE = "<%=SurveyMain.TRANS_HINT_LOCALE%>";
 var TRANS_HINT_LANGUAGE_NAME = "<%=SurveyMain.TRANS_HINT_LANGUAGE_NAME%>";
 </script>
 
-<%--TODO Refactor to add this at the end of every page instead of top, will increase performance.
-       Alternatively, include "defer" in the "script" tags to achieve similar effect. --%>
-<% SurveyAjax.includeJavaScript(request, out); %>
+<%--TODO Refactor to add this at the end of every page instead of top, will increase performance --%>
+<%@include file="/WEB-INF/tmpl/js_include.jsp" %>
 
 <!--  end ajax_status.jsp -->
