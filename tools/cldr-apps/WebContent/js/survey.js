@@ -1017,7 +1017,7 @@ myLoad0 = function(top, args) {
 
 myErr0 = function(top, args) {
 	stdebug("myErr0!:" + top.url + " - a=" + args.toString());
-	var r = top.err2.call(args[0], args[1]);
+	var r = top.err2(args[0], args[1]);
 	queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
 	return r;
 };
