@@ -45,6 +45,11 @@ function showV() {
 			"dojo/dom-construct",
 			"dojo/number",
 			"dojo/domReady!"
+			/*
+			 * Note: there are 22 strings above, and only 21 arguments below.
+			 * No argument corresponds to the string "dojo/domReady!". This is normal.
+			 * See https://dojotoolkit.org/reference-guide/1.10/dojo/domReady.html
+			 */
 		],
 		// HANDLES
 		function(
@@ -451,9 +456,10 @@ function showV() {
 				window.myLoad = function myLoad(url, message, handler, postData, headers) {
 					var otime = new Date().getTime();
 					console.log("MyLoad: " + url + " for " + message);
-					var errorHandler = function(err, ioArgs) {
-						console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
-						handleDisconnect("Could not fetch " + message + " - error " + err.name + " / " + err.message + "\n" + ioArgs.xhr.responseText + "\n url: " + url + "\n", null, "disconnect");
+					var errorHandler = function(err) {
+						let responseText = cldrStAjax.errResponseText(err);
+						console.log('Error: ' + err + ' response ' + responseText);
+						handleDisconnect("Could not fetch " + message + " - error " + err.name + " / " + err.message + "\n" + responseText + "\n url: " + url + "\n", null, "disconnect");
 					};
 					var loadHandler = function(json) {
 						console.log("        " + url + " loaded in " + (new Date().getTime() - otime) + "ms");
@@ -476,7 +482,7 @@ function showV() {
 						postData: postData,
 						headers: headers
 					};
-					queueXhr(xhrArgs);
+					cldrStAjax.queueXhr(xhrArgs);
 				};
 
 				/**
