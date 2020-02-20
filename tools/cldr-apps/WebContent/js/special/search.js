@@ -142,7 +142,7 @@ define("js/special/search.js", ["js/special/SpecialPage.js"], function(SpecialPa
 				 	        		theResult.appendChild(createChunk("(search error)","i"));
 				 	        	}
 					        },
-					        error: function(err, ioArgs){
+					        error: function(err){
 					 			var msg ="Error: "+err.name + " - " + err.message;
 			 	        		theResult.appendChild(createChunk(msg,"i"));
 					        },

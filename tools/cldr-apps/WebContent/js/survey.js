@@ -3,7 +3,7 @@
  */
 
 /**
- * @module survey.js - SurveyTool main JavaScript stuff
+ * survey.js - SurveyTool main JavaScript stuff
  */
 
 // TODO: replace with AMD [?] loading
@@ -1283,7 +1283,7 @@ function trySurveyLoad() {
 	try {
 		var url = contextPath + "/survey?" + cacheKill();
 		console.log("Attempting to restart ST at " + url);
-		dojo.xhrGet({
+		cldrStAjax.sendXhr({
 			url: url,
 			timeout: ajaxTimeout
 		});
@@ -1465,7 +1465,8 @@ function updateStatus() {
 	if (surveySessionId && surveySessionId !== null) {
 		surveySessionUrl = '&s=' + surveySessionId;
 	}
-	dojo.xhrGet({
+
+	cldrStAjax.sendXhr({
 		url: contextPath + "/SurveyAjax?what=status" + surveyLocaleUrl + surveySessionUrl + cacheKill(),
 		handleAs: "json",
 		timeout: ajaxTimeout,
@@ -1535,7 +1536,7 @@ function updateStatus() {
 				setTimeout(updateStatus, timerSpeed);
 			}
 		},
-		error: function(err, ioArgs) {
+		error: function(err) {
 			wasBusted = true;
 			updateStatusBox({
 				err: err.message,
@@ -1734,7 +1735,7 @@ function cloneLocalizeAnon(i) {
  */
 function getTagChildren(tr) {
 	var rowChildren = [];
-	for (k in tr.childNodes) {
+	for (var k in tr.childNodes) {
 		var t = tr.childNodes[k];
 		if (t.tagName) {
 			rowChildren.push(t);
@@ -2202,19 +2203,13 @@ function updateInfoPanelForumPosts(tr) {
 	}
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 
-	let errorHandler = function(err, ioArgs) {
-		console.log('Error in showForumStuff: ' + err + ' response ' + ioArgs /* responseText */);
+	let errorHandler = function(err) {
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error in showForumStuff: ' + err + ' response ' + responseText);
 		showInPop(stopIcon +
 			" Couldn't load forum post for this row- please refresh the page. <br>Error: " +
 			err + "</td>", tr, null);
 		handleDisconnect("Could not showForumStuff:" + err, null);
-		/*
-		 * Note: I think "return true" is superfluous here, but I'm leaving it as-is for now
-		 * in case I'm wrong. Compare loadHandler below with undefined return value.
-		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
-		 * See processXhrQueue.
-		 */
-		return true;
 	};
 
 	let loadHandler = function(json) {
@@ -3408,13 +3403,14 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 			console.log("Error in ajax post [refreshSingleRow] ", e.message);
 		}
 	};
-	var errorHandler = function(err, ioArgs) {
-		console.log('Error: ' + err + ' response ' + ioArgs /* responseText */);
+	var errorHandler = function(err) {
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error: ' + err + ' response ' + responseText);
 		tr.className = "ferrbox";
 		tr.innerHTML = "Error while  loading: " + err.name + " <br> " +
 			err.message + "<div style='border: 1px solid red;'>" +
-			ioArgs /* responseText */ + "</div>";
-		onFailure("err", err, ioArgs);
+			responseText +  "</div>";
+		onFailure("err", err);
 	};
 	var xhrArgs = {
 		url: ourUrl + cacheKill(),
@@ -3556,17 +3552,18 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 			handleDisconnect("handleWiredClick:" + e.message, json);
 		}
 	};
-	var errorHandler = function(err, ioArgs) {
+	var errorHandler = function(err) {
 		/*
 		 * Restore tr.className, so it stops being 'tr_checking1' immediately on receiving
 		 * any response. It may change again below, such as to 'tr_err'.
 		 */
 		tr.className = originalTrClassName;
-		console.log('Error: ' + err + ' response ' + ioArgs /* responseText */);
-		handleDisconnect('Error: ' + err + ' response ' + ioArgs /* responseText */, null);
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error: ' + err + ' response ' + responseText);
+		handleDisconnect('Error: ' + err + ' response ' + responseText, null);
 		theRow.className = "ferrbox";
 		theRow.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message +
-		"<div style='border: 1px solid red;'>" + ioArgs /* responseText */ + "</div>";
+		"<div style='border: 1px solid red;'>" + responseText + "</div>";
 		myUnDefer();
 	};
 	if (box) {
@@ -3603,10 +3600,12 @@ function loadAdminPanel() {
 
 	function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
 		var ourUrl = contextPath + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
-		var errorHandler = function(err, ioArgs) {
-			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + ioArgs /* responseText */);
+		var errorHandler = function(err) {
+			let responseText = cldrStAjax.errResponseText(err);
+			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + responseText);
 			theDiv.className = "ferrbox";
-			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message + "<div style='border: 1px solid red;'>" + ioArgs /* responseText */ + "</div>";
+			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " +
+				err.message + "<div style='border: 1px solid red;'>" + responseText + "</div>";
 		};
 		var xhrArgs = {
 			url: ourUrl + cacheKill(),
@@ -3622,15 +3621,20 @@ function loadAdminPanel() {
 			};
 		}
 		if (xhrArgs.postData) {
+			/*
+			 * Make a POST request
+			 */
 			console.log("admin post: ourUrl: " + ourUrl + " data:" + postData);
 			xhrArgs.headers = {
 				"Content-Type": "text/plain"
 			};
-			dojo.xhrPost(xhrArgs);
 		} else {
+			/*
+			 * Make a GET request
+			 */
 			console.log("admin get: ourUrl: " + ourUrl);
-			dojo.xhrGet(xhrArgs);
 		}
+		cldrStAjax.sendXhr(xhrArgs);
 	}
 	var panelLast = null;
 	var panels = {};
@@ -4083,9 +4087,9 @@ function loadAdminPanel() {
 function showstats(hname) {
 	dojo.ready(loadStui(null, function( /*stui*/ ) {
 		var ourUrl = contextPath + "/SurveyAjax?what=stats_byday";
-		var errorHandler = function(err, ioArgs) {
-			handleDisconnect('Error in showstats: ' + err + ' response ' +
-					ioArgs /* responseText */);
+		var errorHandler = function(err) {
+			let responseText = cldrStAjax.errResponseText(err);
+			handleDisconnect('Error in showstats: ' + err + ' response ' + responseText);
 		};
 		showLoader(null, "Loading statistics");
 		var loadHandler = function(json) {
@@ -4356,9 +4360,9 @@ function showAllItems(divName, user) {
 		div.className = "recentList";
 		div.update = function() {
 			var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
-			var errorHandler = function(err, ioArgs) {
-				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-						ioArgs /* responseText */);
+			var errorHandler = function(err) {
+				let responseText = cldrStAjax.errResponseText(err);
+				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {
@@ -4441,9 +4445,9 @@ function showRecent(divName, locale, user) {
 		div.className = "recentList";
 		div.update = function() {
 			var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
-			var errorHandler = function(err, ioArgs) {
-				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-						ioArgs /* responseText */);
+			var errorHandler = function(err) {
+				let responseText = cldrStAjax.errResponseText(err);
+				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {

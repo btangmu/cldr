@@ -202,7 +202,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 									theSection.show(json, subDiv, params);
 								}
 							},
-							error: function(err, ioArgs) {
+							error: function(err) {
 								updateIf(loading, "Error: " + err.name + "-"+err.message);
 								console.log("Err loading " + theSection.name + " - " + err);
 							}

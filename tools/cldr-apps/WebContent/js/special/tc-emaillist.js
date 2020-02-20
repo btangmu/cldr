@@ -56,7 +56,7 @@ define("js/special/tc-emaillist.js", ["js/special/SpecialPage.js"], function(Spe
  	        		alert('no data- or no users participated.');
  	        	}
 	        },
-	        error: function(err, ioArgs){
+	        error: function(err){
 	        	params.special.showError(params, null, {err: err, what: "Loading participating users"});
 	        }
 	    });
