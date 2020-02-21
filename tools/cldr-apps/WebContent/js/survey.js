@@ -1480,7 +1480,11 @@ function updateStatus() {
 			}
 			var st_err = document.getElementById('st_err');
 			if (!st_err) {
-				return; // normal for about.jsp, browse.jsp
+				/*
+				 * This happens if updateStatus is called for a page like about.jsp, browse.jsp;
+				 * it shouldn't be called in such cases.
+				 */
+				return;
 			}
 			if (json.err != null && json.err.length > 0) {
 				st_err.innerHTML = json.err;
@@ -1573,12 +1577,20 @@ function resetTimerSpeed(speed) {
 // set up window. Let Dojo call us, otherwise dojo won't load.
 require(["dojo/ready"], function(ready) {
 	ready(function() {
-		setTimerOn();
+		let name = window.location.pathname;
+		if (name.includes('about.jsp') || name.includes('browse.jsp')) {
+			/*
+			 * Skip timer for about.jsp and browse.jsp; calling updateStatus for
+			 * those pages would needlessly waste time on the server.
+			 */
+		} else {
+			setTimerOn();
+		}
 	});
 });
 
 /**
- * Table mapping CheckCLDR.StatusAction into capabilites
+ * Table mapping CheckCLDR.StatusAction into capabilities
  * @property statusActionTable
  */
 var statusActionTable = {
