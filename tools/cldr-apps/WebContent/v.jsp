@@ -114,7 +114,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
 	                               dstatus.appendChild(document.createTextNode('.'));
 	                            	   window.setTimeout(function(){
 	                                       dstatus.appendChild(document.createTextNode('.'));
-	                            		    dojo.xhrGet({url: survURL, load: function(data) {   
+	                                       cldrStAjax.sendXhr({url: survURL, load: function(data) {
 	                            		        dstatus.appendChild(document.createTextNode('Loaded  '+data.length + ' bytes from SurveyTool. Reloading this page..')); window.location.reload(true);
 	                            	   }, 2000 /* two seconds */);
 	                           	   });

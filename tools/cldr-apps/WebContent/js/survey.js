@@ -3,7 +3,7 @@
  */
 
 /**
- * @module survey.js - SurveyTool main JavaScript stuff
+ * survey.js - SurveyTool main JavaScript stuff
  */
 
 // TODO: replace with AMD [?] loading
@@ -938,102 +938,6 @@ var disconnected = false;
  */
 var stdebug_enabled = (window.location.search.indexOf('&stdebug=') > -1);
 
-/**
- * Queue of XHR requests waiting to go out
- *
- * @property queueOfXhr
- *
- * Accessed only in this file. TODO: encapsulate, outside global "window" namespace
- */
-var queueOfXhr=[];
-
-/**
- * The current timeout for processing XHRs
- * (Returned by setTimer: a number, representing the ID value of the timer that is set.
- * Use this value with the clearTimeout() method to cancel the timer.)
- * @property queueOfXhrTimeout
- */
-var queueOfXhrTimeout = null;
-
-var myLoad0 = null;
-var myErr0 = null;
-
-var processXhrQueue = function() {
-	if (disconnected) {
-		return;
-	}
-	if (!queueOfXhr || queueOfXhr.length == 0) {
-		queueOfXhr = [];
-		stdebug("PXQ: 0");
-		queueOfXhrTimeout = null;
-		return; // nothing to do, reset.
-	} else {
-		var top = queueOfXhr.shift();
-
-		top.load2 = top.load;
-		top.err2 = top.error;
-		/*
-		 * Note: I think "return" is superfluous here, but I'm leaving it as-is for now
-		 * in case I'm wrong.
-		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
-		 * Our own code is inconsistent about whether load/error handlers have return values.
-		 */
-		top.load = function() {
-			return myLoad0(top, arguments);
-		};
-		top.error = function() {
-			return myErr0(top, arguments);
-		};
-		top.startTime = new Date().getTime();
-		if (top.postData || top.content) {
-			stdebug("PXQ(" + queueOfXhr.length + "): dispatch POST " + top.url);
-			dojo.xhrPost(top);
-		} else {
-			stdebug("PXQ(" + queueOfXhr.length + "): dispatch GET " + top.url);
-			dojo.xhrGet(top);
-		}
-	}
-};
-
-function xhrSetTime(top) {
-	top.stopTime = new Date().getTime();
-	top.tookTime = top.stopTime - top.startTime;
-	stdebug("PXQ(" + queueOfXhr.length + "): time took= " + top.tookTime);
-}
-
-/*
- * xhrQueueTimeout is a constant, 3 milliseconds, used only by
- * myLoad0, myErr0, and queueXhr, in calls to setTimeout for processXhrQueue.
- * TODO: explain, why 3 milliseconds?
- */
-const xhrQueueTimeout = 3;
-myLoad0 = function(top, args) {
-	xhrSetTime(top);
-	stdebug("myLoad0!:" + top.url + " - a=" + args.length);
-	var r = top.load2(args[0], args[1]);
-	queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	return r;
-};
-
-myErr0 = function(top, args) {
-	stdebug("myErr0!:" + top.url + " - a=" + args.toString());
-	var r = top.err2(args[0], args[1]);
-	queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	return r;
-};
-
-/**
- * Queue the XHR request.  It will be a GET *unless* either postData or content are set.
- * @param xhr
- */
-function queueXhr(xhr) {
-	queueOfXhr.push(xhr);
-	stdebug("pushed:  PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);
-	if (!queueOfXhrTimeout) {
-		queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
-	}
-}
-
 function stdebug(x) {
 	if (stdebug_enabled) {
 		console.log(x);
@@ -1154,9 +1058,7 @@ function unbust() {
 	saidDisconnect = false;
 	removeClass(document.getElementsByTagName("body")[0], "disconnected");
 	wasBusted = false;
-	queueOfXhr = []; // clear queue
-	clearTimeout(queueOfXhrTimeout);
-	queueOfXhrTimeout = null;
+	cldrStAjax.clearXhr();
 	hideLoader();
 	saidDisconnect = false;
 	updateStatus(); // will restart regular status updates
@@ -1381,7 +1283,7 @@ function trySurveyLoad() {
 	try {
 		var url = contextPath + "/survey?" + cacheKill();
 		console.log("Attempting to restart ST at " + url);
-		dojo.xhrGet({
+		cldrStAjax.sendXhr({
 			url: url,
 			timeout: ajaxTimeout
 		});
@@ -1563,7 +1465,8 @@ function updateStatus() {
 	if (surveySessionId && surveySessionId !== null) {
 		surveySessionUrl = '&s=' + surveySessionId;
 	}
-	dojo.xhrGet({
+
+	cldrStAjax.sendXhr({
 		url: contextPath + "/SurveyAjax?what=status" + surveyLocaleUrl + surveySessionUrl + cacheKill(),
 		handleAs: "json",
 		timeout: ajaxTimeout,
@@ -1574,6 +1477,9 @@ function updateStatus() {
 				return; // don't thrash
 			}
 			var st_err = document.getElementById('st_err');
+			if (!st_err) {
+				return; // normal for about.jsp, browse.jsp
+			}
 			if (json.err != null && json.err.length > 0) {
 				st_err.innerHTML = json.err;
 				if (json.status && json.status.surveyRunningStamp != surveyRunningStamp) {
@@ -1633,7 +1539,7 @@ function updateStatus() {
 				setTimeout(updateStatus, timerSpeed);
 			}
 		},
-		error: function(err, ioArgs) {
+		error: function(err) {
 			wasBusted = true;
 			updateStatusBox({
 				err: err.message,
@@ -1663,8 +1569,10 @@ function resetTimerSpeed(speed) {
 }
 
 // set up window. Let Dojo call us, otherwise dojo won't load.
-dojo.ready(function(){
-	setTimerOn();
+require(["dojo/ready"], function(ready) {
+	ready(function() {
+		setTimerOn();
+	});
 });
 
 /**
@@ -1832,7 +1740,7 @@ function cloneLocalizeAnon(i) {
  */
 function getTagChildren(tr) {
 	var rowChildren = [];
-	for (k in tr.childNodes) {
+	for (var k in tr.childNodes) {
 		var t = tr.childNodes[k];
 		if (t.tagName) {
 			rowChildren.push(t);
@@ -2268,7 +2176,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 				}
 			},
 		};
-		queueXhr(xhrArgs);
+		cldrStAjax.queueXhr(xhrArgs);
 	}, 1900);
 }
 
@@ -2300,19 +2208,13 @@ function updateInfoPanelForumPosts(tr) {
 	}
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 
-	let errorHandler = function(err, ioArgs) {
-		console.log('Error in showForumStuff: ' + err + ' response ' + ioArgs.xhr.responseText);
+	let errorHandler = function(err) {
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error in showForumStuff: ' + err + ' response ' + responseText);
 		showInPop(stopIcon +
 			" Couldn't load forum post for this row- please refresh the page. <br>Error: " +
 			err + "</td>", tr, null);
 		handleDisconnect("Could not showForumStuff:" + err, null);
-		/*
-		 * Note: I think "return true" is superfluous here, but I'm leaving it as-is for now
-		 * in case I'm wrong. Compare loadHandler below with undefined return value.
-		 * Documentation for dojo.xhrGet has load/error handlers with undefined return values.
-		 * See processXhrQueue.
-		 */
-		return true;
 	};
 
 	let loadHandler = function(json) {
@@ -2361,7 +2263,7 @@ function updateInfoPanelForumPosts(tr) {
 		load: loadHandler,
 		error: errorHandler
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -2503,7 +2405,7 @@ dojo.ready(function() {
 							}
 						},
 					};
-					queueXhr(xhrArgs);
+					cldrStAjax.queueXhr(xhrArgs);
 					// loader.
 				}
 
@@ -3506,13 +3408,14 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 			console.log("Error in ajax post [refreshSingleRow] ", e.message);
 		}
 	};
-	var errorHandler = function(err, ioArgs) {
-		console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
+	var errorHandler = function(err) {
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error: ' + err + ' response ' + responseText);
 		tr.className = "ferrbox";
 		tr.innerHTML = "Error while  loading: " + err.name + " <br> " +
 			err.message + "<div style='border: 1px solid red;'>" +
-			ioArgs.xhr.responseText + "</div>";
-		onFailure("err", err, ioArgs);
+			responseText +  "</div>";
+		onFailure("err", err);
 	};
 	var xhrArgs = {
 		url: ourUrl + cacheKill(),
@@ -3521,7 +3424,7 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		error: errorHandler,
 		timeout: ajaxTimeout
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -3654,17 +3557,18 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 			handleDisconnect("handleWiredClick:" + e.message, json);
 		}
 	};
-	var errorHandler = function(err, ioArgs) {
+	var errorHandler = function(err) {
 		/*
 		 * Restore tr.className, so it stops being 'tr_checking1' immediately on receiving
 		 * any response. It may change again below, such as to 'tr_err'.
 		 */
 		tr.className = originalTrClassName;
-		console.log('Error: ' + err + ' response ' + ioArgs.xhr.responseText);
-		handleDisconnect('Error: ' + err + ' response ' + ioArgs.xhr.responseText, null);
+		let responseText = cldrStAjax.errResponseText(err);
+		console.log('Error: ' + err + ' response ' + responseText);
+		handleDisconnect('Error: ' + err + ' response ' + responseText, null);
 		theRow.className = "ferrbox";
 		theRow.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message +
-			"<div style='border: 1px solid red;'>" + ioArgs.xhr.responseText + "</div>";
+		"<div style='border: 1px solid red;'>" + responseText + "</div>";
 		myUnDefer();
 	};
 	if (box) {
@@ -3679,7 +3583,7 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 		load: loadHandler,
 		error: errorHandler
 	};
-	queueXhr(xhrArgs);
+	cldrStAjax.queueXhr(xhrArgs);
 }
 
 /**
@@ -3701,10 +3605,12 @@ function loadAdminPanel() {
 
 	function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
 		var ourUrl = contextPath + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
-		var errorHandler = function(err, ioArgs) {
-			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + ioArgs.xhr.responseText);
+		var errorHandler = function(err) {
+			let responseText = cldrStAjax.errResponseText(err);
+			console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + responseText);
 			theDiv.className = "ferrbox";
-			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message + "<div style='border: 1px solid red;'>" + ioArgs.xhr.responseText + "</div>";
+			theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " +
+				err.message + "<div style='border: 1px solid red;'>" + responseText + "</div>";
 		};
 		var xhrArgs = {
 			url: ourUrl + cacheKill(),
@@ -3720,15 +3626,20 @@ function loadAdminPanel() {
 			};
 		}
 		if (xhrArgs.postData) {
+			/*
+			 * Make a POST request
+			 */
 			console.log("admin post: ourUrl: " + ourUrl + " data:" + postData);
 			xhrArgs.headers = {
 				"Content-Type": "text/plain"
 			};
-			dojo.xhrPost(xhrArgs);
 		} else {
+			/*
+			 * Make a GET request
+			 */
 			console.log("admin get: ourUrl: " + ourUrl);
-			dojo.xhrGet(xhrArgs);
 		}
+		cldrStAjax.sendXhr(xhrArgs);
 	}
 	var panelLast = null;
 	var panels = {};
@@ -4181,9 +4092,9 @@ function loadAdminPanel() {
 function showstats(hname) {
 	dojo.ready(loadStui(null, function( /*stui*/ ) {
 		var ourUrl = contextPath + "/SurveyAjax?what=stats_byday";
-		var errorHandler = function(err, ioArgs) {
-			handleDisconnect('Error in showstats: ' + err + ' response ' +
-				ioArgs.xhr.responseText);
+		var errorHandler = function(err) {
+			let responseText = cldrStAjax.errResponseText(err);
+			handleDisconnect('Error in showstats: ' + err + ' response ' + responseText);
 		};
 		showLoader(null, "Loading statistics");
 		var loadHandler = function(json) {
@@ -4265,7 +4176,7 @@ function showstats(hname) {
 			load: loadHandler,
 			error: errorHandler
 		};
-		queueXhr(xhrArgs);
+		cldrStAjax.queueXhr(xhrArgs);
 	}));
 }
 
@@ -4454,9 +4365,9 @@ function showAllItems(divName, user) {
 		div.className = "recentList";
 		div.update = function() {
 			var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
-			var errorHandler = function(err, ioArgs) {
-				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-					ioArgs.xhr.responseText);
+			var errorHandler = function(err) {
+				let responseText = cldrStAjax.errResponseText(err);
+				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {
@@ -4514,7 +4425,7 @@ function showAllItems(divName, user) {
 				load: loadHandler,
 				error: errorHandler
 			};
-			queueXhr(xhrArgs);
+			cldrStAjax.queueXhr(xhrArgs);
 		};
 		div.update();
 	});
@@ -4539,9 +4450,9 @@ function showRecent(divName, locale, user) {
 		div.className = "recentList";
 		div.update = function() {
 			var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
-			var errorHandler = function(err, ioArgs) {
-				handleDisconnect('Error in showrecent: ' + err + ' response ' +
-					ioArgs.xhr.responseText);
+			var errorHandler = function(err) {
+				let responseText = cldrStAjax.errResponseText(err);
+				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
 			};
 			showLoader(null, "Loading recent items");
 			var loadHandler = function(json) {
@@ -4603,7 +4514,7 @@ function showRecent(divName, locale, user) {
 				load: loadHandler,
 				error: errorHandler
 			};
-			queueXhr(xhrArgs);
+			cldrStAjax.queueXhr(xhrArgs);
 		};
 		div.update();
 	});
