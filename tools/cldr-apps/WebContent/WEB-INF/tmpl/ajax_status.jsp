@@ -15,8 +15,8 @@
 <script>
 dojoConfig = {
 		parseOnLoad: true,
+		/* async: true, */
 		};</script>
-<% // TODO: encapsulate dojo version in one place, cf. dojoheader.jspf  %>
 <script src='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js'></script>
 <script>
 require(["dojo/parser", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"]);

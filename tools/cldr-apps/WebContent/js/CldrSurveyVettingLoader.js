@@ -3,10 +3,6 @@
  * showV() and reloadV() and related functions
  */
 
-// TODO: replace with AMD [?] loading
-dojo.require("dojo.i18n");
-dojo.require("dojo.string");
-
 /*
  * haveDialog: when true, it means a "dialog" of some kind is displayed.
  * Used for inhibiting $('#left-sidebar').hover in redesign.js.
@@ -1211,39 +1207,40 @@ function showV() {
 				 */
 				function showPossibleProblems(flipper, flipPage, loc, session, effectiveCov, requiredCov) {
 					surveyCurrentLocale = loc;
-					dojo.ready(function() {
+					require(["dojo/ready"], function(ready) {
+						ready(function() {
+							var url = contextPath + "/SurveyAjax?what=possibleProblems&_=" + surveyCurrentLocale + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
+							myLoad(url, "possibleProblems", function(json) {
+								if (verifyJson(json, 'possibleProblems')) {
+									stdebug("json.possibleProblems OK..");
+									if (json.dataLoadTime) {
+										updateIf("dynload", json.dataLoadTime);
+									}
 
-						var url = contextPath + "/SurveyAjax?what=possibleProblems&_=" + surveyCurrentLocale + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
-						myLoad(url, "possibleProblems", function(json) {
-							if (verifyJson(json, 'possibleProblems')) {
-								stdebug("json.possibleProblems OK..");
-								if (json.dataLoadTime) {
-									updateIf("dynload", json.dataLoadTime);
+									var theDiv = flipper.flipToEmpty(flipPage);
+
+									insertLocaleSpecialNote(theDiv);
+
+									if (json.possibleProblems.length > 0) {
+										var subDiv = createChunk("", "div");
+										subDiv.className = "possibleProblems";
+
+										var h3 = createChunk(stui_str("possibleProblems"), "h3");
+										subDiv.appendChild(h3);
+
+										var div3 = document.createElement("div");
+										var newHtml = "";
+										newHtml += testsToHtml(json.possibleProblems);
+										div3.innerHTML = newHtml;
+										subDiv.appendChild(div3);
+										theDiv.appendChild(subDiv);
+									}
+									var theInfo = createChunk("", "p", "special_general");
+									theDiv.appendChild(theInfo);
+									theInfo.innerHTML = stui_str("special_general"); // TODO replace with … ?
+									hideLoader(null);
 								}
-
-								var theDiv = flipper.flipToEmpty(flipPage);
-
-								insertLocaleSpecialNote(theDiv);
-
-								if (json.possibleProblems.length > 0) {
-									var subDiv = createChunk("", "div");
-									subDiv.className = "possibleProblems";
-
-									var h3 = createChunk(stui_str("possibleProblems"), "h3");
-									subDiv.appendChild(h3);
-
-									var div3 = document.createElement("div");
-									var newHtml = "";
-									newHtml += testsToHtml(json.possibleProblems);
-									div3.innerHTML = newHtml;
-									subDiv.appendChild(div3);
-									theDiv.appendChild(subDiv);
-								}
-								var theInfo = createChunk("", "p", "special_general");
-								theDiv.appendChild(theInfo);
-								theInfo.innerHTML = stui_str("special_general"); // TODO replace with … ?
-								hideLoader(null);
-							}
+							});
 						});
 					});
 				}

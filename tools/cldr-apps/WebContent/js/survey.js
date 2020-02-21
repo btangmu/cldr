@@ -1,14 +1,7 @@
 /*
  * survey.js - Copyright (C) 2012,2016 IBM Corporation and Others. All Rights Reserved.
+ * SurveyTool main JavaScript stuff
  */
-
-/**
- * survey.js - SurveyTool main JavaScript stuff
- */
-
-// TODO: replace with AMD [?] loading
-dojo.require("dojo.i18n");
-dojo.require("dojo.string");
 
 /*
  * INHERITANCE_MARKER indicates that the value of a candidate item is inherited.
@@ -542,9 +535,13 @@ var stui = {
 		}
 	},
 	sub: function(x, y) {
-		return dojo.string.substitute(stui.str(x), y);
+		/*
+		 * https://dojotoolkit.org/reference-guide/1.10/dojo/string.html
+		 */
+		require(["dojo/string"], function(string) {
+			return string.substitute(stui.str(x), y);
+		});
 	}
-
 };
 
 var stuidebug_enabled = (window.location.search.indexOf('&stui_debug=') > -1);
@@ -1249,6 +1246,11 @@ function handleDisconnect(why, json, word, what) {
 
 var updateParts = null;
 
+/*
+ * TODO: Avoid browser console showing "ReferenceError: surveyRunningStamp is not defined" here.
+ * surveyRunningStamp is undefined unless ajax_status.jsp is included.
+ * submit.jsp (or SurveyAjax.handleBulkSubmit) includes survey.js but not ajax_status.jsp.
+ */
 var cacheKillStamp = surveyRunningStamp;
 
 /**
@@ -2306,211 +2308,214 @@ window.updateCurrentId = function updateCurrentId(id) {
 };
 
 // window loader stuff
-dojo.ready(function() {
-	var unShow = null;
-	var pucontent = document.getElementById("itemInfo");
-	if (!pucontent) {
-		return;
-	}
+require(["dojo/ready"], function(ready) {
+	ready(function() {
+		var unShow = null;
+		var pucontent = document.getElementById("itemInfo");
+		if (!pucontent) {
+			return;
+		}
 
-	var hideInterval = null;
+		var hideInterval = null;
 
-	function parentOfType(tag, obj) {
-		if (!obj) return null;
-		if (obj.nodeName === tag) return obj;
-		return parentOfType(tag, obj.parentElement);
-	}
+		function parentOfType(tag, obj) {
+			if (!obj) return null;
+			if (obj.nodeName === tag) return obj;
+			return parentOfType(tag, obj.parentElement);
+		}
 
-	function setLastShown(obj) {
-		if (gPopStatus.lastShown && obj != gPopStatus.lastShown) {
-			removeClass(gPopStatus.lastShown, "pu-select");
-			var partr = parentOfType('TR', gPopStatus.lastShown);
-			if (partr) {
-				removeClass(partr, 'selectShow');
+		function setLastShown(obj) {
+			if (gPopStatus.lastShown && obj != gPopStatus.lastShown) {
+				removeClass(gPopStatus.lastShown, "pu-select");
+				var partr = parentOfType('TR', gPopStatus.lastShown);
+				if (partr) {
+					removeClass(partr, 'selectShow');
+				}
 			}
-		}
-		if (obj) {
-			addClass(obj, "pu-select");
-			var partr = parentOfType('TR', obj);
-			if (partr) {
-				addClass(partr, 'selectShow');
+			if (obj) {
+				addClass(obj, "pu-select");
+				var partr = parentOfType('TR', obj);
+				if (partr) {
+					addClass(partr, 'selectShow');
+				}
 			}
-		}
-		gPopStatus.lastShown = obj;
-	}
-
-	function clearLastShown() {
-		setLastShown(null);
-	}
-
-	var deferHelp = {};
-
-	/**
-	 * This is the actual function called to display the right-hand "info" panel.
-	 * It is defined dynamically because it depends on variables that aren't available at startup time.
-	 *
-	 * @param {String} str the string to show at the top
-	 * @param {Node} tr the <TR> of the row
-	 * @param {Boolean} hideIfLast
-	 * @param {Function} fn
-	 * @param {Boolean} immediate
-	 */
-	window.showInPop2 = function(str, tr, hideIfLast, fn, immediate, hide) {
-		if (unShow) {
-			unShow();
-			unShow = null;
-		}
-		incrPopToken('newShow' + str);
-		if (hideInterval) {
-			clearTimeout(hideInterval);
-			hideInterval = null;
+			gPopStatus.lastShown = obj;
 		}
 
-		if (tr && tr.sethash) {
-			window.updateCurrentId(tr.sethash);
+		function clearLastShown() {
+			setLastShown(null);
 		}
-		setLastShown(hideIfLast);
 
-		/*
-		 * TODO: clarify or rename; this td isn't really a td, is it?
+		var deferHelp = {};
+
+		/**
+		 * This is the actual function called to display the right-hand "info" panel.
+		 * It is defined dynamically because it depends on variables that aren't available at startup time.
+		 *
+		 * @param {String} str the string to show at the top
+		 * @param {Node} tr the <TR> of the row
+		 * @param {Boolean} hideIfLast
+		 * @param {Function} fn
+		 * @param {Boolean} immediate
 		 */
-		var td = document.createDocumentFragment();
-
-		// Always have help (if available).
-		var theHelp = null;
-		if (tr) {
-			var theRow = tr.theRow;
-			// this also marks this row as a 'help parent'
-			theHelp = createChunk("", "div", "alert alert-info fix-popover-help vote-help");
-
-			if (theRow.xpstrid) {
-				var deferHelpSpan = document.createElement('span');
-				theHelp.appendChild(deferHelpSpan);
-
-				if (deferHelp[theRow.xpstrid]) {
-					deferHelpSpan.innerHTML = deferHelp[theRow.xpstrid];
-				} else {
-					deferHelpSpan.innerHTML = "<i>" + stui.str("loading") + "</i>";
-
-					// load async
-					var url = contextPath + "/help?xpstrid=" + theRow.xpstrid + "&_instance=" + surveyRunningStamp;
-					var xhrArgs = {
-						url: url,
-						handleAs: "text",
-						load: function(html) {
-							deferHelp[theRow.xpstrid] = html;
-							deferHelpSpan.innerHTML = html;
-							if (isDashboard()) {
-								fixPopoverVotePos();
-							}
-						},
-					};
-					cldrStAjax.queueXhr(xhrArgs);
-					// loader.
-				}
-
-				// extra attributes
-				if (theRow.extraAttributes && Object.keys(theRow.extraAttributes).length > 0) {
-					var extraHeading = createChunk(stui.str("extraAttribute_heading"), "h3", "extraAttribute_heading");
-					var extraContainer = createChunk("", "div", "extraAttributes");
-					appendExtraAttributes(extraContainer, theRow);
-					theHelp.appendChild(extraHeading);
-					theHelp.appendChild(extraContainer);
-				}
+		window.showInPop2 = function(str, tr, hideIfLast, fn, immediate, hide) {
+			if (unShow) {
+				unShow();
+				unShow = null;
 			}
-		}
-		if (theHelp) {
-			td.appendChild(theHelp);
-		}
+			incrPopToken('newShow' + str);
+			if (hideInterval) {
+				clearTimeout(hideInterval);
+				hideInterval = null;
+			}
 
-		if (str) { // If a simple string, clone the string
-			var div2 = document.createElement("div");
-			div2.innerHTML = str;
-			td.appendChild(div2);
-		}
-		// If a generator fn (common case), call it.
-		if (fn != null) {
-			unShow = fn(td);
+			if (tr && tr.sethash) {
+				window.updateCurrentId(tr.sethash);
+			}
+			setLastShown(hideIfLast);
 
-		}
-
-		var theVoteinfo = null;
-		if (tr && tr.voteDiv) {
-			theVoteinfo = tr.voteDiv;
-		}
-		if (theVoteinfo) {
-			td.appendChild(theVoteinfo.cloneNode(true));
-		}
-		if (tr && tr.ticketLink) {
-			td.appendChild(tr.ticketLink.cloneNode(true));
-		}
-
-		// forum stuff
-		if (tr && tr.forumDiv) {
 			/*
-			 * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
-			 * TODO: explain the reason for using cloneNode here, rather than using
-			 * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
-			 * after cloning?
+			 * TODO: clarify or rename; this td isn't really a td, is it?
 			 */
-			var forumDivClone = tr.forumDiv.cloneNode(true);
-			showForumStuff(td, forumDivClone, tr); // give a chance to update anything else
-			td.appendChild(forumDivClone);
-		}
+			var td = document.createDocumentFragment();
 
-		if (tr && tr.theRow && tr.theRow.xpath) {
-			td.appendChild(clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath")));
-		}
+			// Always have help (if available).
+			var theHelp = null;
+			if (tr) {
+				var theRow = tr.theRow;
+				// this also marks this row as a 'help parent'
+				theHelp = createChunk("", "div", "alert alert-info fix-popover-help vote-help");
 
-		// SRL suspicious
-		if (tr) {
-			if (isDashboard()) {
-				showHelpFixPanel(td);
-			} else {
-				removeAllChildNodes(pucontent);
-				pucontent.appendChild(td);
+				if (theRow.xpstrid) {
+					var deferHelpSpan = document.createElement('span');
+					theHelp.appendChild(deferHelpSpan);
+
+					if (deferHelp[theRow.xpstrid]) {
+						deferHelpSpan.innerHTML = deferHelp[theRow.xpstrid];
+					} else {
+						deferHelpSpan.innerHTML = "<i>" + stui.str("loading") + "</i>";
+
+						// load async
+						var url = contextPath + "/help?xpstrid=" + theRow.xpstrid + "&_instance=" + surveyRunningStamp;
+						var xhrArgs = {
+							url: url,
+							handleAs: "text",
+							load: function(html) {
+								deferHelp[theRow.xpstrid] = html;
+								deferHelpSpan.innerHTML = html;
+								if (isDashboard()) {
+									fixPopoverVotePos();
+								}
+							},
+						};
+						cldrStAjax.queueXhr(xhrArgs);
+						// loader.
+					}
+
+					// extra attributes
+					if (theRow.extraAttributes && Object.keys(theRow.extraAttributes).length > 0) {
+						var extraHeading = createChunk(stui.str("extraAttribute_heading"), "h3", "extraAttribute_heading");
+						var extraContainer = createChunk("", "div", "extraAttributes");
+						appendExtraAttributes(extraContainer, theRow);
+						theHelp.appendChild(extraHeading);
+						theHelp.appendChild(extraContainer);
+					}
+				}
 			}
-		} else {
-			var clone = td.cloneNode(true);
-			setHelpContent(td);
-			if (!isDashboard()) {
-				removeAllChildNodes(pucontent);
-				pucontent.appendChild(clone);
+			if (theHelp) {
+				td.appendChild(theHelp);
 			}
 
-		}
-		td = null;
+			if (str) { // If a simple string, clone the string
+				var div2 = document.createElement("div");
+				div2.innerHTML = str;
+				td.appendChild(div2);
+			}
+			// If a generator fn (common case), call it.
+			if (fn != null) {
+				unShow = fn(td);
 
-		// for the voter
-		$('.voteInfo_voterInfo').hover(function() {
-			var email = $(this).data('email').replace(' (at) ', '@');
-			if (email !== '') {
-				$(this).html('<a href="mailto:' + email + '" title="' + email + '" style="color:black"><span class="glyphicon glyphicon-envelope"></span></a>');
-				$(this).closest('td').css('text-align', 'center');
-				$(this).children('a').tooltip().tooltip('show');
+			}
+
+			var theVoteinfo = null;
+			if (tr && tr.voteDiv) {
+				theVoteinfo = tr.voteDiv;
+			}
+			if (theVoteinfo) {
+				td.appendChild(theVoteinfo.cloneNode(true));
+			}
+			if (tr && tr.ticketLink) {
+				td.appendChild(tr.ticketLink.cloneNode(true));
+			}
+
+			// forum stuff
+			if (tr && tr.forumDiv) {
+				/*
+				 * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
+				 * TODO: explain the reason for using cloneNode here, rather than using
+				 * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
+				 * after cloning?
+				 */
+				var forumDivClone = tr.forumDiv.cloneNode(true);
+				showForumStuff(td, forumDivClone, tr); // give a chance to update anything else
+				td.appendChild(forumDivClone);
+			}
+
+			if (tr && tr.theRow && tr.theRow.xpath) {
+				td.appendChild(clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath")));
+			}
+
+			// SRL suspicious
+			if (tr) {
+				if (isDashboard()) {
+					showHelpFixPanel(td);
+				} else {
+					removeAllChildNodes(pucontent);
+					pucontent.appendChild(td);
+				}
 			} else {
+				var clone = td.cloneNode(true);
+				setHelpContent(td);
+				if (!isDashboard()) {
+					removeAllChildNodes(pucontent);
+					pucontent.appendChild(clone);
+				}
+
+			}
+			td = null;
+
+			// for the voter
+			$('.voteInfo_voterInfo').hover(function() {
+				var email = $(this).data('email').replace(' (at) ', '@');
+				if (email !== '') {
+					$(this).html('<a href="mailto:' + email + '" title="' + email +
+							'" style="color:black"><span class="glyphicon glyphicon-envelope"></span></a>');
+					$(this).closest('td').css('text-align', 'center');
+					$(this).children('a').tooltip().tooltip('show');
+				} else {
+					$(this).html($(this).data('name'));
+					$(this).closest('td').css('text-align', 'left');
+				}
+			}, function() {
 				$(this).html($(this).data('name'));
 				$(this).closest('td').css('text-align', 'left');
-			}
-		}, function() {
-			$(this).html($(this).data('name'));
-			$(this).closest('td').css('text-align', 'left');
-		});
+			});
 
-	};
-	// delay before show
-	window.showInPop = function(str, tr, hideIfLast, fn, immediate) {
-		if (hideInterval) {
-			clearTimeout(hideInterval);
-			hideInterval = null;
-		}
-		if (immediate) {
-			return window.showInPop2(str, tr, hideIfLast, fn);
-		}
-	};
-	window.resetPop = function() {
-		lastShown = null;
-	};
+		};
+		// delay before show
+		window.showInPop = function(str, tr, hideIfLast, fn, immediate) {
+			if (hideInterval) {
+				clearTimeout(hideInterval);
+				hideInterval = null;
+			}
+			if (immediate) {
+				return window.showInPop2(str, tr, hideIfLast, fn);
+			}
+		};
+		window.resetPop = function() {
+			lastShown = null;
+		};
+	});
 });
 
 /**
@@ -3019,6 +3024,9 @@ function updateCoverage(theDiv) {
 
 function loadStui(loc, cb) {
 	if (!stui.ready) {
+		/*
+		 * https://dojotoolkit.org/reference-guide/1.10/dojo/i18n.html
+		 */
 		require(["dojo/i18n!./surveyTool/nls/stui.js"], function(stuibundle) {
 			if (!stuidebug_enabled) {
 				stui.str = function(x) {
@@ -3026,7 +3034,9 @@ function loadStui(loc, cb) {
 					else return x;
 				};
 				stui.sub = function(x, y) {
-					return dojo.string.substitute(stui.str(x), y);
+					require(["dojo/string"], function(string) {
+						return string.substitute(stui.str(x), y);
+					});
 				};
 			} else {
 				stui.str = stui_str; // debug
@@ -4090,94 +4100,96 @@ function loadAdminPanel() {
  * @param {String} hname the name of the element to draw into
  */
 function showstats(hname) {
-	dojo.ready(loadStui(null, function( /*stui*/ ) {
-		var ourUrl = contextPath + "/SurveyAjax?what=stats_byday";
-		var errorHandler = function(err) {
-			let responseText = cldrStAjax.errResponseText(err);
-			handleDisconnect('Error in showstats: ' + err + ' response ' + responseText);
-		};
-		showLoader(null, "Loading statistics");
-		var loadHandler = function(json) {
-			try {
-				if (json) {
-					var r = Raphael(hname);
-					var header = json.byday.header;
-					var data = json.byday.data;
-					var header_new = json.byday_new.header;
-					var data_new = json.byday_new.data;
-					var labels_old = [];
-					var count_old = [];
-					var labels = [];
-					var count_new = [];
-					for (var i in data_new) {
-						var newLabel = new Date(data_new[i][header_new.LAST_MOD]).toLocaleDateString();
-						var newCount = data_new[i][header_new.COUNT];
-						labels.push(newLabel); // labels come from new data
-						count_new.push(newCount);
-						var oldLabel = new Date(data[i][header.LAST_MOD]).toLocaleDateString();
-						if (newLabel == oldLabel) {
-							// have old data
-							var oldCount = data[i][header.COUNT];
-							if (oldCount < newCount) {
-								console.log("Preposterous: at " + newLabel + ": " + oldCount + " oldCount < " + newCount + "  newCount ");
-								count_old.push(-1);
+	require(["dojo/ready"], function(ready) {
+		ready(function() {
+			var ourUrl = contextPath + "/SurveyAjax?what=stats_byday";
+			var errorHandler = function(err) {
+				let responseText = cldrStAjax.errResponseText(err);
+				handleDisconnect('Error in showstats: ' + err + ' response ' + responseText);
+			};
+			showLoader(null, "Loading statistics");
+			var loadHandler = function(json) {
+				try {
+					if (json) {
+						var r = Raphael(hname);
+						var header = json.byday.header;
+						var data = json.byday.data;
+						var header_new = json.byday_new.header;
+						var data_new = json.byday_new.data;
+						var labels_old = [];
+						var count_old = [];
+						var labels = [];
+						var count_new = [];
+						for (var i in data_new) {
+							var newLabel = new Date(data_new[i][header_new.LAST_MOD]).toLocaleDateString();
+							var newCount = data_new[i][header_new.COUNT];
+							labels.push(newLabel); // labels come from new data
+							count_new.push(newCount);
+							var oldLabel = new Date(data[i][header.LAST_MOD]).toLocaleDateString();
+							if (newLabel == oldLabel) {
+								// have old data
+								var oldCount = data[i][header.COUNT];
+								if (oldCount < newCount) {
+									console.log("Preposterous: at " + newLabel + ": " + oldCount + " oldCount < " + newCount + "  newCount ");
+									count_old.push(-1);
+								} else {
+									count_old.push(oldCount - newCount);
+								}
 							} else {
-								count_old.push(oldCount - newCount);
+								console.log("Desync: " + newLabel + " / " + oldLabel);
+								count_old.push(-1);
 							}
-						} else {
-							console.log("Desync: " + newLabel + " / " + oldLabel);
-							count_old.push(-1);
 						}
+						var gdata = [];
+						gdata.push(count_new);
+						gdata.push(count_old);
+						showLoader(null, "Drawing");
+						// this: 0,id,node,paper,attrs,transformations,_,prev,next,type,bar,value,events
+						// this.bar ["0", "id", "node", "paper", "attrs", "transformations", "_", "prev", "next", "type", "x", "y", "w", "h", "value"]
+						var fin = function() {
+								this.flag = r.g.popup(this.bar.x, this.bar.y, this.bar.value || "0").insertBefore(this);
+							},
+							fout = function() {
+								this.flag.animate({
+									opacity: 0
+								}, 300, function() {
+									this.remove();
+								});
+							};
+						var labels2 = [];
+						labels2.push(labels);
+						var hei = 500;
+						var offh = 10;
+						var toffh = 30;
+						var toffv = 10 + (hei / (2 * labels.length));
+						console.log("Drawing in : " + hname + " - " + count_new.toString());
+						r.g.hbarchart(100, offh, 600, hei, gdata, {
+								stacked: true,
+								colors: ["#8aa717", "#1751a7"]
+							})
+							.hover(fin, fout);
+						for (var i in labels) {
+							r.text(toffh, toffv + (i * (hei / labels.length)), (labels[i].split(" ")[0]) + "\n" + count_new[i]);
+						}
+						hideLoader(null);
+					} else {
+						handleDisconnect("Failed to load JSON stats", json);
 					}
-					var gdata = [];
-					gdata.push(count_new);
-					gdata.push(count_old);
-					showLoader(null, "Drawing");
-					// this: 0,id,node,paper,attrs,transformations,_,prev,next,type,bar,value,events
-					// this.bar ["0", "id", "node", "paper", "attrs", "transformations", "_", "prev", "next", "type", "x", "y", "w", "h", "value"]
-					var fin = function() {
-							this.flag = r.g.popup(this.bar.x, this.bar.y, this.bar.value || "0").insertBefore(this);
-						},
-						fout = function() {
-							this.flag.animate({
-								opacity: 0
-							}, 300, function() {
-								this.remove();
-							});
-						};
-					var labels2 = [];
-					labels2.push(labels);
-					var hei = 500;
-					var offh = 10;
-					var toffh = 30;
-					var toffv = 10 + (hei / (2 * labels.length));
-					console.log("Drawing in : " + hname + " - " + count_new.toString());
-					r.g.hbarchart(100, offh, 600, hei, gdata, {
-							stacked: true,
-							colors: ["#8aa717", "#1751a7"]
-						})
-						.hover(fin, fout);
-					for (var i in labels) {
-						r.text(toffh, toffv + (i * (hei / labels.length)), (labels[i].split(" ")[0]) + "\n" + count_new[i]);
-					}
-					hideLoader(null);
-				} else {
-					handleDisconnect("Failed to load JSON stats", json);
+				} catch (e) {
+					console.log("Error in ajax get ", e.message);
+					console.log(" response: " + text);
+					handleDisconnect(" exception in getstats: " + e.message, null);
 				}
-			} catch (e) {
-				console.log("Error in ajax get ", e.message);
-				console.log(" response: " + text);
-				handleDisconnect(" exception in getstats: " + e.message, null);
-			}
-		};
-		var xhrArgs = {
-			url: ourUrl,
-			handleAs: "json",
-			load: loadHandler,
-			error: errorHandler
-		};
-		cldrStAjax.queueXhr(xhrArgs);
-	}));
+			};
+			var xhrArgs = {
+				url: ourUrl,
+				handleAs: "json",
+				load: loadHandler,
+				error: errorHandler
+			};
+			cldrStAjax.queueXhr(xhrArgs);
+		});
+	});
 }
 
 /**
@@ -4359,75 +4371,77 @@ function createLocLink(loc, locName, className) {
 }
 
 function showAllItems(divName, user) {
-	dojo.ready(function() {
-		loadStui();
-		var div = document.getElementById(divName);
-		div.className = "recentList";
-		div.update = function() {
-			var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
-			var errorHandler = function(err) {
-				let responseText = cldrStAjax.errResponseText(err);
-				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
-			};
-			showLoader(null, "Loading recent items");
-			var loadHandler = function(json) {
-				try {
-					if (json && json.mine) {
-						var frag = document.createDocumentFragment();
-						var header = json.mine.header;
-						var data = json.mine.data;
-						if (data.length == 0) {
-							frag.appendChild(createChunk(stui_str("recentNone"), "i"));
-						} else {
-							var rowDiv = document.createElement("div");
-							frag.appendChild(rowDiv);
-
-							rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
-							rowDiv.appendChild(createChunk(stui_str("recentCount"), "b"));
-
-							for (var q in data) {
-								var row = data[q];
-
-								var count = row[header.COUNT];
-
+	require(["dojo/ready"], function(ready) {
+		ready(function() {
+			loadStui();
+			var div = document.getElementById(divName);
+			div.className = "recentList";
+			div.update = function() {
+				var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
+				var errorHandler = function(err) {
+					let responseText = cldrStAjax.errResponseText(err);
+					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
+				};
+				showLoader(null, "Loading recent items");
+				var loadHandler = function(json) {
+					try {
+						if (json && json.mine) {
+							var frag = document.createDocumentFragment();
+							var header = json.mine.header;
+							var data = json.mine.data;
+							if (data.length == 0) {
+								frag.appendChild(createChunk(stui_str("recentNone"), "i"));
+							} else {
 								var rowDiv = document.createElement("div");
 								frag.appendChild(rowDiv);
 
-								var loc = row[header.LOCALE];
-								var locname = row[header.LOCALE_NAME];
-								rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
-								rowDiv.appendChild(createChunk(count, "span", "value recentCount"));
+								rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
+								rowDiv.appendChild(createChunk(stui_str("recentCount"), "b"));
 
-								if (surveySessionId != null) {
-									var dlLink = createChunk(stui_str("downloadXmlLink"), "a", "notselected");
-									dlLink.href = "DataExport.jsp?do=myxml&_=" + loc + "&user=" + user + "&s=" + surveySessionId;
-									dlLink.target = "STDownload";
-									rowDiv.appendChild(dlLink);
+								for (var q in data) {
+									var row = data[q];
+
+									var count = row[header.COUNT];
+
+									var rowDiv = document.createElement("div");
+									frag.appendChild(rowDiv);
+
+									var loc = row[header.LOCALE];
+									var locname = row[header.LOCALE_NAME];
+									rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
+									rowDiv.appendChild(createChunk(count, "span", "value recentCount"));
+
+									if (surveySessionId != null) {
+										var dlLink = createChunk(stui_str("downloadXmlLink"), "a", "notselected");
+										dlLink.href = "DataExport.jsp?do=myxml&_=" + loc + "&user=" + user + "&s=" + surveySessionId;
+										dlLink.target = "STDownload";
+										rowDiv.appendChild(dlLink);
+									}
 								}
 							}
-						}
 
-						removeAllChildNodes(div);
-						div.appendChild(frag);
-						hideLoader(null);
-					} else {
-						handleDisconnect("Failed to load JSON recent items", json);
+							removeAllChildNodes(div);
+							div.appendChild(frag);
+							hideLoader(null);
+						} else {
+							handleDisconnect("Failed to load JSON recent items", json);
+						}
+					} catch (e) {
+						console.log("Error in ajax get ", e.message);
+						console.log(" response: " + text);
+						handleDisconnect(" exception in getrecent: " + e.message, null);
 					}
-				} catch (e) {
-					console.log("Error in ajax get ", e.message);
-					console.log(" response: " + text);
-					handleDisconnect(" exception in getrecent: " + e.message, null);
-				}
+				};
+				var xhrArgs = {
+					url: ourUrl,
+					handleAs: "json",
+					load: loadHandler,
+					error: errorHandler
+				};
+				cldrStAjax.queueXhr(xhrArgs);
 			};
-			var xhrArgs = {
-				url: ourUrl,
-				handleAs: "json",
-				load: loadHandler,
-				error: errorHandler
-			};
-			cldrStAjax.queueXhr(xhrArgs);
-		};
-		div.update();
+			div.update();
+		});
 	});
 }
 
@@ -4438,85 +4452,86 @@ function showRecent(divName, locale, user) {
 	if (!user) {
 		user = '';
 	}
-	dojo.ready(function() {
-		loadStui();
-		var div;
+	require(["dojo/ready"], function(ready) {
+		ready(function() {
+			loadStui();
+			var div;
+			if (divName.nodeType > 0) {
+				div = divName;
+			} else {
+				div = document.getElementById(divName);
+			}
+			div.className = "recentList";
+			div.update = function() {
+				var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
+				var errorHandler = function(err) {
+					let responseText = cldrStAjax.errResponseText(err);
+					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
+				};
+				showLoader(null, "Loading recent items");
+				var loadHandler = function(json) {
+					try {
+						if (json && json.recent) {
+							var frag = document.createDocumentFragment();
+							var header = json.recent.header;
+							var data = json.recent.data;
 
-		if (divName.nodeType > 0) {
-			div = divName;
-		} else {
-			div = document.getElementById(divName);
-		}
-		div.className = "recentList";
-		div.update = function() {
-			var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
-			var errorHandler = function(err) {
-				let responseText = cldrStAjax.errResponseText(err);
-				handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
-			};
-			showLoader(null, "Loading recent items");
-			var loadHandler = function(json) {
-				try {
-					if (json && json.recent) {
-						var frag = document.createDocumentFragment();
-						var header = json.recent.header;
-						var data = json.recent.data;
-
-						if (data.length == 0) {
-							frag.appendChild(createChunk(stui_str("recentNone"), "i"));
-						} else {
-							var rowDiv = document.createElement("div");
-							frag.appendChild(rowDiv);
-
-							rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
-							rowDiv.appendChild(createChunk(stui_str("recentXpathCode"), "b"));
-							rowDiv.appendChild(createChunk(stui_str("recentValue"), "b"));
-							rowDiv.appendChild(createChunk(stui_str("recentWhen"), "b"));
-
-							for (var q in data) {
-								var row = data[q];
-
-								var loc = row[header.LOCALE];
-								var locname = row[header.LOCALE_NAME];
-								var org = row[header.ORG];
-								var last_mod = row[header.LAST_MOD];
-								var xpath = row[header.XPATH];
-								var xpath_code = row[header.XPATH_CODE];
-								var xpath_hash = row[header.XPATH_STRHASH];
-								var value = row[header.VALUE];
-
+							if (data.length == 0) {
+								frag.appendChild(createChunk(stui_str("recentNone"), "i"));
+							} else {
 								var rowDiv = document.createElement("div");
 								frag.appendChild(rowDiv);
-								rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
-								var xpathItem;
-								xpath_code = xpath_code.replace(/\t/g, " / ");
-								rowDiv.appendChild(xpathItem = createChunk(xpath_code, "a", "recentXpath"));
-								xpathItem.href = "survey?_=" + loc + "&strid=" + xpath_hash;
-								rowDiv.appendChild(createChunk(value, "span", "value recentValue"));
-								rowDiv.appendChild(createChunk(new Date(last_mod).toLocaleString(), "span", "recentWhen"));
+
+								rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
+								rowDiv.appendChild(createChunk(stui_str("recentXpathCode"), "b"));
+								rowDiv.appendChild(createChunk(stui_str("recentValue"), "b"));
+								rowDiv.appendChild(createChunk(stui_str("recentWhen"), "b"));
+
+								for (var q in data) {
+									var row = data[q];
+
+									var loc = row[header.LOCALE];
+									var locname = row[header.LOCALE_NAME];
+									var org = row[header.ORG];
+									var last_mod = row[header.LAST_MOD];
+									var xpath = row[header.XPATH];
+									var xpath_code = row[header.XPATH_CODE];
+									var xpath_hash = row[header.XPATH_STRHASH];
+									var value = row[header.VALUE];
+
+									var rowDiv = document.createElement("div");
+									frag.appendChild(rowDiv);
+									rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
+									var xpathItem;
+									xpath_code = xpath_code.replace(/\t/g, " / ");
+									rowDiv.appendChild(xpathItem = createChunk(xpath_code, "a", "recentXpath"));
+									xpathItem.href = "survey?_=" + loc + "&strid=" + xpath_hash;
+									rowDiv.appendChild(createChunk(value, "span", "value recentValue"));
+									rowDiv.appendChild(createChunk(new Date(last_mod).toLocaleString(), "span", "recentWhen"));
+								}
 							}
+							removeAllChildNodes(div);
+							div.appendChild(frag);
+							hideLoader(null);
+						} else {
+							handleDisconnect("Failed to load JSON recent items", json);
 						}
-						removeAllChildNodes(div);
-						div.appendChild(frag);
-						hideLoader(null);
-					} else {
-						handleDisconnect("Failed to load JSON recent items", json);
+					} catch (e) {
+						console.log("Error in ajax get ", e.message);
+						console.log(" response: " + text);
+						handleDisconnect(" exception in getrecent: " + e.message, null);
 					}
-				} catch (e) {
-					console.log("Error in ajax get ", e.message);
-					console.log(" response: " + text);
-					handleDisconnect(" exception in getrecent: " + e.message, null);
-				}
+				};
+				var xhrArgs = {
+					url: ourUrl,
+					handleAs: "json",
+					load: loadHandler,
+					error: errorHandler
+				};
+				cldrStAjax.queueXhr(xhrArgs);
 			};
-			var xhrArgs = {
-				url: ourUrl,
-				handleAs: "json",
-				load: loadHandler,
-				error: errorHandler
-			};
-			cldrStAjax.queueXhr(xhrArgs);
-		};
-		div.update();
+			div.update();
+		});
 	});
 }
 
