@@ -1477,6 +1477,9 @@ function updateStatus() {
 				return; // don't thrash
 			}
 			var st_err = document.getElementById('st_err');
+			if (!st_err) {
+				return; // normal for about.jsp, browse.jsp
+			}
 			if (json.err != null && json.err.length > 0) {
 				st_err.innerHTML = json.err;
 				if (json.status && json.status.surveyRunningStamp != surveyRunningStamp) {
@@ -1566,8 +1569,10 @@ function resetTimerSpeed(speed) {
 }
 
 // set up window. Let Dojo call us, otherwise dojo won't load.
-dojo.ready(function(){
-	setTimerOn();
+require(["dojo/ready"], function(ready) {
+	ready(function() {
+		setTimerOn();
+	});
 });
 
 /**
