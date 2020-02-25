@@ -188,7 +188,7 @@ public class ExampleGenerator {
      */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
-    private static boolean AVOID_CLEARING_CACHE = true;
+    private static boolean AVOID_CLEARING_CACHE = false;
 
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
