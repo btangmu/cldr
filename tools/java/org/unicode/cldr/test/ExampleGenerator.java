@@ -178,7 +178,7 @@ public class ExampleGenerator {
     private CLDRFile englishFile;
     Matcher URLMatcher = URL_PATTERN.matcher("");
 
-    /*
+    /**
      * The cache is accessed only by getExampleHtml and updateCache.
      * Its key is built from an xpath, and a value for that xpath.
      * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
@@ -188,7 +188,11 @@ public class ExampleGenerator {
      */
     private Map<String, String> cache = new ConcurrentHashMap<String, String>();
 
-    private static boolean AVOID_CLEARING_CACHE = false;
+    /**
+     * AVOID_CLEARING_CACHE: work in progress, keep false until it becomes beneficial and reliable.
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
+     */
+    private static final boolean AVOID_CLEARING_CACHE = false;
 
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
@@ -259,6 +263,8 @@ public class ExampleGenerator {
      *
      * @param xpath
      * @return true or false
+     *
+     * Called locally (only if AVOID_CLEARING_CACHE is true), and also by TestExampleGeneratorDependencies.
      */
     static public boolean pathMightBeTypeA(String xpath) {
         final String pathAStarts[] = {
