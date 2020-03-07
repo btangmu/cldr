@@ -87,11 +87,12 @@ public class TestExampleDependencies extends TestFmwk {
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
         CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
         if (JUST_LIST_PATHS) {
-            PrintWriter writer;
+            PrintWriter writer = null;
             try {
                 writer = FileUtilities.openUTF8Writer(outputDir, fileName);
             } catch (IOException e) {
                 e.printStackTrace();
+                return;
             }
             ArrayList<String> list = new ArrayList<String>(paths);
             Collections.sort(list);
