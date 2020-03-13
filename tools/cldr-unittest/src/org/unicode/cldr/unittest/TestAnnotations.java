@@ -211,28 +211,28 @@ public class TestAnnotations extends TestFmwkPlus {
         }
     }
 
-    private class UniquenessInfo {
-        UnicodeMap<Annotations> english = Annotations.getData("en");
-        UnicodeSet englishKeys = getCurrent(english.keySet());
-    }
-
     public void TestUniqueness() {
         Set<String> locales = new TreeSet<>();
         locales.add("en");
         locales.addAll(Annotations.getAvailable());
         locales.remove("root");
-        UniquenessInfo uniquenessInfo = new UniquenessInfo();
-        locales.parallelStream().forEach(locale -> uniquenessThisLocale(uniquenessInfo, locale));
+        /*
+         * Note: "problems" here is a work-around for what appears to be a deficiency
+         * in the function sourceLocation, involving the call stack. Seemingly sourceLocation
+         * can't handle the "->" notation used for parallelStream().forEach() if
+         * uniquePerLocale calls errln directly.
+         */
+        Set<String> problems = new HashSet<String>();
+        locales.parallelStream().forEach(locale -> uniquePerLocale(locale, problems));
+        if (!problems.isEmpty()) {
+            problems.forEach(s -> errln(s));
+        }
     }
 
-    private void uniquenessThisLocale(UniquenessInfo uniquenessInfo, String locale) {
+    private void uniquePerLocale(String locale, Set<String> problems) {
         logln("uniqueness: " + locale);
-        Multimap<String, String> verboseNameToEmoji = TreeMultimap.create();
         Multimap<String, String> nameToEmoji = TreeMultimap.create();
-        Map<String, UnicodeSet> localeToMissing = new TreeMap<>();
         AnnotationSet data = Annotations.getDataSet(locale);
-        nameToEmoji.clear();
-        localeToMissing.put(locale, new UnicodeSet(uniquenessInfo.englishKeys).removeAll(data.keySet()).freeze());
         for (String emoji : Emoji.getAllRgi()) {
             String name = data.getShortName(emoji);
             if (name == null) {
@@ -243,35 +243,30 @@ public class TestAnnotations extends TestFmwkPlus {
             }
             nameToEmoji.put(name, emoji);
         }
+        Multimap<String, String> duplicateNameToEmoji = null;
         for (Entry<String, Collection<String>> entry : nameToEmoji.asMap().entrySet()) {
             String name = entry.getKey();
             Collection<String> emojis = entry.getValue();
             if (emojis.size() > 1) {
-                errln("Duplicate name in " + locale + ": “" + name + "” for "
-                    + CollectionUtilities.join(emojis, " & "));
-                verboseNameToEmoji.putAll(name, emojis);
+                synchronized(problems) {
+                    problems.add("Duplicate name in " + locale + ": “" + name + "” for "
+                        + CollectionUtilities.join(emojis, " & "));
+                }
+                if (duplicateNameToEmoji == null) {
+                    duplicateNameToEmoji = TreeMultimap.create();
+                }
+                duplicateNameToEmoji.putAll(name, emojis);
             }
         }
-        if (isVerbose() && !verboseNameToEmoji.isEmpty()) {
+        if (isVerbose() && duplicateNameToEmoji != null && !duplicateNameToEmoji.isEmpty()) {
             System.out.println("\nCollisions");
-            for (Entry<String, String> entry : verboseNameToEmoji.entries()) {
+            for (Entry<String, String> entry : duplicateNameToEmoji.entries()) {
                 String emoji = entry.getValue();
                 System.out.println(locale
                     + "\t" + eng.getShortName(emoji)
                     + "\t" + emoji);
             }
         }
-    }
-
-    private UnicodeSet getCurrent(UnicodeSet keySet) {
-        UnicodeSet currentAge = new UnicodeSet("[:age=9.0:]");
-        UnicodeSet result = new UnicodeSet();
-        for (String s : keySet) {
-            if (currentAge.containsAll(s)) {
-                result.add(s);
-            }
-        }
-        return result.freeze();
     }
 
     public void testAnnotationPaths() {

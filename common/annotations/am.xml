@@ -2911,10 +2911,10 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 		<annotation cp="〰" type="tts">ሞገዳማ ሰረዝ</annotation>
 		<annotation cp="©">የቅጂ መብት</annotation>
 		<annotation cp="©" type="tts">የቅጂ መብት</annotation>
-		<annotation cp="®">ተመዝግቧል | የተመዘገበ ንግድ ምልክት</annotation>
-		<annotation cp="®" type="tts">የተመዘገበ ንግድ ምልክት</annotation>
-		<annotation cp="™">ምልክት | ንግድ ምልክት | የንግድ ምልክት</annotation>
-		<annotation cp="™" type="tts">የንግድ ምልክት</annotation>
+		<annotation cp="®">የቅጂ መብት</annotation>
+		<annotation cp="®" type="tts">የቅጂ መብት</annotation>
+		<annotation cp="™">የቅጂ መብት</annotation>
+		<annotation cp="™" type="tts">የቅጂ መብት</annotation>
 		<annotation cp="🔠">ላቲን | ዓቢይ ፊደል | የላቲን ዓቢይ ፊደል ግቤት | ግቤት | ፊደላት</annotation>
 		<annotation cp="🔠" type="tts">የላቲን ዓቢይ ፊደል ግቤት</annotation>
 		<annotation cp="🔡">ላቲን | ንዑስ ፊደላት | የላቲን ንዑስ ፊደል ግቤት | ግቤት | ፊደላት</annotation>
