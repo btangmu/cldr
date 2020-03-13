@@ -593,7 +593,7 @@ public class DataSection implements JSONString {
         /**
          * The pretty path for this DataRow, set by the constructor.
          * 
-         *  Accessed by NameSort.java, SortMode.java, datarow_short_code.jsp
+         *  Accessed by NameSort.java, SortMode.java
          */
         public String prettyPath = null;
 
@@ -1026,20 +1026,6 @@ public class DataSection implements JSONString {
                 draftIcon = ctx.iconHtml("bar1", "MISSING");
             }
             return draftIcon;
-        }
-
-        /**
-         * Show a row of limited data.
-         *
-         * @param ctx the WebContext
-         */
-        void showDataRowShort(WebContext ctx) {
-            ctx.put(WebContext.DATA_ROW, this);
-            String whichFragment = (String) ctx.get(SurveyMain.DATAROW_JSP);
-            if (whichFragment == null) {
-                whichFragment = SurveyMain.DATAROW_JSP_DEFAULT;
-            }
-            ctx.includeFragment(whichFragment);
         }
 
         /**
@@ -2570,67 +2556,6 @@ public class DataSection implements JSONString {
     public String toString() {
         return "{" + getClass().getSimpleName() + " " + locale + ":" + xpathPrefix + " #" + super.toString() + ", "
             + getAll().size() + " items, pageid " + this.pageId + " } ";
-    }
-
-    /**
-     * Print something...
-     *
-     * @param ctx
-     * @param section
-     * @param zoomedIn
-     * @param canModify
-     * 
-     * Called by showXpath in SurveyForum.java, and by showSection
-     */
-    static void printSectionTableOpen(WebContext ctx, DataSection section, boolean zoomedIn, boolean canModify) {
-        ctx.println("<a name='st_data'></a>");
-        ctx.println("<table summary='Data Items for " + ctx.getLocale().toString() + " " + section.xpathPrefix
-            + "' class='data' border='0'>");
-
-        int table_width = 13;
-        int itemColSpan;
-        if (!canModify) {
-            table_width -= 4; // No vote, change, or no opinion columns
-        }
-        if (zoomedIn) {
-            table_width += 2;
-            itemColSpan = 2; // When zoomed in, Proposed and Other takes up 2 columns
-        } else {
-            itemColSpan = 1;
-        }
-
-        ctx.println("<tr><td colspan='" + table_width + "'>");
-        // dataitems_header.jspf
-        // some context
-        ctx.put(WebContext.DATA_SECTION, section);
-        ctx.put(WebContext.ZOOMED_IN, new Boolean(zoomedIn));
-        ctx.includeFragment("dataitems_header.jsp");
-        ctx.println("</td></tr>");
-
-        ctx.println("<tr class='headingb'>\n" + " <th width='30'>St.</th>\n" + // 1
-            " <th width='30'>Draft</th>\n"); // 1
-        if (canModify) {
-            ctx.print(" <th width='30'>Voted</th>\n"); // 1
-        }
-        ctx.print(" <th>Code</th>\n" + // 2
-            " <th title='[" + SurveyMain.TRANS_HINT_LOCALE + "]'>" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + "</th>\n");
-
-        ctx.print(" <th title='" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + " [" + SurveyMain.TRANS_HINT_LOCALE
-            + "] Example'><i>Ex</i></th>\n");
-
-        ctx.print(" <th colspan=" + itemColSpan + ">" + SurveyMain.getProposedName() + "</th>\n");
-
-        ctx.print(" <th title='Proposed Example'><i>Ex</i></th>\n");
-
-        ctx.print(" <th colspan=" + itemColSpan + ">" + SurveyMain.CURRENT_NAME + "</th>\n");
-
-        ctx.print(" <th title='Current Example'><i>Ex</i></th>\n");
-
-        if (canModify) {
-            ctx.print(" <th colspan='2' >Change</th>\n"); // 8
-            ctx.print("<th width='20' title='No Opinion'>n/o</th>\n"); // 5
-        }
-        ctx.println("</tr>");
     }
 
     public static String getValueHash(String str) {
