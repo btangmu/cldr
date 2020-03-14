@@ -1723,8 +1723,8 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 		<annotation cp="🌉" type="tts">pont de nuit</annotation>
 		<annotation cp="♨">source | sources chaudes</annotation>
 		<annotation cp="♨" type="tts">sources chaudes</annotation>
-		<annotation cp="🎠">source | sources chaudes</annotation>
-		<annotation cp="🎠" type="tts">sources chaudes</annotation>
+		<annotation cp="🎠">cheval | cheval de manège | manège</annotation>
+		<annotation cp="🎠" type="tts">cheval de manège</annotation>
 		<annotation cp="🎡">grande roue | roue</annotation>
 		<annotation cp="🎡" type="tts">grande roue</annotation>
 		<annotation cp="🎢">montagnes | russes</annotation>
