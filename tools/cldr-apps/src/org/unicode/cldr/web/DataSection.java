@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
@@ -92,7 +91,7 @@ public class DataSection implements JSONString {
     /**
      * The baseline CLDRFile for this DataSection
      */
-    public CLDRFile translationHintsFile;
+    private CLDRFile translationHintsFile;
 
     /**
      * The CLDRFile for the root locale; use lazy initialization, see getRootFile
@@ -147,12 +146,6 @@ public class DataSection implements JSONString {
              * checkedVotes is used only in the function getVotes, for efficiency.
              */
             private boolean checkedVotes = false;
-
-            /**
-             * TODO: document the purpose of examples, non-null only in a short block of code
-             * currently (2018-8-10) near end of populateFrom.
-             */
-            private Vector<ExampleEntry> examples = null;
 
             /**
              * tests is included in json data sent to client
@@ -379,11 +372,6 @@ public class DataSection implements JSONString {
                         hasErrors = true;
                     if (warningCount > 0) /* row */
                         hasWarnings = true;
-                    // propagate to parent
-                    if (errorCount > 0) /* row */
-                        parentRow.hasErrors = true;
-                    if (warningCount > 0) /* row */
-                        parentRow.hasWarnings = true;
                 }
                 return weHaveTests;
             }
@@ -509,7 +497,7 @@ public class DataSection implements JSONString {
          *
          * inheritedLocale is accessed from InterestSort.java for Partition.Membership("Missing"), otherwise it could be private.
          */
-        CLDRLocale inheritedLocale = null;
+        public CLDRLocale inheritedLocale = null;
 
         /**
          * pathWhereFound, if not null, may be, for example:
@@ -578,12 +566,7 @@ public class DataSection implements JSONString {
         public Map<String, CandidateItem> items = new TreeMap<String, CandidateItem>();
 
         /** Cache of field hash **/
-        String myFieldHash = null;
-
-        /* parentRow - defaults to self if it is a "super" (i.e. parent without any
-         * alternate)
-         */
-        public DataRow parentRow = this;
+        private String myFieldHash = null;
 
         /**
          * Used only in the function getPrettyPath
@@ -805,70 +788,11 @@ public class DataSection implements JSONString {
         }
 
         /**
-         * Get a list of proposed items, for this DataRow.
-         *
-         * @deprecated use getValues() instead
-         * @see #getValues()
-         * 
-         * Called by getVotesForUser.
-         * 
-         * Also called from row.jsp -- how to replace getItems() there with getValues()? Confusion over return type,
-         *    Collection<? extends CandidateInfo>
-         *       versus
-         *    Collection<CandidateItem>
-         *    
-         * Also called from r_txt.jsp whose usage isn't clear.
-         */
-        @SuppressWarnings("unchecked")
-        public Collection<CandidateItem> getItems() {
-            return ((Collection<CandidateItem>) getValues());
-        }
-
-        /**
          * Get a list of proposed items, if any, for this DataRow.
          */
         @Override
         public Collection<? extends CandidateInfo> getValues() {
             return items.values();
-        }
-
-        public String getSpecialURL(WebContext ctx) {
-            if (getXpath().startsWith(DataSection.EXEMPLAR_PARENT)) {
-                String zone = prettyPath;
-                int n = zone.lastIndexOf('/');
-                if (n != -1) {
-                    zone = zone.substring(0, n);
-                    /*
-                     *  blahblah/default/foo -> blahblah/default
-                     *  ('foo' is lastType and will show up as the value)
-                     */
-                }
-                return ctx.base() + "?" + "_=" + ctx.getLocale() + "&amp;x=timezones&amp;zone=" + zone;
-            }
-            return null;
-        }
-
-        /**
-         * Return the CandidateItem for a particular user ID
-         *
-         * @param userId
-         * @return
-         */
-        public CandidateItem getVotesForUser(int userId) {
-            UserRegistry.User infoForUser = sm.reg.getInfo(userId);
-            /* see gatherVotes - getVotes() is populated with a
-             * set drawn from the getInfo() singletons.
-             */
-            if (infoForUser == null) {
-                return null;
-            }
-            for (CandidateItem item : getItems()) {
-                Set<User> votes = item.getVotes();
-                if (votes != null && votes.contains(infoForUser)) {
-                    return item;
-                }
-            }
-            return null; /* not found. */
         }
 
         public String getWinningValue() {
@@ -889,40 +813,6 @@ public class DataSection implements JSONString {
 
         public boolean isName() {
             return NAME_TYPE_PATTERN.matcher(prettyPath).matches();
-        }
-
-        /**
-         * 
-         * @param ctx
-         * @param canModify
-         * @param zoomedIn
-         * @param specialUrl
-         * @return
-         * 
-         * Called only by row.jsp
-         */
-        public String itemTypeName(WebContext ctx, boolean canModify, boolean zoomedIn, String specialUrl) {
-            StringBuilder sb = new StringBuilder();
-            String disputeIcon = "";
-            if (canModify) {
-                if (DisputePageManager.getOrgDisputeCount(ctx.session.user.voterOrg(), getLocale(), getXpathId())) {
-                    disputeIcon = ctx.iconHtml("disp", "Vetter Dispute");
-                }
-            }
-            sb.append("<tt title='" + sm.xpt.getPrettyPath(getXpathId()) + "' >");
-            String typeShown = prettyPath.replaceAll("/", "/\u200b");
-            if (!zoomedIn) {
-                if (specialUrl != null) {
-                    sb.append("<a class='notselected' " + ctx.atarget() + " href='" + specialUrl + "'>" + typeShown + disputeIcon
-                        + "</a>");
-                } else {
-                    sb.append(sm.fora.getForumLink(ctx, this, parentRow.getXpathId(), typeShown + disputeIcon));
-                }
-            } else {
-                sb.append(typeShown + disputeIcon);
-            }
-            sb.append("</tt>");
-            return sb.toString();
         }
 
         /**
@@ -953,79 +843,6 @@ public class DataSection implements JSONString {
                     }
                 }
             }
-        }
-
-        /**
-         * Get the status icon for this DataRow
-         *
-         * @param ctx the WebContext
-         * @return the status icon, as a string
-         *
-         * Called only by row.jsp
-         */
-        public String getStatusIcon(WebContext ctx) {
-            String statusIcon = "";
-            if (hasErrors) {
-                statusIcon = ctx.iconHtml("stop", "Errors - please zoom in");
-            } else if (hasWarnings) {
-                statusIcon = ctx.iconHtml("warn", "Warnings - please zoom in");
-            }
-            return statusIcon;
-        }
-
-        /**
-         * Get the row class for this DataRow
-         *
-         * @return "vother, "error", or "warning"
-         */
-        public String getRowClass() {
-            // calculate the class of data items
-            String rclass = "vother";
-            if (hasErrors) {
-                rclass = "error";
-            } else if (hasWarnings) {
-                rclass = "warning";
-            }
-            return rclass;
-        }
-
-        /**
-         * Get an icon indicating whether the user has voted for this DataRow
-         *
-         * @return the html string
-         */
-        public String getVotedIcon(WebContext ctx) {
-            String votedIcon = ctx.iconHtml("bar0", "You have not yet voted on this item.");
-            if (userHasVoted(ctx.userId())) {
-                votedIcon = ctx.iconHtml("vote", "You have already voted on this item.");
-            }
-            return votedIcon;
-        }
-
-        /**
-         * Get an icon indicating the draft status for this DataRow
-         *
-         * @return the html string
-         */
-        public String getDraftIcon(WebContext ctx) {
-            String draftIcon = "";
-            switch (confirmStatus) {
-            case approved:
-                draftIcon = ctx.iconHtml("okay", "APPROVED");
-                break;
-            case contributed:
-                draftIcon = ctx.iconHtml("conf", "CONTRIBUTED");
-                break;
-            case provisional:
-                draftIcon = ctx.iconHtml("conf2", "PROVISIONAL");
-                break;
-            case unconfirmed:
-                draftIcon = ctx.iconHtml("ques", "UNCONFIRMED");
-                break;
-            case missing:
-                draftIcon = ctx.iconHtml("bar1", "MISSING");
-            }
-            return draftIcon;
         }
 
         /**
@@ -1609,8 +1426,6 @@ public class DataSection implements JSONString {
      */
     private static Pattern excludeAlways;
 
-    public static final String EXEMPLAR_PARENT = "//ldml/dates/timeZoneNames/zone";
-
     private static final String fromto[] = { "^days/(.*)/(sun)$", "days/1-$2/$1", "^days/(.*)/(mon)$", "days/2-$2/$1",
         "^days/(.*)/(tue)$", "days/3-$2/$1", "^days/(.*)/(wed)$", "days/4-$2/$1", "^days/(.*)/(thu)$", "days/5-$2/$1",
         "^days/(.*)/(fri)$", "days/6-$2/$1", "^days/(.*)/(sat)$", "days/7-$2/$1", "^months/(.*)/month/([0-9]*)$",
@@ -1662,7 +1477,7 @@ public class DataSection implements JSONString {
         }
     }
 
-    /*
+    /**
      * A serial number, used only in the function getN()
      */
     private static int n = 0;
@@ -1813,9 +1628,6 @@ public class DataSection implements JSONString {
     // UI strings
     boolean canName = true; // can the Display Name be used for sorting?
 
-    // hash of examples
-    Hashtable<String, ExampleEntry> exampleHash = new Hashtable<String, ExampleEntry>();
-
     /*
      * Interest group
      */
@@ -1878,18 +1690,6 @@ public class DataSection implements JSONString {
      */
     void addDataRow(DataRow row) {
         rowsHash.put(row.xpath, row);
-    }
-
-    /**
-     * Enregister an ExampleEntry
-     *
-     * Called only by populateFrom
-     */
-    ExampleEntry addExampleEntry(ExampleEntry e) {
-        synchronized (exampleHash) {
-            exampleHash.put(e.hash, e);
-        }
-        return e; // for the hash.
     }
 
     /**
@@ -2064,20 +1864,6 @@ public class DataSection implements JSONString {
      */
     public Collection<DataRow> getAll() {
         return rowsHash.values();
-    }
-
-    /**
-     * Get the row for the given xpath in this DataSection
-     *
-     * Linear search for matching item.
-     *
-     * @param xpath the integer...
-     * @return the matching DataRow
-     * 
-     * Called from r_rxt.jsp
-     */
-    public DataRow getDataRow(int xpath) {
-        return getDataRow(sm.xpt.getById(xpath));
     }
 
     /**
@@ -2496,57 +2282,7 @@ public class DataSection implements JSONString {
         }
         if (setInheritFrom != null) {
             row.inheritedLocale = setInheritFrom;
-        }        
-
-        /*
-         * Store who voted for what. [ this could be loaded at displaytime..]
-         * 
-         * TODO: explain the following block.
-         * myItem.examples is assigned to here, but not referenced anywhere else,
-         * so what is this block for, and does examples need to be a member of
-         * CandidateItem (as it currently is) rather than just a local variable here?
-         */
-        if (myItem != null && !examplesResult.isEmpty()) {
-            // reuse the same ArrayList unless it contains something
-            if (myItem.examples == null) {
-                myItem.examples = new Vector<ExampleEntry>();
-            }
-            for (Iterator<CheckStatus> it3 = examplesResult.iterator(); it3.hasNext();) {
-                CheckCLDR.CheckStatus status = it3.next();
-                myItem.examples.add(addExampleEntry(new ExampleEntry(this, row, myItem, status)));
-            }
         }
-    }
-
-    /**
-     * @param ctx
-     * @param matcher
-     * @return
-     */
-    public DisplaySet getDisplaySet(WebContext ctx, XPathMatcher matcher) {
-        SortMode sortMode = getSortMode(ctx);
-
-        // Get the set of things to display.
-        DisplaySet dSet = createDisplaySet(sortMode, matcher);
-        return dSet;
-    }
-
-    /**
-     * @param ctx
-     * @return
-     */
-    public SortMode getSortMode(WebContext ctx) {
-        // get the name of the sortmode
-        String sortModeName = SortMode.getSortMode(ctx, this);
-        // are we in 'disputed-only' mode?
-        if (ctx.field("only").equals("disputed")) {
-            /*
-             * so that disputed shows up on top - force the sortmode.
-             */
-            sortModeName = SurveyMain.PREF_SORTMODE_WARNING;
-        }
-        SortMode sortMode = SortMode.getInstance(sortModeName);
-        return sortMode;
     }
 
     /**
