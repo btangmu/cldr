@@ -497,7 +497,7 @@ public class DataSection implements JSONString {
          *
          * inheritedLocale is accessed from InterestSort.java for Partition.Membership("Missing"), otherwise it could be private.
          */
-        public CLDRLocale inheritedLocale = null;
+        CLDRLocale inheritedLocale = null;
 
         /**
          * pathWhereFound, if not null, may be, for example:
