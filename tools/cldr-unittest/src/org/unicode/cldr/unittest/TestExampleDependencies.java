@@ -55,7 +55,7 @@ public class TestExampleDependencies extends TestFmwk {
         final CLDRFile englishFile = info.getEnglish();
         final Factory factory = info.getCldrFactory();
         final Set<String> locales = factory.getAvailable();
-        final String outputDir = CLDRPaths.GEN_DIRECTORY + "test/";
+        final String outputDir = CLDRPaths.GEN_DIRECTORY + "test" + File.separator;
 
         System.out.println("...");
         System.out.println("Starting to loop through " + locales.size() + " locales ...");
@@ -71,9 +71,11 @@ public class TestExampleDependencies extends TestFmwk {
                 fileName = "allpaths_" + localeId + ".txt";
             }
             if (new File(outputDir, fileName).exists()) {
-                System.out.println("Locale: " + localeId + " -- skipping since " + fileName + " already exists");
+                System.out.println("Locale: " + localeId + " -- skipping since " +
+                    outputDir + fileName + " already exists");
             } else {
-                System.out.println("Locale: " + localeId + " -- creating " + fileName + " ...");
+                System.out.println("Locale: " + localeId + " -- creating "
+                    + outputDir + fileName + " ...");
                 writeOneLocale(localeId, outputDir, fileName, factory, englishFile);
             }
         }
