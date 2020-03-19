@@ -1,7 +1,6 @@
 package org.unicode.cldr.util;
 
 import java.util.HashSet;
-import java.util.Map;
 
 /**
  * Like CLDRFile, with an added feature for recording the paths for which
@@ -13,22 +12,14 @@ import java.util.Map;
  * the set of all paths in this file that were accessed to generate the example.
  */
 public class RecordingCLDRFile extends CLDRFile {
-    HashSet<String> paths = new HashSet<String>();
+    private HashSet<String> paths = new HashSet<String>();
 
     public RecordingCLDRFile(XMLSource dataSource) {
         super(dataSource);
-
-        /*
-         * TODO: possibly freeze()?
-         * Otherwise, possibly log when changes are made, since we anticipate
-         * only read-access while recording; could override functions like add()...
-         */
-        // freeze(); // ?
     }
 
     public RecordingCLDRFile(XMLSource dataSource, XMLSource... resolvingParents) {
         super(dataSource, resolvingParents);
-        // freeze(); // ?
     }
 
     public void clearPaths() {
@@ -40,25 +31,21 @@ public class RecordingCLDRFile extends CLDRFile {
     }
 
     public String getStringValue(String xpath) {
-        String result = super.getStringValue(xpath);
-        paths.add(xpath);
-        return result;
+        addPath(xpath);
+        return super.getStringValue(xpath);
     }
 
     public String getWinningValue(String xpath) {
-        String result = super.getWinningValue(xpath);
-        paths.add(xpath);
-        return result;
+        addPath(xpath);
+        return super.getWinningValue(xpath);
     }
 
     public String getConstructedValue(String xpath) {
-        String result = super.getConstructedValue(xpath);
-        paths.add(xpath);
-        return result;
+        addPath(xpath);
+        return super.getConstructedValue(xpath);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private static Map asMap(String[][] data, boolean tree) {
-        throw new UnsupportedOperationException("asMap is unsupported for RecordingCLDRFile");
+    private void addPath(String xpath) {
+        paths.add(xpath);
     }
 }
