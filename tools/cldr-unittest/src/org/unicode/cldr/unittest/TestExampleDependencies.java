@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,15 +23,16 @@ import org.unicode.cldr.util.PathStarrer;
 import org.unicode.cldr.util.RecordingCLDRFile;
 import org.unicode.cldr.util.XMLSource;
 
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
 import com.ibm.icu.dev.test.TestFmwk;
 import com.ibm.icu.dev.util.CollectionUtilities;
 
 public class TestExampleDependencies extends TestFmwk {
 
-    private final boolean JUST_LIST_PATHS = false;
-    private final boolean USE_STARRED_PATHS = true;
     private final boolean USE_RECORDING = true;
-    private final boolean countOnly = false;
+    private final boolean USE_STARRED_PATHS = true;
+    private final boolean JUST_LIST_PATHS = false;
 
     public static void main(String[] args) {
         new TestExampleDependencies().run(args);
@@ -41,19 +43,93 @@ public class TestExampleDependencies extends TestFmwk {
      *
      * The goal is to optimize example caching by only regenerating examples when necessary.
      *
-     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
+     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
      *
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
-        /*
-         * Different localeId gives different dependencies.
-         * For example:
-         *   "fr": 650 "type A"
-         *   "de": 652 "type A"
-         *   "am": 618 "type A"
-         *   "zh": 12521 "type A"
-         */
+        if (USE_RECORDING) {
+            /*
+             * Fast method: use RecordingCLDRFile to learn which paths are checked
+             * to produce the example for a given path. This is fast enough that we
+             * can do it for all locales at once to produce a single file.
+             */
+            useRecording();
+        } else {
+            /*
+             * Slow method: loop through all paths, modifying the value for each path
+             * and then doing an inner loop through all paths to see whether the example
+             * changed for each other path. This is extremely slow, so we produce one file
+             * for each locale, with the intention of merging the files afterwards.
+             */
+            useModifying();
+        }
+    }
+
+    private void useRecording() throws IOException {
+        final CLDRConfig info = CLDRConfig.getInstance();
+        final CLDRFile englishFile = info.getEnglish();
+        final Factory factory = info.getCldrFactory();
+        final Set<String> locales = factory.getAvailable();
+        final String outputDir = CLDRPaths.GEN_DIRECTORY + "test" + File.separator;
+        final Multimap<String, String> dependenciesA = TreeMultimap.create();
+
+        System.out.println("...");
+        System.out.println("Starting to loop through " + locales.size() + " locales ...");
+
+        for (String localeId : locales) {
+            // if (CLDRFile.isSupplementalName(localeID)) continue;
+            System.out.println(localeId);
+            addDependenciesForLocale(dependenciesA, localeId, factory, englishFile);
+        }
+        String fileName = "example_dependencies_A_"
+            + "ALL"
+            + (USE_STARRED_PATHS ? "_star" : "")
+            + (USE_RECORDING ? "_rec" : "")
+            + ".json";
+        System.out.println("Creating " + outputDir + fileName + " ...");
+        writeDependenciesToFile(dependenciesA, outputDir, fileName);
+    }
+
+    private void addDependenciesForLocale(Multimap<String, String> dependenciesA, String localeId, Factory factory, CLDRFile englishFile) {
+        RecordingCLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
+        cldrFile.disableCaching();
+
+        Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
+        CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
+        final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
+
+        ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+        egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
+
+        long count = 0;
+        for (String pathB : paths) {
+            if (skipPathForDependencies(pathB)) {
+                continue;
+            }
+            String valueB = cldrFile.getStringValue(pathB);
+            if (valueB == null) {
+                continue;
+            }
+            if ((++count % 1000) == 0) {
+                System.out.println(count);
+            }
+            String starredB = USE_STARRED_PATHS ? pathStarrer.set(pathB) : null;
+            cldrFile.clearRecordedPaths();
+            egTest.getExampleHtml(pathB, valueB);
+            HashSet<String> pathsA = cldrFile.getRecordedPaths();
+            for (String pathA: pathsA) {
+                if (pathA.equals(pathB) || skipPathForDependencies(pathA)) {
+                    continue;
+                }
+                String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
+                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA,
+                                  USE_STARRED_PATHS ? starredB : pathB);
+            }
+        }
+    }
+
+    private void useModifying() {
         final CLDRConfig info = CLDRConfig.getInstance();
         final CLDRFile englishFile = info.getEnglish();
         final Factory factory = info.getCldrFactory();
@@ -98,28 +174,26 @@ public class TestExampleDependencies extends TestFmwk {
         }
         final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
-        ExampleGenerator egBase = USE_RECORDING ? null : new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
+        ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
 
-        HashMap<String, String> originalValues = USE_RECORDING ? null : new HashMap<String, String>();
+        HashMap<String, String> originalValues = new HashMap<String, String>();
 
-        if (!USE_RECORDING) {
-            getExamplesForBase(egBase, cldrFile, paths, originalValues);
-            /*
-             * Make egBase "cacheOnly" so that getExampleHtml will throw an exception if future queries
-             * are not found in the cache. Alternatively, could just make a local hashmap originalExamples,
-             * similar to originalValues. That might be more robust, require more memory, faster or slower?
-             * Should try both ways.
-             */
-            egBase.makeCacheOnly();
-        }
+        getExamplesForBase(egBase, cldrFile, paths, originalValues);
+        /*
+         * Make egBase "cacheOnly" so that getExampleHtml will throw an exception if future queries
+         * are not found in the cache. Alternatively, could just make a local hashmap originalExamples,
+         * similar to originalValues. That might be more robust, require more memory, faster or slower?
+         * Should try both ways.
+         */
+        egBase.makeCacheOnly();
 
         ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
         egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
 
-        CLDRFile top = USE_RECORDING ? null : cldrFile.getUnresolved(); // can mutate top
+        CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
         /*
-         * TODO: Multimap would be better for dependenciesA; requires revision of writeDependenciesToFile
+         * TODO: Multimap would be better for dependenciesA
          */
         HashMap<String, HashSet<String>> dependenciesA = new HashMap<String, HashSet<String>>();
         long count = 0;
@@ -143,117 +217,90 @@ public class TestExampleDependencies extends TestFmwk {
             }
             String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
             HashSet<String> a = USE_STARRED_PATHS ? dependenciesA.get(starredA) : null;
-            if (USE_RECORDING) {
-                cldrFile.clearPaths();
-                egTest.getExampleHtml(pathA, valueA);
-                HashSet<String> pathsB = cldrFile.getPaths();
-                if (a == null) {
-                    a = new HashSet<String>();
+            /*
+             * For each path (A), temporarily change its value, and then check each other path (B),
+             * to see whether changing the value for A changed the example for B.
+             */
+            /*
+             * Modify the value for pathA in some random way
+             */
+            String newValue = modifyValueRandomly(valueA);
+            /*
+             * cldrFile.add would lead to UnsupportedOperationException("Resolved CLDRFiles are read-only");
+             * Instead do top.add(), which works since top.dataSource = cldrFile.dataSource.currentSource.
+             * First, need to do valueChanged to clear getSourceLocaleIDCache.
+             */
+            cldrFile.valueChanged(pathA);
+            top.add(pathA, newValue);
+
+            /*
+             * Reality check, did we really change the value returned by cldrFile.getStringValue?
+             */
+            String valueAX = cldrFile.getStringValue(pathA);
+            if (valueAX.equals(newValue)) {
+                // Good, expected
+                // System.out.println("Changing top changed cldrFile: newValue = " + newValue
+                //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
+            } else {
+                // Bad, didn't work as expected
+                System.out.println("Changing top did not change cldrFile: newValue = " + newValue
+                    + "; valueAX = " + valueAX + "; valueA = " + valueA);
+            }
+            boolean maybeTypeA = ExampleGenerator.pathMightBeTypeA(pathA);
+
+            for (String pathB : paths) {
+                if (pathA.equals(pathB) || skipPathForDependencies(pathB)) {
+                    continue;
                 }
-                for (String pathB: pathsB) {
-                    if (pathA.equals(pathB) || skipPathForDependencies(pathB)) {
-                        continue;
+                /*
+                 * For valueB, use originalValues.get(pathB), not cldrFile.getStringValue(pathB).
+                 * They could be different if changing valueA changes valueB (probably due to aliasing).
+                 * In that case, we're not interested in whether changing valueA changes valueB. We need
+                 * to know whether changing valueA changes an example that was already cached, keyed by
+                 * pathB and the original valueB.
+                 */
+                String valueB = originalValues.get(pathB);
+                if (valueB == null) {
+                    continue;
+                }
+                pathB = pathB.intern();
+
+                // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
+                String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache (or throw cacheOnly exception)
+                String exTest = egTest.getExampleHtml(pathB, valueB); // this won't come from cache
+                if ((exTest == null) != (exBase == null)) {
+                    throw new InternalError("One null but not both? " + pathA + " --- " + pathB);
+                } else if (exTest != null && !exTest.equals(exBase)) {
+                    if (!maybeTypeA) {
+                        System.out.println("Warning: !maybeTypeA: " + pathA);
+                    }
+                    if (a == null) {
+                        a = new HashSet<String>();
                     }
                     a.add(USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
                     ++dependencyCount;
                 }
-                if (a != null && !a.isEmpty()) {
-                    dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
-                }
-            } else {
-                /*
-                 * TODO: move this block into a subroutine
-                 */
-                /*
-                 * For each path (A), temporarily change its value, and then check each other path (B),
-                 * to see whether changing the value for A changed the example for B.
-                 */
-                /*
-                 * Modify the value for pathA in some random way
-                 */
-                String newValue = modifyValueRandomly(valueA);
-                /*
-                 * cldrFile.add would lead to UnsupportedOperationException("Resolved CLDRFiles are read-only");
-                 * Instead do top.add(), which works since top.dataSource = cldrFile.dataSource.currentSource.
-                 * First, need to do valueChanged to clear getSourceLocaleIDCache.
-                 */
-                cldrFile.valueChanged(pathA);
-                top.add(pathA, newValue);
-
-                /*
-                 * Reality check, did we really change the value returned by cldrFile.getStringValue?
-                 */
-                String valueAX = cldrFile.getStringValue(pathA);
-                if (valueAX.equals(newValue)) {
-                    // Good, expected
-                    // System.out.println("Changing top changed cldrFile: newValue = " + newValue
-                    //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
-                } else {
-                    // Bad, didn't work as expected
-                    System.out.println("Changing top did not change cldrFile: newValue = " + newValue
-                        + "; valueAX = " + valueAX + "; valueA = " + valueA);
-                }
-                boolean maybeTypeA = ExampleGenerator.pathMightBeTypeA(pathA);
-
-                for (String pathB : paths) {
-                    if (pathA.equals(pathB) || skipPathForDependencies(pathB)) {
-                        continue;
-                    }
-                    /*
-                     * For valueB, use originalValues.get(pathB), not cldrFile.getStringValue(pathB).
-                     * They could be different if changing valueA changes valueB (probably due to aliasing).
-                     * In that case, we're not interested in whether changing valueA changes valueB. We need
-                     * to know whether changing valueA changes an example that was already cached, keyed by
-                     * pathB and the original valueB.
-                     */
-                    String valueB = originalValues.get(pathB);
-                    if (valueB == null) {
-                        continue;
-                    }
-                    if (false && pathA.equals("//ldml/localeDisplayNames/languages/language[@type=\"aa\"]")
-                        && pathB.equals("//ldml/numbers/currencies/currency[@type=\"EUR\"]/symbol")) {
-                        System.out.println("Got our paths in inner loop...");
-                    }
-                    pathB = pathB.intern();
-
-                    // egTest.icuServiceBuilder.setCldrFile(cldrFile); // clear caches in icuServiceBuilder; has to be public
-                    String exBase = egBase.getExampleHtml(pathB, valueB); // this will come from cache (or throw cacheOnly exception)
-                    String exTest = egTest.getExampleHtml(pathB, valueB); // this won't come from cache
-                    if ((exTest == null) != (exBase == null)) {
-                        throw new InternalError("One null but not both? " + pathA + " --- " + pathB);
-                    } else if (exTest != null && !exTest.equals(exBase)) {
-                        if (!maybeTypeA) {
-                            System.out.println("Warning: !maybeTypeA: " + pathA);
-                        }
-                        if (a == null) {
-                            a = new HashSet<String>();
-                        }
-                        a.add(USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
-                        ++dependencyCount;
-                    }
-                }
-                if (a != null && !a.isEmpty()) {
-                    dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
-                }
-                /*
-                 * Restore the original value, so that the changes due to this pathA don't get
-                 * carried over to the next pathA. Again call valueChanged to clear getSourceLocaleIDCache.
-                 */
-                top.add(pathA, valueA);
-                cldrFile.valueChanged(pathA);
-                String valueAXX = cldrFile.getStringValue(pathA);
-                if (!valueAXX.equals(valueA)) {
-                    System.out.println("Failed to restore original value: valueAXX = " + valueAXX
-                        + "; valueA = " + valueA);
-                }
+            }
+            if (a != null && !a.isEmpty()) {
+                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
+            }
+            /*
+             * Restore the original value, so that the changes due to this pathA don't get
+             * carried over to the next pathA. Again call valueChanged to clear getSourceLocaleIDCache.
+             */
+            top.add(pathA, valueA);
+            cldrFile.valueChanged(pathA);
+            String valueAXX = cldrFile.getStringValue(pathA);
+            if (!valueAXX.equals(valueA)) {
+                System.out.println("Failed to restore original value: valueAXX = " + valueAXX
+                    + "; valueA = " + valueA);
             }
         }
         try {
-            writeDependenciesToFile(dependenciesA, outputDir, fileName, countOnly);
+            writeDependenciesToFile(dependenciesA, outputDir, fileName);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // writeDependenciesToFile(dependenciesB, "example_dependencies_B_" + localeId, countOnly);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
     }
 
@@ -268,7 +315,6 @@ public class TestExampleDependencies extends TestFmwk {
         ArrayList<String> list = new ArrayList<String>(paths);
         Collections.sort(list);
         for (String path : list) {
-            // writer.println(path);
             writer.println(path.replaceAll("\"", "\\\\\""));
         }
     }
@@ -324,7 +370,6 @@ public class TestExampleDependencies extends TestFmwk {
          * String concatenation, e.g., change "foo" to "foo1"
          */
         return value + "1";
-        // return "1".equals(value) ? "2" : "1";
     }
 
     /**
@@ -388,12 +433,10 @@ public class TestExampleDependencies extends TestFmwk {
      *
      * @param dependencies the map of example-generator path dependencies
      * @param fileName the name of the file to create, without path or extension
-     * @param countOnly true to show only the count of the set for each key path in the map
-     *                  false to include all the paths
      *
      * @throws IOException
      */
-    private void writeDependenciesToFile(HashMap<String, HashSet<String>> dependencies, String dir, String name, boolean countOnly) throws IOException {
+    private void writeDependenciesToFile(HashMap<String, HashSet<String>> dependencies, String dir, String name) throws IOException {
         // JSONObject json = new JSONObject(dependencies);
         // json.write(writer);
 
@@ -412,23 +455,18 @@ public class TestExampleDependencies extends TestFmwk {
             }
             HashSet<String> set = dependencies.get(pathA);
             writer.print("  " + "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"" + ": ");
-            if (countOnly) {
-                Integer count = set.size();
-                writer.println(count.toString());
-            } else {
-                writer.println("[");
-                boolean firstPathB = true;
-                for (String pathB : set) {
-                    if (firstPathB) {
-                        firstPathB = false;
-                    } else {
-                        writer.println(",");
-                    }
-                    writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
+            writer.println("[");
+            boolean firstPathB = true;
+            for (String pathB : set) {
+                if (firstPathB) {
+                    firstPathB = false;
+                } else {
+                    writer.println(",");
                 }
-                writer.println("");
-                writer.print("  ]");
+                writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
             }
+            writer.println("");
+            writer.print("  ]");
             ++keysWritten;
         }
 
@@ -437,4 +475,54 @@ public class TestExampleDependencies extends TestFmwk {
         writer.close();
         System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
     }
+
+    /**
+     * Write the given map of example-generator path dependencies to a json file.
+     * Multimap version!
+     *
+     * If this function is to be used and revised long-term, it would be better to use JSONObject,
+     * or write a format other than json.
+     * JSONObject isn't currently linked to cldr-unittest TestAll, package org.unicode.cldr.unittest.
+     *
+     * @param dependencies the multimap of example-generator path dependencies
+     * @param fileName the name of the file to create, without path or extension
+     *
+     * @throws IOException
+     */
+    private void writeDependenciesToFile(Multimap<String, String> dependencies, String dir, String name) throws IOException {
+        PrintWriter writer = FileUtilities.openUTF8Writer(dir, name);
+        writer.println("{");
+
+        ArrayList<String> list = new ArrayList<String>(dependencies.keySet());
+        Collections.sort(list);
+        boolean firstPathA = true;
+        int keysWritten = 0;
+        for (String pathA : list) {
+            if (firstPathA) {
+                firstPathA = false;
+            } else {
+                writer.println(",");
+            }
+            Collection<String> values = dependencies.get(pathA);
+            writer.print("  " + "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"" + ": ");
+            writer.println("[");
+            boolean firstPathB = true;
+            for (String pathB : values) {
+                if (firstPathB) {
+                    firstPathB = false;
+                } else {
+                    writer.println(",");
+                }
+                writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
+            }
+            writer.println("");
+            writer.print("  ]");
+            ++keysWritten;
+        }
+        writer.println("");
+        writer.println("}");
+        writer.close();
+        System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
+    }
+
 }
