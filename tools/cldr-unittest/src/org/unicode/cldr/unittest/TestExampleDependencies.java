@@ -95,7 +95,7 @@ public class TestExampleDependencies extends TestFmwk {
     }
 
     private void addDependenciesForLocale(Multimap<String, String> dependencies, String localeId) {
-        RecordingCLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
+        RecordingCLDRFile cldrFile = makeRecordingCldrFile(localeId);
         cldrFile.disableCaching();
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
@@ -127,6 +127,13 @@ public class TestExampleDependencies extends TestFmwk {
         }
     }
 
+    private RecordingCLDRFile makeRecordingCldrFile(String localeId) {
+        XMLSource topSource = factory.makeSource(localeId);
+        List<XMLSource> parents = getParentSources(factory, localeId);
+        XMLSource[] a = new XMLSource[parents.size()];
+        return new RecordingCLDRFile(topSource, parents.toArray(a));
+    }
+
     private void useModifying() throws IOException {
         for (String localeId : locales) {
             String fileName = "example_dependencies_A_"
@@ -146,7 +153,7 @@ public class TestExampleDependencies extends TestFmwk {
     }
 
     private void writeOneLocale(String localeId, String outputDir, String fileName) throws IOException {
-        RecordingCLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
+        CLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
         cldrFile.disableCaching();
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
@@ -269,7 +276,7 @@ public class TestExampleDependencies extends TestFmwk {
      * @param paths
      * @param originalValues
      */
-    private void getExamplesForBase(ExampleGenerator egBase, RecordingCLDRFile cldrFile, Set<String> paths, HashMap<String, String> originalValues) {
+    private void getExamplesForBase(ExampleGenerator egBase, CLDRFile cldrFile, Set<String> paths, HashMap<String, String> originalValues) {
         for (String path : paths) {
             if (skipPathForDependencies(path)) {
                 continue;
@@ -322,28 +329,28 @@ public class TestExampleDependencies extends TestFmwk {
      * will be a SimpleXMLSource.
      *
      * @param factory
-     * @param localeID
+     * @param localeId
      * @return the CLDRFile
      */
-    private static RecordingCLDRFile makeMutableResolved(Factory factory, String localeID) {
-        XMLSource topSource = factory.makeSource(localeID).cloneAsThawed(); // make top one modifiable
-        List<XMLSource> parents = getParentSources(factory, localeID);
+    private static CLDRFile makeMutableResolved(Factory factory, String localeId) {
+        XMLSource topSource = factory.makeSource(localeId).cloneAsThawed(); // make top one modifiable
+        List<XMLSource> parents = getParentSources(factory, localeId);
         XMLSource[] a = new XMLSource[parents.size()];
-        return new RecordingCLDRFile(topSource, parents.toArray(a));
+        return new CLDRFile(topSource, parents.toArray(a));
     }
 
     /**
      * Get the parent sources for the given localeId
      *
      * @param factory
-     * @param localeID
+     * @param localeId
      * @return the List of XMLSource objects
      *
      * Called only by makeMutableResolved
      */
-    private static List<XMLSource> getParentSources(Factory factory, String localeID) {
+    private static List<XMLSource> getParentSources(Factory factory, String localeId) {
         List<XMLSource> parents = new ArrayList<>();
-        for (String currentLocaleID = LocaleIDParser.getParent(localeID);
+        for (String currentLocaleID = LocaleIDParser.getParent(localeId);
             currentLocaleID != null;
             currentLocaleID = LocaleIDParser.getParent(currentLocaleID)) {
             parents.add(factory.makeSource(currentLocaleID));
