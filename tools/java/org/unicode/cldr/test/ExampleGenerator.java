@@ -35,6 +35,7 @@ import org.unicode.cldr.util.ICUServiceBuilder;
 import org.unicode.cldr.util.LanguageTagParser;
 import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.PathDescription;
+import org.unicode.cldr.util.PathStarrer;
 import org.unicode.cldr.util.PatternCache;
 import org.unicode.cldr.util.PluralSamples;
 import org.unicode.cldr.util.SupplementalDataInfo;
@@ -94,7 +95,7 @@ public class ExampleGenerator {
     private static SupplementalDataInfo supplementalDataInfo;
     private PathDescription pathDescription;
 
-    /*
+    /**
      * For testing, caching can be disabled for some ExampleGenerators while still
      * enabled for others.
      */
@@ -104,7 +105,7 @@ public class ExampleGenerator {
         cachingIsEnabled = false;
     }
 
-    /*
+    /**
      * For testing, we can switch some ExampleGenerators into a special "cache only"
      * mode, where they will throw an exception if queried for a path+value that isn't
      * already in the cache. See TestExampleGeneratorDependencies.
@@ -180,19 +181,21 @@ public class ExampleGenerator {
 
     /**
      * The cache is accessed only by getExampleHtml and updateCache.
-     * Its key is built from an xpath, and a value for that xpath.
-     * Its value is an HTML string showing example(s) using that value for that path, for the locale of this ExampleGenerator.
+     * It maps: starredPath → (unstarredPath → (value → html))
+     * The HTML string shows example(s) using that value for that path, for the locale of this ExampleGenerator.
      *
      * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
      * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
      */
-    private Map<String, String> cache = new ConcurrentHashMap<String, String>();
+    private Map<String, Map<String, Map<String, String>>> cache = new ConcurrentHashMap<String, Map<String, Map<String, String>>>();
 
     /**
      * AVOID_CLEARING_CACHE: work in progress, keep false until it becomes beneficial and reliable.
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
      */
-    private static final boolean AVOID_CLEARING_CACHE = false;
+    private static final boolean AVOID_CLEARING_CACHE = true;
+
+    private PathStarrer pathStarrer = new PathStarrer().setSubstitutionPattern("*");
 
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
@@ -212,121 +215,30 @@ public class ExampleGenerator {
      *
      * @param xpath the path whose winning value has (may have?) changed
      *
-     * TODO: make sure we're only called if the winning value really HAS changed.
-     * Looking at the callers, it's not obvious if that's the case, or if this
-     * function may sometimes be called when a vote has been made without actually
-     * changing the winning value.
+     * TODO: IMPORTANT! Make sure we're only called if the winning value really HAS changed.
+     * In fact, currently (2020-03-23), updateCache is called when a vote is made even if the vote does
+     * not change the winning value, causing needless cache-clearing.
      *
      * Called by TestCache.updateExampleGeneratorCache
      */
-    public void updateCache(@SuppressWarnings("unused") String xpath) {
-        /*
-         * TODO: instead of removing ALL keys, only remove keys for which the examples
-         * may be affected by this change.
-         *
-         * It appears (based on incomplete evidence), that all paths of type “A”
-         * (i.e., all that have dependencies) start with one of these seven strings:
-         * //ldml/characterLabels
-         * //ldml/dates
-         * //ldml/delimiters
-         * //ldml/listPatterns
-         * //ldml/localeDisplayNames
-         * //ldml/numbers
-         * //ldml/units
-         *
-         * Problem: that's something like 98% of all paths! Need to narrow it down much further.
-         *
-         * For any other path given as the argument to this function, there should be no need to clear the cache.
-         * Also, when there are dependencies, ideally only the keys for paths that are dependent on this path
-         * should be removed. It might be slow to loop through the cache testing each path to see if it's affected.
-         * Ideally we might maintain a complete mapping of dependencies, so given pathA we could quickly loop
-         * through the pre-existing set of paths B that depend on pathA.
-         *
-         * Reference: https://unicode-org.atlassian.net/browse/CLDR-13331
-         */
+    public void updateCache(String xpath) {
         if (AVOID_CLEARING_CACHE) {
-            if (!pathMightBeTypeA(xpath)) {
-                return;
+            /*
+             * Only remove keys for which the examples may be affected by this change.
+             *
+             * All paths of type “A” (i.e., all that have dependencies) have keys in ExampleDependencies.dependencies.
+             * For any other path given as the argument to this function, there should be no need to clear the cache.
+             * When there are dependencies, only remove the keys for paths that are dependent on this path.
+             *
+             * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
+             */
+            String starredA = pathStarrer.set(xpath);
+            for (String starredB : ExampleDependencies.dependencies.get(starredA)) {
+                cache.remove(starredB);
             }
-        }
-        cache.clear();
-    }
-
-    static long typeACount = 0, notTypeACount = 0;
-
-    /**
-     * Does changing the winning value for the given path potentially have side-effect of changing the example
-     * html for other paths? In other words, might this be a path of type "A"?
-     *
-     * We say "might be", since this function is meant to be fast rather than exact. It should never return
-     * false for a path that really is type "A", but it may return true for some paths that aren't really type "A".
-     *
-     * @param xpath
-     * @return true or false
-     *
-     * Called locally (only if AVOID_CLEARING_CACHE is true), and also by TestExampleGeneratorDependencies.
-     */
-    static public boolean pathMightBeTypeA(String xpath) {
-        final String pathAStarts[] = {
-            "//ldml/characterLabels/characterLabelPattern",
-            "//ldml/characterLabels/characterLabel",
-            "//ldml/dates/calendars",
-            "//ldml/dates/fields",
-            "//ldml/dates/timeZoneNames",
-            "//ldml/delimiters/alternateQuotationEnd",
-            "//ldml/delimiters/alternateQuotationStart",
-            "//ldml/delimiters/quotationEnd",
-            "//ldml/delimiters/quotationStart",
-            "//ldml/listPatterns/listPattern",
-            "//ldml/localeDisplayNames/codePatterns",
-            "//ldml/localeDisplayNames/keys",
-            "//ldml/localeDisplayNames/languages",
-            "//ldml/localeDisplayNames/localeDisplayPattern",
-            "//ldml/localeDisplayNames/scripts",
-            "//ldml/localeDisplayNames/territories",
-            "//ldml/localeDisplayNames/types",
-            "//ldml/numbers/currencies",
-            "//ldml/numbers/currencyFormats",
-            "//ldml/numbers/decimalFormats",
-            "//ldml/numbers/defaultNumberingSystem",
-            "//ldml/numbers/minimalPairs",
-            "//ldml/numbers/minimumGroupingDigits",
-            "//ldml/numbers/miscPatterns",
-            "//ldml/numbers/otherNumberingSystems",
-            "//ldml/numbers/percentFormats",
-            "//ldml/numbers/scientificFormats",
-            "//ldml/numbers/symbols",
-            "//ldml/posix/messages",
-            "//ldml/typographicNames",
-            "//ldml/units/durationUnit",
-            "//ldml/units/unitLength",
-        };
-        /***
-        final String pathAStartsShorter[] = {
-            "//ldml/characterLabels",
-            "//ldml/dates",
-            "//ldml/delimiters",
-            "//ldml/listPatterns",
-            "//ldml/localeDisplayNames",
-            "//ldml/numbers",
-            "//ldml/units"
-        };
-        ***/
-        boolean maybeTypeA = false;
-        for (String s : pathAStarts) {
-            if (xpath.startsWith(s)) {
-                maybeTypeA = true;
-                break;
-            }
-        }
-        if (maybeTypeA) {
-             ++typeACount;
         } else {
-             ++notTypeACount; // e.g., //ldml/localeDisplayNames/subdivisions/subdivision[@type="gbeng"] or //ldml/localeDisplayNames/variants/variant[@type="1901"] or //ldml/localeDisplayNames/measurementSystemNames/measurementSystemName[@type="US"]
+            cache.clear();
         }
-        // System.out.println("type A percent = " + ((100 * typeACount) / (typeACount + notTypeACount))
-        //    + " [" + typeACount + ", " + notTypeACount + "]");
-        return maybeTypeA;
     }
 
     private static final String NONE = "\uFFFF";
@@ -450,94 +362,32 @@ public class ExampleGenerator {
         if (value == null) {
             return null;
         }
-        String cacheKey = null;
         String result = null;
+        String starredPath = null;
+        Map<String, Map<String, String>> pathMap = null;
+        Map<String, String> valueMap = null;
         try {
             if (cachingIsEnabled) {
-                cacheKey = xpath + "," + value;
-                result = cache.get(cacheKey);
-                if (result != null) {
-                    if (result == NONE) {
-                        return null;
+                starredPath = pathStarrer.set(xpath);
+                pathMap = cache.get(starredPath);
+                if (pathMap != null) {
+                    valueMap = pathMap.get(xpath);
+                    if (valueMap != null) {
+                        result = valueMap.get(value);
                     }
-                    return result;
                 }
-            } else if (cacheOnly ) {
-                throw new InternalError("getExampleHtml cacheOnly not found: " + cacheKey);
+                if (result != null) {
+                    return (result == NONE) ? null : result;
+                } else if (cacheOnly ) {
+                    throw new InternalError("getExampleHtml cacheOnly not found: " + xpath + ", " + value);
+                }
             }
             // If generating examples for an inheritance marker, then we need to find the
             // "real" value to generate from.
             if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
                 value = cldrFile.getConstructedBaileyValue(xpath, null, null);
             }
-
-            /*
-             * result is null at this point. Get the real value if we can.
-             *
-             * Need getInstance, not getFrozenInstance here: some functions such as handleNumberSymbol
-             * expect to call functions like parts.addRelative which throw exceptions if parts is frozen.
-             */
-            XPathParts parts = XPathParts.getInstance(xpath);
-            if (parts.contains("dateRangePattern")) { // {0} - {1}
-                result = handleDateRangePattern(value);
-            } else if (parts.contains("timeZoneNames")) {
-                result = handleTimeZoneName(parts, value);
-            } else if (parts.contains("localeDisplayNames")) {
-                result = handleDisplayNames(xpath, parts, value);
-            } else if (parts.contains("currency")) {
-                result = handleCurrency(xpath, parts, value);
-            } else if (parts.contains("dayPeriods")) {
-                result = handleDayPeriod(parts, value);
-            } else if (parts.contains("pattern") || parts.contains("dateFormatItem")) {
-                if (parts.contains("calendar")) {
-                    result = handleDateFormatItem(xpath, value);
-                } else if (parts.contains("miscPatterns")) {
-                    result = handleMiscPatterns(parts, value);
-                } else if (parts.contains("numbers")) {
-                    if (parts.contains("currencyFormat")) {
-                        result = handleCurrencyFormat(parts, value);
-                    } else {
-                        result = handleDecimalFormat(parts, value);
-                    }
-                }
-            } else if (parts.getElement(2).contains("symbols")) {
-                result = handleNumberSymbol(parts, value);
-            } else if (parts.contains("defaultNumberingSystem") || parts.contains("otherNumberingSystems")) {
-                result = handleNumberingSystem(value);
-            } else if (parts.contains("currencyFormats") && parts.contains("unitPattern")) {
-                result = formatCountValue(xpath, parts, value);
-            } else if (parts.getElement(-1).equals("compoundUnitPattern")) {
-                result = handleCompoundUnit(parts);
-            } else if (parts.getElement(-1).equals("compoundUnitPattern1") 
-                || parts.getElement(-1).equals("unitPrefixPattern")) {
-                result = handleCompoundUnit1(parts, value);
-            } else if (parts.getElement(-1).equals("unitPattern")) {
-                String count = parts.getAttributeValue(-1, "count");
-                result = handleFormatUnit(Count.valueOf(count), value);
-            } else if (parts.getElement(-1).equals("durationUnitPattern")) {
-                result = handleDurationUnit(value);
-            } else if (parts.contains("intervalFormats")) {
-                result = handleIntervalFormats(parts, value);
-            } else if (parts.getElement(1).equals("delimiters")) {
-                result = handleDelimiters(parts, xpath, value);
-            } else if (parts.getElement(1).equals("listPatterns")) {
-                result = handleListPatterns(parts, value);
-            } else if (parts.getElement(2).equals("ellipsis")) {
-                result = handleEllipsis(parts.getAttributeValue(-1, "type"), value);
-            } else if (parts.getElement(-1).equals("monthPattern")) {
-                result = handleMonthPatterns(parts, value);
-            } else if (parts.getElement(-1).equals("appendItem")) {
-                result = handleAppendItems(parts, value);
-            } else if (parts.getElement(-1).equals("annotation")) {
-                result = handleAnnotationName(parts, value);
-            } else if (parts.getElement(-1).equals("characterLabel")) {
-                result = handleLabel(parts, value);
-            } else if (parts.getElement(-1).equals("characterLabelPattern")) {
-                result = handleLabelPattern(parts, value);
-            } else {
-                // didn't detect anything
-                result = null;
-            }
+            result = constructExampleHtml(xpath, value);
         } catch (NullPointerException e) {
             if (SHOW_ERROR) {
                 e.printStackTrace();
@@ -547,7 +397,6 @@ public class ExampleGenerator {
             String unchained = verboseErrors ? ("<br>" + finalizeBackground(unchainException(e))) : "";
             result = "<i>Parsing error. " + finalizeBackground(e.getMessage()) + "</i>" + unchained;
         }
-
         if (result != null) {
             // add transliteration if one exists
             if (!typeIsEnglish) {
@@ -555,13 +404,94 @@ public class ExampleGenerator {
             }
             result = finalizeBackground(result);
         }
-
         if (cachingIsEnabled) {
-            if (result == null) {
-                cache.put(cacheKey, NONE);
-            } else {
-                cache.put(cacheKey, result);
+            if (pathMap == null) {
+                pathMap = new ConcurrentHashMap<String, Map<String, String>>();
+                cache.put(starredPath, pathMap);
             }
+            if (valueMap == null) {
+                valueMap = new ConcurrentHashMap<String, String>();
+                pathMap.put(xpath, valueMap);
+            }
+            valueMap.put(value, (result == null) ? NONE : result);
+        }
+        return result;
+    }
+
+    /**
+     * Do the main work of getExampleHtml given that the result was not
+     * found in the cache.
+     *
+     * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
+     * @param value the value; e.g., "{1} [{0}]"; not necessarily the winning value
+     * @return the example HTML, or null
+     */
+    private String constructExampleHtml(String xpath, String value) {
+        String result = null;
+        /*
+         * Need getInstance, not getFrozenInstance here: some functions such as handleNumberSymbol
+         * expect to call functions like parts.addRelative which throw exceptions if parts is frozen.
+         */
+        XPathParts parts = XPathParts.getInstance(xpath);
+        if (parts.contains("dateRangePattern")) { // {0} - {1}
+            result = handleDateRangePattern(value);
+        } else if (parts.contains("timeZoneNames")) {
+            result = handleTimeZoneName(parts, value);
+        } else if (parts.contains("localeDisplayNames")) {
+            result = handleDisplayNames(xpath, parts, value);
+        } else if (parts.contains("currency")) {
+            result = handleCurrency(xpath, parts, value);
+        } else if (parts.contains("dayPeriods")) {
+            result = handleDayPeriod(parts, value);
+        } else if (parts.contains("pattern") || parts.contains("dateFormatItem")) {
+            if (parts.contains("calendar")) {
+                result = handleDateFormatItem(xpath, value);
+            } else if (parts.contains("miscPatterns")) {
+                result = handleMiscPatterns(parts, value);
+            } else if (parts.contains("numbers")) {
+                if (parts.contains("currencyFormat")) {
+                    result = handleCurrencyFormat(parts, value);
+                } else {
+                    result = handleDecimalFormat(parts, value);
+                }
+            }
+        } else if (parts.getElement(2).contains("symbols")) {
+            result = handleNumberSymbol(parts, value);
+        } else if (parts.contains("defaultNumberingSystem") || parts.contains("otherNumberingSystems")) {
+            result = handleNumberingSystem(value);
+        } else if (parts.contains("currencyFormats") && parts.contains("unitPattern")) {
+            result = formatCountValue(xpath, parts, value);
+        } else if (parts.getElement(-1).equals("compoundUnitPattern")) {
+            result = handleCompoundUnit(parts);
+        } else if (parts.getElement(-1).equals("compoundUnitPattern1")
+            || parts.getElement(-1).equals("unitPrefixPattern")) {
+            result = handleCompoundUnit1(parts, value);
+        } else if (parts.getElement(-1).equals("unitPattern")) {
+            String count = parts.getAttributeValue(-1, "count");
+            result = handleFormatUnit(Count.valueOf(count), value);
+        } else if (parts.getElement(-1).equals("durationUnitPattern")) {
+            result = handleDurationUnit(value);
+        } else if (parts.contains("intervalFormats")) {
+            result = handleIntervalFormats(parts, value);
+        } else if (parts.getElement(1).equals("delimiters")) {
+            result = handleDelimiters(parts, xpath, value);
+        } else if (parts.getElement(1).equals("listPatterns")) {
+            result = handleListPatterns(parts, value);
+        } else if (parts.getElement(2).equals("ellipsis")) {
+            result = handleEllipsis(parts.getAttributeValue(-1, "type"), value);
+        } else if (parts.getElement(-1).equals("monthPattern")) {
+            result = handleMonthPatterns(parts, value);
+        } else if (parts.getElement(-1).equals("appendItem")) {
+            result = handleAppendItems(parts, value);
+        } else if (parts.getElement(-1).equals("annotation")) {
+            result = handleAnnotationName(parts, value);
+        } else if (parts.getElement(-1).equals("characterLabel")) {
+            result = handleLabel(parts, value);
+        } else if (parts.getElement(-1).equals("characterLabelPattern")) {
+            result = handleLabelPattern(parts, value);
+        } else {
+            // didn't detect anything
+            result = null;
         }
         return result;
     }

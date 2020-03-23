@@ -30,9 +30,16 @@ import com.ibm.icu.dev.util.CollectionUtilities;
 
 public class TestExampleDependencies extends TestFmwk {
 
-    private final boolean USE_RECORDING = true;
     private final boolean USE_STARRED_PATHS = true;
-    private final boolean JUST_LIST_PATHS = false;
+    private final boolean USE_RECORDING = true;
+    private final String fileExtension = USE_RECORDING ? ".java" : ".json";
+
+    private CLDRConfig info;
+    private CLDRFile englishFile;
+    private Factory factory;
+    private Set<String> locales;
+    private String outputDir;
+    private PathStarrer pathStarrer;
 
     public static void main(String[] args) {
         new TestExampleDependencies().run(args);
@@ -43,11 +50,21 @@ public class TestExampleDependencies extends TestFmwk {
      *
      * The goal is to optimize example caching by only regenerating examples when necessary.
      *
-     * Still under construction. Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
      *
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
+        info = CLDRConfig.getInstance();
+        englishFile = info.getEnglish();
+        factory = info.getCldrFactory();
+        locales = factory.getAvailable();
+        outputDir = CLDRPaths.GEN_DIRECTORY + "test" + File.separator;
+        pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
+
+        System.out.println("...");
+        System.out.println("Looping through " + locales.size() + " locales ...");
+
         if (USE_RECORDING) {
             /*
              * Fast method: use RecordingCLDRFile to learn which paths are checked
@@ -67,42 +84,26 @@ public class TestExampleDependencies extends TestFmwk {
     }
 
     private void useRecording() throws IOException {
-        final CLDRConfig info = CLDRConfig.getInstance();
-        final CLDRFile englishFile = info.getEnglish();
-        final Factory factory = info.getCldrFactory();
-        final Set<String> locales = factory.getAvailable();
-        final String outputDir = CLDRPaths.GEN_DIRECTORY + "test" + File.separator;
-        final Multimap<String, String> dependenciesA = TreeMultimap.create();
-
-        System.out.println("...");
-        System.out.println("Starting to loop through " + locales.size() + " locales ...");
-
+        final Multimap<String, String> dependencies = TreeMultimap.create();
         for (String localeId : locales) {
-            // if (CLDRFile.isSupplementalName(localeID)) continue;
             System.out.println(localeId);
-            addDependenciesForLocale(dependenciesA, localeId, factory, englishFile);
+            addDependenciesForLocale(dependencies, localeId);
         }
-        String fileName = "example_dependencies_A_"
-            + "ALL"
-            + (USE_STARRED_PATHS ? "_star" : "")
-            + (USE_RECORDING ? "_rec" : "")
-            + ".json";
+        String fileName = "ExampleDependencies" + fileExtension;
         System.out.println("Creating " + outputDir + fileName + " ...");
-        writeDependenciesToFile(dependenciesA, outputDir, fileName);
+        writeDependenciesToFile(dependencies, outputDir, fileName);
     }
 
-    private void addDependenciesForLocale(Multimap<String, String> dependenciesA, String localeId, Factory factory, CLDRFile englishFile) {
+    private void addDependenciesForLocale(Multimap<String, String> dependencies, String localeId) {
         RecordingCLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
         cldrFile.disableCaching();
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
         CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
-        final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
         ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
         egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
 
-        long count = 0;
         for (String pathB : paths) {
             if (skipPathForDependencies(pathB)) {
                 continue;
@@ -110,9 +111,6 @@ public class TestExampleDependencies extends TestFmwk {
             String valueB = cldrFile.getStringValue(pathB);
             if (valueB == null) {
                 continue;
-            }
-            if ((++count % 1000) == 0) {
-                System.out.println(count);
             }
             String starredB = USE_STARRED_PATHS ? pathStarrer.set(pathB) : null;
             cldrFile.clearRecordedPaths();
@@ -123,56 +121,36 @@ public class TestExampleDependencies extends TestFmwk {
                     continue;
                 }
                 String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
-                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA,
+                dependencies.put(USE_STARRED_PATHS ? starredA : pathA,
                                   USE_STARRED_PATHS ? starredB : pathB);
             }
         }
     }
 
-    private void useModifying() {
-        final CLDRConfig info = CLDRConfig.getInstance();
-        final CLDRFile englishFile = info.getEnglish();
-        final Factory factory = info.getCldrFactory();
-        final Set<String> locales = factory.getAvailable();
-        final String outputDir = CLDRPaths.GEN_DIRECTORY + "test" + File.separator;
-
-        System.out.println("...");
-        System.out.println("Starting to loop through " + locales.size() + " locales ...");
-
+    private void useModifying() throws IOException {
         for (String localeId : locales) {
-            // if (CLDRFile.isSupplementalName(localeID)) continue;
-
             String fileName = "example_dependencies_A_"
                 + localeId
                 + (USE_STARRED_PATHS ? "_star" : "")
-                + (USE_RECORDING ? "_rec" : "")
-                + ".json";
+                + fileExtension;
 
-            if (JUST_LIST_PATHS) {
-                fileName = "allpaths_" + localeId + ".txt";
-            }
             if (new File(outputDir, fileName).exists()) {
                 System.out.println("Locale: " + localeId + " -- skipping since " +
                     outputDir + fileName + " already exists");
             } else {
                 System.out.println("Locale: " + localeId + " -- creating "
                     + outputDir + fileName + " ...");
-                writeOneLocale(localeId, outputDir, fileName, factory, englishFile);
+                writeOneLocale(localeId, outputDir, fileName);
             }
         }
     }
 
-    private void writeOneLocale(String localeId, String outputDir, String fileName, Factory factory, CLDRFile englishFile) {
+    private void writeOneLocale(String localeId, String outputDir, String fileName) throws IOException {
         RecordingCLDRFile cldrFile = makeMutableResolved(factory, localeId); // time-consuming
         cldrFile.disableCaching();
 
         Set<String> paths = new TreeSet<String>(cldrFile.getComparator());
         CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
-        if (JUST_LIST_PATHS) {
-            justListPaths(outputDir, fileName, paths);
-            return;
-        }
-        final PathStarrer pathStarrer = USE_STARRED_PATHS ? new PathStarrer().setSubstitutionPattern("*") : null;
 
         ExampleGenerator egBase = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
 
@@ -192,14 +170,15 @@ public class TestExampleDependencies extends TestFmwk {
 
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
-        /*
-         * TODO: Multimap would be better for dependenciesA
-         */
-        HashMap<String, HashSet<String>> dependenciesA = new HashMap<String, HashSet<String>>();
+        final Multimap<String, String> dependencies = TreeMultimap.create();
         long count = 0;
         long skipCount = 0;
         long dependencyCount = 0;
 
+        /*
+         * For each path (A), temporarily change its value, and then check each other path (B),
+         * to see whether changing the value for A changed the example for B.
+         */
         for (String pathA : paths) {
             if (skipPathForDependencies(pathA)) {
                 ++skipCount;
@@ -216,11 +195,6 @@ public class TestExampleDependencies extends TestFmwk {
                 break;
             }
             String starredA = USE_STARRED_PATHS ? pathStarrer.set(pathA) : null;
-            HashSet<String> a = USE_STARRED_PATHS ? dependenciesA.get(starredA) : null;
-            /*
-             * For each path (A), temporarily change its value, and then check each other path (B),
-             * to see whether changing the value for A changed the example for B.
-             */
             /*
              * Modify the value for pathA in some random way
              */
@@ -237,16 +211,11 @@ public class TestExampleDependencies extends TestFmwk {
              * Reality check, did we really change the value returned by cldrFile.getStringValue?
              */
             String valueAX = cldrFile.getStringValue(pathA);
-            if (valueAX.equals(newValue)) {
-                // Good, expected
-                // System.out.println("Changing top changed cldrFile: newValue = " + newValue
-                //    + "; valueAX = " + valueAX + "; valueA = " + valueA);
-            } else {
+            if (!valueAX.equals(newValue)) {
                 // Bad, didn't work as expected
                 System.out.println("Changing top did not change cldrFile: newValue = " + newValue
                     + "; valueAX = " + valueAX + "; valueA = " + valueA);
             }
-            boolean maybeTypeA = ExampleGenerator.pathMightBeTypeA(pathA);
 
             for (String pathB : paths) {
                 if (pathA.equals(pathB) || skipPathForDependencies(pathB)) {
@@ -271,18 +240,9 @@ public class TestExampleDependencies extends TestFmwk {
                 if ((exTest == null) != (exBase == null)) {
                     throw new InternalError("One null but not both? " + pathA + " --- " + pathB);
                 } else if (exTest != null && !exTest.equals(exBase)) {
-                    if (!maybeTypeA) {
-                        System.out.println("Warning: !maybeTypeA: " + pathA);
-                    }
-                    if (a == null) {
-                        a = new HashSet<String>();
-                    }
-                    a.add(USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
+                    dependencies.put(USE_STARRED_PATHS ? starredA : pathA, USE_STARRED_PATHS ? pathStarrer.set(pathB).intern() : pathB);
                     ++dependencyCount;
                 }
-            }
-            if (a != null && !a.isEmpty()) {
-                dependenciesA.put(USE_STARRED_PATHS ? starredA : pathA, a);
             }
             /*
              * Restore the original value, so that the changes due to this pathA don't get
@@ -296,27 +256,8 @@ public class TestExampleDependencies extends TestFmwk {
                     + "; valueA = " + valueA);
             }
         }
-        try {
-            writeDependenciesToFile(dependenciesA, outputDir, fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        writeDependenciesToFile(dependencies, outputDir, fileName);
         System.out.println("count = " + count + "; skipCount = " + skipCount + "; dependencyCount = " + dependencyCount);
-    }
-
-    private void justListPaths(String outputDir, String fileName, Set<String> paths) {
-        PrintWriter writer = null;
-        try {
-            writer = FileUtilities.openUTF8Writer(outputDir, fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        ArrayList<String> list = new ArrayList<String>(paths);
-        Collections.sort(list);
-        for (String path : list) {
-            writer.println(path.replaceAll("\"", "\\\\\""));
-        }
     }
 
     /**
@@ -330,7 +271,7 @@ public class TestExampleDependencies extends TestFmwk {
      */
     private void getExamplesForBase(ExampleGenerator egBase, RecordingCLDRFile cldrFile, Set<String> paths, HashMap<String, String> originalValues) {
         for (String path : paths) {
-            if (path.endsWith("/alias") || path.startsWith("//ldml/identity")) {
+            if (skipPathForDependencies(path)) {
                 continue;
             }
             String value = cldrFile.getStringValue(path);
@@ -348,8 +289,8 @@ public class TestExampleDependencies extends TestFmwk {
      * @param value
      * @return the modified value, guaranteed to be different from value
      *
-     * TODO: avoid IllegalArgumentException thrown/caught in, e.g., ICUServiceBuilder.getSymbolString;
-     * this function might need path as parameter, to generate only "legal" values for specific paths.
+     * Note: it might be best to avoid IllegalArgumentException thrown/caught in, e.g., ICUServiceBuilder.getSymbolString;
+     * in which case this function might need path as parameter, to generate only "legal" values for specific paths.
      */
     private String modifyValueRandomly(String value) {
         /*
@@ -425,74 +366,53 @@ public class TestExampleDependencies extends TestFmwk {
     }
 
     /**
-     * Write the given map of example-generator path dependencies to a json file.
+     * Write the given map of example-generator path dependencies to a json or java file.
      *
-     * If this function is to be used and revised long-term, it would be better to use JSONObject,
-     * or write a format other than json.
-     * JSONObject isn't currently linked to cldr-unittest TestAll, package org.unicode.cldr.unittest.
-     *
-     * @param dependencies the map of example-generator path dependencies
-     * @param fileName the name of the file to create, without path or extension
-     *
-     * @throws IOException
-     */
-    private void writeDependenciesToFile(HashMap<String, HashSet<String>> dependencies, String dir, String name) throws IOException {
-        // JSONObject json = new JSONObject(dependencies);
-        // json.write(writer);
-
-        PrintWriter writer = FileUtilities.openUTF8Writer(dir, name);
-        writer.println("{");
-
-        ArrayList<String> list = new ArrayList<String>(dependencies.keySet());
-        Collections.sort(list);
-        boolean firstPathA = true;
-        int keysWritten = 0;
-        for (String pathA : list) {
-            if (firstPathA) {
-                firstPathA = false;
-            } else {
-                writer.println(",");
-            }
-            HashSet<String> set = dependencies.get(pathA);
-            writer.print("  " + "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"" + ": ");
-            writer.println("[");
-            boolean firstPathB = true;
-            for (String pathB : set) {
-                if (firstPathB) {
-                    firstPathB = false;
-                } else {
-                    writer.println(",");
-                }
-                writer.print("    " + "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"");
-            }
-            writer.println("");
-            writer.print("  ]");
-            ++keysWritten;
-        }
-
-        writer.println("");
-        writer.println("}");
-        writer.close();
-        System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
-    }
-
-    /**
-     * Write the given map of example-generator path dependencies to a json file.
-     * Multimap version!
-     *
-     * If this function is to be used and revised long-term, it would be better to use JSONObject,
+     * If this function is to be used for json and revised long-term, it would be better to use JSONObject,
      * or write a format other than json.
      * JSONObject isn't currently linked to cldr-unittest TestAll, package org.unicode.cldr.unittest.
      *
      * @param dependencies the multimap of example-generator path dependencies
-     * @param fileName the name of the file to create, without path or extension
+     * @param dir the directory in which to create the file
+     * @param fileName the name of the file to create
      *
      * @throws IOException
      */
     private void writeDependenciesToFile(Multimap<String, String> dependencies, String dir, String name) throws IOException {
         PrintWriter writer = FileUtilities.openUTF8Writer(dir, name);
-        writer.println("{");
+        if (fileExtension.equals(".json")) {
+            writeJson(dependencies, dir, name, writer);
+        } else {
+            writeJava(dependencies, dir, name, writer);
+        }
+    }
 
+    private void writeJava(Multimap<String, String> dependencies, String dir, String name, PrintWriter writer) {
+        writer.println("package org.unicode.cldr.test;");
+        writer.println("import com.google.common.collect.ImmutableSetMultimap;");
+        writer.println("public class ExampleDependencies {");
+        writer.println("    public static ImmutableSetMultimap<String, String> dependencies");
+        writer.println("            = new ImmutableSetMultimap.Builder<String, String>()");
+        int dependenciesWritten = 0;
+        ArrayList<String> listA = new ArrayList<String>(dependencies.keySet());
+        Collections.sort(listA);
+        for (String pathA : listA) {
+            ArrayList<String> listB = new ArrayList<String>(dependencies.get(pathA));
+            Collections.sort(listB);
+            String a = "\"" + pathA.replaceAll("\"", "\\\\\"") + "\"";
+            for (String pathB : listB) {
+                String b = "\"" + pathB.replaceAll("\"", "\\\\\"") + "\"";
+                writer.println("        .put(" + a + ", " + b + ")");
+                ++dependenciesWritten;
+            }
+        }
+        writer.println("        .build();");
+        writer.println("}");
+        writer.close();
+        System.out.println("Wrote " + dependenciesWritten + " dependencies to " + dir + name);
+    }
+
+    private void writeJson(Multimap<String, String> dependencies, String dir, String name, PrintWriter writer) {
         ArrayList<String> list = new ArrayList<String>(dependencies.keySet());
         Collections.sort(list);
         boolean firstPathA = true;
@@ -524,5 +444,4 @@ public class TestExampleDependencies extends TestFmwk {
         writer.close();
         System.out.println("Wrote " + keysWritten + " keys to " + dir + name);
     }
-
 }
