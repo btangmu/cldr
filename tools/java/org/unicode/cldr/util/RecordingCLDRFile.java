@@ -6,9 +6,9 @@ import java.util.HashSet;
  * Like CLDRFile, with an added feature for recording the paths for which
  * getStringValue, etc., are called.
  *
- * The first intended usage is for ExampleGenerator, to identify all the paths on
- * which a given example depends. When beginning to generate an example, ExampleGenerator
- * can call clearRecordedPaths; then when finishing that example, it can call getRecordedPaths
+ * The first intended usage is for TestExampleDependencies, to identify all the paths on
+ * which a given example depends. Before calling ExampleGenerator.getExampleHtml, TestExampleDependencies
+ * calls clearRecordedPaths. After getting each example, TestExampleDependencies calls getRecordedPaths
  * to get the set of all paths in this file that were accessed to generate the example.
  */
 public class RecordingCLDRFile extends CLDRFile {

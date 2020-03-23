@@ -183,6 +183,7 @@ public class ExampleGenerator {
      * The cache is accessed only by getExampleHtml and updateCache.
      * It maps: starredPath → (unstarredPath → (value → html))
      * The HTML string shows example(s) using that value for that path, for the locale of this ExampleGenerator.
+     * Inclusion of starred paths enables performance improvement, see AVOID_CLEARING_CACHE.
      *
      * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
      * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
@@ -190,7 +191,7 @@ public class ExampleGenerator {
     private Map<String, Map<String, Map<String, String>>> cache = new ConcurrentHashMap<String, Map<String, Map<String, String>>>();
 
     /**
-     * AVOID_CLEARING_CACHE: work in progress, keep false until it becomes beneficial and reliable.
+     * AVOID_CLEARING_CACHE: a performance optimization. Should be true except for testing.
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
      */
     private static final boolean AVOID_CLEARING_CACHE = true;
@@ -200,7 +201,7 @@ public class ExampleGenerator {
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
      * any paths whose examples might depend on the winning value of the given path,
-     * since the winning value of the given path has (or may have?) changed.
+     * since the winning value of the given path has changed.
      *
      * There is no need to update the example(s) for the given path itself, since
      * the cache key includes path+value and therefore each path+value has its own
@@ -214,10 +215,6 @@ public class ExampleGenerator {
      * might include "afar (Djibouti)", which depends on the values of both pathA and pathB.
      *
      * @param xpath the path whose winning value has (may have?) changed
-     *
-     * TODO: IMPORTANT! Make sure we're only called if the winning value really HAS changed.
-     * In fact, currently (2020-03-23), updateCache is called when a vote is made even if the vote does
-     * not change the winning value, causing needless cache-clearing.
      *
      * Called by TestCache.updateExampleGeneratorCache
      */
