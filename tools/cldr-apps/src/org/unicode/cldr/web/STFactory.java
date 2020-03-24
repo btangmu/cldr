@@ -197,7 +197,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
          * @param resolveMorePaths true for making vxml, else false
          * @return the VoteResolver
          *
-         * TODO: reevaluate whether resolveMorePaths is needed.
+         * TODO: reevaluate whether resolveMorePaths is needed anymore.
          */
         public VoteResolver<String> setValueFromResolver(String path, VoteResolver<String> resolver, boolean resolveMorePaths) {
             PerLocaleData.PerXPathData xpd = ballotBox.peekXpathData(path);

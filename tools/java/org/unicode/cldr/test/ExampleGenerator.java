@@ -315,20 +315,13 @@ public class ExampleGenerator {
             cacheItem.putExample(result);
         } catch (NullPointerException e) {
             /*
-             * TODO: stop NullPointerException from happening! Why does it happen? It happens in locale "fr" for:
+             * TODO: stop catching NullPointerException here, after further testing.
+             * It formerly happened (in locale "fr") for:
              * xpath = "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/intervalFormats/intervalFormatItem[@id=\"Bhm\"]/greatestDifference[@id=\"B\"]";
-             * value = "h:mm B – h:mm B";
-             * And other paths and values. Call stack:
-             * at com.ibm.icu.util.Calendar.setTime(Calendar.java:1965)
-             * at com.ibm.icu.text.DateFormat.format(DateFormat.java:694)
-             * at com.ibm.icu.text.DateFormat.format(DateFormat.java:706)
-             * at org.unicode.cldr.test.ExampleGenerator$IntervalFormat.format(ExampleGenerator.java:998)
-             * at org.unicode.cldr.test.ExampleGenerator.handleIntervalFormats(ExampleGenerator.java:787)
-             * at org.unicode.cldr.test.ExampleGenerator.constructExampleHtml(ExampleGenerator.java:382)
-             * at org.unicode.cldr.test.ExampleGenerator.getExampleHtml(ExampleGenerator.java:314)
+             * value = "h:mm B – h:mm B"; due to a bug in handleIntervalFormats, now fixed.
              *
-             * This normally happens during cldr-unittest TestAll, for example, but it's masked
-             * since SHOW_ERROR is false. Such bugs shouldn't be ignored.
+             * This normally happened during cldr-unittest TestAll, for example, but was masked
+             * since SHOW_ERROR was false. Such bugs shouldn't be ignored.
              */
             if (SHOW_ERROR) {
                 e.printStackTrace();
@@ -810,9 +803,6 @@ public class ExampleGenerator {
              * The problem is that greatestDifference = "B", and SECOND_INTERVAL doesn't have
              * a key for "B". It also happens with "G" as in "y G – y G".
              */
-            if (!"B".equals(greatestDifference) && !"G".equals(greatestDifference)) {
-                System.out.println("handleIntervalFormats NULL: " + greatestDifference);
-            }
             return null;
         }
         return intervalFormat.format(FIRST_INTERVAL, later);
