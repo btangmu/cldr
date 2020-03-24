@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,7 +34,6 @@ import org.unicode.cldr.util.ICUServiceBuilder;
 import org.unicode.cldr.util.LanguageTagParser;
 import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.PathDescription;
-import org.unicode.cldr.util.PathStarrer;
 import org.unicode.cldr.util.PatternCache;
 import org.unicode.cldr.util.PluralSamples;
 import org.unicode.cldr.util.SupplementalDataInfo;
@@ -85,7 +83,7 @@ public class ExampleGenerator {
 
     private static final String EXEMPLAR_CITY_LOS_ANGELES = "//ldml/dates/timeZoneNames/zone[@type=\"America/Los_Angeles\"]/exemplarCity";
 
-    private static final boolean SHOW_ERROR = false;
+    private static final boolean SHOW_ERROR = true;
 
     private static final Pattern URL_PATTERN = Pattern
         .compile("http://[\\-a-zA-Z0-9]+(\\.[\\-a-zA-Z0-9]+)*([/#][\\-a-zA-Z0-9]+)*");
@@ -95,25 +93,12 @@ public class ExampleGenerator {
     private static SupplementalDataInfo supplementalDataInfo;
     private PathDescription pathDescription;
 
-    /**
-     * For testing, caching can be disabled for some ExampleGenerators while still
-     * enabled for others.
-     */
-    private boolean cachingIsEnabled = true;
-
-    public void disableCaching() {
-        cachingIsEnabled = false;
+    public void setCachingEnabled(boolean enabled) {
+        exCache.setCachingEnabled(enabled);
     }
 
-    /**
-     * For testing, we can switch some ExampleGenerators into a special "cache only"
-     * mode, where they will throw an exception if queried for a path+value that isn't
-     * already in the cache. See TestExampleGeneratorDependencies.
-     */
-    private boolean cacheOnly = false;
-
-    public void makeCacheOnly() {
-        cacheOnly = true;
+    public void setCacheOnly(boolean cacheOnly) {
+        exCache.setCacheOnly(cacheOnly);
     }
 
     public final static double NUMBER_SAMPLE = 123456.789;
@@ -179,66 +164,20 @@ public class ExampleGenerator {
     private CLDRFile englishFile;
     Matcher URLMatcher = URL_PATTERN.matcher("");
 
-    /**
-     * The cache is accessed only by getExampleHtml and updateCache.
-     * It maps: starredPath → (unstarredPath → (value → html))
-     * The HTML string shows example(s) using that value for that path, for the locale of this ExampleGenerator.
-     * Inclusion of starred paths enables performance improvement, see AVOID_CLEARING_CACHE.
-     *
-     * Note that this cache is internal to each ExampleGenerator. Compare TestCache.exampleGeneratorCache,
-     * which is at a higher level, caching entire ExampleGenerator objects, one for each locale.
-     */
-    private Map<String, Map<String, Map<String, String>>> cache = new ConcurrentHashMap<String, Map<String, Map<String, String>>>();
-
-    /**
-     * AVOID_CLEARING_CACHE: a performance optimization. Should be true except for testing.
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
-     */
-    private static final boolean AVOID_CLEARING_CACHE = true;
-
-    private PathStarrer pathStarrer = new PathStarrer().setSubstitutionPattern("*");
+    private ExampleCache exCache = new ExampleCache();
 
     /**
      * For this (locale-specific) ExampleGenerator, clear the cached examples for
      * any paths whose examples might depend on the winning value of the given path,
      * since the winning value of the given path has changed.
      *
-     * There is no need to update the example(s) for the given path itself, since
-     * the cache key includes path+value and therefore each path+value has its own
-     * example, regardless of which value is winning. There is a need to update
-     * the examples for OTHER paths whose examples depend on the winning value
-     * of the given path.
-     *
-     * For example, let pathA = "//ldml/localeDisplayNames/languages/language[@type=\"aa\"]"
-     * and pathB = "//ldml/localeDisplayNames/territories/territory[@type=\"DJ\"]". The values,
-     * in locale fr, might be "afar" for pathA and "Djibouti" for pathB. The example for pathB
-     * might include "afar (Djibouti)", which depends on the values of both pathA and pathB.
-     *
-     * @param xpath the path whose winning value has (may have?) changed
+     * @param xpath the path whose winning value has changed
      *
      * Called by TestCache.updateExampleGeneratorCache
      */
     public void updateCache(String xpath) {
-        if (AVOID_CLEARING_CACHE) {
-            /*
-             * Only remove keys for which the examples may be affected by this change.
-             *
-             * All paths of type “A” (i.e., all that have dependencies) have keys in ExampleDependencies.dependencies.
-             * For any other path given as the argument to this function, there should be no need to clear the cache.
-             * When there are dependencies, only remove the keys for paths that are dependent on this path.
-             *
-             * Reference: https://unicode-org.atlassian.net/browse/CLDR-13636
-             */
-            String starredA = pathStarrer.set(xpath);
-            for (String starredB : ExampleDependencies.dependencies.get(starredA)) {
-                cache.remove(starredB);
-            }
-        } else {
-            cache.clear();
-        }
+        exCache.update(xpath);
     }
-
-    private static final String NONE = "\uFFFF";
 
     private ICUServiceBuilder icuServiceBuilder = new ICUServiceBuilder();
 
@@ -351,6 +290,9 @@ public class ExampleGenerator {
      * example. <br>
      * The result is valid HTML.
      *
+     * If generating examples for an inheritance marker, use the "real" inherited value
+     * to generate from. Do this BEFORE accessing the cache, which doesn't use INHERITANCE_MARKER.
+     *
      * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
      * @param value the value; e.g., "{1} [{0}]"; not necessarily the winning value
      * @return the example HTML, or null
@@ -360,32 +302,34 @@ public class ExampleGenerator {
             return null;
         }
         String result = null;
-        String starredPath = null;
-        Map<String, Map<String, String>> pathMap = null;
-        Map<String, String> valueMap = null;
         try {
-            if (cachingIsEnabled) {
-                starredPath = pathStarrer.set(xpath);
-                pathMap = cache.get(starredPath);
-                if (pathMap != null) {
-                    valueMap = pathMap.get(xpath);
-                    if (valueMap != null) {
-                        result = valueMap.get(value);
-                    }
-                }
-                if (result != null) {
-                    return (result == NONE) ? null : result;
-                } else if (cacheOnly ) {
-                    throw new InternalError("getExampleHtml cacheOnly not found: " + xpath + ", " + value);
-                }
-            }
-            // If generating examples for an inheritance marker, then we need to find the
-            // "real" value to generate from.
             if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
                 value = cldrFile.getConstructedBaileyValue(xpath, null, null);
             }
+            ExampleCache.ExampleCacheItem cacheItem = exCache.new ExampleCacheItem(xpath, value);
+            result = cacheItem.getExample();
+            if (result != null) {
+                return result;
+            }
             result = constructExampleHtml(xpath, value);
+            cacheItem.putExample(result);
         } catch (NullPointerException e) {
+            /*
+             * TODO: stop NullPointerException from happening! Why does it happen? It happens in locale "fr" for:
+             * xpath = "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/intervalFormats/intervalFormatItem[@id=\"Bhm\"]/greatestDifference[@id=\"B\"]";
+             * value = "h:mm B – h:mm B";
+             * And other paths and values. Call stack:
+             * at com.ibm.icu.util.Calendar.setTime(Calendar.java:1965)
+             * at com.ibm.icu.text.DateFormat.format(DateFormat.java:694)
+             * at com.ibm.icu.text.DateFormat.format(DateFormat.java:706)
+             * at org.unicode.cldr.test.ExampleGenerator$IntervalFormat.format(ExampleGenerator.java:998)
+             * at org.unicode.cldr.test.ExampleGenerator.handleIntervalFormats(ExampleGenerator.java:787)
+             * at org.unicode.cldr.test.ExampleGenerator.constructExampleHtml(ExampleGenerator.java:382)
+             * at org.unicode.cldr.test.ExampleGenerator.getExampleHtml(ExampleGenerator.java:314)
+             *
+             * This normally happens during cldr-unittest TestAll, for example, but it's masked
+             * since SHOW_ERROR is false. Such bugs shouldn't be ignored.
+             */
             if (SHOW_ERROR) {
                 e.printStackTrace();
             }
@@ -393,24 +337,6 @@ public class ExampleGenerator {
         } catch (RuntimeException e) {
             String unchained = verboseErrors ? ("<br>" + finalizeBackground(unchainException(e))) : "";
             result = "<i>Parsing error. " + finalizeBackground(e.getMessage()) + "</i>" + unchained;
-        }
-        if (result != null) {
-            // add transliteration if one exists
-            if (!typeIsEnglish) {
-                result = addTransliteration(result, value);
-            }
-            result = finalizeBackground(result);
-        }
-        if (cachingIsEnabled) {
-            if (pathMap == null) {
-                pathMap = new ConcurrentHashMap<String, Map<String, String>>();
-                cache.put(starredPath, pathMap);
-            }
-            if (valueMap == null) {
-                valueMap = new ConcurrentHashMap<String, String>();
-                pathMap.put(xpath, valueMap);
-            }
-            valueMap.put(value, (result == null) ? NONE : result);
         }
         return result;
     }
@@ -489,6 +415,12 @@ public class ExampleGenerator {
         } else {
             // didn't detect anything
             result = null;
+        }
+        if (result != null) {
+            if (!typeIsEnglish) {
+                result = addTransliteration(result, value);
+            }
+            result = finalizeBackground(result);
         }
         return result;
     }
@@ -868,7 +800,22 @@ public class ExampleGenerator {
         // //ldml/dates/calendars/calendar[@type="gregorian"]/dateTimeFormats/intervalFormats/intervalFormatItem[@id="yMd"]/greatestDifference[@id="y"]
         // find where to split the value
         intervalFormat.setPattern(parts, value);
-        return intervalFormat.format(FIRST_INTERVAL, SECOND_INTERVAL.get(greatestDifference));
+        Date later = SECOND_INTERVAL.get(greatestDifference);
+        if (later == null) {
+            /*
+             * TODO: handle this properly or at least explain it. It happens in locale "fr" for:
+             * xpath = "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/intervalFormats/intervalFormatItem[@id=\"Bhm\"]/greatestDifference[@id=\"B\"]";
+             * value = "h:mm B – h:mm B";
+             * Formerly null was passed to intervalFormat.format(), leading to NullPointerException.
+             * The problem is that greatestDifference = "B", and SECOND_INTERVAL doesn't have
+             * a key for "B". It also happens with "G" as in "y G – y G".
+             */
+            if (!"B".equals(greatestDifference) && !"G".equals(greatestDifference)) {
+                System.out.println("handleIntervalFormats NULL: " + greatestDifference);
+            }
+            return null;
+        }
+        return intervalFormat.format(FIRST_INTERVAL, later);
     }
 
     private String handleDelimiters(XPathParts parts, String xpath, String value) {
@@ -1079,6 +1026,9 @@ public class ExampleGenerator {
         BitSet letters = new BitSet();
 
         public String format(Date earlier, Date later) {
+            if (earlier == null || later == null) {
+                return null;
+            }
             return firstFormat.format(earlier) + secondFormat.format(later);
         }
 

@@ -102,7 +102,7 @@ public class TestExampleDependencies extends TestFmwk {
         CollectionUtilities.addAll(cldrFile.iterator(), paths); // time-consuming
 
         ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-        egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
+        egTest.setCachingEnabled(false); // will not employ a cache -- this should save some time, since cache would be wasted
 
         for (String pathB : paths) {
             if (skipPathForDependencies(pathB)) {
@@ -170,10 +170,10 @@ public class TestExampleDependencies extends TestFmwk {
          * similar to originalValues. That might be more robust, require more memory, faster or slower?
          * Should try both ways.
          */
-        egBase.makeCacheOnly();
+        egBase.setCacheOnly(true);
 
         ExampleGenerator egTest = new ExampleGenerator(cldrFile, englishFile, CLDRPaths.DEFAULT_SUPPLEMENTAL_DIRECTORY);
-        egTest.disableCaching(); // will not employ a cache -- this should save some time, since cache would be wasted
+        egTest.setCachingEnabled(false); // will not employ a cache -- this should save some time, since cache would be wasted
 
         CLDRFile top = cldrFile.getUnresolved(); // can mutate top
 
