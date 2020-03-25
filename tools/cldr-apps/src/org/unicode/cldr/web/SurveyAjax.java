@@ -3092,8 +3092,7 @@ public class SurveyAjax extends HttpServlet {
         String tail = "'></script>\n";
 
         /**
-         * INCLUDE_SCRIPT_VERSION leave false for now (CLDR-13585).
-         * May change to true per:
+         * INCLUDE_SCRIPT_VERSION true per:
          *    https://unicode-org.atlassian.net/browse/CLDR-13582
          *    "Make sure browser uses most recent JavaScript files for ST"
          */
