@@ -3096,7 +3096,7 @@ public class SurveyAjax extends HttpServlet {
          *    https://unicode-org.atlassian.net/browse/CLDR-13582
          *    "Make sure browser uses most recent JavaScript files for ST"
          */
-        final boolean INCLUDE_SCRIPT_VERSION = false;
+        final boolean INCLUDE_SCRIPT_VERSION = true;
         final String v = INCLUDE_SCRIPT_VERSION ? "?v=" + CLDRConfig.getInstance().getProperty("CLDR_DIR_HASH") : "";
 
         out.write(prefix + "jquery.autosize.min.js" + tail);
