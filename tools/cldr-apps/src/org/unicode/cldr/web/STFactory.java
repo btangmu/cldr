@@ -888,7 +888,14 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
 
         }
 
-        private static final boolean ERRORS_ALLOWED_IN_VETTING = true;
+        /**
+         * If true, disable ValueChecker, to allow items to win in spite of test failures.
+         *
+         * Changed to false per https://unicode-org.atlassian.net/browse/CLDR-13238
+         *
+         * If necessary, ValueChecker can be revised to disallow only specific errors such as CheckForCopy.
+         */
+        private static final boolean ERRORS_ALLOWED_IN_VETTING = false;
 
         /**
          * Create or update a VoteResolver for this item
