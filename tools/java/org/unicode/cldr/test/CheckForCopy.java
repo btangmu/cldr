@@ -9,6 +9,7 @@ import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRFile.Status;
 import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.Factory;
+import org.unicode.cldr.util.InternalCldrException;
 import org.unicode.cldr.util.LanguageTagParser;
 import org.unicode.cldr.util.RegexLookup;
 import org.unicode.cldr.util.XPathParts;
@@ -71,7 +72,7 @@ public class CheckForCopy extends FactoryCheckCLDR {
     public CheckCLDR handleCheck(String path, String fullPath, String value,
         Options options, List<CheckStatus> result) {
 
-        if (fullPath == null || value == null) {
+        if (fullPath == null || path == null || value == null) {
             return this; // skip root, and paths that we don't have
         }
 
@@ -94,7 +95,11 @@ public class CheckForCopy extends FactoryCheckCLDR {
 
         Failure failure = Failure.ok;
 
-        String english = getDisplayInformation().getStringValue(path);
+        CLDRFile di = getDisplayInformation();
+        if (di == null) {
+            throw new InternalCldrException("CheckForCopy.handleCheck error: getDisplayInformation is null");
+        }
+        String english = di.getStringValue(path);
         if (value.equals(english)) {
             if (ASCII_LETTER.containsSome(english)) {
                 failure = Failure.same_as_english;
