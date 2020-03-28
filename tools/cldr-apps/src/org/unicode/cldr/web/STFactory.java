@@ -878,6 +878,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                     if (false) System.out.println("Checking result of " + path + " = " + value + " := haserr " + CheckCLDR.CheckStatus.hasError(result));
                     if (CheckCLDR.CheckStatus.hasError(result)) {
                         badValues.add(value);
+                        CheckCLDR.logInternalErrors(result);
                         return false;
                     } else {
                         allValues.add(value);
