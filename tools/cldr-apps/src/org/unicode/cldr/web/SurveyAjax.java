@@ -3113,7 +3113,7 @@ public class SurveyAjax extends HttpServlet {
      *
      * @throws IOException
      *
-     * Some code was moved to this function and its subroutines from EmbeddedReport.jsp and other jsp files.
+     * Some code was moved to this function and those it calls, from EmbeddedReport.jsp and other jsp files.
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13152
      */
     static private void generateReport(HttpServletRequest request, HttpServletResponse response,
@@ -3191,9 +3191,10 @@ public class SurveyAjax extends HttpServlet {
 
         final String calendarType = "gregorian";
         final String title = com.ibm.icu.lang.UCharacter.toTitleCase(SurveyMain.TRANS_HINT_LOCALE.toLocale(), calendarType, null);
+        final String href = "http://cldr.unicode.org/translation/date-time-review"; // TODO: broken link
 
         out.write("<h3>Review Date/Times : " + title + "</h3>");
-        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/date-time-review'>instructions</a> before continuing.</p>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='" + href + "'>instructions</a> before continuing.</p>");
 
         STFactory fac = sm.getSTFactory();
         CLDRFile englishFile = fac.make("en", true);
@@ -3217,8 +3218,10 @@ public class SurveyAjax extends HttpServlet {
      */
     private static void generateZonesReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
 
+        final String href = "http://cldr.unicode.org/translation/review-zones"; // TODO: broken link
+
         out.write("<h3>Review Zones</h3>");
-        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-zones'>instructions</a> before continuing.</p>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='" + href + "'>instructions</a> before continuing.</p>");
 
         CLDRFile englishFile = sm.getDiskFactory().make("en", true);
         CLDRFile nativeFile = sm.getSTFactory().make(l, true);
@@ -3236,8 +3239,10 @@ public class SurveyAjax extends HttpServlet {
      */
     private static void generateNumbersReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
 
+        final String href = "http://cldr.unicode.org/translation/review-numbers"; // TODO: broken link
+
         out.write("<h3>Review Numbers</h3>");
-        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-numbers'>instructions</a> before continuing.</p>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='" + href + "'>instructions</a> before continuing.</p>");
 
         STFactory fac = sm.getSTFactory();
         CLDRFile nativeFile = fac.make(l, true);
