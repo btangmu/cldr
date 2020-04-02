@@ -3133,7 +3133,7 @@ public class SurveyAjax extends HttpServlet {
          */
         String which = request.getParameter("x");
         String contentType = SurveyMain.R_VETTING_JSON.equals(which) ? "application/json" : "text/html";
-        response.setHeader("Content-Type", contentType);
+        // response.setHeader("Content-Type", contentType);
         response.setContentType(contentType);
 
         WebContext ctx = new WebContext(request, response);
