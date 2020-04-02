@@ -1351,10 +1351,6 @@ public class WebContext implements Cloneable, Appendable {
         return (String) get(k);
     }
 
-    public Boolean getBoolean(String k) {
-        return (Boolean) get(k);
-    }
-
     /**
      * @return the CLDRLocale with which this WebContext currently pertains.
      * @see CLDRLocale
@@ -1901,26 +1897,5 @@ public class WebContext implements Cloneable, Appendable {
     public void loginRemember(User user) {
         addCookie(SurveyMain.QUERY_EMAIL, user.email, SurveyMain.TWELVE_WEEKS);
         addCookie(SurveyMain.QUERY_PASSWORD, user.password, SurveyMain.TWELVE_WEEKS);
-    }
-
-    /**
-     * Show a 'report' template (r_)
-     *
-     * @param which
-     *            current section
-     */
-    public boolean doReport(String which) {
-        if (WebContext.isLegalReportName(which)) {
-            flush();
-            includeFragment(which + ".jsp");
-            return true;
-        } else {
-            println("<i>Illegal report name: " + which + "</i><br/>");
-            return false;
-        }
-    }
-
-    static boolean isLegalReportName(String which) {
-        return REPORT_SUFFIX_PATTERN.matcher(which.substring(2)).matches();
     }
 }

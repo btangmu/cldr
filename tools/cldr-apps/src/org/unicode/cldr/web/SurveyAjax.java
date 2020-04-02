@@ -44,6 +44,7 @@ import org.unicode.cldr.util.CLDRInfo.UserInfo;
 import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.CoverageInfo;
+import org.unicode.cldr.util.DateTimeFormats;
 import org.unicode.cldr.util.DtdData.IllegalByDtdException;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.Level;
@@ -346,6 +347,8 @@ public class SurveyAjax extends HttpServlet {
                 sendError(out, "Missing parameter: " + REQ_WHAT, ErrorCode.E_INTERNAL);
             } else if (what.equals(WHAT_GETROW)) {
                 getRow(request, response, out, sm, sess, l, xpath);
+            } else if (what.equals(WHAT_REPORT)) {
+                generateReport(request, response, out, sm, sess, l);
             } else if (what.equals(WHAT_STATS_BYLOC)) {
                 JSONWriter r = newJSONStatusQuick(sm);
                 JSONObject query = DBUtils.queryToCachedJSON(what, 5 * 60 * 1000, StatisticsUtils.QUERY_ALL_VOTES);
@@ -3096,5 +3099,117 @@ public class SurveyAjax extends HttpServlet {
 
         out.write(prefix + "redesign.js" + v + tail);
         out.write(prefix + "review.js" + v + tail);
+    }
+
+    /**
+     * Generate a report, such as Date/Times or Dashboard.
+     *
+     * @param request the HttpServletRequest
+     * @param response the HttpServletResponse
+     * @param out the Writer
+     * @param sm the SurveyMain
+     * @param sess the session id
+     * @param l the CLDRLocale
+     *
+     * @throws IOException
+     * @throws JSONException
+     * @throws VoteNotAcceptedException
+     *
+     * Some code was moved here from EmbeddedReport.jsp
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13152
+     */
+    static private void generateReport(HttpServletRequest request, HttpServletResponse response,
+        Writer out, SurveyMain sm, String sess, CLDRLocale l)
+            throws IOException, JSONException, InvalidXPathException {
+
+        CookieSession cs = CookieSession.retrieve(sess);
+        if (cs == null) {
+            response.setHeader("Content-Type", "text/html; charset=UTF-8");
+            out.write("<b>Invalid or expired session (try reloading the page)</b>");
+            return;
+        }
+        /*
+         * Content-Type (html or json) must be set BEFORE writing (or calling flush()), otherwise it's ignored.
+         */
+        String which = request.getParameter("x");
+        String contentType = SurveyMain.R_VETTING_JSON.equals(which) ? "application/json" : "text/html";
+        response.setHeader("Content-Type", contentType);
+        response.setContentType(contentType);
+
+        WebContext ctx = new WebContext(request, response);
+        ctx.session = cs;
+        ctx.sm = CookieSession.sm;
+
+        // If we needed loc below, we would first normalize it with loc = l.toString()
+        ctx.setLocale(l);
+        request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
+        if (SurveyMain.R_VETTING_JSON.equals(which)) {
+            doDashboard(out, cs, l, ctx);
+        } else if ("r_datetime".equals(which)) {
+            doDateTimeReport(out, sm, l);
+        } else if ("r_zones".equals(which)) {
+            doZonesReport(out, sm, l);
+        } else if ("r_compact".equals(which)) {
+            doNumbersReport(out, sm, l);
+        } else {
+            out.write("<i>Illegal report name: " + which + "</i><br/>\n");
+        }
+    }
+
+    private static void doDashboard(Writer out, CookieSession cs, CLDRLocale l, WebContext ctx) throws IOException {
+
+        try {
+            StringBuffer sb = new StringBuffer();
+            VettingViewerQueue.getInstance().writeVettingViewerOutput(l, sb, ctx, cs);
+            out.write(sb.toString());
+        } catch (Throwable t) {
+            /*
+             * catch ALL errors, because we need to return JSON
+             */
+            SurveyLog.logException(t, "when loading the Dashboard", ctx);
+            try {
+                new org.json.JSONWriter(out).object().key("err").value("Exception: " + t.getMessage()
+                    + " while loading the Dashboard").key("err_code").value("E_INTERNAL").endObject();
+            } catch (JSONException e) {
+                SurveyLog.logException(e, "when loading the Dashboard", ctx);
+            }
+            return; // cut off output
+        }
+    }
+
+    private static void doDateTimeReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+
+        final String calendarType = "gregorian";
+        final String title = com.ibm.icu.lang.UCharacter.toTitleCase(SurveyMain.TRANS_HINT_LOCALE.toLocale(), calendarType, null);
+        out.write("<h3>Review Date/Times : " + title + "</h3>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/date-time-review'>instructions</a> before continuing.</p>");
+        CLDRFile englishFile = sm.getDiskFactory().make("en", true);
+        DateTimeFormats formats = new DateTimeFormats().set(sm.getSTFactory().make(l, true), calendarType);
+        DateTimeFormats english = new DateTimeFormats().set(englishFile, calendarType);
+        formats.addTable(english, out);
+        formats.addDateTable(englishFile, out);
+        formats.addDayPeriods(englishFile, out);
+    }
+
+    private static void doZonesReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+
+        out.write("<h3>Review Zones</h3>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-zones'>instructions</a> before continuing.</p>");
+
+        CLDRFile englishFile = sm.getDiskFactory().make("en", true);
+        CLDRFile nativeFile = sm.getSTFactory().make(l, true);
+
+        org.unicode.cldr.util.VerifyZones.showZones(null, englishFile, nativeFile, out);
+    }
+
+    private static void doNumbersReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+
+        out.write("<h3>Review Numbers</h3>");
+        out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-numbers'>instructions</a> before continuing.</p>");
+
+        STFactory fac = sm.getSTFactory();
+        CLDRFile nativeFile = fac.make(l, true);
+
+        org.unicode.cldr.util.VerifyCompactNumbers.showNumbers(nativeFile, true, "EUR", out, fac);
     }
 }

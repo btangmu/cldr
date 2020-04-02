@@ -3990,9 +3990,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             }
 
             if (which.startsWith(REPORT_PREFIX)) {
-                if (!subCtx.doReport(which)) {
+                // if (!subCtx.doReport(which)) {
                     doMain(ctx);
-                }
+                // }
             } else if (pageId != null && !which.equals(xMAIN)) {
                 showPathList(subCtx, which, pageId);
             } else if (RAW_MENU_ITEM.equals(which)) {

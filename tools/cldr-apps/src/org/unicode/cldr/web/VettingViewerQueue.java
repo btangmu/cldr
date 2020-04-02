@@ -622,28 +622,27 @@ public class VettingViewerQueue {
     }
 
     /**
+     * Write the Dashboard
      *
      * @param locale
      * @param aBuffer
      * @param ctx the WebContext, never null
      * @param sess the CookieSession
-     *
-     * Called only by r_vetting_json.jsp
      */
     public void writeVettingViewerOutput(CLDRLocale locale, StringBuffer aBuffer, WebContext ctx, CookieSession sess) {
-        Level usersLevel = Level.get(ctx.getEffectiveCoverageLevel(ctx.getLocale().toString()));
+        String loc = locale.getBaseName();
         String levelString = sess.settings().get(SurveyMain.PREF_COVLEV, WebContext.PREF_COVLEV_LIST[0]);
         /*
          * if no coverage level set, use default one
          */
+        Level usersLevel;
         if (levelString.equals("default")) {
-            usersLevel = Level.get(ctx.getEffectiveCoverageLevel(ctx.getLocale().toString()));
+            usersLevel = Level.get(ctx.getEffectiveCoverageLevel(loc));
         } else {
             usersLevel = Level.get(levelString);
         }
         UserRegistry.User user = sess.user;
         Organization usersOrg = Organization.fromString(user.voterOrg());
-        boolean quick = ctx.hasField("quick");
         final String st_org = user.org;
         SurveyMain sm = CookieSession.sm;
         STFactory sourceFactory = sm.getSTFactory();
@@ -660,7 +659,6 @@ public class VettingViewerQueue {
         }
 
         if (locale != SUMMARY_LOCALE) {
-            String loc = locale.getBaseName();
             /*
              * sourceFile provides the current winning values, taking into account recent votes.
              * baselineFile provides the "baseline" (a.k.a. "trunk") values, i.e., the values that
@@ -672,8 +670,8 @@ public class VettingViewerQueue {
             Factory baselineFactory = CLDRConfig.getInstance().getCommonAndSeedAndMainAndAnnotationsFactory();
             CLDRFile baselineFile = baselineFactory.make(loc, true);
             Relation<R2<SectionId, PageId>, VettingViewer<Organization>.WritingInfo> file;
-            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, quick, sourceFile, quick ? null : baselineFile);
-            this.getJSONReview(aBuffer, sourceFile, baselineFile, file, choiceSet, loc, true, quick, ctx);
+            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, false /* quick */, sourceFile, baselineFile);
+            this.getJSONReview(aBuffer, sourceFile, baselineFile, file, choiceSet, loc, true, false /* quick */, ctx);
         } else {
             if (DEBUG) {
                 System.err.println("Starting summary gen..");
