@@ -3112,47 +3112,41 @@ public class SurveyAjax extends HttpServlet {
      * @param l the CLDRLocale
      *
      * @throws IOException
-     * @throws JSONException
-     * @throws VoteNotAcceptedException
      *
      * Some code was moved here from EmbeddedReport.jsp
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13152
      */
     static private void generateReport(HttpServletRequest request, HttpServletResponse response,
-        Writer out, SurveyMain sm, String sess, CLDRLocale l)
-            throws IOException, JSONException, InvalidXPathException {
+        Writer out, SurveyMain sm, String sess, CLDRLocale l) throws IOException {
 
         CookieSession cs = CookieSession.retrieve(sess);
         if (cs == null) {
-            response.setHeader("Content-Type", "text/html; charset=UTF-8");
+            response.setContentType("text/html");
             out.write("<b>Invalid or expired session (try reloading the page)</b>");
             return;
         }
-        /*
-         * Content-Type (html or json) must be set BEFORE writing (or calling flush()), otherwise it's ignored.
-         */
         String which = request.getParameter("x");
-        String contentType = SurveyMain.R_VETTING_JSON.equals(which) ? "application/json" : "text/html";
-        // response.setHeader("Content-Type", contentType);
-        response.setContentType(contentType);
 
-        WebContext ctx = new WebContext(request, response);
-        ctx.session = cs;
-        ctx.sm = CookieSession.sm;
-
-        // If we needed loc below, we would first normalize it with loc = l.toString()
-        ctx.setLocale(l);
-        request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
         if (SurveyMain.R_VETTING_JSON.equals(which)) {
+            response.setContentType("application/json");
+            WebContext ctx = new WebContext(request, response);
+            request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
+            ctx.session = cs;
+            ctx.sm = CookieSession.sm;
+            // If we needed loc below, we would first normalize it with loc = l.toString()
+            ctx.setLocale(l);
             doDashboard(out, cs, l, ctx);
-        } else if ("r_datetime".equals(which)) {
-            doDateTimeReport(out, sm, l);
-        } else if ("r_zones".equals(which)) {
-            doZonesReport(out, sm, l);
-        } else if ("r_compact".equals(which)) {
-            doNumbersReport(out, sm, l);
         } else {
-            out.write("<i>Illegal report name: " + which + "</i><br/>\n");
+            response.setContentType("text/html");
+            if ("r_datetime".equals(which)) {
+                doDateTimeReport(out, sm, l);
+            } else if ("r_zones".equals(which)) {
+                doZonesReport(out, sm, l);
+            } else if ("r_compact".equals(which)) {
+                doNumbersReport(out, sm, l);
+            } else {
+                out.write("<i>Unrecognized report name: " + which + "</i><br/>\n");
+            }
         }
     }
 
