@@ -3113,7 +3113,7 @@ public class SurveyAjax extends HttpServlet {
      *
      * @throws IOException
      *
-     * Some code was moved here from EmbeddedReport.jsp
+     * Some code was moved to this function and its subroutines from EmbeddedReport.jsp and other jsp files.
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13152
      */
     static private void generateReport(HttpServletRequest request, HttpServletResponse response,
@@ -3132,25 +3132,33 @@ public class SurveyAjax extends HttpServlet {
             WebContext ctx = new WebContext(request, response);
             request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
             ctx.session = cs;
-            ctx.sm = CookieSession.sm;
-            // If we needed loc below, we would first normalize it with loc = l.toString()
+            ctx.sm = sm;
             ctx.setLocale(l);
-            doDashboard(out, cs, l, ctx);
+            generateDashboard(out, cs, l, ctx);
         } else {
             response.setContentType("text/html");
             if ("r_datetime".equals(which)) {
-                doDateTimeReport(out, sm, l);
+                generateDateTimesReport(out, sm, l);
             } else if ("r_zones".equals(which)) {
-                doZonesReport(out, sm, l);
+                generateZonesReport(out, sm, l);
             } else if ("r_compact".equals(which)) {
-                doNumbersReport(out, sm, l);
+                generateNumbersReport(out, sm, l);
             } else {
                 out.write("<i>Unrecognized report name: " + which + "</i><br/>\n");
             }
         }
     }
 
-    private static void doDashboard(Writer out, CookieSession cs, CLDRLocale l, WebContext ctx) throws IOException {
+    /**
+     * Generate the Dashboard, as json
+     *
+     * @param out the Writer
+     * @param cs the CookieSession
+     * @param l the CLDRLocale
+     * @param ctx the WebContext
+     * @throws IOException
+     */
+    private static void generateDashboard(Writer out, CookieSession cs, CLDRLocale l, WebContext ctx) throws IOException {
 
         try {
             StringBuffer sb = new StringBuffer();
@@ -3171,21 +3179,43 @@ public class SurveyAjax extends HttpServlet {
         }
     }
 
-    private static void doDateTimeReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+    /**
+     * Generate the Date/Times report, as html
+     *
+     * @param out the Writer
+     * @param sm the SurveyMain
+     * @param l the CLDRLocale
+     * @throws IOException
+     */
+    private static void generateDateTimesReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
 
         final String calendarType = "gregorian";
         final String title = com.ibm.icu.lang.UCharacter.toTitleCase(SurveyMain.TRANS_HINT_LOCALE.toLocale(), calendarType, null);
+
         out.write("<h3>Review Date/Times : " + title + "</h3>");
         out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/date-time-review'>instructions</a> before continuing.</p>");
-        CLDRFile englishFile = sm.getDiskFactory().make("en", true);
-        DateTimeFormats formats = new DateTimeFormats().set(sm.getSTFactory().make(l, true), calendarType);
+
+        STFactory fac = sm.getSTFactory();
+        CLDRFile englishFile = fac.make("en", true);
+        CLDRFile nativeFile = fac.make(l, true);
+
+        DateTimeFormats formats = new DateTimeFormats().set(nativeFile, calendarType);
         DateTimeFormats english = new DateTimeFormats().set(englishFile, calendarType);
+
         formats.addTable(english, out);
         formats.addDateTable(englishFile, out);
         formats.addDayPeriods(englishFile, out);
     }
 
-    private static void doZonesReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+    /**
+     * Generate the Zones report, as html
+     *
+     * @param out the Writer
+     * @param sm the SurveyMain
+     * @param l the CLDRLocale
+     * @throws IOException
+     */
+    private static void generateZonesReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
 
         out.write("<h3>Review Zones</h3>");
         out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-zones'>instructions</a> before continuing.</p>");
@@ -3196,7 +3226,15 @@ public class SurveyAjax extends HttpServlet {
         org.unicode.cldr.util.VerifyZones.showZones(null, englishFile, nativeFile, out);
     }
 
-    private static void doNumbersReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
+    /**
+     * Generate the Numbers report, as html
+     *
+     * @param out the Writer
+     * @param sm the SurveyMain
+     * @param l the CLDRLocale
+     * @throws IOException
+     */
+    private static void generateNumbersReport(Writer out, SurveyMain sm, CLDRLocale l) throws IOException {
 
         out.write("<h3>Review Numbers</h3>");
         out.write("<p>Please read the <a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/review-numbers'>instructions</a> before continuing.</p>");
