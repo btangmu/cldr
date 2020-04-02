@@ -301,6 +301,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     // ===== Special bug numbers.
     public static final String URL_HOST = "http://www.unicode.org/";
     public static final String URL_CLDR = URL_HOST + "cldr/";
+    
+    /*
+     * TODO: CLDR no longer uses trac; change BUG_URL_BASE to link to github instead
+     */
     public static final String BUG_URL_BASE = URL_CLDR + "trac";
     public static final String GENERAL_HELP_URL = URL_CLDR + "survey_tool.html";
     public static final String GENERAL_HELP_NAME = "Instructions";
@@ -5715,14 +5719,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 t.printStackTrace();
                 SurveyLog.logger.warning("While shutting down reg ");
             }
-            try {
-                if (xpt != null)
-                    xpt.shutdownDB();
-            } catch (Throwable t) {
-                t.printStackTrace();
-                SurveyLog.logger.warning("While shutting down xpt ");
-            }
-
             if (dbUtils != null) {
                 dbUtils.doShutdown();
             }

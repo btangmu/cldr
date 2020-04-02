@@ -3175,7 +3175,6 @@ public class SurveyAjax extends HttpServlet {
             } catch (JSONException e) {
                 SurveyLog.logException(e, "when loading the Dashboard", ctx);
             }
-            return; // cut off output
         }
     }
 

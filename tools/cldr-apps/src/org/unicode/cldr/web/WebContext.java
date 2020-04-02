@@ -22,7 +22,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -42,7 +41,6 @@ import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.util.PathHeader;
 import org.unicode.cldr.util.PathHeader.PageId;
-import org.unicode.cldr.util.PatternCache;
 import org.unicode.cldr.util.StandardCodes;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 import org.unicode.cldr.web.SurveyAjax.AjaxType;
@@ -1641,7 +1639,6 @@ public class WebContext implements Cloneable, Appendable {
 
     private boolean checkedPage = false;
     private PageId pageId = null;
-    static Pattern REPORT_SUFFIX_PATTERN = PatternCache.get("^[0-9a-z]([0-9a-z_]*)$");
 
     public PageId getPageId() {
         if (!checkedPage) {
