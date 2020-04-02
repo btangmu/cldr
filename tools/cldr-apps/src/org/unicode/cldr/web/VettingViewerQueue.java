@@ -643,6 +643,7 @@ public class VettingViewerQueue {
         }
         UserRegistry.User user = sess.user;
         Organization usersOrg = Organization.fromString(user.voterOrg());
+        final boolean quick = false;
         final String st_org = user.org;
         SurveyMain sm = CookieSession.sm;
         STFactory sourceFactory = sm.getSTFactory();
@@ -670,8 +671,8 @@ public class VettingViewerQueue {
             Factory baselineFactory = CLDRConfig.getInstance().getCommonAndSeedAndMainAndAnnotationsFactory();
             CLDRFile baselineFile = baselineFactory.make(loc, true);
             Relation<R2<SectionId, PageId>, VettingViewer<Organization>.WritingInfo> file;
-            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, false /* quick */, sourceFile, baselineFile);
-            this.getJSONReview(aBuffer, sourceFile, baselineFile, file, choiceSet, loc, true, false /* quick */, ctx);
+            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, quick, sourceFile, baselineFile);
+            this.getJSONReview(aBuffer, sourceFile, baselineFile, file, choiceSet, loc, true, quick, ctx);
         } else {
             if (DEBUG) {
                 System.err.println("Starting summary gen..");
