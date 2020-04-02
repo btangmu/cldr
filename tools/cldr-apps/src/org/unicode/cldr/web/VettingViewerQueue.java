@@ -671,7 +671,7 @@ public class VettingViewerQueue {
             Factory baselineFactory = CLDRConfig.getInstance().getCommonAndSeedAndMainAndAnnotationsFactory();
             CLDRFile baselineFile = baselineFactory.make(loc, true);
             Relation<R2<SectionId, PageId>, VettingViewer<Organization>.WritingInfo> file;
-            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, quick, sourceFile, baselineFile);
+            file = vv.generateFileInfoReview(choiceSet, loc, usersOrg, usersLevel, quick, sourceFile, quick ? null : baselineFile);
             this.getJSONReview(aBuffer, sourceFile, baselineFile, file, choiceSet, loc, true, quick, ctx);
         } else {
             if (DEBUG) {
