@@ -353,7 +353,6 @@ public class TestAll extends TestGroup {
                     @Override
                     public void update(int count) {
                         update(count, "");
-
                     }
 
                     @Override
@@ -368,7 +367,7 @@ public class TestAll extends TestGroup {
 
                     @Override
                     public long startTime() {
-                         return 0;
+                        return 0;
                     }
                 };
             }
