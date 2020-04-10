@@ -27,7 +27,6 @@ import org.unicode.cldr.util.VettingViewer.VoteStatus;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
-import com.ibm.icu.impl.Relation;
 import com.ibm.icu.text.Collator;
 import com.ibm.icu.util.ULocale;
 
@@ -1541,28 +1540,6 @@ public class VoteResolver<T> {
             + ", totals: " + totals
             + ", winning: {" + getWinningValue() + ", " + getWinningStatus() + "}"
             + "}";
-    }
-
-    public static Map<String, Map<Organization, Relation<Level, Integer>>> getLocaleToVetters() {
-        Map<String, Map<Organization, Relation<Level, Integer>>> result = new TreeMap<String, Map<Organization, Relation<Level, Integer>>>();
-        for (int voter : getVoterToInfo().keySet()) {
-            VoterInfo info = getVoterToInfo().get(voter);
-            if (info.getLevel() == Level.locked) {
-                continue;
-            }
-            for (String locale : info.getLocales()) {
-                Map<Organization, Relation<Level, Integer>> orgToVoter = result.get(locale);
-                if (orgToVoter == null) {
-                    result.put(locale, orgToVoter = new TreeMap<Organization, Relation<Level, Integer>>());
-                }
-                Relation<Level, Integer> rel = orgToVoter.get(info.getOrganization());
-                if (rel == null) {
-                    orgToVoter.put(info.getOrganization(), rel = Relation.of(new TreeMap<Level, Set<Integer>>(), TreeSet.class));
-                }
-                rel.put(info.getLevel(), voter);
-            }
-        }
-        return result;
     }
 
     private static Map<Integer, VoterInfo> getVoterToInfo() {
