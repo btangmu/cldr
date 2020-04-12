@@ -33,7 +33,6 @@ import org.unicode.cldr.icu.LDMLConstants;
 import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus.Subtype;
-import org.unicode.cldr.test.CheckForCopy;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
 import org.unicode.cldr.test.TestCache;
 import org.unicode.cldr.test.TestCache.TestResultBundle;
@@ -169,15 +168,6 @@ public class SurveyAjax extends HttpServlet {
             return newList;
         }
 
-        /**
-         * Make a json object representing the given VoteResolver, for sending to the client
-         *
-         * @param r the VoteResolver
-         * @return the JSONObject
-         * @throws JSONException
-         *
-         * Called only by DataSection.DataRow.toJSONString()
-         */
         public static JSONObject wrap(final VoteResolver<String> r) throws JSONException {
             JSONObject ret = new JSONObject()
                 .put("raw", r.toString()) /* "raw" is only used for debugging (stdebug_enabled) */
@@ -189,17 +179,16 @@ public class SurveyAjax extends HttpServlet {
 
             JSONObject orgs = new JSONObject();
             for (Organization o : Organization.values()) {
-                String orgVote = r.getOrgVote(o); // deprecated, but used by client!
-                if (orgVote == null) {
+                String orgVote = r.getOrgVote(o);
+                if (orgVote == null)
                     continue;
-                }
                 Map<String, Long> votes = r.getOrgToVotes(o);
 
                 JSONObject org = new JSONObject();
                 org.put("status", r.getStatusForOrganization(o));
                 org.put("orgVote", orgVote);
                 org.put("votes", votes);
-                if (conflictedOrgs.contains(o)) {
+                if (conflictedOrgs.contains(org)) {
                     org.put("conflicted", true);
                 }
                 orgs.put(o.name(), org);
@@ -2184,7 +2173,7 @@ public class SurveyAjax extends HttpServlet {
             String xpathString = sm.xpt.getById(xp);
             String loc = m.get("locale").toString();
             CLDRLocale locale = CLDRLocale.getInstance(loc);
-            XMLSource diskData = sm.getDiskFactory().makeSource(locale.getBaseName()).freeze(); // trunk
+            XMLSource diskData = (XMLSource) sm.getDiskFactory().makeSource(locale.getBaseName()).freeze(); // trunk
             DisplayAndInputProcessor daip = new DisplayAndInputProcessor(locale, false);
             if (value != null) {
                 value = daip.processInput(xpathString, value, null);
@@ -2235,7 +2224,7 @@ public class SurveyAjax extends HttpServlet {
      * 
      * @param value the value in question
      * @param curValue the current value, that is, file.getStringValue(xpathString)
-     * @param diskData the XMLSource for getBaileyValue
+     * @param file the CLDRFile for getBaileyValue
      * @param xpathString the path identifier
      * @return true if it matches or inherits, else false
      */
@@ -2475,16 +2464,9 @@ public class SurveyAjax extends HttpServlet {
 
         DataRow pvi = section.getDataRow(xp);
         CheckCLDR.StatusAction showRowAction = pvi.getStatusAction();
-        if (CldrUtility.INHERITANCE_MARKER.equals(val)) {
-            if (pvi.wouldInheritNull()) {
-                showRowAction = CheckCLDR.StatusAction.FORBID_NULL;
-            } else {
-                CLDRFile cldrFile = stf.make(locale.getBaseName(), true, true);
-                if (CheckForCopy.sameAsCode(val, xp, cldrFile)) {
-                    showRowAction = CheckCLDR.StatusAction.FORBID_CODE;
-                }
-            }
-         } else if (pvi.isUnvotableRoot(val)) {
+        if (CldrUtility.INHERITANCE_MARKER.equals(val) && pvi.wouldInheritNull()) {
+            showRowAction = CheckCLDR.StatusAction.FORBID_NULL;
+        } else if (pvi.isUnvotableRoot(val)) {
             showRowAction = CheckCLDR.StatusAction.FORBID_ROOT;
         }
 
