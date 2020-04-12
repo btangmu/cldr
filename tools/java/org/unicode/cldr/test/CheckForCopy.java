@@ -78,6 +78,21 @@ public class CheckForCopy extends FactoryCheckCLDR {
 
         Status status = new Status();
 
+        // don't check inherited values unless they are from ^^^
+        /*
+         * TODO: clarify the purpose of using topStringValue and getConstructedValue here;
+         * maybe related to getConstructedBaileyValue
+         */
+        String topStringValue = getCldrFileToCheck().getUnresolved().getStringValue(path);
+        final boolean isExplicitBailey = CldrUtility.INHERITANCE_MARKER.equals(topStringValue);
+        if (!isExplicitBailey) {
+            String loc = getCldrFileToCheck().getSourceLocaleID(path, status);
+            if (!getCldrFileToCheck().getLocaleID().equals(loc)
+                || !path.equals(status.pathWhereFound)) {
+                return this;
+            }
+        }
+
         if (Boolean.TRUE == skip.get(path)) {
             return this;
         }
@@ -99,12 +114,7 @@ public class CheckForCopy extends FactoryCheckCLDR {
         // May override English test
         if (Boolean.TRUE != SKIP_CODE_CHECK.get(path)) {
             String value2 = value;
-            /*
-             * TODO: clarify the purpose of using topStringValue and getConstructedValue here;
-             * maybe related to getConstructedBaileyValue
-             */
-            String topStringValue = getCldrFileToCheck().getUnresolved().getStringValue(path);
-            if (CldrUtility.INHERITANCE_MARKER.equals(topStringValue)) {
+            if (isExplicitBailey) {
                 value2 = getCldrFileToCheck().getConstructedValue(path);
                 if (value2 == null) { // no special constructed value
                     value2 = value;

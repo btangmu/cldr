@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -383,8 +382,6 @@ public class VoteResolver<T> {
         private T baileyValue;
         private boolean baileySet; // was the bailey value set
 
-        private Set<T> disqualifiedValues = null;
-
         OrganizationToValueAndVote() {
             for (Organization org : Organization.values()) {
                 orgToVotes.put(org, new MaxCounter<T>(true));
@@ -504,7 +501,10 @@ public class VoteResolver<T> {
                 }
                 Iterator<T> iterator = items.getKeysetSortedByCount(false).iterator();
                 T value = iterator.next();
-                long weight = getQualifiedCount(items, value);
+                long weight = items.getCount(value);
+                if (weight == 0) {
+                    continue;
+                }
                 Organization org = entry.getKey();
                 if (DEBUG) {
                     System.out.println("sortedKeys?? " + value + " " + org.displayName);
@@ -513,7 +513,7 @@ public class VoteResolver<T> {
                 // if there is more than one item, check that it is less
                 if (iterator.hasNext()) {
                     T value2 = iterator.next();
-                    long weight2 = getQualifiedCount(items, value2);
+                    long weight2 = items.getCount(value2);
                     // if the votes for #1 are not better than #2, we have a dispute
                     if (weight == weight2) {
                         if (conflictedOrganizations != null) {
@@ -538,7 +538,7 @@ public class VoteResolver<T> {
                     if (DEBUG) {
                         System.out.println("Items in order: " + item.toString() + new Timestamp(items.getTime(item)).toString());
                     }
-                    long count = getQualifiedCount(items, item);
+                    long count = items.getCount(item);
                     long time = items.getTime(item);
                     if (count > maxCount) {
                         maxCount = count;
@@ -610,11 +610,9 @@ public class VoteResolver<T> {
                 }
             }
             EnumSet<Organization> conflicted = EnumSet.noneOf(Organization.class);
-            String disq = (disqualifiedValues == null) ? "[]" : disqualifiedValues.toString();
             return "{orgToVotes: " + orgToVotesString
                 + ", totals: " + getTotals(conflicted)
                 + ", conflicted: " + conflicted.toString()
-                + ", disqualified: " + disq
                 + "}";
         }
 
@@ -640,53 +638,6 @@ public class VoteResolver<T> {
                 result.put(item, counter.getCount(item));
             }
             return result;
-        }
-
-        /**
-         * Disqualify the given value from winning
-         *
-         * @param value the candidate value
-         */
-        private void disqualify(T value) {
-            if (value == null) {
-                return;
-            }
-            if (disqualifiedValues == null) {
-                disqualifiedValues = new HashSet<T>();
-            }
-            T valueOrBailey = CldrUtility.INHERITANCE_MARKER.equals(value) ? baileyValue : value;
-            disqualifiedValues.add(valueOrBailey);
-        }
-
-        /**
-         * Get the count for the given value and items, adjusting to zero
-         * if the value is disqualified
-         *
-         * @param items the Counter<T>
-         * @param value the candidate value
-         * @return the possibly adjusted count
-         */
-        private long getQualifiedCount(Counter<T> items, T value) {
-            if (isDisqualified(value)) {
-                return 0;
-            }
-            return items.getCount(value);
-        }
-
-        /**
-         * Is the given value disqualified from winning?
-         *
-         * @param value the candidate value
-         * @return true if disqualified, else false
-         */
-        private boolean isDisqualified(T value) {
-            if (disqualifiedValues != null) {
-                T valueOrBailey = CldrUtility.INHERITANCE_MARKER.equals(value) ? baileyValue : value;
-                if (disqualifiedValues.contains(valueOrBailey)) {
-                    return true;
-                }
-            }
-            return false;
         }
     }
 
@@ -987,10 +938,6 @@ public class VoteResolver<T> {
                 winningValue = (T) NO_WINNING_VALUE;
                 winningStatus = Status.missing;
             }
-            if (organizationToValueAndVote.isDisqualified(winningValue)) {
-                winningValue = (T) NO_WINNING_VALUE;
-                winningStatus = Status.missing;
-            }
             valuesWithSameVotes.add(winningValue);
             return;
         }
@@ -1036,10 +983,6 @@ public class VoteResolver<T> {
             winningValue = trunkValue;
             valuesWithSameVotes.clear();
             valuesWithSameVotes.add(winningValue);
-        }
-        if (organizationToValueAndVote.isDisqualified(winningValue)) {
-            winningValue = (T) NO_WINNING_VALUE;
-            winningStatus = Status.missing;
         }
     }
 
@@ -1982,23 +1925,5 @@ public class VoteResolver<T> {
      */
     public boolean canFlagOnLosing() {
         return valueIsLocked || (requiredVotes == HIGH_BAR);
-    }
-
-    /**
-     * Disqualify the given value for winning with this VoteResolver.
-     *
-     * @param value the value to be disqualified
-     */
-    public void disqualify(T value) {
-        // organizationToValueAndVote.disqualify(value);
-    }
-
-    /**
-     * Get the set of disqualified values
-     *
-     * @return the set, or null
-     */
-    public Set<T> getDisqualifiedValues() {
-        return organizationToValueAndVote.disqualifiedValues;
     }
 }
