@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -109,6 +110,7 @@ abstract public class CheckCLDR {
         FORBID_UNLESS_DATA_SUBMISSION(true), 
         FORBID_NULL(true),
         FORBID_ROOT(true),
+        FORBID_CODE(true),
         FORBID_PERMANENT_WITHOUT_FORUM(true);
 
         private final boolean isForbidden;
@@ -923,6 +925,26 @@ abstract public class CheckCLDR {
             }
             return false;
         }
+
+        /**
+         * Do any items in this list have the given type and subtype?
+         *
+         * @param result the list of CheckStatus items
+         * @param type the Type
+         * @param sub the Subtype
+         * @return true if any items in result are of given type and subtype, else false
+         */
+        public static boolean hasTypeAndSubtype(LinkedList<CheckStatus> result, Type type, Subtype sub) {
+            if (result == null || type == null || sub == null) {
+                return false;
+            }
+            for (CheckStatus s : result) {
+                if (s.getType().equals(type) && sub.equals(s.subtype)) {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public static abstract class SimpleDemo {
@@ -1380,5 +1402,13 @@ abstract public class CheckCLDR {
 
     public void setEnglishFile(CLDRFile englishFile) {
         this.englishFile = englishFile;
+    }
+
+    public static void logInternalErrors(LinkedList<CheckStatus> result) {
+        for (CheckStatus s : result) {
+            if (s.subtype == Subtype.internalError) {
+                System.err.println(s.getMessage());
+            }
+        }
     }
 }

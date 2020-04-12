@@ -2904,16 +2904,19 @@ function appendExample(parent, text, loc) {
  * @param {DOM} newButton	 button prototype object
  */
 function addVitem(td, tr, theRow, item, newButton) {
+	var displayValue = item.value;
+	if (displayValue === INHERITANCE_MARKER) {
+		displayValue = theRow.inheritedValue;
+		if (displayValue == null) {
+			return;
+		}
+	}
 	var div = document.createElement("div");
 	var isWinner = (td == tr.proposedcell);
 	var testKind = getTestKind(item.tests);
 	setDivClass(div, testKind);
 	item.div = div; // back link
 
-	var displayValue = item.value;
-	if (item.value === INHERITANCE_MARKER) {
-		displayValue = theRow.inheritedValue; // TODO: what if theRow.inheritedValue is undefined, as it sometimes is?
-	}
 
 	var choiceField = document.createElement("div");
 	var wrap;
