@@ -187,13 +187,8 @@ public class SurveyAjax extends HttpServlet {
 
             Map<String, Long> valueToVote = r.getResolvedVoteCounts();
 
-            Set<String> disqualified = r.getDisqualifiedValues();
-
             JSONObject orgs = new JSONObject();
             for (Organization o : Organization.values()) {
-                if (disqualified != null && disqualified.contains("am")) {
-                    System.out.println("Here we are");
-                }
                 String orgVote = r.getOrgVote(o); // deprecated, but used by client!
                 if (orgVote == null) {
                     continue;
@@ -217,9 +212,6 @@ public class SurveyAjax extends HttpServlet {
             ret.put("valueIsLocked", r.isValueLocked());
             ret.put("value_vote", valueToVoteA);
             ret.put("nameTime", r.getNameTime());
-            if (disqualified != null) {
-                ret.put("disqualified", disqualified);
-            }
             return ret;
         }
 
