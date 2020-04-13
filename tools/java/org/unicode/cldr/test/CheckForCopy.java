@@ -80,32 +80,6 @@ public class CheckForCopy extends FactoryCheckCLDR {
         return this;
     }
 
-    @Override
-    public CheckCLDR setCldrFileToCheck(CLDRFile cldrFileToCheck, Options options,
-        List<CheckStatus> possibleErrors) {
-
-        if (cldrFileToCheck == null) {
-            return this;
-        }
-
-        final String localeID = cldrFileToCheck.getLocaleID();
-
-        LanguageTagParser ltp = new LanguageTagParser().set(localeID);
-        String lang = ltp.getLanguage();
-
-        setSkipTest(false);
-        if (lang.equals("en") || localeID.equals("root")) {// || exemplars != null && ASCII_LETTER.containsNone(exemplars)) {
-            setSkipTest(true);
-            if (DEBUG) {
-                System.out.println("# CheckForCopy: Skipping: " + localeID);
-            }
-            return this;
-        }
-
-        super.setCldrFileToCheck(cldrFileToCheck, options, possibleErrors);
-        return this;
-    }
-
     /**
      * Check the given path and value, and return true if it has a same_as_code failure
 
@@ -134,12 +108,12 @@ public class CheckForCopy extends FactoryCheckCLDR {
         /*
          * Don't check inherited values unless they are from ^^^
          *
-         * Note that we do have to check in the context of vote submission, otherwise
-         * nothing prevents voting to inherit the code value.
+         * In the context of vote submission, we must check inherited values,
+         * otherwise nothing prevents voting to inherit the code value.
          *
          * TODO: clarify the purpose of using topStringValue and getConstructedValue here;
-         * maybe related to getConstructedBaileyValue. This code is confusing and warrants
-         * explanation.
+         * cf. getConstructedBaileyValue. This code is confusing and warrants explanation.
+         * The meaning of "explicit" here is the opposite its meaning elsewhere.
          */
         String topStringValue = cldrFile.getUnresolved().getStringValue(path);
         final boolean isExplicitBailey = CldrUtility.INHERITANCE_MARKER.equals(topStringValue);
@@ -242,5 +216,31 @@ public class CheckForCopy extends FactoryCheckCLDR {
             break;
         default:
         }
+    }
+
+    @Override
+    public CheckCLDR setCldrFileToCheck(CLDRFile cldrFileToCheck, Options options,
+        List<CheckStatus> possibleErrors) {
+
+        if (cldrFileToCheck == null) {
+            return this;
+        }
+
+        final String localeID = cldrFileToCheck.getLocaleID();
+
+        LanguageTagParser ltp = new LanguageTagParser().set(localeID);
+        String lang = ltp.getLanguage();
+
+        setSkipTest(false);
+        if (lang.equals("en") || localeID.equals("root")) {// || exemplars != null && ASCII_LETTER.containsNone(exemplars)) {
+            setSkipTest(true);
+            if (DEBUG) {
+                System.out.println("# CheckForCopy: Skipping: " + localeID);
+            }
+            return this;
+        }
+
+        super.setCldrFileToCheck(cldrFileToCheck, options, possibleErrors);
+        return this;
     }
 }
