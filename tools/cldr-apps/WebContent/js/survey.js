@@ -2587,7 +2587,10 @@ function checkLRmarker(field, dir, value) {
  * @return {DOM} the new span
  */
 function appendItem(div, value, pClass, tr) {
-	var text = document.createTextNode(value ? value : stui.str("no value"));
+	if (!value) {
+		return;
+	}
+	var text = document.createTextNode(value);
 	var span = document.createElement("span");
 	span.appendChild(text);
 	if (!value) {
