@@ -683,8 +683,7 @@ const cldrSurveyTable = (function() {
 			setLang(valdiv);
 			if (value === INHERITANCE_MARKER) {
 				/*
-				 * Note: theRow.inheritedValue can be undefined here, in which case appendItem
-				 * would change it to "no value", which could be displayed in the winning column.
+				 * theRow.inheritedValue can be undefined here; then do not append
 				 */
 				if (theRow.inheritedValue) {
 					appendItem(valdiv, theRow.inheritedValue, item.pClass, tr);
