@@ -1230,6 +1230,12 @@ function handleDisconnect(why, json, word, what) {
 		saidDisconnect = true;
 		if (json && json.err) {
 			why = why + "\n The error message was: \n" + json.err;
+			if (json.err.fileName) {
+				why = why + "\nFile: " + json.err.fileName;
+				if (json.err.lineNumber) {
+					why = why + "\nLine: " + json.err.lineNumber;
+				}
+			}
 		}
 		console.log("Disconnect: " + why);
 		var oneword = document.getElementById("progress_oneword");
@@ -2587,7 +2593,10 @@ function checkLRmarker(field, dir, value) {
  * @return {DOM} the new span
  */
 function appendItem(div, value, pClass, tr) {
-	var text = document.createTextNode(value ? value : stui.str("no value"));
+	if (!value) {
+		return;
+	}
+	var text = document.createTextNode(value);
 	var span = document.createElement("span");
 	span.appendChild(text);
 	if (!value) {
@@ -2904,16 +2913,19 @@ function appendExample(parent, text, loc) {
  * @param {DOM} newButton	 button prototype object
  */
 function addVitem(td, tr, theRow, item, newButton) {
+	var displayValue = item.value;
+	if (displayValue === INHERITANCE_MARKER) {
+		displayValue = theRow.inheritedValue;
+		if (displayValue == null) {
+			return;
+		}
+	}
 	var div = document.createElement("div");
 	var isWinner = (td == tr.proposedcell);
 	var testKind = getTestKind(item.tests);
 	setDivClass(div, testKind);
 	item.div = div; // back link
 
-	var displayValue = item.value;
-	if (item.value === INHERITANCE_MARKER) {
-		displayValue = theRow.inheritedValue; // TODO: what if theRow.inheritedValue is undefined, as it sometimes is?
-	}
 
 	var choiceField = document.createElement("div");
 	var wrap;
