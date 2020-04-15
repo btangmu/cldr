@@ -11,6 +11,9 @@
  *
  * Dependencies on external code:
  * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap
+ *
+ * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
+ * also some/all code from forum.js
  */
 const cldrStForum = (function() {
 
@@ -154,11 +157,10 @@ const cldrStForum = (function() {
 		setTimeout(function() {postModal.find('textarea').focus();}, 1000 /* one second */);
 	}
 
-
 	/**
 	 * Show a modal window displaying a forum post
 	 *
-	 * @param postModal the mysterious object related to "Bootstrap"
+	 * @param postModal the mysterious object related to bootstrap.js
 	 * @param onClose the callback function
 	 *
 	 * Called only by openPost and openReply, in this file
