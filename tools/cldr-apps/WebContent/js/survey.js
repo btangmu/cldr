@@ -1749,11 +1749,6 @@ function showForumStuff(frag, forumDivClone, tr) {
 			myLoad(url, "sidewaysView", function(json) {
 				/*
 				 * Count the number of unique locales in json.others and json.novalue.
-				 *
-				 * There was a bug here:
-				 *	var locale_count = Object.keys(json.others).length + json.novalue.length;
-				 * This's not a valid way to count the locales, since the keys of json.others are candidate
-				 * values, not locales. Reference: https://unicode.org/cldr/trac/ticket/11688
 				 */
 				var relatedLocales = json.novalue.slice();
 				for (var s in json.others) {

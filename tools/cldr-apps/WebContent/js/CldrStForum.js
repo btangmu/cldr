@@ -169,6 +169,10 @@ const cldrStForum = (function() {
 		formDidChange = false;
 		// fire when the post window closes. Can reload posts, etc.
 		postModal.on('hidden.bs.modal', function(e) {
+			/*
+			 * TODO: this "var postModal" has the same name as one of the parameters to showPost.
+			 * Is this a nightmare or just a headache?
+			 */
 			var postModal = $('#post-modal');
 			if (onClose) {
 				var form = $('#post-form');
@@ -277,9 +281,9 @@ const cldrStForum = (function() {
 	 * @param {Array} j.ret - forum post data
 	 * @return {Object} new DOM object
 	 *
-	 * TODO: shorten this function, currently about 200 lines long, by moving code into
-	 * subroutines. Also, postpone creating DOM elements until finished constructing the
-	 * filtered list of threads, to make the code cleaner, faster, and more testable.
+	 * TODO: shorten this function by moving code into subroutines. Also, postpone creating
+	 * DOM elements until finished constructing the filtered list of threads, to make the code
+	 * cleaner, faster, and more testable.
 	 *
 	 * TODO: revise threading so that the same locale+path can have multiple distinct threads,
 	 * rather than always combining posts with the same locale+path into a single "thread".
@@ -297,23 +301,10 @@ const cldrStForum = (function() {
 			postHash[json.ret[num].id] = json.ret[num];
 		}
 
-		// now, collect the threads
-		function threadId(post) {
-			if (post.parent >= 0 && postHash[post.parent]) {
-				// if  the parent exists.
-				return threadId(postHash[post.parent]);
-			}
-			if (post.xpath) {
-				return post.locale + "|" + post.xpath; // item post
-			} else {
-				return post.locale + "|#" + post.id; // non-item post
-			}
-		}
-
 		// next, add threadIds and create the topic divs
 		for (let num in json.ret) {
 			var post = json.ret[num];
-			post.threadId = threadId(post);
+			post.threadId = getThreadId(post, postHash);
 
 			if (!topicDivs[post.threadId]) {
 				// add the topic div
@@ -474,6 +465,34 @@ const cldrStForum = (function() {
 			}
 		}
 		return filterAndAssembleForumThreads(json.ret, topicDivs);
+	}
+
+	/**
+	 * Get the "thread id" for the given post.
+	 *
+	 * For posts with parents, the thread id is the same as the thread id of the parent.
+	 *
+	 * For posts without parents, the thread id depends on whether the post is an "item post"
+	 * or a "non-item" post -- that is, whether or not it is associated with an xpath.
+	 *
+	 * An "item post" has a thread id like "aa|7f8ed9085d13fcc6", where aa is the locale and 7f8ed9085d13fcc6 is the xpath.
+	 *
+	 * A "non-item post" has a thread id like "aa|#1234", where aa is the locale and 1234 is the post id.
+	 *
+	 * @param post the post object
+	 * @param postHash the map indexed by all posts
+	 * @return the thread id string
+	 */
+	function getThreadId(post, postHash) {
+		if (post.parent >= 0 && postHash[post.parent]) {
+			// if the parent exists.
+			return getThreadId(postHash[post.parent], postHash); // recursive
+		}
+		if (post.xpath) {
+			return post.locale + "|" + post.xpath; // item post
+		} else {
+			return post.locale + "|#" + post.id; // non-item post
+		}
 	}
 
 	/**
