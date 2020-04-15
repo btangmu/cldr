@@ -150,11 +150,18 @@ const cldrStForumFilter = (function() {
 		return !passIfYouPosted(threadPosts);
 	}
 
-	/*
-	 * Make only these functions accessible from other files:
+	/**
+	 * Make only these functions accessible from other files
 	 */
-	return {
+	let exportedFunctions = {
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
 	};
+	/*
+	 * Enable Mocha tests to import this file as a module
+	 */
+	if (typeof exports === "object") {
+		module.exports = exportedFunctions;
+	}
+	return exportedFunctions;
 })();
