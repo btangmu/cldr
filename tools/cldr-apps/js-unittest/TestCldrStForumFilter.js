@@ -1,6 +1,15 @@
 'use strict';
-const assert = require('assert');
-const cldrStForumFilter = require('../WebContent/js/CldrStForumFilter.js');
+// const assert = require('assert');
+// const cldrStForumFilter = require('../WebContent/js/CldrStForumFilter.js');
+
+let assert = chai.assert;
+
+describe('cldrStForumFilter.createMenu', function() {
+	it('should not return null', function() {
+		const actualOutput = cldrStForumFilter.createMenu(1, null);
+		assert(actualOutput != null);
+	});
+});
 
 describe('cldrStForumFilter.getFilteredThreadIds', function() {
 	it('should return two threads for two unrelated posts', function() {

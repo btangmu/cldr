@@ -153,7 +153,7 @@ const cldrStForumFilter = (function() {
 	/**
 	 * Make only these functions accessible from other files
 	 */
-	let exportedFunctions = {
+	const exportedFunctions = {
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
 	};
