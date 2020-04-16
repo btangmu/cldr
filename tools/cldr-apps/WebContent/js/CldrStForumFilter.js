@@ -150,7 +150,7 @@ const cldrStForumFilter = (function() {
 		return !passIfYouPosted(threadPosts);
 	}
 
-	/**
+	/*
 	 * Make only these functions accessible from other files
 	 */
 	return {
