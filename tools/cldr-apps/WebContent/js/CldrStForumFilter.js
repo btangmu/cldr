@@ -153,15 +153,8 @@ const cldrStForumFilter = (function() {
 	/**
 	 * Make only these functions accessible from other files
 	 */
-	const exportedFunctions = {
+	return {
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
 	};
-	/*
-	 * Enable Mocha tests to import this file as a module
-	 */
-	if (typeof exports === "object") {
-		module.exports = exportedFunctions;
-	}
-	return exportedFunctions;
 })();
