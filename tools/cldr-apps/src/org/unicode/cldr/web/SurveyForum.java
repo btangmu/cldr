@@ -378,6 +378,14 @@ public class SurveyForum {
         return postId;
     }
 
+    /**
+     * Add a row to the FORUM_STATUS db table for the given post and status,
+     * unless this status doesn't belong in the table
+     *
+     * @param postId the post id
+     * @param status the string representing a ForumStatus, or null
+     * @throws SurveyException
+     */
     private void addStatusToTable(int postId, String status) throws SurveyException {
 
         ForumStatus forumStatus = ForumStatus.fromName(status, ForumStatus.OPEN);
@@ -1215,9 +1223,6 @@ public class SurveyForum {
             throw new SurveyException(ErrorCode.E_NO_PERMISSION, "You do not have permission to access that locale");
     }
 
-    /**
-     * @return the pallresult
-     */
     private static String getPallresult() {
         Table forumPosts = DBUtils.Table.FORUM_POSTS;
         return getPallresult(forumPosts.toString());
@@ -1245,12 +1250,12 @@ public class SurveyForum {
     /**
      * Respond when the user adds a new forum post.
      *
-     * @param mySession
+     * @param mySession the CookieSession
      * @param xpath of the form "stringid" or "#1234"
-     * @param l
-     * @param subj
-     * @param text
-     * @param status the status string such as "open", or null
+     * @param l the CLDRLocale
+     * @param subj the subject of the post
+     * @param text the text of the post
+     * @param status the status string such as "Open", or null
      * @param replyTo could be {@link #NO_PARENT} if there is no parent
      * @return the post id
      *
@@ -1273,6 +1278,9 @@ public class SurveyForum {
         return sm.fora.doPostInternal(base_xpath, replyTo, l, subj, text, status, couldFlagOnLosing, mySession.user);
     }
 
+    /**
+     * Status values associated with forum posts and threads
+     */
     private enum ForumStatus {
         CLOSED(0, "Closed"),
         OPEN(1, "Open"),
@@ -1287,10 +1295,23 @@ public class SurveyForum {
         private final int id;
         private final String name;
 
+        /**
+         * Get the integer id for this ForumStatus
+         *
+         * @return the id
+         */
         public int toInt() {
             return id;
         }
 
+        /**
+         * Get a ForumStatus value from its name, or if the name is not associated with
+         * a ForumStatus value, use the given default ForumStatus
+         *
+         * @param name
+         * @param defaultStatus
+         * @return the ForumStatus
+         */
         public static ForumStatus fromName(String name, ForumStatus defaultStatus) {
             if (name != null) {
                 for (ForumStatus s : ForumStatus.values()) {
@@ -1302,6 +1323,13 @@ public class SurveyForum {
             return defaultStatus;
         }
 
+        /**
+         * Does the given ForumStatus belong in the FORUM_STATUS db table?
+         *
+         * Keep the table smaller by not storing rows in it for status CLOSED.
+         *
+         * @return true or false
+         */
         public boolean belongsInTable() {
             return this != CLOSED;
         }

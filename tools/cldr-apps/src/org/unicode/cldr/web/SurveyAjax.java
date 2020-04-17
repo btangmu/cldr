@@ -1009,6 +1009,22 @@ public class SurveyAjax extends HttpServlet {
         }
     }
 
+    /**
+     * Make a new forum post using data submitted by the client, save it to the database,
+     * and send the client a json version of the post
+     *
+     * @param request the HttpServletRequest
+     * @param response the HttpServletResponse
+     * @param out the PrintWriter
+     * @param xpath the path, or null
+     * @param l the CLDRLocale
+     * @param mySession the CookieSession
+     * @param sm the SurveyMain
+     *
+     * @throws SurveyException
+     * @throws JSONException
+     * @throws IOException
+     */
     private void postToForum(HttpServletRequest request, HttpServletResponse response, PrintWriter out,
             String xpath, CLDRLocale l, CookieSession mySession, SurveyMain sm) throws SurveyException, JSONException, IOException {
 
