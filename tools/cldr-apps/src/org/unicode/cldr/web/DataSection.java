@@ -80,7 +80,7 @@ public class DataSection implements JSONString {
      * a "history" to be constructed and passed to the client for each CandidateItem,
      * indicating how/when/why it was added. This should be false for production.
      */
-    private static boolean USE_CANDIDATE_HISTORY = false;
+    private static boolean USE_CANDIDATE_HISTORY = true;
 
     /*
      * TODO: order classes consistently; inner classes should all be at top or all be at bottom.
