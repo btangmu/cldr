@@ -56,7 +56,7 @@ const cldrStForum = (function() {
 				'<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>' +
 				'</div>\n';
 
-			boolean isReply = false; // ?? TODO: isReply for dashboard
+			let isReply = false; // ?? TODO: isReply for dashboard
 			content += postStatusMenu(isReply);
 
 			/*
@@ -203,7 +203,7 @@ const cldrStForum = (function() {
 	 */
 	function postStatusMenu(isReply) {
 		let content = '<p>Status: ';
-		content += '<select>\n';
+		content += '<select id="forumStatusMenu">\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
 
 		if (!isReply) {
@@ -219,7 +219,7 @@ const cldrStForum = (function() {
 			 * TODO: is this user the same user who made the first post in the thread?
 			 * Only that user, or a TC, is allowed to close the thread.
 			 */
-			let userCanClose = false;
+			let userCanClose = true;
 			if (userCanClose) {
 				content += '<option value="Closed">Close</option>\n';
 			}
@@ -238,6 +238,14 @@ const cldrStForum = (function() {
 	 * NOTE: this function uses JQuery (not Dojo) for ajax
 	 */
 	function submitPost(event) {
+		let forumStatus = document.getElementById("forumStatusMenu").value;
+		if (!forumStatus) {
+			/*
+			 * TODO: alert user that status is required
+			 */
+			return;
+		}
+
 		var locale = surveyCurrentLocale;
 		var url = contextPath + "/SurveyAjax";
 		var form = $('#post-form');
@@ -254,6 +262,7 @@ const cldrStForum = (function() {
 					xpath: xpath,
 					text: $('#post-form textarea[name=text]').val(),
 					subj: $('#post-form input[name=subj]').val(), // "Review"
+					forumStatus: forumStatus,
 					what: "forum_post"
 				},
 				type: "POST",
