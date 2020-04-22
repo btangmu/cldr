@@ -10,24 +10,6 @@
 const INHERITANCE_MARKER = "↑↑↑";
 
 /**
- * Format a date and time for display in a forum post.
- *
- * @param x the number of seconds since 1970-01-01
- * @returns the formatted date and time as a string
- *
- * Like "2018-05-16 13:45" per cldr-dev@unicode.org.
- */
-function fmtDateTime(x) {
-	const d = new Date(x);
-
-	function pad(n) {
-		return (n < 10) ? '0' + n : n;
-	}
-	return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
-		' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-}
-
-/**
  * Is the given string for a report, that is, does it start with "r_"?
  *
  * @class GLOBAL
@@ -71,23 +53,6 @@ function addClass(obj, className) {
 		obj.className = className + " " + obj.className;
 	}
 	return obj;
-}
-
-/**
- *
- */
-function post2text(text) {
-	if (text === undefined || text === null) {
-		text = "(empty)";
-	}
-	var out = text;
-	out = out.replace(/<p>/g, '\n');
-	out = out.replace(/&quot;/g, '"');
-	out = out.replace(/&lt;/g, '<');
-	out = out.replace(/&gt;/g, '>');
-	out = out.replace(/&amp;/g, '&');
-
-	return out;
 }
 
 /**

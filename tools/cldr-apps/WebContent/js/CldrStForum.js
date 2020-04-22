@@ -10,14 +10,22 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap
+ * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, stui.str, listenFor, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
  */
 const cldrStForum = (function() {
 
-	var formDidChange = false;
+	let FORUM_DEBUG = true;
+
+	function forumDebug(s) {
+		if (FORUM_DEBUG) {
+			console.log(s);
+		}
+	}
+
+	let formDidChange = false;
 
 	function didFormChange() {
 		return formDidChange;
@@ -130,7 +138,6 @@ const cldrStForum = (function() {
 		}
 		content += '</form>';
 
-		// 'new' (dom based) generate
 		content += '<div class="post"></div>';
 		content += '<div class="forumDiv"></div>';
 
@@ -154,7 +161,9 @@ const cldrStForum = (function() {
 
 		postModal.find('textarea').autosize();
 		postModal.find('.submit-post').click(submitPost);
-		setTimeout(function() {postModal.find('textarea').focus();}, 1000 /* one second */);
+		setTimeout(function() {
+			postModal.find('textarea').focus();
+		}, 1000 /* one second */);
 	}
 
 	/**
@@ -169,14 +178,10 @@ const cldrStForum = (function() {
 		formDidChange = false;
 		// fire when the post window closes. Can reload posts, etc.
 		postModal.on('hidden.bs.modal', function(e) {
-			/*
-			 * TODO: this "var postModal" has the same name as one of the parameters to showPost.
-			 * Is this a nightmare or just a headache?
-			 */
-			var postModal = $('#post-modal');
 			if (onClose) {
-				var form = $('#post-form');
-				onClose(postModal, form, formDidChange);
+				let form = $('#post-form');
+				let modal = $('#post-modal');
+				onClose(modal, form, formDidChange);
 			}
 		});
 		postModal.modal();
@@ -285,7 +290,7 @@ const cldrStForum = (function() {
 	 * DOM elements until finished constructing the filtered list of threads, to make the code
 	 * cleaner, faster, and more testable.
 	 *
-	 * TODO: revise threading so that the same locale+path can have multiple distinct threads,
+	 * Threading has been revised, so that the same locale+path can have multiple distinct threads,
 	 * rather than always combining posts with the same locale+path into a single "thread".
 	 * Reference: https://unicode-org.atlassian.net/browse/CLDR-13695
 	 */
@@ -310,11 +315,11 @@ const cldrStForum = (function() {
 				// add the topic div
 				var topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
-				var topicInfo = createChunk("", "h4", "postTopicInfo");
+				var topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
 				if (!json.noItemLink) {
 					topicDiv.appendChild(topicInfo);
 					if (post.locale) {
-						var localeLink = createChunk(locmap.getLocaleName(post.locale), "a", "localeName");
+						var localeLink = forumCreateChunk(locmap.getLocaleName(post.locale), "a", "localeName");
 						if (post.locale != surveyCurrentLocale) {
 							localeLink.href = linkToLocale(post.locale);
 						}
@@ -322,21 +327,21 @@ const cldrStForum = (function() {
 					}
 				}
 				if (!post.xpath) {
-					topicInfo.appendChild(createChunk(post2text(post.subject), "span", "topicSubject"));
+					topicInfo.appendChild(forumCreateChunk(post2text(post.subject), "span", "topicSubject"));
 				} else {
 					if (!json.noItemLink) {
-						var itemLink = createChunk(stui.str("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
+						var itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
 						itemLink.href = "#/" + post.locale + "//" + post.xpath;
 						topicInfo.appendChild(itemLink);
 						(function(topicInfo) {
-							var loadingMsg = createChunk(stui.str("loading"), "i", "loadingMsg");
+							var loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
 							topicInfo.appendChild(loadingMsg);
 							xpathMap.get({
 								hex: post.xpath
 							}, function(o) {
 								if (o.result) {
 									topicInfo.removeChild(loadingMsg);
-									var itemPh = createChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
+									var itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
 									itemPh.title = o.result.path;
 									topicInfo.appendChild(itemPh);
 								}
@@ -352,40 +357,57 @@ const cldrStForum = (function() {
 		for (let num in json.ret) {
 			var post = json.ret[num];
 
-			var subpost = createChunk("", "div", "post"); // was: subpost
+			var subpost = forumCreateChunk("", "div", "post"); // was: subpost
 			postDivs[post.id] = subpost;
 			subpost.id = "fp" + post.id;
 
-			var headingLine = createChunk("", "h4", "selected");
+			var headingLine = forumCreateChunk("", "h4", "selected");
 
 			// If post.posterInfo is undefined, don't crash; insert "[Poster no longer active]".
 			if (!post.posterInfo) {
-				headingLine.appendChild(createChunk("[Poster no longer active]", "span", ""));
+				headingLine.appendChild(forumCreateChunk("[Poster no longer active]", "span", ""));
 			} else {
-				var gravitar = createGravitar(post.posterInfo);
+				/*
+				 * TODO: encapsulate "createGravitar" dependency
+				 */
+				var gravitar;
+				if (typeof createGravitar !== 'undefined') {
+					gravitar = createGravitar(post.posterInfo);
+				} else {
+					gravitar = document.createTextNode('');
+				}
 				gravitar.className = "gravitar pull-left";
 				subpost.appendChild(gravitar);
-				if (post.posterInfo.id == surveyUser.id) {
-					headingLine.appendChild(createChunk(stui.str("user_me"), "span", "forum-me"));
+				/*
+				 * TODO: encapsulate "surveyUser" dependency
+				 */
+				if (typeof surveyUser !== 'undefined' && post.posterInfo.id == surveyUser.id) {
+					headingLine.appendChild(forumCreateChunk(forumStr("user_me"), "span", "forum-me"));
 				} else {
-					var usera = createChunk(post.posterInfo.name + ' ', "a", "");
+					var usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
 					if (post.posterInfo.email) {
-						usera.appendChild(createChunk("", "span", "glyphicon glyphicon-envelope"));
+						usera.appendChild(forumCreateChunk("", "span", "glyphicon glyphicon-envelope"));
 						usera.href = "mailto:" + post.posterInfo.email;
 					}
 					headingLine.appendChild(usera);
 					headingLine.appendChild(document.createTextNode(' (' + post.posterInfo.org + ') '));
 				}
-				var userLevelChunk = createChunk(stui.str("userlevel_" + post.posterInfo.userlevelName), "span", "userLevelName label-info label");
-				userLevelChunk.title = stui.str("userlevel_" + post.posterInfo.userlevelName + "_desc");
+				var userLevelChunk = forumCreateChunk(forumStr("userlevel_" + post.posterInfo.userlevelName), "span", "userLevelName label-info label");
+				userLevelChunk.title = forumStr("userlevel_" + post.posterInfo.userlevelName + "_desc");
 				headingLine.appendChild(userLevelChunk);
 			}
 			var date = fmtDateTime(post.date_long);
 			if (post.version) {
 				date = "[v" + post.version + "] " + date;
 			}
-			var dateChunk = createChunk(date, "span", "label label-primary pull-right forumLink");
+			var dateChunk = forumCreateChunk(date, "span", "label label-primary pull-right forumLink");
 			(function(post) {
+				/*
+				 * TODO: encapsulate "listenFor" dependency
+				 */
+				if (typeof listenFor === 'undefined') {
+					return;
+				}
 				listenFor(dateChunk, "click", function(e) {
 					if (post.locale && locmap.getLanguage(surveyCurrentLocale) != locmap.getLanguage(post.locale)) {
 						surveyCurrentLocale = locmap.getLanguage(post.locale);
@@ -403,20 +425,26 @@ const cldrStForum = (function() {
 			headingLine.appendChild(dateChunk);
 			subpost.appendChild(headingLine);
 
-			var subSubChunk = createChunk("", "div", "postHeaderInfoGroup");
+			var subSubChunk = forumCreateChunk("", "div", "postHeaderInfoGroup");
 			subpost.appendChild(subSubChunk); {
-				var subChunk = createChunk("", "div", "postHeaderItem");
+				var subChunk = forumCreateChunk("", "div", "postHeaderItem");
 				subSubChunk.appendChild(subChunk);
-				subChunk.appendChild(createChunk(post2text(post.subject), "b", "postSubject"));
+				subChunk.appendChild(forumCreateChunk(post2text(post.subject), "b", "postSubject"));
 			}
 
 			// actual text
 			var postText = post2text(post.text);
 			var postContent;
-			subpost.appendChild(postContent = createChunk(postText, "div", "postContent"));
+			subpost.appendChild(postContent = forumCreateChunk(postText, "div", "postContent"));
 			if (json.replyButton) {
-				var replyButton = createChunk(stui.str("forum_reply"), "button", "btn btn-default btn-sm");
+				var replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
 				(function(post) {
+					/*
+					 * TODO: encapsulate "listenFor" dependency
+					 */
+					if (typeof listenFor === 'undefined') {
+						return;
+					}
 					listenFor(replyButton, "click", function(e) {
 						openReply({
 							locale: surveyCurrentLocale,
@@ -434,7 +462,7 @@ const cldrStForum = (function() {
 
 			// reply link
 			if (json.replyStub) {
-				var replyChunk = createChunk("Reply (leaves this page)", "a", "postReply");
+				var replyChunk = forumCreateChunk("Reply (leaves this page)", "a", "postReply");
 				replyChunk.href = json.replyStub + post.id;
 				subpost.appendChild(replyChunk);
 			}
@@ -443,19 +471,19 @@ const cldrStForum = (function() {
 		for (let num in json.ret) {
 			var post = json.ret[num];
 			if (post.parent != -1) {
-				stdebug("reparenting " + post.id + " to " + post.parent);
+				forumDebug("reparenting " + post.id + " to " + post.parent);
 				if (postDivs[post.parent]) {
 					if (!postDivs[post.parent].replies) {
 						// add the "replies" area
-						stdebug("ADding replies area to " + post.parent);
-						postDivs[post.parent].replies = createChunk("", "div", "postReplies");
+						forumDebug("Adding replies area to " + post.parent);
+						postDivs[post.parent].replies = forumCreateChunk("", "div", "postReplies");
 						postDivs[post.parent].appendChild(postDivs[post.parent].replies);
 					}
 					// add to new location
 					postDivs[post.parent].replies.appendChild(postDivs[post.id]);
 				} else {
 					// The parent of this post was deleted.
-					stdebug("The parent of post #" + post.id + " is " + post.parent + " but it was deleted or not visible");
+					forumDebug("The parent of post #" + post.id + " is " + post.parent + " but it was deleted or not visible");
 					// link it in somewhere
 					topicDivs[post.threadId].appendChild(postDivs[post.id]);
 				}
@@ -468,16 +496,53 @@ const cldrStForum = (function() {
 	}
 
 	/**
+	 * Convert the given text by replacing some html with plain text
+	 *
+	 * @param the plain text
+	 */
+	function post2text(text) {
+		if (text === undefined || text === null) {
+			text = "(empty)";
+		}
+		var out = text;
+		out = out.replace(/<p>/g, '\n');
+		out = out.replace(/&quot;/g, '"');
+		out = out.replace(/&lt;/g, '<');
+		out = out.replace(/&gt;/g, '>');
+		out = out.replace(/&amp;/g, '&');
+		return out;
+	}
+
+	/**
+	 * Create a DOM object with the specified text, tag, and HTML class.
+	 *
+	 * @param text textual content of the new object, or null for none
+	 * @param tag which element type to create, or null for "span"
+	 * @param className CSS className, or null for none.
+	 * @return new DOM object
+	 *
+	 * This duplicated a function in survey.js; copied here to avoid the dependency, at least while testing/refactoring
+	 */
+	function forumCreateChunk(text, tag, className) {
+		if (!tag) {
+			tag = "span";
+		}
+		var chunk = document.createElement(tag);
+		if (className) {
+			chunk.className = className;
+		}
+		if (text) {
+			chunk.appendChild(document.createTextNode(text));
+		}
+		return chunk;
+	}
+
+	/**
 	 * Get the "thread id" for the given post.
 	 *
-	 * For posts with parents, the thread id is the same as the thread id of the parent.
+	 * For a post with a parent, the thread id is the same as the thread id of the parent.
 	 *
-	 * For posts without parents, the thread id depends on whether the post is an "item post"
-	 * or a "non-item" post -- that is, whether or not it is associated with an xpath.
-	 *
-	 * An "item post" has a thread id like "aa|7f8ed9085d13fcc6", where aa is the locale and 7f8ed9085d13fcc6 is the xpath.
-	 *
-	 * A "non-item post" has a thread id like "aa|#1234", where aa is the locale and 1234 is the post id.
+	 * For post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
 	 *
 	 * @param post the post object
 	 * @param postHash the map indexed by all posts
@@ -485,14 +550,10 @@ const cldrStForum = (function() {
 	 */
 	function getThreadId(post, postHash) {
 		if (post.parent >= 0 && postHash[post.parent]) {
-			// if the parent exists.
+			// if the parent exists
 			return getThreadId(postHash[post.parent], postHash); // recursive
 		}
-		if (post.xpath) {
-			return post.locale + "|" + post.xpath; // item post
-		} else {
-			return post.locale + "|#" + post.id; // non-item post
-		}
+		return post.locale + "|" + post.id;
 	}
 
 	/**
@@ -522,6 +583,40 @@ const cldrStForum = (function() {
 			}		
 		});
 		return forumDiv;
+	}
+
+	/**
+	 * Convert the given short string into a human-readable string.
+	 *
+	 * TODO: encapsulate "stui" dependency better
+	 *
+	 * @param s the short string, like "forum_item" or "forum_reply"
+	 * @return the human-readable string like "Item" or "Reply"
+	 */
+	function forumStr(s) {
+		var gravitar;
+		if (typeof stui !== 'undefined') {
+			return stui.str(s);
+		}
+		return s;
+	}
+
+	/**
+	 * Format a date and time for display in a forum post.
+	 *
+	 * @param x the number of seconds since 1970-01-01
+	 * @returns the formatted date and time as a string
+	 *
+	 * Like "2018-05-16 13:45" per cldr-dev@unicode.org.
+	 */
+	function fmtDateTime(x) {
+		const d = new Date(x);
+
+		function pad(n) {
+			return (n < 10) ? '0' + n : n;
+		}
+		return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+			' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 	}
 
 	/*

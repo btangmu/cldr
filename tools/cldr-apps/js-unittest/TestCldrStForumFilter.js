@@ -1,6 +1,6 @@
 'use strict';
 
-const assert = chai.assert;
+var assert = chai.assert;
 
 describe('cldrStForumFilter.createMenu', function() {
 	it('should not return null', function() {
