@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -66,22 +67,21 @@ public class SurveyForum {
 
     private static java.util.logging.Logger logger;
 
+    /**
+     * Map post id to ForumStatus
+     */
+    private ConcurrentHashMap<Integer, ForumStatus> allStatus = new ConcurrentHashMap<Integer, ForumStatus>();
+
     public static String DB_FORA = "sf_fora"; // forum name -> id
     public static String DB_READERS = "sf_readers"; //
 
-    public static String DB_LOC2FORUM = "sf_loc2forum"; // locale -> forum.. for
-    // selects.
+    public static String DB_LOC2FORUM = "sf_loc2forum"; // locale -> forum.. for selects.
 
     /* --------- FORUM ------------- */
     static final String F_FORUM = "forum";
     public static final String F_XPATH = "xpath";
-    static final String F_PATH = "path";
     static final String F_DO = "d";
-    static final String F_LIST = "list";
     static final String F_VIEW = "view";
-    static final String F_ADD = "add";
-    static final String F_REPLY = "reply";
-    static final String F_POST = "post";
 
     static final String POST_SPIEL = "Post a comment to other vetters. (Don't use this to report SurveyTool issues or propose data changes: use the bug forms.)";
 
@@ -372,26 +372,28 @@ public class SurveyForum {
             throw new SurveyException(ErrorCode.E_INTERNAL, complaint);
         }
 
-        addStatusToTable(postId, status);
+        setStatus(postId, status);
 
         emailNotify(user, locale, base_xpath, subj, text, postId);
         return postId;
     }
 
     /**
-     * Add a row to the FORUM_STATUS db table for the given post and status,
-     * unless this status doesn't belong in the table
+     * Add a row to the FORUM_STATUS db table for the given post and status
+     * and add it to allStatus, unless this status doesn't belong in the table
      *
      * @param postId the post id
      * @param status the string representing a ForumStatus, or null
      * @throws SurveyException
      */
-    private void addStatusToTable(int postId, String status) throws SurveyException {
+    private void setStatus(int postId, String status) throws SurveyException {
 
         ForumStatus forumStatus = ForumStatus.fromName(status, ForumStatus.OPEN);
         if (!forumStatus.belongsInTable()) {
             return;
         }
+        int statusId = forumStatus.toInt();
+        allStatus.put(postId, forumStatus);
         try {
             Connection conn = null;
             PreparedStatement pAdd = null;
@@ -399,7 +401,7 @@ public class SurveyForum {
                 conn = sm.dbUtils.getDBConnection();
                 pAdd = prepare_pAddStatus(conn);
                 pAdd.setInt(1, postId);
-                pAdd.setInt(2, forumStatus.toInt());
+                pAdd.setInt(2, statusId);
                 int n = pAdd.executeUpdate();
                 conn.commit();
                 if (n != 1) {
@@ -413,6 +415,41 @@ public class SurveyForum {
             SurveyLog.logException(se, complaint);
             throw new SurveyException(ErrorCode.E_INTERNAL, complaint);
         }
+    }
+
+    /**
+     * Read the status table and fill in the allStatus hash
+     */
+    private void getAllStatusFromTable() {
+        Connection conn = null;
+        PreparedStatement pList = null;
+        try {
+            conn = sm.dbUtils.getDBConnection();
+            pList = DBUtils.prepareStatement(conn, "pList", "SELECT id,status FROM " + DBUtils.Table.FORUM_STATUS.toString());
+            ResultSet rs = pList.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt(1);
+                int si = rs.getInt(2);
+                ForumStatus status = ForumStatus.fromInt(si, ForumStatus.CLOSED);
+                if (status != ForumStatus.CLOSED) {
+                    allStatus.put(id, status);
+                }
+            }
+        } catch (SQLException se) {
+            String complaint = "SurveyForum: Could not get status from table " + DBUtils.unchainSqlException(se);
+            logger.severe(complaint);
+            throw new RuntimeException(complaint);
+        } finally {
+            DBUtils.close(pList, conn);
+        }
+    }
+
+    private ForumStatus getStatusOfPost(int postId) {
+        ForumStatus forumStatus = allStatus.get(postId);
+        if (forumStatus == null) {
+            return ForumStatus.CLOSED;
+        }
+        return forumStatus;
     }
 
     /**
@@ -639,6 +676,7 @@ public class SurveyForum {
             conn.commit();
         }
         reloadLocales(conn);
+        getAllStatusFromTable();
     }
 
     private SurveyMain sm = null;
@@ -1149,14 +1187,7 @@ public class SurveyForum {
                             + ".last_time DESC", forumNumber, base_xpath, ident);
                     }
                 }
-                /*
-                 * TODO: get the ForumStatus for each post. Probably should do a join on the two tables FORUM_POSTS and FORUM_STATUS above.
-                 */
-                ForumStatus forumStatus = ForumStatus.OPEN;
                 if (o != null) {
-                    /* Gather the post data. Note that showPost is not called here.
-                     * The formatting is done by cldrStForum.parseContent.
-                     */
                     for (int i = 0; i < o.length; i++) {
                         int poster = (Integer) o[i][0];
                         String subj2 = (String) o[i][1];
@@ -1173,7 +1204,7 @@ public class SurveyForum {
                             post.put("poster", poster)
                                 .put("subject", subj2)
                                 .put("text", text2)
-                                .put("forumStatus", forumStatus)
+                                .put("forumStatus", getStatusOfPost(id).toName())
                                 .put("date", lastDate)
                                 .put("date_long", lastDate.getTime())
                                 .put("id", id)
@@ -1302,6 +1333,32 @@ public class SurveyForum {
          */
         public int toInt() {
             return id;
+        }
+
+        /**
+         * Get the name for this ForumStatus
+         *
+         * @return the name
+         */
+        public String toName() {
+            return name;
+        }
+
+        /**
+         * Get a ForumStatus value from its name, or if the name is not associated with
+         * a ForumStatus value, use the given default ForumStatus
+         *
+         * @param i
+         * @param defaultStatus
+         * @return the ForumStatus
+         */
+        public static ForumStatus fromInt(int i, ForumStatus defaultStatus) {
+            for (ForumStatus s : ForumStatus.values()) {
+                if (s.id == i) {
+                    return s;
+                }
+            }
+            return defaultStatus;
         }
 
         /**

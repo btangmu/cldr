@@ -5,7 +5,7 @@ var assert = chai.assert;
 describe('cldrStForumFilter.createMenu', function() {
 	it('should not return null', function() {
 		const actualOutput = cldrStForumFilter.createMenu(1, null);
-		assert(actualOutput != null);
+		assert(actualOutput != null, "not null");
 	});
 });
 

@@ -30,8 +30,8 @@ describe('cldrStForum.parseContent', function() {
 
 		assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
 
-		let s = "HeikapuPPerson_TESTER_ "
-			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtestforum_replyHeikapuPPerson_TESTER_ "
+		let s = "n "
+			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtestforum_replyn "
 			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: Reviewtest reply blah!forum_reply";
 
 		assert.equal(normalizeWhitespace(s), normalizeWhitespace(content.firstChild.textContent));

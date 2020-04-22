@@ -357,7 +357,7 @@ const cldrStForum = (function() {
 		for (let num in json.ret) {
 			var post = json.ret[num];
 
-			var subpost = forumCreateChunk("", "div", "post"); // was: subpost
+			var subpost = forumCreateChunk("", "div", "post");
 			postDivs[post.id] = subpost;
 			subpost.id = "fp" + post.id;
 
