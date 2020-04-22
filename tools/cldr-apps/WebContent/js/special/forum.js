@@ -88,7 +88,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				var postButton = createChunk(stui.str("forumNewPostButton"), "button", "btn btn-default btn-sm");
 				postButton.appendChild(createChunk("","span",""));
 				listenFor(postButton, "click", function(e) {
-					cldrStForum.openReply({
+					cldrStForum.openPostOrReply({
 						locale: surveyCurrentLocale,
 						onReplyClose: function(postModal, form, formDidChange) {
 							if (formDidChange) {

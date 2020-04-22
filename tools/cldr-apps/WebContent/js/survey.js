@@ -1898,7 +1898,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 						if (couldFlag) {
 							subj = subj + " (Flag for review)";
 						}
-						cldrStForum.openReply({
+						cldrStForum.openPostOrReply({
 							locale: surveyCurrentLocale,
 							xpath: theRow.xpstrid,
 							subject: subj,

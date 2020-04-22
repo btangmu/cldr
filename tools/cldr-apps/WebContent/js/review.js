@@ -24,7 +24,7 @@ $(function() {
 	dynamic.on('click', 'button.fix', toggleFix);
 	dynamic.on('click', '.hide-review', toggleReviewLine);
 	dynamic.on('click', '.show-items', toggleItems);
-	dynamic.on('click', '.post-review', cldrStForum.openPost);
+	dynamic.on('click', '.post-review', cldrStForum.openPostFromDashboard);
 	dynamic.on('click', '.hide-review.done', toggleReview);
 
 	$(window).scroll(function() {

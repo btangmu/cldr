@@ -10,7 +10,7 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, stui.str, listenFor, ...
+ * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, stui.str, listenFor, bootstrap.js, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
@@ -34,14 +34,11 @@ const cldrStForum = (function() {
 	/**
 	 * Open a thread of posts concerning this xpath
 	 *
-	 * Called only from review.js, for Dashboard
-	 *
-	 * Strangely, the non-Dashboard "New Forum Post" button (e.g., see http://localhost:8080/cldr-apps/v#forum/aa//)
-	 * does NOT call openPost()! It calls openReply(), even though the resulting post gets parent = -1 = SurveyForum.NO_PARENT.
+	 * Called only from review.js, for Dashboard only -- doesn't work outside dashboard due to dependencies on .data-review, etc.
 	 *
 	 * NOTE: this function uses JQuery (not Dojo) for ajax ($.get)
 	 */
-	function openPost() {
+	function openPostFromDashboard() {
 		var path = $(this).closest(".data-review").data('path');
 		var choice = $(this).closest(".table-wrapper").data('type');
 		var postModal = $('#post-modal');
@@ -59,10 +56,11 @@ const cldrStForum = (function() {
 				'<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>' +
 				'</div>\n';
 
-			content += postStatusMenu();
+			boolean isReply = false; // ?? TODO: isReply for dashboard
+			content += postStatusMenu(isReply);
 
 			/*
-			 * This Submit button differs from the one in openReply() by having data-path and data-choice
+			 * This Submit button differs from the one in openPostOrReply() by having data-path and data-choice
 			 */
 			content += '<button data-path="' + path +
 				'" data-choice="' + choice + '" class="btn btn-success submit-post btn-block">Submit</button>';
@@ -100,27 +98,29 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Allow an in-line reply to a forum post.
+	 * Make a new forum post or a reply.
 	 *
-	 * Strangely, this function is also used for the non-Dashboard "New Forum Post" button,
-	 * which is not a reply; see openPost comments
+	 * This function (formerly named openReply) is used for the non-Dashboard "New Forum Post" button,
+	 * which is not a reply. It is also used for Reply.
 	 *
-	 * Called from forum.js and survey.js
+	 * Called from forum.js (new) and survey.js (reply)
 	 *
 	 * @param params the object containing various parameters: onReplyClose, locale, xpath, replyTo, replyData, ...
 	 */
-	function openReply(params) {
+	function openPostOrReply(params) {
 		var postModal = $('#post-modal');
 		showPost(postModal, params.onReplyClose);
+
+		let isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 
 		var content = '';
 		content += '<form role="form" id="post-form">';
 		content += '<div class="form-group">';
 		content += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
-		content += '<input class="form-control" name="subj" type="text" value="Re: "></div>';
+		content += '<input class="form-control" name="subj" type="text" value=""></div>';
 		content += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
 
-		content += postStatusMenu();
+		content += postStatusMenu(isReply);
 
 		content += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		content += '<input type="hidden" name="forum" value="true">';
@@ -143,19 +143,20 @@ const cldrStForum = (function() {
 
 		postModal.find('.modal-body').html(content);
 
-		if (params.replyTo && params.replyTo >= 0 && params.replyData) {
-			var subj = post2text(params.replyData.subject);
-			if (subj.substring(0,3) != 'Re:') {
-				subj = 'Re: '+subj;
+		let subject = '';
+		if (isReply && params.replyData) {
+			subject = post2text(params.replyData.subject);
+			if (subject.substring(0, 3) != 'Re:') {
+				subject = 'Re: ' + subject;
 			}
-			postModal.find('input[name=subj]')[0].value = (subj);
 		} else if (params.subject) {
-			postModal.find('input[name=subj]')[0].value = (params.subject);
+			subject = params.subject;
 		}
+		postModal.find('input[name=subj]')[0].value = subject;
 
 		if (params.replyData) {
-			var forumDiv = parseContent({ret: [params.replyData], noItemLink: true});
-			var postHolder = postModal.find('.modal-body').find('.forumDiv');
+			let forumDiv = parseContent({ret: [params.replyData], noItemLink: true});
+			let postHolder = postModal.find('.modal-body').find('.forumDiv');
 			postHolder[0].appendChild(forumDiv);
 		}
 
@@ -172,7 +173,7 @@ const cldrStForum = (function() {
 	 * @param postModal the mysterious object related to bootstrap.js
 	 * @param onClose the callback function
 	 *
-	 * Called only by openPost and openReply, in this file
+	 * Called only by openPostFromDashboard and openPostOrReply, in this file
 	 */
 	function showPost(postModal, onClose) {
 		formDidChange = false;
@@ -190,23 +191,39 @@ const cldrStForum = (function() {
 	/**
 	 * Get the html content for the Status menu
 	 *
+	 * @param isReply true if this post is a reply, else false
 	 * @return the html
 	 *
-	 * Called only by openPost and openReply, in this file
+	 * Called only by openPostFromDashboard and openPostOrReply, in this file
 	 *
 	 * Work in progress, reference: https://unicode-org.atlassian.net/browse/CLDR-13695
 	 * and https://unicode-org.atlassian.net/browse/CLDR-13610
+	 *
+	 * Compare SurveyForum.ForumStatus on server
 	 */
-	function postStatusMenu() {
+	function postStatusMenu(isReply) {
 		let content = '<p>Status: ';
 		content += '<select>\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
-		content += '<option value="0">Open</option>\n';
-		content += '<option value="1">Agree</option>\n';
-		content += '<option value="2">Disagree</option>\n';
-		content += '<option value="3">Information needed</option>\n';
-		content += '<option value="4">Action needed</option>\n';
-		content += '<option value="5">Close</option>\n';
+
+		if (!isReply) {
+			content += '<option value="Request">Request a change</option>\n';
+		}
+		content += '<option value="Question">Ask a question</option>\n';
+		if (isReply) {
+			content += '<option value="Agreed">Agree</option>\n';
+			content += '<option value="Disputed">Disagree</option>\n';
+		}
+		if (isReply) {
+			/*
+			 * TODO: is this user the same user who made the first post in the thread?
+			 * Only that user, or a TC, is allowed to close the thread.
+			 */
+			let userCanClose = false;
+			if (userCanClose) {
+				content += '<option value="Closed">Close</option>\n';
+			}
+		}
 		content += '</select></p>\n';
 		return content;
 	}
@@ -216,7 +233,7 @@ const cldrStForum = (function() {
 	 *
 	 * @param event
 	 *
-	 * Called by openPost and openReply, in this file
+	 * Called by openPostFromDashboard and openPostOrReply, in this file
 	 *
 	 * NOTE: this function uses JQuery (not Dojo) for ajax
 	 */
@@ -446,7 +463,7 @@ const cldrStForum = (function() {
 						return;
 					}
 					listenFor(replyButton, "click", function(e) {
-						openReply({
+						openPostOrReply({
 							locale: surveyCurrentLocale,
 							//xpath: '',
 							replyTo: post.id,
@@ -623,8 +640,8 @@ const cldrStForum = (function() {
 	 * Make only these functions accessible from other files:
 	 */
 	return {
-		openPost: openPost,
-		openReply: openReply,
+		openPostFromDashboard: openPostFromDashboard,
+		openPostOrReply: openPostOrReply,
 		didFormChange: didFormChange,
 		parseContent: parseContent,
 	};

@@ -388,7 +388,7 @@ public class SurveyForum {
      */
     private void setStatus(int postId, String status) throws SurveyException {
 
-        ForumStatus forumStatus = ForumStatus.fromName(status, ForumStatus.OPEN);
+        ForumStatus forumStatus = ForumStatus.fromName(status, ForumStatus.QUESTION);
         if (!forumStatus.belongsInTable()) {
             return;
         }
@@ -1314,7 +1314,8 @@ public class SurveyForum {
      */
     private enum ForumStatus {
         CLOSED(0, "Closed"),
-        OPEN(1, "Open"),
+        QUESTION(1, "Question"),
+        REQUEST(2, "Request"),
         DISPUTED(2, "Disputed"),
         AGREED(3, "Agreed");
 
