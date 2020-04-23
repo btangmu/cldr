@@ -57,7 +57,8 @@ const cldrStForum = (function() {
 				'</div>\n';
 
 			let isReply = false; // ?? TODO: isReply for dashboard
-			content += postStatusMenu(isReply);
+			let userCanClose = canUserClose(isReply, post);
+			content += postStatusMenu(isReply, userCanClose);
 
 			/*
 			 * This Submit button differs from the one in openPostOrReply() by having data-path and data-choice
@@ -108,34 +109,28 @@ const cldrStForum = (function() {
 	 * @param params the object containing various parameters: onReplyClose, locale, xpath, replyTo, replyData, ...
 	 */
 	function openPostOrReply(params) {
-		var postModal = $('#post-modal');
+		const postModal = $('#post-modal');
 		showPost(postModal, params.onReplyClose);
 
-		let isReply = (params.replyTo && params.replyTo >= 0) ? true : false
+		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
+		const replyTo = isReply ? params.replyTo : -1;
+		const parentPost = (isReply && params.replyData) ? params.replyData : null;
+		const userCanClose = canUserClose(isReply, parentPost);
+		const xpath = params.xpath ? params.xpath : '';
 
-		var content = '';
+		let content = '';
+
 		content += '<form role="form" id="post-form">';
 		content += '<div class="form-group">';
 		content += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
 		content += '<input class="form-control" name="subj" type="text" value=""></div>';
 		content += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
-
-		content += postStatusMenu(isReply);
-
+		content += postStatusMenu(isReply, userCanClose);
 		content += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		content += '<input type="hidden" name="forum" value="true">';
 		content += '<input type="hidden" name="_" value="' + params.locale + '">';
-
-		if (params.xpath) {
-			content += '<input type="hidden" name="xpath" value="' + params.xpath + '">';
-		} else {
-			content += '<input type="hidden" name="xpath" value="">';
-		}
-		if (params.replyTo) {
-			content += '<input type="hidden" name="replyTo" value="' + params.replyTo + '">';
-		} else {
-			content += '<input type="hidden" name="replyTo" value="-1">';
-		}
+		content += '<input type="hidden" name="xpath" value="' + xpath + '">';
+		content += '<input type="hidden" name="replyTo" value="' + replyTo + '">';
 		content += '</form>';
 
 		content += '<div class="post"></div>';
@@ -144,8 +139,8 @@ const cldrStForum = (function() {
 		postModal.find('.modal-body').html(content);
 
 		let subject = '';
-		if (isReply && params.replyData) {
-			subject = post2text(params.replyData.subject);
+		if (isReply && parentPost) {
+			subject = post2text(parentPost.subject);
 			if (subject.substring(0, 3) != 'Re:') {
 				subject = 'Re: ' + subject;
 			}
@@ -154,8 +149,8 @@ const cldrStForum = (function() {
 		}
 		postModal.find('input[name=subj]')[0].value = subject;
 
-		if (params.replyData) {
-			let forumDiv = parseContent({ret: [params.replyData], noItemLink: true});
+		if (parentPost) {
+			let forumDiv = parseContent({ret: [parentPost], noItemLink: true});
 			let postHolder = postModal.find('.modal-body').find('.forumDiv');
 			postHolder[0].appendChild(forumDiv);
 		}
@@ -192,6 +187,7 @@ const cldrStForum = (function() {
 	 * Get the html content for the Status menu
 	 *
 	 * @param isReply true if this post is a reply, else false
+	 * @param userCanClose true if this user is allowed to close, else false
 	 * @return the html
 	 *
 	 * Called only by openPostFromDashboard and openPostOrReply, in this file
@@ -201,7 +197,7 @@ const cldrStForum = (function() {
 	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
-	function postStatusMenu(isReply) {
+	function postStatusMenu(isReply, userCanClose) {
 		let content = '<p>Status: ';
 		content += '<select id="forumStatusMenu">\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
@@ -214,18 +210,38 @@ const cldrStForum = (function() {
 			content += '<option value="Agreed">Agree</option>\n';
 			content += '<option value="Disputed">Disagree</option>\n';
 		}
-		if (isReply) {
-			/*
-			 * TODO: is this user the same user who made the first post in the thread?
-			 * Only that user, or a TC, is allowed to close the thread.
-			 */
-			let userCanClose = true;
-			if (userCanClose) {
-				content += '<option value="Closed">Close</option>\n';
-			}
+		if (userCanClose) {
+			content += '<option value="Closed">Close</option>\n';
 		}
 		content += '</select></p>\n';
 		return content;
+	}
+
+	/**
+	 * Is this user allowed to close the thread now?
+	 *
+	 * The user is only allowed if they are the original poster of the thread,
+	 * or a TC (technical committee) member.
+	 *
+	 * @param isReply true if this post is a reply, else false
+	 * @param post either this post or its parent, for getThreadFirstPostId 
+	 * @return true if this user is allowed to close, else false
+	 */
+	function canUserClose(isReply, post) {
+		if (!isReply || post == null) {
+			return false;
+		}
+		if (typeof surveyUser !== 'undefined') {
+			const currentPoster = surveyUser;
+			const originalPoster = getThreadFirstPostId(post);
+			if (originalPoster === currentPoster) {
+				return true;
+			}
+			if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -323,19 +339,17 @@ const cldrStForum = (function() {
 	function parseContent(json) {
 
 		// json.ret has posts in reverse order (newest first).
+		let posts = json.ret;
+
+		initializePostHash(posts);
+
 		var postDivs = {}; //  postid -> div
 		var topicDivs = {}; // xpath -> div or "#123" -> div
-		var postHash = {}; // postid -> item
-
-		// first, collect the posts.
-		for (let num in json.ret) {
-			postHash[json.ret[num].id] = json.ret[num];
-		}
 
 		// next, add threadIds and create the topic divs
-		for (let num in json.ret) {
-			var post = json.ret[num];
-			post.threadId = getThreadId(post, postHash);
+		for (let num in posts) {
+			var post = posts[num];
+			post.threadId = getThreadId(post);
 
 			if (!topicDivs[post.threadId]) {
 				// add the topic div
@@ -380,8 +394,8 @@ const cldrStForum = (function() {
 			}
 		}
 		// Now, top to bottom, just create the post divs
-		for (let num in json.ret) {
-			var post = json.ret[num];
+		for (let num in posts) {
+			var post = posts[num];
 
 			var subpost = forumCreateChunk("", "div", "post");
 			postDivs[post.id] = subpost;
@@ -407,7 +421,7 @@ const cldrStForum = (function() {
 				/*
 				 * TODO: encapsulate "surveyUser" dependency
 				 */
-				if (typeof surveyUser !== 'undefined' && post.posterInfo.id == surveyUser.id) {
+				if (typeof surveyUser !== 'undefined' && post.posterInfo.id === surveyUser.id) {
 					headingLine.appendChild(forumCreateChunk(forumStr("user_me"), "span", "forum-me"));
 				} else {
 					var usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
@@ -494,8 +508,8 @@ const cldrStForum = (function() {
 			}
 		}
 		// reparent any nodes that we can
-		for (let num in json.ret) {
-			var post = json.ret[num];
+		for (let num in posts) {
+			var post = posts[num];
 			if (post.parent != -1) {
 				forumDebug("reparenting " + post.id + " to " + post.parent);
 				if (postDivs[post.parent]) {
@@ -518,7 +532,7 @@ const cldrStForum = (function() {
 				topicDivs[post.threadId].appendChild(postDivs[post.id]);
 			}
 		}
-		return filterAndAssembleForumThreads(json.ret, topicDivs);
+		return filterAndAssembleForumThreads(posts, topicDivs);
 	}
 
 	/**
@@ -571,15 +585,23 @@ const cldrStForum = (function() {
 	 * For post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
 	 *
 	 * @param post the post object
-	 * @param postHash the map indexed by all posts
 	 * @return the thread id string
 	 */
-	function getThreadId(post, postHash) {
-		if (post.parent >= 0 && postHash[post.parent]) {
-			// if the parent exists
-			return getThreadId(postHash[post.parent], postHash); // recursive
+	function getThreadId(post) {
+		return post.locale + "|" + getThreadFirstPostId(post);
+	}
+
+	/**
+	 * Get the post id for the original post in the thread containing this post
+	 *
+	 * @param post the post object
+	 * @return the original post id
+	 */
+	function getThreadFirstPostId(post) {
+		while (post.parent >= 0 && postHash[post.parent]) {
+			post = postHash[post.parent];
 		}
-		return post.locale + "|" + post.id;
+		return post.id;
 	}
 
 	/**
@@ -643,6 +665,19 @@ const cldrStForum = (function() {
 		}
 		return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
 			' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+	}
+
+	/**
+	 * Mapping from post id to post object, describing the set of
+	 * posts in the most recently parsed json
+	 */
+	let postHash = {};
+
+	function initializePostHash(posts) {
+		postHash = {};
+		for (let num in posts) {
+			postHash[posts[num].id] = posts[num];
+		}
 	}
 
 	/*
