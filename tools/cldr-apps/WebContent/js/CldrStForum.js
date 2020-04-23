@@ -199,6 +199,7 @@ const cldrStForum = (function() {
 	 */
 	function postStatusMenu(isReply, userCanClose) {
 		let content = '<p>Status: ';
+
 		content += '<select id="forumStatusMenu">\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
 
@@ -224,7 +225,7 @@ const cldrStForum = (function() {
 	 * or a TC (technical committee) member.
 	 *
 	 * @param isReply true if this post is a reply, else false
-	 * @param post either this post or its parent, for getThreadFirstPostId 
+	 * @param post either this post or its parent, for getFirstPostInThread
 	 * @return true if this user is allowed to close, else false
 	 */
 	function canUserClose(isReply, post) {
@@ -233,7 +234,7 @@ const cldrStForum = (function() {
 		}
 		if (typeof surveyUser !== 'undefined') {
 			const currentPoster = surveyUser;
-			const originalPoster = getThreadFirstPostId(post);
+			const originalPoster = getFirstPostInThread(post).poster;
 			if (originalPoster === currentPoster) {
 				return true;
 			}
@@ -588,20 +589,26 @@ const cldrStForum = (function() {
 	 * @return the thread id string
 	 */
 	function getThreadId(post) {
-		return post.locale + "|" + getThreadFirstPostId(post);
+		const firstPost = getFirstPostInThread(post);
+		/*
+		 * Caution: strangely, a post may have a different locale than the first post in its thread.
+		 * For example, even though post 32034 is fr_CA, its child 32036 is fr.
+		 * The thread id must use the locale of of the first post, for consistency.
+		 */
+		return firstPost.locale + "|" + firstPost.id;
 	}
 
 	/**
-	 * Get the post id for the original post in the thread containing this post
+	 * Get the first (original) post in the thread containing this post
 	 *
 	 * @param post the post object
-	 * @return the original post id
+	 * @return the first post in the thread
 	 */
-	function getThreadFirstPostId(post) {
+	function getFirstPostInThread(post) {
 		while (post.parent >= 0 && postHash[post.parent]) {
 			post = postHash[post.parent];
 		}
-		return post.id;
+		return post;
 	}
 
 	/**
