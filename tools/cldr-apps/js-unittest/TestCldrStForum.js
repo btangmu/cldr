@@ -15,12 +15,8 @@ describe('cldrStForum.parseContent', function() {
 
 	it('should return correct result for this json', function() {
 		this.timeout(5000);
-		  
-		let content = cldrStForum.parseContent({
-			ret: json.ret,
-			replyButton: true,
-			noItemLink: true
-		});
+
+		const content = cldrStForum.parseContent(json.ret, true /* noItemLink */, true /* replyButton */, true /* fullSet */, null /* onReplyClose */);
 
 		assert(content != null, "content is not null");
 
@@ -30,7 +26,7 @@ describe('cldrStForum.parseContent', function() {
 
 		assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
 
-		let s = "n "
+		const s = "n "
 			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtestforum_replyn "
 			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: Reviewtest reply blah!forum_reply";
 

@@ -1959,14 +1959,13 @@ function showForumStuff(frag, forumDivClone, tr) {
 /**
  * Update the forum posts in the Info Panel
  *
+ * This includes the version of the Info Panel displayed in the Dashboard "Fix" window
+ *
  * @param tr the table-row element with which the forum posts are associated,
  *		and whose info is shown in the Info Panel; or null, to get the
  *		tr from surveyCurrentId
  */
 function updateInfoPanelForumPosts(tr) {
-	if (isDashboard()) {
-		return; // no Info Panel in Dashboard
-	}
 	if (!tr) {
 		if (surveyCurrentId !== '') {
 			/*
@@ -1996,11 +1995,8 @@ function updateInfoPanelForumPosts(tr) {
 	let loadHandler = function(json) {
 		try {
 			if (json && json.ret) {
-				let content = cldrStForum.parseContent({
-					ret: json.ret,
-					replyButton: true,
-					noItemLink: true
-				});
+				const posts = json.ret;
+				const content = cldrStForum.parseContent(posts, true /* noItemLink */, true /* replyButton */, true /* fullSet */, null /* onReplyClose */);
 				/*
 				 * Reality check: the json should refer to the same path as tr, which in practice
 				 * always matches surveyCurrentId. If not, log a warning and substitute "Please reload"
@@ -2009,7 +2005,7 @@ function updateInfoPanelForumPosts(tr) {
 				let xpstrid = json.ret[0].xpath;
 				if (xpstrid !== tr.xpstrid || xpstrid !== surveyCurrentId) {
 					console.log('Warning: xpath strid mismatch in updateInfoPanelForumPosts loadHandler:');
-					console.log('json.ret[0].xpath = ' + json.ret[0].xpath);
+					console.log('posts[0].xpath = ' + posts[0].xpath);
 					console.log('tr.xpstrid = ' + tr.xpstrid);
 					console.log('surveyCurrentId = ' + surveyCurrentId);
 

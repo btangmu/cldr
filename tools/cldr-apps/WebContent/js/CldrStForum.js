@@ -37,6 +37,8 @@ const cldrStForum = (function() {
 	 * Called only from review.js, for Dashboard only -- doesn't work outside dashboard due to dependencies on .data-review, etc.
 	 *
 	 * NOTE: this function uses JQuery (not Dojo) for ajax ($.get)
+	 *
+	 * Bootstrap.js post-modal: https://getbootstrap.com/docs/4.1/components/modal/
 	 */
 	function openPostFromDashboard() {
 		var path = $(this).closest(".data-review").data('path');
@@ -49,15 +51,15 @@ const cldrStForum = (function() {
 		showPost(postModal, null);
 
 		$.get(url, function(data) {
-			var post = data.ret;
+			var posts = data.ret; // posts array, could be empty
 			var content = '';
 			content += '<form role="form" id="post-form">';
 			content += '<div class="form-group">' +
 				'<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>' +
 				'</div>\n';
 
-			let isReply = false; // ?? TODO: isReply for dashboard
-			let userCanClose = canUserClose(isReply, post);
+			let isReply = (posts && posts.length > 0);
+			let userCanClose = canUserClose(isReply, posts[0]);
 			content += postStatusMenu(isReply, userCanClose);
 
 			/*
@@ -81,12 +83,9 @@ const cldrStForum = (function() {
 
 			postModal.find('.modal-body').html(content);
 
-			if (post) {
-				var forumDiv = parseContent({
-					ret: post,
-					noItemLink: true
-				});
-				var postHolder = postModal.find('.modal-body').find('.forumDiv');
+			if (posts) {
+				const forumDiv = parseContent(posts, true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+				const postHolder = postModal.find('.modal-body').find('.forumDiv');
 				postHolder[0].appendChild(forumDiv);
 			}
 
@@ -150,8 +149,8 @@ const cldrStForum = (function() {
 		postModal.find('input[name=subj]')[0].value = subject;
 
 		if (parentPost) {
-			let forumDiv = parseContent({ret: [parentPost], noItemLink: true});
-			let postHolder = postModal.find('.modal-body').find('.forumDiv');
+			const forumDiv = parseContent([parentPost], true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+			const postHolder = postModal.find('.modal-body').find('.forumDiv');
 			postHolder[0].appendChild(forumDiv);
 		}
 
@@ -229,7 +228,7 @@ const cldrStForum = (function() {
 	 * @return true if this user is allowed to close, else false
 	 */
 	function canUserClose(isReply, post) {
-		if (!isReply || post == null) {
+		if (!isReply || !post) {
 			return false;
 		}
 		if (typeof surveyUser !== 'undefined') {
@@ -287,17 +286,15 @@ const cldrStForum = (function() {
 				contentType: "application/x-www-form-urlencoded;",
 				dataType: 'json',
 				success: function(data) {
-					var post = $('.post').first();
+					let post = $('.post').first();
 					if (data.err) {
 						post.before("<p class='warn'>error: " + data.err + "</p>");
 					} else if (data.ret && data.ret.length > 0) {
-						var postModal = $('#post-modal');
-						var postHolder = postModal.find('.modal-body').find('.post');
-						let firstPostHolder = postHolder[0];
-						firstPostHolder.insertBefore(parseContent({
-							ret: data.ret,
-							noItemLink: true
-						}), firstPostHolder.firstChild);
+						const postModal = $('#post-modal');
+						const postHolder = postModal.find('.modal-body').find('.post');
+						const firstPostHolder = postHolder[0];
+						const forumDiv = parseContent(data.ret, true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+						firstPostHolder.insertBefore(forumDiv, firstPostHolder.firstChild);
 						// reset
 						post = $('.post').first();
 						post.hide();
@@ -323,11 +320,15 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Create a DOM object referring to this forum post
+	 * Create a DOM object referring to this set of forum posts
 	 *
-	 * @param {Object} json - options
-	 * @param {Array} j.ret - forum post data
-	 * @return {Object} new DOM object
+	 * @param posts the array of forum post objects, newest first
+	 * @param noItemLink true if there should not be an "item" (xpath) link; else false
+	 * @param showReplyButton true if there should be a reply button; else false
+	 * @param fullSet true if this is a full set of posts; else false
+	 * @param onReplyClose a callback function, or null
+	 *
+	 * @return new DOM object
 	 *
 	 * TODO: shorten this function by moving code into subroutines. Also, postpone creating
 	 * DOM elements until finished constructing the filtered list of threads, to make the code
@@ -337,12 +338,11 @@ const cldrStForum = (function() {
 	 * rather than always combining posts with the same locale+path into a single "thread".
 	 * Reference: https://unicode-org.atlassian.net/browse/CLDR-13695
 	 */
-	function parseContent(json) {
-
-		// json.ret has posts in reverse order (newest first).
-		let posts = json.ret;
-
-		initializePostHash(posts);
+	function parseContent(posts, noItemLink, showReplyButton, fullSet, onReplyClose) {
+		if (fullSet) {
+			postHash = {};
+		}
+		updatePostHash(posts);
 
 		var postDivs = {}; //  postid -> div
 		var topicDivs = {}; // xpath -> div or "#123" -> div
@@ -357,7 +357,7 @@ const cldrStForum = (function() {
 				var topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
 				var topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
-				if (!json.noItemLink) {
+				if (!noItemLink) {
 					topicDiv.appendChild(topicInfo);
 					if (post.locale) {
 						var localeLink = forumCreateChunk(locmap.getLocaleName(post.locale), "a", "localeName");
@@ -369,26 +369,24 @@ const cldrStForum = (function() {
 				}
 				if (!post.xpath) {
 					topicInfo.appendChild(forumCreateChunk(post2text(post.subject), "span", "topicSubject"));
-				} else {
-					if (!json.noItemLink) {
-						var itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
-						itemLink.href = "#/" + post.locale + "//" + post.xpath;
-						topicInfo.appendChild(itemLink);
-						(function(topicInfo) {
-							var loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
-							topicInfo.appendChild(loadingMsg);
-							xpathMap.get({
-								hex: post.xpath
-							}, function(o) {
-								if (o.result) {
-									topicInfo.removeChild(loadingMsg);
-									var itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
-									itemPh.title = o.result.path;
-									topicInfo.appendChild(itemPh);
-								}
-							});
-						})(topicInfo);
-					}
+				} else if (!noItemLink) {
+					var itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
+					itemLink.href = "#/" + post.locale + "//" + post.xpath;
+					topicInfo.appendChild(itemLink);
+					(function(topicInfo) {
+						var loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
+						topicInfo.appendChild(loadingMsg);
+						xpathMap.get({
+							hex: post.xpath
+						}, function(o) {
+							if (o.result) {
+								topicInfo.removeChild(loadingMsg);
+								var itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
+								itemPh.title = o.result.path;
+								topicInfo.appendChild(itemPh);
+							}
+						});
+					})(topicInfo);
 				}
 				topicDivs[post.threadId] = topicDiv;
 				topicDiv.id = "fthr_" + post.threadId;
@@ -477,7 +475,7 @@ const cldrStForum = (function() {
 			var postText = post2text(post.text);
 			var postContent;
 			subpost.appendChild(postContent = forumCreateChunk(postText, "div", "postContent"));
-			if (json.replyButton) {
+			if (showReplyButton) {
 				var replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
 				(function(post) {
 					/*
@@ -492,20 +490,13 @@ const cldrStForum = (function() {
 							//xpath: '',
 							replyTo: post.id,
 							replyData: post,
-							onReplyClose: json.onReplyClose
+							onReplyClose: onReplyClose
 						});
 						stStopPropagation(e);
 						return false;
 					});
 				})(post);
 				subpost.appendChild(replyButton);
-			}
-
-			// reply link
-			if (json.replyStub) {
-				var replyChunk = forumCreateChunk("Reply (leaves this page)", "a", "postReply");
-				replyChunk.href = json.replyStub + post.id;
-				subpost.appendChild(replyChunk);
 			}
 		}
 		// reparent any nodes that we can
@@ -585,16 +576,15 @@ const cldrStForum = (function() {
 	 *
 	 * For post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
 	 *
+	 * Caution: strangely, a post may have a different locale than the first post in its thread.
+	 * For example, even though post 32034 is fr_CA, its child 32036 is fr.
+	 * The thread id must use the locale of of the first post, for consistency.
+	 *
 	 * @param post the post object
 	 * @return the thread id string
 	 */
 	function getThreadId(post) {
 		const firstPost = getFirstPostInThread(post);
-		/*
-		 * Caution: strangely, a post may have a different locale than the first post in its thread.
-		 * For example, even though post 32034 is fr_CA, its child 32036 is fr.
-		 * The thread id must use the locale of of the first post, for consistency.
-		 */
 		return firstPost.locale + "|" + firstPost.id;
 	}
 
@@ -680,8 +670,7 @@ const cldrStForum = (function() {
 	 */
 	let postHash = {};
 
-	function initializePostHash(posts) {
-		postHash = {};
+	function updatePostHash(posts) {
 		for (let num in posts) {
 			postHash[posts[num].id] = posts[num];
 		}

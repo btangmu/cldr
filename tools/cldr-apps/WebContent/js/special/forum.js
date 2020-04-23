@@ -52,14 +52,10 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				console.log("Scrolling " + itemid);
 				win.scrollIntoView(pdiv);
 				(function(o,itemid,pdiv){
-					//if(!o.lastHighlight) {
-					//	o.lastHighlight=itemid;
 						pdiv.style["background-color"]="yellow";
 						window.setTimeout(function(){
 							pdiv.style["background-color"]=null;
-						//	o.lastHighlight=null;
 						}, 2000);
-					//}
 				})(this,itemid,pdiv);
 			} else {
 				console.log("No item "+itemid);
@@ -124,10 +120,14 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				if(json.ret.length == 0) {
 					ourDiv.appendChild(createChunk(stui.str("forum_noposts"),"p","helpContent"));
 				} else {
-					ourDiv.appendChild(cldrStForum.parseContent({ret: json.ret,
-						replyButton: true,					
-						onReplyClose: function(postModal, form, formDidChange) {if(formDidChange){console.log('Reload- changed.');reloadV();}},
-						noItemLink: false}));
+					const onReplyClose = function(postModal, form, formDidChange) {
+						if (formDidChange) {
+							console.log('Reload- changed.');
+							reloadV();
+						}
+					};
+					const content = cldrStForum.parseContent(json.ret, false /* noItemLink */, true /* replyButton */, true /* fullSet */, onReplyClose);
+					ourDiv.appendChild(content);
 				}
 				
 				// No longer loading
