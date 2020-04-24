@@ -117,16 +117,11 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				ourDiv.appendChild(controlSpan);
 
 				ourDiv.appendChild(document.createElement('hr'));
-				if(json.ret.length == 0) {
+				const posts = json.ret;
+				if (posts.length == 0) {
 					ourDiv.appendChild(createChunk(stui.str("forum_noposts"),"p","helpContent"));
 				} else {
-					const onReplyClose = function(postModal, form, formDidChange) {
-						if (formDidChange) {
-							console.log('Reload- changed.');
-							reloadV();
-						}
-					};
-					const content = cldrStForum.parseContent(json.ret, false /* noItemLink */, true /* replyButton */, true /* fullSet */, onReplyClose);
+					const content = cldrStForum.parseContentInMainContext(posts);
 					ourDiv.appendChild(content);
 				}
 				

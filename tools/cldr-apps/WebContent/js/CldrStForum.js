@@ -11,7 +11,7 @@
  *
  * Dependencies on external code:
  * window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, surveyCurrentLocale,
- * stui.str, listenFor, bootstrap.js, ...
+ * stui.str, listenFor, bootstrap.js, reloadV, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
@@ -321,6 +321,17 @@ const cldrStForum = (function() {
 		event.stopPropagation();
 	}
 
+	function parseContent(posts, noItemLink, showReplyButton, fullSet, onReplyClose) {
+		const onReplyClose = function(postModal, form, formDidChange) {
+			if (formDidChange) {
+				console.log('Reload- changed.');
+				reloadV();
+			}
+		};
+		const content = cldrStForum.parseContent(posts, false /* noItemLink */, true /* replyButton */, true /* fullSet */, onReplyClose);
+		return content;
+	}
+
 	/**
 	 * Create a DOM object referring to this set of forum posts
 	 *
@@ -444,7 +455,7 @@ const cldrStForum = (function() {
 			var dateChunk = forumCreateChunk(date, "span", "label label-primary pull-right forumLink");
 			(function(post) {
 				/*
-				 * TODO: encapsulate "listenFor" dependency
+				 * TODO: encapsulate "listenFor" and "reloadV" dependencies
 				 */
 				if (typeof listenFor === 'undefined') {
 					return;
