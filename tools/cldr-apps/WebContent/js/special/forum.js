@@ -88,7 +88,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 						locale: surveyCurrentLocale,
 						onReplyClose: function(postModal, form, formDidChange) {
 							if (formDidChange) {
-								console.log('Reload- changed.');
+								console.log('forum.js calling reloadV for forumNewPostButton.');
 								reloadV();
 							}
 						},

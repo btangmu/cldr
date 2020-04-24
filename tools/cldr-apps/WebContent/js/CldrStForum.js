@@ -18,7 +18,7 @@
  */
 const cldrStForum = (function() {
 
-	let FORUM_DEBUG = false;
+	const FORUM_DEBUG = false;
 
 	function forumDebug(s) {
 		if (FORUM_DEBUG) {
@@ -26,6 +26,10 @@ const cldrStForum = (function() {
 		}
 	}
 
+	/**
+	 * Did the form change? For callback, awkward onReplyClose + reloadV dependency.
+	 * showPost makes it false; submitPost can make it true
+	 */
 	let formDidChange = false;
 
 	/**
@@ -562,7 +566,7 @@ const cldrStForum = (function() {
 			opts.showReplyButton = true;
 			opts.onReplyClose = function(postModal, form, formDidChange) {
 				if (formDidChange) {
-					console.log('Reload- changed.');
+					console.log('cldrStForum.getOptionsForContext calling reloadV for onReplyClose');
 					/*
 					 * TODO: encapsulate dependency on reloadV, or avoid this callback business entirely
 					 */
