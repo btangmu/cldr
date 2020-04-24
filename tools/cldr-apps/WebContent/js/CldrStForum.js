@@ -18,7 +18,7 @@
  */
 const cldrStForum = (function() {
 
-	let FORUM_DEBUG = true;
+	let FORUM_DEBUG = false;
 
 	function forumDebug(s) {
 		if (FORUM_DEBUG) {
@@ -33,7 +33,8 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Open a thread of posts concerning this xpath
+	 * If there are any existing posts concerning this xpath, open a Reply to an existing thread,
+	 * otherwise open a new thread of posts concerning this xpath.
 	 *
 	 * Called only from review.js, for Dashboard only -- doesn't work outside dashboard due to dependencies on .data-review, etc.
 	 *
@@ -85,7 +86,7 @@ const cldrStForum = (function() {
 			postModal.find('.modal-body').html(content);
 
 			if (posts) {
-				const forumDiv = parseContent(posts, true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+				const forumDiv = parseContent(posts, 'new');
 				const postHolder = postModal.find('.modal-body').find('.forumDiv');
 				postHolder[0].appendChild(forumDiv);
 			}
@@ -110,7 +111,7 @@ const cldrStForum = (function() {
 	 */
 	function openPostOrReply(params) {
 		const postModal = $('#post-modal');
-		showPost(postModal, params.onReplyClose);
+		showPost(postModal, params.opts.onReplyClose);
 
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
@@ -150,7 +151,7 @@ const cldrStForum = (function() {
 		postModal.find('input[name=subj]')[0].value = subject;
 
 		if (parentPost) {
-			const forumDiv = parseContent([parentPost], true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+			const forumDiv = parseContent([parentPost], 'new');
 			const postHolder = postModal.find('.modal-body').find('.forumDiv');
 			postHolder[0].appendChild(forumDiv);
 		}
@@ -295,7 +296,8 @@ const cldrStForum = (function() {
 						const postModal = $('#post-modal');
 						const postHolder = postModal.find('.modal-body').find('.post');
 						const firstPostHolder = postHolder[0];
-						const forumDiv = parseContent(data.ret, true /* noItemLink */, false /* replyButton */, false /* fullSet */, null /* onReplyClose */);
+						const posts = data.ret;
+						const forumDiv = parseContentInSubmitContext(posts);
 						firstPostHolder.insertBefore(forumDiv, firstPostHolder.firstChild);
 						// reset
 						post = $('.post').first();
@@ -321,25 +323,11 @@ const cldrStForum = (function() {
 		event.stopPropagation();
 	}
 
-	function parseContent(posts, noItemLink, showReplyButton, fullSet, onReplyClose) {
-		const onReplyClose = function(postModal, form, formDidChange) {
-			if (formDidChange) {
-				console.log('Reload- changed.');
-				reloadV();
-			}
-		};
-		const content = cldrStForum.parseContent(posts, false /* noItemLink */, true /* replyButton */, true /* fullSet */, onReplyClose);
-		return content;
-	}
-
 	/**
 	 * Create a DOM object referring to this set of forum posts
 	 *
 	 * @param posts the array of forum post objects, newest first
-	 * @param noItemLink true if there should not be an "item" (xpath) link; else false
-	 * @param showReplyButton true if there should be a reply button; else false
-	 * @param fullSet true if this is a full set of posts; else false
-	 * @param onReplyClose a callback function, or null
+	 * @param context the string defining the context
 	 *
 	 * @return new DOM object
 	 *
@@ -351,8 +339,11 @@ const cldrStForum = (function() {
 	 * rather than always combining posts with the same locale+path into a single "thread".
 	 * Reference: https://unicode-org.atlassian.net/browse/CLDR-13695
 	 */
-	function parseContent(posts, noItemLink, showReplyButton, fullSet, onReplyClose) {
-		if (fullSet) {
+	function parseContent(posts, context) {
+
+		const opts = getOptionsForContext(context);
+
+		if (opts.fullSet) {
 			postHash = {};
 		}
 		updatePostHash(posts);
@@ -370,7 +361,7 @@ const cldrStForum = (function() {
 				var topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
 				var topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
-				if (!noItemLink) {
+				if (opts.showItemLink) {
 					topicDiv.appendChild(topicInfo);
 					if (post.locale) {
 						var localeLink = forumCreateChunk(locmap.getLocaleName(post.locale), "a", "localeName");
@@ -382,7 +373,7 @@ const cldrStForum = (function() {
 				}
 				if (!post.xpath) {
 					topicInfo.appendChild(forumCreateChunk(post2text(post.subject), "span", "topicSubject"));
-				} else if (!noItemLink) {
+				} else if (opts.showItemLink) {
 					var itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
 					itemLink.href = "#/" + post.locale + "//" + post.xpath;
 					topicInfo.appendChild(itemLink);
@@ -488,7 +479,7 @@ const cldrStForum = (function() {
 			var postText = post2text(post.text);
 			var postContent;
 			subpost.appendChild(postContent = forumCreateChunk(postText, "div", "postContent"));
-			if (showReplyButton) {
+			if (opts.showReplyButton) {
 				var replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
 				(function(post) {
 					/*
@@ -503,7 +494,7 @@ const cldrStForum = (function() {
 							//xpath: '',
 							replyTo: post.id,
 							replyData: post,
-							onReplyClose: onReplyClose
+							onReplyClose: opts.onReplyClose
 						});
 						stStopPropagation(e);
 						return false;
@@ -538,6 +529,68 @@ const cldrStForum = (function() {
 			}
 		}
 		return filterAndAssembleForumThreads(posts, topicDivs);
+	}
+
+	/**
+	 * Get an object whose properties define the parseContent options to be used for a particular
+	 * context in which parseContent is called
+	 *
+	 * @param context the string defining the context:
+	 *
+	 *   'main' for the context in which "Forum" is chosen from the left sidebar
+	 *
+	 *   'info' for the "Info Panel" context (either main vetting view row, or Dashboard "Fix" button)
+	 *
+	 *   'new' for creation of a new post or reply
+	 *
+	 * @return an object with these properties:
+	 *
+	 *   showItemLink = true if there should be an "item" (xpath) link
+	 *
+	 *   showReplyButton = true if there should be a reply button
+	 *
+	 *   fullSet = true if this is a full set of posts
+	 *
+	 *   onReplyClose = a callback function, or null
+	 */
+	function getOptionsForContext(context) {
+		let opts = getDefaultParseOptions();
+		if (context === 'main') {
+			opts.showItemLink = true;
+			opts.showReplyButton = true;
+			opts.onReplyClose = function(postModal, form, formDidChange) {
+				if (formDidChange) {
+					console.log('Reload- changed.');
+					/*
+					 * TODO: encapsulate dependency on reloadV
+					 */
+					reloadV();
+				}
+			};
+		} else if (context === 'info') {
+			opts.showReplyButton = true;
+		} else if (context === 'new') {
+			/*
+			 * posts may have zero, one, or more elements here, for parent(s),
+			 * if any, of a new post in the process of being created
+			 */
+			opts.fullSet = false;
+		} else {
+			console.log('Unrecognized context in getOptionsForContext: ' + context)
+		}
+		return opts;
+	}
+
+	/**
+	 * Get the default parseContent options
+	 */
+	function getDefaultParseOptions() {
+		let opts = {};
+		opts.showItemLink = false;
+		opts.showReplyButton = false;
+		opts.fullSet = true;
+		opts.onReplyClose = null;
+		return opts;
 	}
 
 	/**
@@ -638,7 +691,7 @@ const cldrStForum = (function() {
 				 */
 				forumDiv.append(topicDivs[post.threadId]);
 				filteredArray = filteredArray.filter(id => (id !== post.threadId));
-			}		
+			}
 		});
 		return forumDiv;
 	}
@@ -652,7 +705,6 @@ const cldrStForum = (function() {
 	 * @return the human-readable string like "Item" or "Reply"
 	 */
 	function forumStr(s) {
-		var gravitar;
 		if (typeof stui !== 'undefined') {
 			return stui.str(s);
 		}

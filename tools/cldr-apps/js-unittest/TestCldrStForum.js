@@ -16,7 +16,11 @@ describe('cldrStForum.parseContent', function() {
 	it('should return correct result for this json', function() {
 		this.timeout(5000);
 
-		const content = cldrStForum.parseContent(json.ret, true /* noItemLink */, true /* replyButton */, true /* fullSet */, null /* onReplyClose */);
+		const posts = json.ret;
+
+		assert(posts != null, "posts is not null");
+
+		const content = cldrStForum.parseContent(posts, 'info');
 
 		assert(content != null, "content is not null");
 

@@ -121,7 +121,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				if (posts.length == 0) {
 					ourDiv.appendChild(createChunk(stui.str("forum_noposts"),"p","helpContent"));
 				} else {
-					const content = cldrStForum.parseContentInMainContext(posts);
+					const content = cldrStForum.parseContent(posts, 'main');
 					ourDiv.appendChild(content);
 				}
 				

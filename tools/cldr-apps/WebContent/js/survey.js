@@ -1996,13 +1996,13 @@ function updateInfoPanelForumPosts(tr) {
 		try {
 			if (json && json.ret) {
 				const posts = json.ret;
-				const content = cldrStForum.parseContent(posts, true /* noItemLink */, true /* replyButton */, true /* fullSet */, null /* onReplyClose */);
+				const content = cldrStForum.parseContent(posts, 'info');
 				/*
 				 * Reality check: the json should refer to the same path as tr, which in practice
 				 * always matches surveyCurrentId. If not, log a warning and substitute "Please reload"
 				 * for the content.
 				 */
-				let xpstrid = json.ret[0].xpath;
+				let xpstrid = posts[0].xpath;
 				if (xpstrid !== tr.xpstrid || xpstrid !== surveyCurrentId) {
 					console.log('Warning: xpath strid mismatch in updateInfoPanelForumPosts loadHandler:');
 					console.log('posts[0].xpath = ' + posts[0].xpath);
