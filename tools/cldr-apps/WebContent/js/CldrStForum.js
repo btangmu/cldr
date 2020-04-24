@@ -10,7 +10,8 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * 	window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, stui.str, listenFor, bootstrap.js, ...
+ * window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, surveyCurrentLocale,
+ * stui.str, listenFor, bootstrap.js, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
@@ -199,7 +200,7 @@ const cldrStForum = (function() {
 	function postStatusMenu(isReply, userCanClose) {
 		let content = '<p>Status: ';
 
-		content += '<select id="forumStatusMenu">\n';
+		content += '<select id="forumStatusMenu" required>\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
 
 		if (!isReply) {
@@ -257,11 +258,12 @@ const cldrStForum = (function() {
 		let forumStatus = document.getElementById("forumStatusMenu").value;
 		if (!forumStatus) {
 			/*
-			 * TODO: alert user that status is required
+			 * Normally this won't happen, since the menu has the attribute "required".
+			 * The browser should prevent the form from being submitted, and it should ask
+			 * the user to make a selection. If we do get here anyway, return silently.
 			 */
 			return;
 		}
-
 		var locale = surveyCurrentLocale;
 		var url = contextPath + "/SurveyAjax";
 		var form = $('#post-form');
@@ -647,12 +649,10 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Format a date and time for display in a forum post.
+	 * Format a date and time for display in a forum post
 	 *
 	 * @param x the number of seconds since 1970-01-01
-	 * @returns the formatted date and time as a string
-	 *
-	 * Like "2018-05-16 13:45" per cldr-dev@unicode.org.
+	 * @returns the formatted date and time as a string, like "2018-05-16 13:45"
 	 */
 	function fmtDateTime(x) {
 		const d = new Date(x);
