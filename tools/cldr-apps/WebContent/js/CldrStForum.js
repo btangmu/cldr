@@ -28,9 +28,11 @@ const cldrStForum = (function() {
 
 	let formDidChange = false;
 
-	function didFormChange() {
-		return formDidChange;
-	}
+	/**
+	 * Mapping from post id to post object, describing the set of
+	 * posts in the most recently parsed json
+	 */
+	let postHash = {};
 
 	/**
 	 * If there are any existing posts concerning this xpath, open a Reply to an existing thread,
@@ -562,7 +564,7 @@ const cldrStForum = (function() {
 				if (formDidChange) {
 					console.log('Reload- changed.');
 					/*
-					 * TODO: encapsulate dependency on reloadV
+					 * TODO: encapsulate dependency on reloadV, or avoid this callback business entirely
 					 */
 					reloadV();
 				}
@@ -583,6 +585,8 @@ const cldrStForum = (function() {
 
 	/**
 	 * Get the default parseContent options
+	 *
+	 * @return a new object with the default properties
 	 */
 	function getDefaultParseOptions() {
 		let opts = {};
@@ -591,6 +595,17 @@ const cldrStForum = (function() {
 		opts.fullSet = true;
 		opts.onReplyClose = null;
 		return opts;
+	}
+
+	/**
+	 * Update the postHash mapping from post id to post object
+	 *
+	 * @param posts the array of posts
+	 */
+	function updatePostHash(posts) {
+		for (let num in posts) {
+			postHash[posts[num].id] = posts[num];
+		}
 	}
 
 	/**
@@ -727,25 +742,12 @@ const cldrStForum = (function() {
 			' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 	}
 
-	/**
-	 * Mapping from post id to post object, describing the set of
-	 * posts in the most recently parsed json
-	 */
-	let postHash = {};
-
-	function updatePostHash(posts) {
-		for (let num in posts) {
-			postHash[posts[num].id] = posts[num];
-		}
-	}
-
 	/*
 	 * Make only these functions accessible from other files:
 	 */
 	return {
 		openPostFromDashboard: openPostFromDashboard,
 		openPostOrReply: openPostOrReply,
-		didFormChange: didFormChange,
 		parseContent: parseContent,
 	};
 })();
