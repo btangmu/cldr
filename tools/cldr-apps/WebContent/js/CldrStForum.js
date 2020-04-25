@@ -117,7 +117,7 @@ const cldrStForum = (function() {
 	 */
 	function openPostOrReply(params) {
 		const postModal = $('#post-modal');
-		showPost(postModal, params.opts.onReplyClose);
+		showPost(postModal, params.onReplyClose);
 
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
