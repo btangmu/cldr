@@ -239,15 +239,41 @@ const cldrStForum = (function() {
 		if (!isReply || !post) {
 			return false;
 		}
+		if (userIsOriginalPoster(post)) {
+			return true;
+		}
+		if (userIsTC())
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Is the current user the original poster in the thread containing this post?
+	 *
+	 * @param post either this post or its parent, for getFirstPostInThread
+	 * @returns true or false
+	 */
+	function userIsOriginalPoster(post) {
+		if (!post) {
+			return false;
+		}
 		if (typeof surveyUser !== 'undefined') {
-			const currentPoster = surveyUser;
-			const originalPoster = getFirstPostInThread(post).poster;
-			if (originalPoster === currentPoster) {
+			if (surveyUser === getFirstPostInThread(post).poster) {
 				return true;
 			}
-			if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
-				return true;
-			}
+		}
+		return false;
+	}
+
+	/**
+	 * Is the current user a TC (Technical Committee) member?
+	 *
+	 * @returns true or false
+	 */
+	function userIsTC() {
+		if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
+			return true;
 		}
 		return false;
 	}
@@ -303,7 +329,7 @@ const cldrStForum = (function() {
 						const postHolder = postModal.find('.modal-body').find('.post');
 						const firstPostHolder = postHolder[0];
 						const posts = data.ret;
-						const forumDiv = parseContentInSubmitContext(posts);
+						const forumDiv = parseContent(posts, 'new');
 						firstPostHolder.insertBefore(forumDiv, firstPostHolder.firstChild);
 						// reset
 						post = $('.post').first();

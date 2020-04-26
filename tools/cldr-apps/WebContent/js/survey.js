@@ -1973,7 +1973,9 @@ function updateInfoPanelForumPosts(tr) {
 			 */
 			tr = document.getElementById('r@' + surveyCurrentId);
 		} else {
-			console.log("updateInfoPanelForumPosts: tr was null, surveyCurrentId was empty");
+			/*
+			 * This is normal when adding a post in the main forum interface, which has no Info Panel).
+			 */
 			return;
 		}
 	}
