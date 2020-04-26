@@ -31,8 +31,8 @@ describe('cldrStForum.parseContent', function() {
 		assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
 
 		const s = "n "
-			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtestforum_replyn "
-			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: Reviewtest reply blah!forum_reply";
+			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtest【Closed】forum_replyn "
+			+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: Reviewtest reply blah!【Closed】forum_reply";
 
 		assert.equal(normalizeWhitespace(s), normalizeWhitespace(content.firstChild.textContent));
 	});

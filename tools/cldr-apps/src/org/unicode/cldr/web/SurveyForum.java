@@ -330,7 +330,7 @@ public class SurveyForum {
      *
      * Called by STFactory.PerLocaleData.voteForValue (for "Flag Removed" only) as well as locally by doPost
      */
-    public Integer doPostInternal(int base_xpath, int replyTo, final CLDRLocale locale, String subj, String text,
+    private Integer doPostInternal(int base_xpath, int replyTo, final CLDRLocale locale, String subj, String text,
             String status, final boolean couldFlagOnLosing, final UserRegistry.User user) throws SurveyException {
 
         final int forumNumber = getForumNumber(locale);
@@ -1306,7 +1306,21 @@ public class SurveyForum {
         if (couldFlagOnLosing) {
             text = text + FLAGGED_FOR_REVIEW_HTML;
         }
-        return sm.fora.doPostInternal(base_xpath, replyTo, l, subj, text, status, couldFlagOnLosing, mySession.user);
+        return doPostInternal(base_xpath, replyTo, l, subj, text, status, couldFlagOnLosing, mySession.user);
+    }
+
+    /**
+     * Make a special post for flag removal
+     *
+     * @param xpathId
+     * @param locale
+     * @param user
+     * @return the post id
+     *
+     * @throws SurveyException
+     */
+    public int postFlagRemoved(int xpathId, CLDRLocale locale, User user) throws SurveyException {
+        return doPostInternal(xpathId, -1, locale, "Flag Removed", "(The flag was removed.)", ForumStatus.CLOSED.toName(), false, user);
     }
 
     /**
