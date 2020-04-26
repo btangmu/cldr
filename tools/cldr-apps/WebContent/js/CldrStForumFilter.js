@@ -78,14 +78,15 @@ const cldrStForumFilter = (function() {
 	 * Assume each post has post.threadId.
 	 *
 	 * @param posts the array of post objects, from newest to oldest
+	 * @param applyFilter true if the currently menu-selected filter should be applied
 	 * @return the filtered array of threadId strings
 	 */
-	function getFilteredThreadIds(posts) {
+	function getFilteredThreadIds(posts, applyFilter) {
 		const threadsToPosts = getThreadsToPosts(posts);
 
 		let filteredArray = [];
 		Object.keys(threadsToPosts).forEach(function(threadId) {
-			if (threadPasses(threadsToPosts[threadId])) {
+			if (!applyFilter || threadPasses(threadsToPosts[threadId])) {
 				filteredArray.push(threadId);
 			}
 		});

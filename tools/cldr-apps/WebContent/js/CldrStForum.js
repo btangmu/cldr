@@ -206,9 +206,9 @@ const cldrStForum = (function() {
 	 * Compare SurveyForum.ForumStatus on server
 	 */
 	function postStatusMenu(isReply, userCanClose, isOriginalPoster) {
-		let content = '<p>Status: ';
+		let content = '<p id="forum-status-area">Status: ';
 
-		content += '<select id="forumStatusMenu" required>\n';
+		content += '<select id="forum-status-menu" required>\n';
 		content += '<option value="" disabled selected>Select one</option>\n';
 
 		if (!isReply) {
@@ -289,7 +289,7 @@ const cldrStForum = (function() {
 	 * NOTE: this function uses JQuery (not Dojo) for ajax
 	 */
 	function submitPost(event) {
-		let forumStatus = document.getElementById("forumStatusMenu").value;
+		let forumStatus = document.getElementById('forum-status-menu').value;
 		if (!forumStatus) {
 			/*
 			 * Normally this won't happen, since the menu has the attribute "required".
@@ -305,6 +305,7 @@ const cldrStForum = (function() {
 		if ($('#post-form textarea[name=text]').val()) {
 			$('#post-form button').fadeOut();
 			$('#post-form .input-group').fadeOut(); // subject line
+			$('#forum-status-area').fadeOut();
 			var xpath = $('#post-form input[name=xpath]').val();
 			var ajaxParams = {
 				data: {
@@ -564,7 +565,7 @@ const cldrStForum = (function() {
 				topicDivs[post.threadId].appendChild(postDivs[post.id]);
 			}
 		}
-		return filterAndAssembleForumThreads(posts, topicDivs);
+		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter);
 	}
 
 	/**
@@ -588,12 +589,15 @@ const cldrStForum = (function() {
 	 *   fullSet = true if this is a full set of posts
 	 *
 	 *   onReplyClose = a callback function, or null
+	 *
+	 *   applyFilter = true if the currently menu-selected filter should be applied
 	 */
 	function getOptionsForContext(context) {
 		let opts = getDefaultParseOptions();
 		if (context === 'main') {
 			opts.showItemLink = true;
 			opts.showReplyButton = true;
+			opts.applyFilter = true;
 			opts.onReplyClose = function(postModal, form, formDidChange) {
 				if (formDidChange) {
 					console.log('cldrStForum.getOptionsForContext calling reloadV for onReplyClose');
@@ -627,6 +631,7 @@ const cldrStForum = (function() {
 		opts.showItemLink = false;
 		opts.showReplyButton = false;
 		opts.fullSet = true;
+		opts.applyFilter = false;
 		opts.onReplyClose = null;
 		return opts;
 	}
@@ -723,11 +728,12 @@ const cldrStForum = (function() {
 	 *
 	 * @param posts the array of post objects, from newest to oldest
 	 * @param topicDivs the array of thread elements, indexed by threadId
+	 * @param applyFilter true if the currently menu-selected filter should be applied
 	 * @return the new document fragment
 	 */
-	function filterAndAssembleForumThreads(posts, topicDivs) {
+	function filterAndAssembleForumThreads(posts, topicDivs, applyFilter) {
 
-		let filteredArray = cldrStForumFilter.getFilteredThreadIds(posts);
+		let filteredArray = cldrStForumFilter.getFilteredThreadIds(posts, applyFilter);
 
 		const forumDiv = document.createDocumentFragment();
 
