@@ -66,9 +66,10 @@ const cldrStForum = (function() {
 				'<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>' +
 				'</div>\n';
 
-			let isReply = (posts && posts.length > 0);
-			let userCanClose = canUserClose(isReply, posts[0]);
-			content += postStatusMenu(isReply, userCanClose);
+			const isReply = (posts && posts.length > 0);
+			const isOriginalPoster = userIsOriginalPoster(post);
+			const userCanClose = canUserClose(isReply, isOriginalPoster);
+			content += postStatusMenu(isReply, userCanClose, isOriginalPoster);
 
 			/*
 			 * This Submit button differs from the one in openPostOrReply() by having data-path and data-choice
@@ -122,7 +123,9 @@ const cldrStForum = (function() {
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
-		const userCanClose = canUserClose(isReply, parentPost);
+		const isOriginalPoster = userIsOriginalPoster(parentPost);
+		const userCanClose = canUserClose(isReply, isOriginalPoster);
+
 		const xpath = params.xpath ? params.xpath : '';
 
 		let content = '';
@@ -132,7 +135,7 @@ const cldrStForum = (function() {
 		content += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
 		content += '<input class="form-control" name="subj" type="text" value=""></div>';
 		content += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
-		content += postStatusMenu(isReply, userCanClose);
+		content += postStatusMenu(isReply, userCanClose, isOriginalPoster);
 		content += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		content += '<input type="hidden" name="forum" value="true">';
 		content += '<input type="hidden" name="_" value="' + params.locale + '">';
@@ -195,16 +198,14 @@ const cldrStForum = (function() {
 	 *
 	 * @param isReply true if this post is a reply, else false
 	 * @param userCanClose true if this user is allowed to close, else false
+	 * @param isOriginalPoster true if the current user is the original poster in the thread
 	 * @return the html
 	 *
 	 * Called only by openPostFromDashboard and openPostOrReply, in this file
 	 *
-	 * Work in progress, reference: https://unicode-org.atlassian.net/browse/CLDR-13695
-	 * and https://unicode-org.atlassian.net/browse/CLDR-13610
-	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
-	function postStatusMenu(isReply, userCanClose) {
+	function postStatusMenu(isReply, userCanClose, isOriginalPoster) {
 		let content = '<p>Status: ';
 
 		content += '<select id="forumStatusMenu" required>\n';
@@ -214,7 +215,7 @@ const cldrStForum = (function() {
 			content += '<option value="Request">Request a change</option>\n';
 		}
 		content += '<option value="Question">Ask a question</option>\n';
-		if (isReply) {
+		if (isReply && !isOriginalPoster) {
 			content += '<option value="Agreed">Agree</option>\n';
 			content += '<option value="Disputed">Disagree</option>\n';
 		}
@@ -232,17 +233,17 @@ const cldrStForum = (function() {
 	 * or a TC (technical committee) member.
 	 *
 	 * @param isReply true if this post is a reply, else false
-	 * @param post either this post or its parent, for getFirstPostInThread
+	 * @param isOriginalPoster true if the current user is the original poster in the thread
 	 * @return true if this user is allowed to close, else false
 	 */
-	function canUserClose(isReply, post) {
-		if (!isReply || !post) {
+	function canUserClose(isReply, isOriginalPoster) {
+		if (!isReply) {
 			return false;
 		}
-		if (userIsOriginalPoster(post)) {
+		if (isOriginalPoster) {
 			return true;
 		}
-		if (userIsTC())
+		if (userIsTC()) {
 			return true;
 		}
 		return false;
@@ -509,8 +510,11 @@ const cldrStForum = (function() {
 
 			// actual text
 			var postText = post2text(post.text);
-			var postContent;
-			subpost.appendChild(postContent = forumCreateChunk(postText, "div", "postContent"));
+			var postContent = forumCreateChunk(postText, "div", "postContent");
+			subpost.appendChild(postContent);
+			
+			subpost.appendChild(forumCreateChunk('【' + post.forumStatus + '】', 'div', ''));
+
 			if (opts.showReplyButton) {
 				var replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
 				(function(post) {
