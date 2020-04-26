@@ -10,8 +10,8 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * window.surveyCurrentLocale, window.surveySessionId, window.locmap, createGravitar, surveyUser, surveyCurrentLocale,
- * stui.str, listenFor, bootstrap.js, reloadV, ...
+ * window.surveyCurrentLocale, window.surveySessionId, window.surveyUser, window.locmap,
+ * createGravitar, stui.str, listenFor, bootstrap.js, reloadV, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
@@ -227,29 +227,6 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Is this user allowed to close the thread now?
-	 *
-	 * The user is only allowed if they are the original poster of the thread,
-	 * or a TC (technical committee) member.
-	 *
-	 * @param isReply true if this post is a reply, else false
-	 * @param isOriginalPoster true if the current user is the original poster in the thread
-	 * @return true if this user is allowed to close, else false
-	 */
-	function canUserClose(isReply, isOriginalPoster) {
-		if (!isReply) {
-			return false;
-		}
-		if (isOriginalPoster) {
-			return true;
-		}
-		if (userIsTC()) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
 	 * Is the current user the original poster in the thread containing this post?
 	 *
 	 * @param post either this post or its parent, for getFirstPostInThread
@@ -265,6 +242,20 @@ const cldrStForum = (function() {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Is this user allowed to close the thread now?
+	 *
+	 * The user is only allowed if they are the original poster of the thread,
+	 * or a TC (technical committee) member.
+	 *
+	 * @param isReply true if this post is a reply, else false
+	 * @param isOriginalPoster true if the current user is the original poster in the thread
+	 * @return true if this user is allowed to close, else false
+	 */
+	function canUserClose(isReply, isOriginalPoster) {
+		return (isReply && (isOriginalPoster || userIsTC());
 	}
 
 	/**
