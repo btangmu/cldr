@@ -175,7 +175,7 @@ const cldrStForum = (function() {
 	/**
 	 * Show a modal window displaying a forum post
 	 *
-	 * @param postModal the mysterious object related to bootstrap.js
+	 * @param postModal the bootstrap.js $('#post-modal') element
 	 * @param onClose the callback function
 	 *
 	 * Called only by openPostFromDashboard and openPostOrReply, in this file
@@ -255,7 +255,7 @@ const cldrStForum = (function() {
 	 * @return true if this user is allowed to close, else false
 	 */
 	function canUserClose(isReply, isOriginalPoster) {
-		return (isReply && (isOriginalPoster || userIsTC());
+		return isReply && (isOriginalPoster || userIsTC());
 	}
 
 	/**

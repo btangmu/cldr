@@ -34,7 +34,6 @@ import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.CLDRURLS;
 import org.unicode.cldr.util.VoteResolver;
-import org.unicode.cldr.web.DBUtils.Table;
 import org.unicode.cldr.web.SurveyException.ErrorCode;
 import org.unicode.cldr.web.UserRegistry.LogoutException;
 import org.unicode.cldr.web.UserRegistry.User;
@@ -226,7 +225,7 @@ public class SurveyForum {
         return num;
     }
 
-    public int gatherInterestedUsers(String forum, Set<Integer> cc_emails, Set<Integer> bcc_emails) {
+    private int gatherInterestedUsers(String forum, Set<Integer> cc_emails, Set<Integer> bcc_emails) {
         int emailCount = 0;
         try {
             Connection conn = null;
@@ -324,8 +323,8 @@ public class SurveyForum {
      * @param statusStr the status string like "Open", or null
      * @param couldFlagOnLosing
      * @param user
-     * @param postId
-     * @return
+     * @return the new post id, or <= 0 for failure
+     *
      * @throws SurveyException
      *
      * Called by STFactory.PerLocaleData.voteForValue (for "Flag Removed" only) as well as locally by doPost
@@ -333,8 +332,38 @@ public class SurveyForum {
     private Integer doPostInternal(int base_xpath, int replyTo, final CLDRLocale locale, String subj, String text,
             String status, final boolean couldFlagOnLosing, final UserRegistry.User user) throws SurveyException {
 
+        ForumStatus forumStatus = ForumStatus.fromName(status, null);
+        if (forumStatus == null || !userCanPostWithStatus(user, forumStatus)) {
+            return 0;
+        }
+        int postId = savePostToDb(user, subj, text, replyTo, locale, base_xpath, couldFlagOnLosing);
+
+        setStatus(postId, forumStatus);
+
+        emailNotify(user, locale, base_xpath, subj, text, postId);
+
+        return postId;
+    }
+
+    /**
+     * Save a new post to the FORUM_POSTS table
+     *
+     * @param user
+     * @param subj
+     * @param text
+     * @param replyTo
+     * @param locale
+     * @param base_xpath
+     * @param couldFlagOnLosing
+     * @return the new post id, or <= 0 for failure
+     * @throws SurveyException
+     */
+    private int savePostToDb(User user, String subj, String text, int replyTo, final CLDRLocale locale,
+            int base_xpath, boolean couldFlagOnLosing) throws SurveyException {
+
+        int postId = 0;
+
         final int forumNumber = getForumNumber(locale);
-        int postId;
 
         try {
             Connection conn = null;
@@ -371,11 +400,22 @@ public class SurveyForum {
             SurveyLog.logException(se, complaint);
             throw new SurveyException(ErrorCode.E_INTERNAL, complaint);
         }
-
-        setStatus(postId, status);
-
-        emailNotify(user, locale, base_xpath, subj, text, postId);
         return postId;
+    }
+
+    private boolean userCanPostWithStatus(User user, ForumStatus forumStatus) {
+        if (forumStatus != ForumStatus.CLOSED) {
+            return true;
+        }
+        if (UserRegistry.userIsTC(user)) {
+            return true;
+        }
+        /*
+         * TODO: if user started this thread, return true
+         * This was already checked on the client, but we should check on server too
+         */
+        return true;
+        // return false;
     }
 
     /**
@@ -383,13 +423,12 @@ public class SurveyForum {
      * and add it to allStatus, unless this status doesn't belong in the table
      *
      * @param postId the post id
-     * @param status the string representing a ForumStatus, or null
+     * @param status the ForumStatus, or null
      * @throws SurveyException
      */
-    private void setStatus(int postId, String status) throws SurveyException {
+    private void setStatus(int postId, ForumStatus forumStatus) throws SurveyException {
 
-        ForumStatus forumStatus = ForumStatus.fromName(status, ForumStatus.QUESTION);
-        if (!forumStatus.belongsInTable()) {
+        if (forumStatus == null || !forumStatus.belongsInTable()) {
             return;
         }
         int statusId = forumStatus.toInt();
@@ -1132,11 +1171,11 @@ public class SurveyForum {
 
     /**
      * Gather forum post information into a JSONArray, in preparation for
-     * displaying it to the user (which is done by cldrStForum.parseContent).
+     * displaying it to the user.
      *
      * @param session
      * @param locale
-     * @param base_xpath Base XPath of the item being viewed, if positive
+     * @param base_xpath Base XPath of the item being viewed, if positive; or XPathTable.NO_XPATH
      * @param ident If nonzero - select only this item. If zero, select all items.
      * @return the JSONArray
      * @throws JSONException
@@ -1154,7 +1193,7 @@ public class SurveyForum {
             try {
                 conn = sm.dbUtils.getDBConnection();
                 Object[][] o = null;
-                final CharSequence forumPosts = DBUtils.Table.FORUM_POSTS.toString();
+                final String forumPosts = DBUtils.Table.FORUM_POSTS.toString();
                 if (ident == 0) {
                     if (base_xpath == 0) {
                         // all posts
@@ -1236,7 +1275,9 @@ public class SurveyForum {
             }
         } catch (SQLException se) {
             // When query fails, set breakpoint here and look at se.detailMessage for clues
-            String complaint = "SurveyForum:  Couldn't show posts in forum " + locale + " - " + DBUtils.unchainSqlException(se)
+            String complaint = "SurveyForum:  Couldn't show posts in forum "
+                + locale
+                + " - " + DBUtils.unchainSqlException(se)
                 + " - fGetByLoc";
             logger.severe(complaint);
             throw new RuntimeException(complaint);
@@ -1250,19 +1291,20 @@ public class SurveyForum {
 
     private void assertCanAccessForum(UserRegistry.User user, CLDRLocale locale) throws SurveyException {
         boolean canModify = (UserRegistry.userCanAccessForum(user, locale));
-        if (!canModify)
+        if (!canModify) {
             throw new SurveyException(ErrorCode.E_NO_PERMISSION, "You do not have permission to access that locale");
+        }
     }
 
     private static String getPallresult() {
-        Table forumPosts = DBUtils.Table.FORUM_POSTS;
-        return getPallresult(forumPosts.toString());
-    }
-
-    private static String getPallresult(String forumPosts) {
-        return forumPosts + ".poster," + forumPosts + ".subj," + forumPosts + ".text,"
-            + forumPosts.toString()
-            + ".last_time," + forumPosts + ".id," + forumPosts + ".forum, " + forumPosts + ".loc ";
+        String forumPosts = DBUtils.Table.FORUM_POSTS.toString();
+        return forumPosts + ".poster,"
+                + forumPosts + ".subj,"
+                + forumPosts + ".text,"
+                + forumPosts + ".last_time,"
+                + forumPosts + ".id,"
+                + forumPosts + ".forum,"
+                + forumPosts + ".loc ";
     }
 
     /**
@@ -1271,11 +1313,16 @@ public class SurveyForum {
      * @param forumPosts the table name
      * @return the string to be used as part of a query
      */
-    private static String getPallresultfora(final CharSequence forumPosts) {
-        return forumPosts + ".poster," + forumPosts + ".subj," + forumPosts + ".text,"
-            + forumPosts.toString()
-            + ".last_time," + forumPosts + ".id," + forumPosts + ".parent," + forumPosts + ".xpath, "
-            + forumPosts + ".loc," + forumPosts + ".version";
+    private static String getPallresultfora(String forumPosts) {
+        return forumPosts + ".poster,"
+            + forumPosts + ".subj,"
+            + forumPosts + ".text,"
+            + forumPosts + ".last_time,"
+            + forumPosts + ".id,"
+            + forumPosts + ".parent,"
+            + forumPosts + ".xpath, "
+            + forumPosts + ".loc,"
+            + forumPosts + ".version";
     }
 
     /**
@@ -1287,7 +1334,7 @@ public class SurveyForum {
      * @param subj the subject of the post
      * @param text the text of the post
      * @param status the status string such as "Open", or null
-     * @param replyTo could be {@link #NO_PARENT} if there is no parent
+     * @param replyTo the id of the post to which this is a reply; {@link #NO_PARENT} if there is no parent
      * @return the post id
      *
      * @throws SurveyException

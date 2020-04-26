@@ -1041,6 +1041,10 @@ public class SurveyAjax extends HttpServlet {
 
         r.put("postId", postId);
         if (postId > 0) {
+            /*
+             * TODO: explain XPathTable.NO_XPATH here.
+             * toJSON is called for WHAT_FORUM_FETCH as toJSON(mySession, locale, id, 0)
+             */
             r.put("ret", sm.fora.toJSON(mySession, l, XPathTable.NO_XPATH, postId));
         }
         send(r, out);

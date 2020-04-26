@@ -1722,15 +1722,31 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     /* print a user table without any extra help in it */
-    public void printUserTable(WebContext ctx) {
+    private void printUserTable(WebContext ctx) {
         printUserTableWithHelp(ctx, null, null);
     }
 
+    /**
+     *
+     * @param ctx
+     * @param helpLink
+     *
+     * Called by DisputePageManager as well as locally
+     */
     public void printUserTableWithHelp(WebContext ctx, String helpLink) {
         printUserTableWithHelp(ctx, helpLink, null);
     }
 
-    public void printUserTableWithHelp(WebContext ctx, String helpLink, String helpName) {
+    /**
+     * Display information about one more users
+     *
+     * @param ctx
+     * @param helpLink
+     * @param helpName
+     *
+     * Called, for example, when the user chooses "Settings" under "My Account" in the gear menu
+     */
+    private void printUserTableWithHelp(WebContext ctx, String helpLink, String helpName) {
         ctx.put("helpLink", helpLink);
         ctx.put("helpName", helpName);
         ctx.includeFragment("usermenu.jsp");
