@@ -402,7 +402,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     static final String PREF_NOSHOWDELETE = "p_nodelete";
     static final String PREF_DELETEZOOMOUT = "p_deletezoomout";
     public static final String PREF_NOJAVASCRIPT = "p_nojavascript";
-    static final String PREF_ADV = "p_adv"; // show advanced prefs?
     static final String PREF_XPATHS = "p_xpaths"; // show xpaths?
     public static final String PREF_LISTROWS = "p_listrows";
     public static final String PREF_DEBUGJSP = "p_debugjsp"; // debug JSPs?
@@ -440,8 +439,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     public static final String GREGO_XPATH = "//ldml/dates/" + LDMLConstants.CALENDARS + "/" + LDMLConstants.CALENDAR
         + "[@type=\"gregorian\"]";
-    public static final String RAW_MENU_ITEM = "raw";
-    public static final String TEST_MENU_ITEM = "test";
 
     public static final String SHOWHIDE_SCRIPT = "<script><!-- \n"
         + "function show(what)\n"
@@ -3925,15 +3922,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         subCtx.put("which", which);
         subCtx.put(WebContext.CAN_MODIFY, canModify);
         subCtx.includeFragment("menu_top.jsp"); // ' code lists .. ' etc
-
-        // not in the jsp- advanced idems.
-        if (ctx.prefBool(PREF_ADV)) {
-            subCtx.println("<p class='hang'>Advanced Items: ");
-            // printMenu(subCtx, which, TEST_MENU_ITEM);
-            printMenu(subCtx, which, RAW_MENU_ITEM);
-            subCtx.println("</p>");
-        }
-
         subCtx.println("</div>");
     }
 
@@ -3985,8 +3973,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
             if (pageId != null && !which.equals(xMAIN)) {
                 showPathList(subCtx, which, pageId);
-            } else if (RAW_MENU_ITEM.equals(which)) {
-                getOutputFileManager().doRaw(subCtx);
             } else {
                 which = xMAIN;
                 doMain(subCtx); // TODO: does this ever happen? Or is doMain effectively dead code?
