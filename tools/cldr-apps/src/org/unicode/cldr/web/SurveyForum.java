@@ -7,25 +7,17 @@
 
 package org.unicode.cldr.web;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -35,34 +27,17 @@ import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.CLDRURLS;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.web.SurveyException.ErrorCode;
-import org.unicode.cldr.web.UserRegistry.LogoutException;
 import org.unicode.cldr.web.UserRegistry.User;
 
 import com.ibm.icu.dev.util.ElapsedTimer;
 import com.ibm.icu.text.DateFormat;
-import com.ibm.icu.text.UCharacterIterator;
-import com.ibm.icu.text.UnicodeSet;
 import com.ibm.icu.util.ULocale;
-import com.sun.syndication.feed.synd.SyndContent;
-import com.sun.syndication.feed.synd.SyndContentImpl;
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndEntryImpl;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.feed.synd.SyndFeedImpl;
-import com.sun.syndication.io.SyndFeedOutput;
 
 /**
  * This class implements a discussion forum per language (ISO code)
  */
 public class SurveyForum {
     private static final String FLAGGED_FOR_REVIEW_HTML = " <p>[This item was flagged for CLDR TC review.]";
-
-    private static UnicodeSet VALID_FOR_XML = new UnicodeSet( // from http://www.w3.org/TR/xml/#charsets
-        0x09, 0x0A,
-        0x0D, 0x0D,
-        0x20, 0xD7FF,
-        0xe000, 0xfffd,
-        0x10000, 0x10ffff).freeze();
 
     private static java.util.logging.Logger logger;
 
@@ -120,7 +95,6 @@ public class SurveyForum {
 
     private Hashtable<String, Integer> nameToNum = new Hashtable<String, Integer>();
 
-    private static final int GOOD_FORUM = 0; // 0 or greater
     private static final int BAD_FORUM = -1;
     private static final int NO_FORUM = -2;
 
@@ -518,38 +492,6 @@ public class SurveyForum {
     }
 
     /**
-     *
-     * @param me
-     * @param uid
-     * @return
-     *
-     * Called only by doFeed, for RSS???
-     */
-    private String getNameTextFromUid(UserRegistry.User me, int uid) {
-        UserRegistry.User theU = null;
-        theU = sm.reg.getInfo(uid);
-        String aLink = null;
-        if ((theU != null) && (me != null) && ((uid == me.id) || // if it's us
-        // or..
-            (UserRegistry.userIsTC(me) || // or TC..
-                (UserRegistry.userIsVetter(me))))) { // vetter&same org
-            if ((me == null) || (me.org == null)) {
-                throw new InternalError("null: c.s.u.o");
-            }
-            if ((theU != null) && (theU.org == null)) {
-                throw new InternalError("null: theU.o");
-            }
-            aLink = theU.name + " (" + theU.org + ")";
-        } else if (theU != null) {
-            aLink = "(" + theU.org + " vetter #" + uid + ")";
-        } else {
-            aLink = "(#" + uid + ")";
-        }
-
-        return aLink;
-    }
-
-    /**
      * Called by SM to create the reg
      *
      * @param xlogger
@@ -728,11 +670,6 @@ public class SurveyForum {
         return DBUtils.prepareStatement(conn, "fAdd", "INSERT INTO " + DB_FORA + " (loc) values (?)");
     }
 
-    private static PreparedStatement prepare_pList(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pList", "SELECT poster,subj,text,id,last_time,loc,xpath FROM " + DBUtils.Table.FORUM_POSTS.toString()
-            + " WHERE (forum = ?) ORDER BY last_time DESC ");
-    }
-
     /**
      * Prepare a statement for adding a new post to the forum table.
      * 
@@ -761,28 +698,8 @@ public class SurveyForum {
             + " (id,status) values (?,?)");
     }
 
-    private static PreparedStatement prepare_pAll(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pAll", "SELECT " + getPallresult() + " FROM " + DBUtils.Table.FORUM_POSTS + "," + DB_FORA + " WHERE ("
-            + DBUtils.Table.FORUM_POSTS + ".forum = " + DB_FORA + ".id) ORDER BY " + DBUtils.Table.FORUM_POSTS + ".last_time DESC");
-    }
-
-    private static PreparedStatement prepare_pForMe(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pForMe", "SELECT " + getPallresult() + " FROM " + DBUtils.Table.FORUM_POSTS.toString()
-            + ","
-            + DB_FORA
-            + " " // same as pAll
-            + " where (" + DBUtils.Table.FORUM_POSTS + ".forum=" + DB_FORA + ".id) AND exists ( select " + UserRegistry.CLDR_INTEREST
-            + ".forum from " + UserRegistry.CLDR_INTEREST + "," + DB_FORA + " where " + UserRegistry.CLDR_INTEREST
-            + ".uid=? AND " + UserRegistry.CLDR_INTEREST + ".forum=" + DB_FORA + ".loc AND " + DB_FORA + ".id=" + DBUtils.Table.FORUM_POSTS.toString()
-            + ".forum) ORDER BY " + DBUtils.Table.FORUM_POSTS + ".last_time DESC");
-    }
-
     private static PreparedStatement prepare_pIntUsers(Connection conn) throws SQLException {
         return DBUtils.prepareStatement(conn, "pIntUsers", "SELECT uid from " + UserRegistry.CLDR_INTEREST + " where forum=?");
-    }
-
-    private static String localeToForum(String locale) {
-        return localeToForum(new ULocale(locale));
     }
 
     private static String localeToForum(ULocale locale) {
@@ -808,336 +725,6 @@ public class SurveyForum {
     public static String forumLink(WebContext ctx, String forum) {
         return "<a " + ctx.atarget(WebContext.TARGET_DOCS) + " class='forumlink' href='" + forumUrl(ctx, forum) + "' >" // title='"+title+"'
             + "Forum" + "</a>";
-    }
-
-    // XML/RSS
-
-    private static void sendErr(HttpServletRequest request, HttpServletResponse response, String err) throws IOException {
-        response.setContentType("text/html; charset=utf-8");
-        WebContext xctx = new WebContext(request, response);
-        xctx.println("Error: " + err);
-        xctx.close();
-        return;
-    }
-
-    /**
-     * Respond to an RSS "feed" request?
-     *
-     * TODO: is this used, and if so, how?
-     *
-     * @param request
-     * @param response
-     * @return
-     * @throws IOException
-     * @throws ServletException
-     *
-     * Called by OutputFileManager.doRawXml
-     */
-    public boolean doFeed(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-
-        response.setContentType("text/xml; charset=utf-8");
-
-        String feedType = request.getParameter("feed");
-        if (feedType == null) {
-            feedType = "rss_0.94";
-        }
-
-        String email = request.getParameter("email");
-        String pw = request.getParameter("pw");
-
-        if (email == null || pw == null) {
-            sendErr(request, response, "URL error.");
-            return true;
-        }
-
-        UserRegistry.User user = null;
-        try {
-            user = sm.reg.get(pw, email, "RSS@" + WebContext.userIP(request));
-        } catch (LogoutException e) {
-            e.printStackTrace();
-        }
-
-        if (user == null) {
-            sendErr(request, response, "authentication err");
-            return true;
-        }
-
-        String base = "http://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath()
-            + request.getServletPath();
-        String loc = request.getParameter("_");
-
-        if ((loc != null) && (!UserRegistry.userCanModifyLocale(user, CLDRLocale.getInstance(loc)))) {
-            sendErr(request, response, "permission denied for locale " + loc);
-            return true;
-        }
-
-        try {
-            SyndFeed feed = new SyndFeedImpl();
-            feed.setFeedType(feedType);
-            List<SyndEntry> entries = new ArrayList<SyndEntry>();
-            feed.setLink(base);
-
-            if (loc != null) {
-                feed.setTitle("CLDR Feed for " + loc);
-                feed.setDescription("test feed");
-
-                SyndEntry entry;
-                SyndContent description;
-
-                try {
-                    Connection conn = null;
-                    PreparedStatement pList = null;
-                    try {
-                        conn = sm.dbUtils.getDBConnection();
-                        pList = prepare_pList(conn);
-
-                        int forumNumber = getForumNumberFromDB(loc);
-                        if (forumNumber >= GOOD_FORUM) {
-                            pList.setInt(1, forumNumber);
-                            ResultSet rs = pList.executeQuery();
-                            while (rs.next()) {
-                                int poster = rs.getInt(1);
-                                String subj = rs.getString(2);
-                                String text = rs.getString(3);
-                                int id = rs.getInt(4);
-                                java.sql.Timestamp lastDate = rs.getTimestamp(5);
-
-                                String nameLink = getNameTextFromUid(user, poster);
-
-                                entry = new SyndEntryImpl();
-                                entry.setTitle(subj);
-                                entry.setAuthor(nameLink);
-                                entry.setLink(base + "?forum=" + loc + "&amp;" + F_DO + "=" + F_VIEW + "&amp;id=" + id
-                                    + "&amp;email=" + email + "&amp;pw=" + pw);
-                                entry.setPublishedDate(lastDate); // dateParser.parse("2004-06-08"));
-                                description = new SyndContentImpl();
-                                description.setType("text/html");
-                                description.setValue("From: " + nameLink + "<br><hr>" + shortenText(text));
-                                entry.setDescription(description);
-                                entries.add(entry);
-                            }
-                        }
-                    } finally {
-                        DBUtils.close(pList, conn);
-                    }
-                } catch (SQLException se) {
-                    String complaint = "SurveyForum:  Couldn't use forum " + loc + " - " + DBUtils.unchainSqlException(se)
-                        + " - fGetByLoc";
-                    logger.severe(complaint);
-                    throw new RuntimeException(complaint);
-                }
-
-            } else { /* loc is null */
-                feed.setTitle("CLDR Feed for " + user.email);
-                String locs[] = user.getInterestList();
-                if (locs == null) {
-                    feed.setDescription("All CLDR locales.");
-                } else if (locs.length == 0) {
-                    feed.setDescription("No locales.");
-                } else {
-                    String locslist = null;
-                    for (String l : locs) {
-                        if (locslist == null) {
-                            locslist = l;
-                        } else {
-                            locslist = locslist + " " + l;
-                        }
-                    }
-                    feed.setDescription("Your locales: " + locslist);
-                }
-
-                SyndEntry entry;
-                SyndContent description;
-                // not a specific locale, but ALL [of my locales]
-
-                try {
-                    Connection conn = null;
-                    PreparedStatement pAll = null;
-                    try {
-                        conn = sm.dbUtils.getDBConnection();
-                        // first, articles.
-                        ResultSet rs = null; // list of articles.
-
-                        if (locs == null) {
-                            pAll = prepare_pAll(conn);
-                            rs = pAll.executeQuery();
-                        } else {
-                            pAll = prepare_pForMe(conn);
-                            pAll.setInt(1, user.id);
-                            rs = pAll.executeQuery();
-                        }
-
-                        while (rs.next() && true) {
-                            int poster = rs.getInt(1);
-                            String subj = DBUtils.getStringUTF8(rs, 2);
-                            String text = DBUtils.getStringUTF8(rs, 3);
-                            java.sql.Timestamp lastDate = rs.getTimestamp(4); // TODO:
-                            // timestamp
-
-                            subj = validateForXML(subj);
-                            text = validateForXML(text);
-                            int id = rs.getInt(5);
-                            //String forum = rs.getString(6);
-                            String ploc = rs.getString(7);
-
-                            String forumText = localeToForum(ploc);
-                            String nameLink = getNameTextFromUid(user, poster);
-
-                            entry = new SyndEntryImpl();
-                            if (subj.startsWith(forumText)) {
-                                entry.setTitle(subj);
-                            } else {
-                                entry.setTitle(forumText + ":" + subj);
-                            }
-                            entry.setAuthor(nameLink);
-                            entry.setLink(base + "?forum=" + forumText + "&amp;" + F_DO + "=" + F_VIEW + "&amp;id=" + id
-                                + "&amp;email=" + email + "&amp;pw=" + pw);
-                            entry.setPublishedDate(lastDate); // dateParser.parse("2004-06-08"));
-                            description = new SyndContentImpl();
-                            description.setType("text/html");
-                            description.setValue("From: " + nameLink + "<br><hr>" + shortenText(text));
-                            entry.setDescription(description);
-                            entries.add(entry);
-                        }
-                    } finally {
-                        DBUtils.close(pAll, conn);
-                    }
-                } catch (SQLException se) {
-                    String complaint = "SurveyForum:  Couldn't use forum s for RSS- " + DBUtils.unchainSqlException(se)
-                        + " - fGetByLoc";
-                    logger.severe(complaint);
-                    throw new RuntimeException(complaint);
-                }
-            }
-            feed.setEntries(entries);
-
-            Writer writer = response.getWriter();
-            SyndFeedOutput output = new SyndFeedOutput();
-            output.output(feed, writer);
-        } catch (Throwable ie) {
-            SurveyLog.logException(ie, "getting RSS feed for " + loc + " and user " + user.toString());
-            System.err.println("Error getting RSS feed: " + ie.toString());
-            ie.printStackTrace();
-        }
-        return true;
-    }
-
-    /**
-     * Make sure the string is valid XML.
-     * @param str
-     * @return
-     */
-    private final String validateForXML(String str) {
-        if (VALID_FOR_XML.containsAll(str)) {
-            return str;
-        } else {
-            UnicodeSet tmpSet = new UnicodeSet(VALID_FOR_XML)
-                .complement()
-                .retainAll(str);
-            StringBuilder sb = new StringBuilder(str.length());
-            sb.append("((INVALID CHARS: " + tmpSet.toString() + " )) ");
-            int cp;
-            for (UCharacterIterator ui = UCharacterIterator.getInstance(str); (cp = ui.next()) != UCharacterIterator.DONE;) {
-                if (VALID_FOR_XML.contains(cp)) {
-                    sb.append(Character.toChars(cp));
-                } else {
-                    sb.append("\\x{" + Integer.toHexString(cp) + "}");
-                }
-            }
-            return sb.toString();
-        }
-    }
-
-    private static String shortenText(String s) {
-        if (s.length() < 100) {
-            return s;
-        } else {
-            return s.substring(0, 100) + "...";
-        }
-    }
-
-    /**
-     * RSS???
-     *
-     * @param ctx
-     * @return
-     *
-     * Maybe called by SurveyMain.printHeader
-     */
-    String forumFeedStuff(WebContext ctx) {
-        if (ctx.session == null || ctx.session.user == null || !UserRegistry.userIsStreet(ctx.session.user)) {
-            return "";
-        }
-        String feedUrl = ctx.schemeHostPort()
-            + ctx.base()
-            + ("/feed?_=" + localeToForum(ctx.getLocale()) + "&amp;email=" + ctx.session.user.email + "&amp;pw="
-                + ctx.session.user.password + "&amp;");
-        return
-        /*
-         * "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"Atom 1.0\" href=\""
-         * +feedUrl+"&feed=atom_1.0\">" +
-         */
-        "<link rel=\"alternate\" type=\"application/rdf+xml\" title=\"RSS 1.0\" href=\"" + feedUrl + "&feed=rss_1.0\">"
-            + "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS 2.0\" href=\"" + feedUrl + "&feed=rss_2.0\">";
-    }
-
-    /**
-     * RSS???
-     *
-     * @param ctx
-     * @param forum
-     * @return
-     *
-     * Maybe called from usermenu.jsp as well as locally
-     */
-    public static String forumFeedIcon(WebContext ctx, String forum) {
-        if (ctx.session == null || ctx.session.user == null || !UserRegistry.userIsStreet(ctx.session.user)) {
-            return "";
-        }
-        String feedUrl = ctx.schemeHostPort()
-            + ctx.base()
-            + ("/feed?_=" + localeToForum(ctx.getLocale()) + "&amp;email=" + ctx.session.user.email + "&amp;pw="
-                + ctx.session.user.password + "&amp;");
-
-        return " <a href='" + feedUrl + "&feed=rss_2.0" + "'>" + ctx.iconHtml("feed", "RSS 2.0") + "<!-- Forum&nbsp;rss --></a>";
-    }
-
-    /**
-     * RSS???
-     *
-     * @param ctx
-     * @return
-     *
-     * Maybe called by SurveyMain.printHeader
-     */
-    String mainFeedStuff(WebContext ctx) {
-        if (ctx.session == null || ctx.session.user == null || !UserRegistry.userIsStreet(ctx.session.user)) {
-            return "";
-        }
-
-        String feedUrl = ctx.schemeHostPort() + ctx.base()
-            + ("/feed?email=" + ctx.session.user.email + "&amp;pw=" + ctx.session.user.password + "&amp;");
-        return "<link rel=\"alternate\" type=\"application/atom+xml\" title=\"Atom 1.0\" href=\"" + feedUrl + "&feed=atom_1.0\">"
-            + "<link rel=\"alternate\" type=\"application/rdf+xml\" title=\"RSS 1.0\" href=\"" + feedUrl + "&feed=rss_1.0\">"
-            + "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS 2.0\" href=\"" + feedUrl + "&feed=rss_2.0\">";
-    }
-
-    /**
-     * RSS???
-     *
-     * @param ctx
-     * @return
-     *
-     * Maybe called by SurveyMain.doLocaleList
-     */
-    public String mainFeedIcon(WebContext ctx) {
-        if (ctx.session == null || ctx.session.user == null || !UserRegistry.userIsStreet(ctx.session.user)) {
-            return "";
-        }
-        String feedUrl = ctx.schemeHostPort() + ctx.base()
-            + ("/feed?email=" + ctx.session.user.email + "&amp;pw=" + ctx.session.user.password + "&amp;");
-
-        return "<a href='" + feedUrl + "&feed=rss_2.0" + "'>" + ctx.iconHtml("feed", "RSS 2.0") + "RSS 2.0</a>";
     }
 
     /**
@@ -1294,17 +881,6 @@ public class SurveyForum {
         if (!canModify) {
             throw new SurveyException(ErrorCode.E_NO_PERMISSION, "You do not have permission to access that locale");
         }
-    }
-
-    private static String getPallresult() {
-        String forumPosts = DBUtils.Table.FORUM_POSTS.toString();
-        return forumPosts + ".poster,"
-                + forumPosts + ".subj,"
-                + forumPosts + ".text,"
-                + forumPosts + ".last_time,"
-                + forumPosts + ".id,"
-                + forumPosts + ".forum,"
-                + forumPosts + ".loc ";
     }
 
     /**

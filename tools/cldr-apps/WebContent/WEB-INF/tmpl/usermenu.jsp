@@ -75,7 +75,7 @@ String helpName = ctx.getString("helpName");
                 }
                 if(ctx.getLocale()!=null) {
                                     String forum = ctx.getLocale().getLanguage();
-                                    %><%=SurveyForum.forumLink(subCtx,forum)%><%=SurveyForum.forumFeedIcon(subCtx, forum)%><%
+                                    %><%=SurveyForum.forumLink(subCtx,forum)%><%
                 }
     		} else {
     			ctx.print(" <smaller>Coverage: "+curSetting+"</smaller>");

@@ -1419,16 +1419,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         }
         ctx.println(title + "</title>");
         ctx.println("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\">");
-
-        // no RSS on the official site- for now
-        if (ctx.getLocale() != null) {
-            ctx.println(fora.forumFeedStuff(ctx));
-        } else {
-            if (!ctx.hasField("x") && !ctx.hasField("do") && !ctx.hasField("sql") && !ctx.hasField("dump")) {
-                ctx.println(fora.mainFeedStuff(ctx));
-            }
-        }
-
         ctx.put("TITLE", title);
         ctx.includeFragment("st_top.jsp");
         ctx.no_js_warning();
@@ -3666,7 +3656,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     void doLocaleList(WebContext ctx, WebContext baseContext) {
         boolean showCodes = ctx.prefBool(PREF_SHOWCODES);
 
-        ctx.println(fora.mainFeedIcon(ctx) + "<br>");
         ctx.println("<h1>Locales</h1>");
         {
             WebContext nuCtx = (WebContext) ctx.clone();
@@ -3679,11 +3668,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         }
 
         LocaleTree lm = getLocaleTree();
-        // if(lm == null) {
-        // busted("Can't load CLDR data files from " + fileBase);
-        // throw new RuntimeException("Can't load CLDR data files from " +
-        // fileBase);
-        // }
 
         ctx.println("<table summary='Locale List' border=1 class='list'>");
         int n = 0;
@@ -3708,12 +3692,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                         ctx.println(", ");
                     }
                     CLDRLocale subLocale = sm.get(sn);
-                    // if(subLocale.length()>0) {
                     printLocaleLink(baseContext, (subLocale), sn);
                     if (showCodes) {
                         ctx.println("&nbsp;-&nbsp;<tt>" + subLocale + "</tt>");
                     }
-                    // }
                     j++;
                 }
             } else {
@@ -3749,8 +3731,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             ctx.flush();
             ctx.redirectToVurl(ctx.context(VURL_LOCALES)); // may blink.
             return;
-            //doLocaleList(ctx, baseContext);
-            //ctx.println("<br/>");
         } else {
             showLocale(ctx, which, whyBad);
         }
