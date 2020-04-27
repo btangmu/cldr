@@ -307,7 +307,7 @@ public class SurveyForum {
             String status, final boolean couldFlagOnLosing, final UserRegistry.User user) throws SurveyException {
 
         ForumStatus forumStatus = ForumStatus.fromName(status, null);
-        if (forumStatus == null || !userCanPostWithStatus(user, forumStatus)) {
+        if (forumStatus == null || !userCanPostWithStatus(user, forumStatus, replyTo)) {
             return 0;
         }
         int postId = savePostToDb(user, subj, text, replyTo, locale, base_xpath, couldFlagOnLosing);
@@ -377,19 +377,71 @@ public class SurveyForum {
         return postId;
     }
 
-    private boolean userCanPostWithStatus(User user, ForumStatus forumStatus) {
+    /**
+     * Is the current user allowed to post with the given status in this context?
+     * This was already checked on the client, but don't trust the client too much.
+     * Check on server as well, at least to prevent someone closing a post who shouldn't be allowed to.
+     *
+     * @param user the current user
+     * @param forumStatus the ForumStatus
+     * @param replyTo the post id of the parent, or NO_PARENT
+     * @return true or false
+     *
+     * @throws SurveyException
+     */
+    private boolean userCanPostWithStatus(User user, ForumStatus forumStatus, int replyTo) throws SurveyException {
         if (forumStatus != ForumStatus.CLOSED) {
+            return true;
+        }
+        if (replyTo == NO_PARENT) {
+            return false; // first post can't begin as closed
+        }
+        if (getFirstPosterInThread(replyTo) == user.id) {
             return true;
         }
         if (UserRegistry.userIsTC(user)) {
             return true;
         }
-        /*
-         * TODO: if user started this thread, return true
-         * This was already checked on the client, but we should check on server too
-         */
-        return true;
-        // return false;
+        return false;
+    }
+
+    /**
+     * Get the user id of the first poster in the thread containing this post
+     *
+     * @param postId
+     * @return the user id, or UserRegistry.NO_USER
+     *
+     * @throws SurveyException
+     */
+    private int getFirstPosterInThread(int postId) throws SurveyException {
+        int posterId = UserRegistry.NO_USER;
+        Connection conn = null;
+        PreparedStatement pList = null;
+        try {
+            conn = sm.dbUtils.getDBConnection();
+            pList = DBUtils.prepareStatement(conn, "pList", "SELECT parent,poster FROM " + DBUtils.Table.FORUM_POSTS.toString()
+                + " WHERE id=?");
+            for (;;) {
+                pList.setInt(1, postId);
+                ResultSet rs = pList.executeQuery();
+                int parentId = NO_PARENT;
+                while (rs.next()) {
+                    parentId = rs.getInt(1);
+                    posterId = rs.getInt(2);
+                }
+                if (parentId == NO_PARENT) {
+                    break;
+                }
+                postId = parentId;
+            }
+         } catch (SQLException se) {
+            String complaint = "SurveyForum: Couldn't get parent for post - " + DBUtils.unchainSqlException(se);
+            SurveyLog.logException(se, complaint);
+            throw new SurveyException(ErrorCode.E_INTERNAL, complaint);
+        } finally {
+            DBUtils.close(pList, conn);
+        }
+        return posterId;
     }
 
     /**
