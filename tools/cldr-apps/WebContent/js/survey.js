@@ -1980,7 +1980,11 @@ function updateInfoPanelForumPosts(tr) {
 		}
 	}
 	if (!tr || !tr.forumDiv || !tr.forumDiv.url) {
-		console.log("updateInfoPanelForumPosts: !tr || !tr.forumDiv || !tr.forumDiv.url");
+		/*
+		 * This happens for updateInfoPanelForumPosts(null) called by success handler
+		 * for submitPost, from Dashboard
+		 */
+		// console.log("updateInfoPanelForumPosts: !tr || !tr.forumDiv || !tr.forumDiv.url");
 		return;
 	}
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";

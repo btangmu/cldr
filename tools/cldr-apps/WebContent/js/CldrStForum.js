@@ -67,7 +67,7 @@ const cldrStForum = (function() {
 				'</div>\n';
 
 			const isReply = (posts && posts.length > 0);
-			const isOriginalPoster = userIsOriginalPoster(post);
+			const isOriginalPoster = userIsOriginalPoster(posts[0]);
 			const userCanClose = canUserClose(isReply, isOriginalPoster);
 			content += postStatusMenu(isReply, userCanClose, isOriginalPoster);
 
@@ -556,7 +556,7 @@ const cldrStForum = (function() {
 				topicDivs[post.threadId].appendChild(postDivs[post.id]);
 			}
 		}
-		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter);
+		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter, opts.showThreadCount);
 	}
 
 	/**
@@ -579,9 +579,11 @@ const cldrStForum = (function() {
 	 *
 	 *   fullSet = true if this is a full set of posts
 	 *
-	 *   onReplyClose = a callback function, or null
-	 *
 	 *   applyFilter = true if the currently menu-selected filter should be applied
+	 *
+	 *   showThreadCount = true to display the number of threads
+	 *
+	 *   onReplyClose = a callback function, or null
 	 */
 	function getOptionsForContext(context) {
 		let opts = getDefaultParseOptions();
@@ -589,6 +591,7 @@ const cldrStForum = (function() {
 			opts.showItemLink = true;
 			opts.showReplyButton = true;
 			opts.applyFilter = true;
+			opts.showThreadCount = true;
 			opts.onReplyClose = function(postModal, form, formDidChange) {
 				if (formDidChange) {
 					console.log('cldrStForum.getOptionsForContext calling reloadV for onReplyClose');
@@ -623,6 +626,7 @@ const cldrStForum = (function() {
 		opts.showReplyButton = false;
 		opts.fullSet = true;
 		opts.applyFilter = false;
+		opts.showThreadCount = false;
 		opts.onReplyClose = null;
 		return opts;
 	}
@@ -720,16 +724,22 @@ const cldrStForum = (function() {
 	 * @param posts the array of post objects, from newest to oldest
 	 * @param topicDivs the array of thread elements, indexed by threadId
 	 * @param applyFilter true if the currently menu-selected filter should be applied
+	 * @param showThreadCount true to display the number of threads
 	 * @return the new document fragment
 	 */
-	function filterAndAssembleForumThreads(posts, topicDivs, applyFilter) {
+	function filterAndAssembleForumThreads(posts, topicDivs, applyFilter, showThreadCount) {
 
 		let filteredArray = cldrStForumFilter.getFilteredThreadIds(posts, applyFilter);
-
 		const forumDiv = document.createDocumentFragment();
-
+		let countEl = null;
+		if (showThreadCount) {
+			countEl = document.createElement('h4');
+			forumDiv.append(countEl);
+		}
+		let threadCount = 0;
 		posts.forEach(function(post) {
 			if (filteredArray.includes(post.threadId)) {
+				++threadCount;
 				/*
 				 * Append the div for this threadId, then remove this threadId
 				 * from filteredArray to prevent appending the same div again
@@ -739,6 +749,9 @@ const cldrStForum = (function() {
 				filteredArray = filteredArray.filter(id => (id !== post.threadId));
 			}
 		});
+		if (showThreadCount) {
+			countEl.innerHTML = threadCount + ' threads';
+		}
 		return forumDiv;
 	}
 
