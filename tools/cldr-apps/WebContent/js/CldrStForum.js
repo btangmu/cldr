@@ -11,7 +11,7 @@
  *
  * Dependencies on external code:
  * window.surveyCurrentLocale, window.surveySessionId, window.surveyUser, window.locmap,
- * createGravitar, stui.str, listenFor, bootstrap.js, reloadV, ...
+ * createGravitar, stui.str, listenFor, bootstrap.js, reloadV, contextPath, surveyCurrentSpecial, ...
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts, updateInfoPanelForumPosts, appendForumStuff;
  * also some/all code from forum.js
@@ -27,170 +27,80 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Did the form change? For callback, awkward onReplyClose + reloadV dependency.
-	 * showPost makes it false; submitPost can make it true
-	 */
-	let formDidChange = false;
-
-	/**
 	 * Mapping from post id to post object, describing the set of
 	 * posts in the most recently parsed json
 	 */
 	let postHash = {};
 
 	/**
-	 * If there are any existing posts concerning this xpath, open a Reply to an existing thread,
-	 * otherwise open a new thread of posts concerning this xpath.
-	 *
-	 * Called only from review.js, for Dashboard only -- doesn't work outside dashboard due to dependencies on .data-review, etc.
-	 *
-	 * NOTE: this function uses JQuery (not Dojo) for ajax ($.get)
-	 *
-	 * Bootstrap.js post-modal: https://getbootstrap.com/docs/4.1/components/modal/
-	 */
-	function openPostFromDashboard() {
-		var path = $(this).closest(".data-review").data('path');
-		var choice = $(this).closest(".table-wrapper").data('type');
-		var postModal = $('#post-modal');
-		var locale = surveyCurrentLocale;
-		var url = contextPath + "/SurveyAjax?what=forum_fetch&s=" + surveySessionId + "&xpath=" +
-			$(this).closest('tr').data('path') + "&voteinfo&_=" + locale;
-
-		showPost(postModal, null);
-
-		$.get(url, function(data) {
-			var posts = data.ret; // posts array, could be empty
-			var content = '';
-			content += '<form role="form" id="post-form">';
-			content += '<div class="form-group">' +
-				'<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>' +
-				'</div>\n';
-
-			const isReply = (posts && posts.length > 0);
-			const isOriginalPoster = userIsOriginalPoster(posts[0]);
-			const userCanClose = canUserClose(isReply, isOriginalPoster);
-			content += postStatusMenu(isReply, userCanClose, isOriginalPoster);
-
-			/*
-			 * This Submit button differs from the one in openPostOrReply() by having data-path and data-choice
-			 */
-			content += '<button data-path="' + path +
-				'" data-choice="' + choice + '" class="btn btn-success submit-post btn-block">Submit</button>';
-
-			content += '<input type="hidden" name="forum" value="true">';
-			content += '<input type="hidden" name="_" value="' + surveyCurrentLocale + '">';
-			content += '<input type="hidden" name="replyTo" value="-1">';
-			content += '<input type="hidden" name="data-path" value="' + path + '">';
-			content += '<input type="hidden" name="xpath" value="#' + path + '">'; // numeric
-			content += '<label class="post-subj"><input name="subj" type="hidden" value="Review"></label>';
-			content += '<input name="post" type="hidden" value="Post">';
-			content += '<input name="isReview" type="hidden" value="1">';
-			content += '</form>';
-
-			content += '<div class="post"></div>';
-			content += '<div class="forumDiv"></div>';
-
-			postModal.find('.modal-body').html(content);
-
-			if (posts) {
-				const forumDiv = parseContent(posts, 'new');
-				const postHolder = postModal.find('.modal-body').find('.forumDiv');
-				postHolder[0].appendChild(forumDiv);
-			}
-
-			postModal.find('textarea').autosize();
-			postModal.find('.submit-post').click(submitPost);
-			setTimeout(function() {
-				postModal.find('textarea').focus();
-			}, 1000 /* one second */ );
-		}, 'json');
-	}
-
-	/**
 	 * Make a new forum post or a reply.
 	 *
-	 * This function (formerly named openReply) is used for the non-Dashboard "New Forum Post" button,
-	 * which is not a reply. It is also used for Reply.
-	 *
-	 * Called from forum.js (new) and survey.js (reply)
-	 *
-	 * @param params the object containing various parameters: onReplyClose, locale, xpath, replyTo, replyData, ...
+	 * @param params the object containing various parameters: locale, xpath, replyTo, replyData, ...
 	 */
 	function openPostOrReply(params) {
-		const postModal = $('#post-modal');
-		showPost(postModal, params.onReplyClose);
-
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
 		const isOriginalPoster = userIsOriginalPoster(parentPost);
 		const userCanClose = canUserClose(isReply, isOriginalPoster);
-
+		const locale = params.locale ? params.locale : '';
 		const xpath = params.xpath ? params.xpath : '';
+		const subjectParam = params.subject ? params.subject : '';
+		const html = makePostHtml(isReply, userCanClose, isOriginalPoster, locale, xpath, replyTo);
+		const subject = makePostSubject(isReply, parentPost, subjectParam);
 
-		let content = '';
-
-		content += '<form role="form" id="post-form">';
-		content += '<div class="form-group">';
-		content += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
-		content += '<input class="form-control" name="subj" type="text" value=""></div>';
-		content += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
-		content += postStatusMenu(isReply, userCanClose, isOriginalPoster);
-		content += '<button class="btn btn-success submit-post btn-block">Submit</button>';
-		content += '<input type="hidden" name="forum" value="true">';
-		content += '<input type="hidden" name="_" value="' + params.locale + '">';
-		content += '<input type="hidden" name="xpath" value="' + xpath + '">';
-		content += '<input type="hidden" name="replyTo" value="' + replyTo + '">';
-		content += '</form>';
-
-		content += '<div class="post"></div>';
-		content += '<div class="forumDiv"></div>';
-
-		postModal.find('.modal-body').html(content);
-
-		let subject = '';
-		if (isReply && parentPost) {
-			subject = post2text(parentPost.subject);
-			if (subject.substring(0, 3) != 'Re:') {
-				subject = 'Re: ' + subject;
-			}
-		} else if (params.subject) {
-			subject = params.subject;
-		}
-		postModal.find('input[name=subj]')[0].value = subject;
-
-		if (parentPost) {
-			const forumDiv = parseContent([parentPost], 'new');
-			const postHolder = postModal.find('.modal-body').find('.forumDiv');
-			postHolder[0].appendChild(forumDiv);
-		}
-
-		postModal.find('textarea').autosize();
-		postModal.find('.submit-post').click(submitPost);
-		setTimeout(function() {
-			postModal.find('textarea').focus();
-		}, 1000 /* one second */);
+		openPostWindow(subject, html, parentPost);
 	}
 
 	/**
-	 * Show a modal window displaying a forum post
+	 * Assemble the form and related html elements for creating a forum post
 	 *
-	 * @param postModal the bootstrap.js $('#post-modal') element
-	 * @param onClose the callback function
-	 *
-	 * Called only by openPostFromDashboard and openPostOrReply, in this file
+	 * @param isReply is this a reply? True or false
+	 * @param userCanClose true if this user is allowed to close, else false
+	 * @param isOriginalPoster true if the current user is the original poster in the thread
+	 * @param locale the locale string
+	 * @param xpath the xpath string
+	 * @param replyTo the post id of the post being replied to, or -1
 	 */
-	function showPost(postModal, onClose) {
-		formDidChange = false;
-		// fire when the post window closes. Can reload posts, etc.
-		postModal.on('hidden.bs.modal', function(e) {
-			if (onClose) {
-				let form = $('#post-form');
-				let modal = $('#post-modal');
-				onClose(modal, form, formDidChange);
+	function makePostHtml(isReply, userCanClose, isOriginalPoster, locale, xpath, replyTo) {
+		let html = '';
+
+		html += '<form role="form" id="post-form">';
+		html += '<div class="form-group">';
+		html += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
+		html += '<input class="form-control" name="subj" type="text" value=""></div>';
+		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
+		html += postStatusMenu(isReply, userCanClose, isOriginalPoster);
+		html += '<button class="btn btn-success submit-post btn-block">Submit</button>';
+		html += '<input type="hidden" name="forum" value="true">';
+		html += '<input type="hidden" name="_" value="' + locale + '">';
+		html += '<input type="hidden" name="xpath" value="' + xpath + '">';
+		html += '<input type="hidden" name="replyTo" value="' + replyTo + '">';
+		html += '</form>';
+
+		html += '<div class="post"></div>';
+		html += '<div class="forumDiv"></div>';
+
+		return html;
+	}
+
+	/**
+	 * Make the subject string for a forum post
+	 *
+	 * @param isReply is this a reply? True or false
+	 * @param parentPost the post object for the post being replied to, or null
+	 * @param subjectParam the subject for this post supplied in parameters
+	 * @return the string
+	 */
+	function makePostSubject(isReply, parentPost, subjectParam) {
+		if (isReply && parentPost) {
+			let subject = post2text(parentPost.subject);
+			if (subject.substring(0, 3) != 'Re:') {
+				subject = 'Re: ' + subject;
 			}
-		});
-		postModal.modal();
+			return subject;
+		}
+		return subjectParam;
 	}
 
 	/**
@@ -200,8 +110,6 @@ const cldrStForum = (function() {
 	 * @param userCanClose true if this user is allowed to close, else false
 	 * @param isOriginalPoster true if the current user is the original poster in the thread
 	 * @return the html
-	 *
-	 * Called only by openPostFromDashboard and openPostOrReply, in this file
 	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
@@ -271,16 +179,39 @@ const cldrStForum = (function() {
 	}
 
 	/**
+	 * Open a window displaying the form for creating a post
+	 *
+	 * @param subject the subject string
+	 * @param html the main html for the form
+	 * @param parentPost the post object, if any, to which this is a reply, for display at the bottom of the window 
+	 *
+	 * Reference: Bootstrap.js post-modal: https://getbootstrap.com/docs/4.1/components/modal/
+	 */
+	function openPostWindow(subject, html, parentPost) {
+		const postModal = $('#post-modal');
+		postModal.find('.modal-body').html(html);
+		postModal.find('input[name=subj]')[0].value = subject;
+
+		if (parentPost) {
+			const forumDiv = parseContent([parentPost], 'new');
+			const postHolder = postModal.find('.modal-body').find('.forumDiv');
+			postHolder[0].appendChild(forumDiv);
+		}
+		postModal.modal();
+		postModal.find('textarea').autosize();
+		postModal.find('.submit-post').click(submitPost);
+		setTimeout(function() {
+			postModal.find('textarea').focus();
+		}, 1000 /* one second */);
+	}
+
+	/**
 	 * Submit a forum post
 	 *
 	 * @param event
-	 *
-	 * Called by openPostFromDashboard and openPostOrReply, in this file
-	 *
-	 * NOTE: this function uses JQuery (not Dojo) for ajax
 	 */
 	function submitPost(event) {
-		let forumStatus = document.getElementById('forum-status-menu').value;
+		const forumStatus = document.getElementById('forum-status-menu').value;
 		if (!forumStatus) {
 			/*
 			 * Normally this won't happen, since the menu has the attribute "required".
@@ -289,63 +220,68 @@ const cldrStForum = (function() {
 			 */
 			return;
 		}
-		var locale = surveyCurrentLocale;
-		var url = contextPath + "/SurveyAjax";
-		var form = $('#post-form');
-		formDidChange = true;
-		if ($('#post-form textarea[name=text]').val()) {
-			$('#post-form button').fadeOut();
-			$('#post-form .input-group').fadeOut(); // subject line
-			$('#forum-status-area').fadeOut();
-			var xpath = $('#post-form input[name=xpath]').val();
-			var ajaxParams = {
-				data: {
-					s: surveySessionId,
-					"_": surveyCurrentLocale,
-					replyTo: $('#post-form input[name=replyTo]').val(),
-					xpath: xpath,
-					text: $('#post-form textarea[name=text]').val(),
-					subj: $('#post-form input[name=subj]').val(), // "Review"
-					forumStatus: forumStatus,
-					what: "forum_post"
-				},
-				type: "POST",
-				url: url,
-				contentType: "application/x-www-form-urlencoded;",
-				dataType: 'json',
-				success: function(data) {
-					let post = $('.post').first();
-					if (data.err) {
-						post.before("<p class='warn'>error: " + data.err + "</p>");
-					} else if (data.ret && data.ret.length > 0) {
-						const postModal = $('#post-modal');
-						const postHolder = postModal.find('.modal-body').find('.post');
-						const firstPostHolder = postHolder[0];
-						const posts = data.ret;
-						const forumDiv = parseContent(posts, 'new');
-						firstPostHolder.insertBefore(forumDiv, firstPostHolder.firstChild);
-						// reset
-						post = $('.post').first();
-						post.hide();
-						post.show('highlight', {
-							color: "#d9edf7"
-						});
-						$('#post-form textarea').val('');
-						$('#post-form textarea').fadeOut();
-						updateInfoPanelForumPosts(null);
-					} else {
-						post.before("<i>Your post was added, #" + data.postId + " but could not be shown.</i>");
-					}
-				},
-				error: function(err) {
-					var post = $('.post').first();
-					post.before("<p class='warn'>error! " + err + "</p>");
-				}
-			};
-			$.ajax(ajaxParams);
+		const text = $('#post-form textarea[name=text]').val();
+		if (text) {
+			reallySubmitPost(text, forumStatus);
 		}
 		event.preventDefault();
 		event.stopPropagation();
+	}
+
+	/**
+	 * Submit a forum post
+	 *
+	 * @param text the non-empty body of the message
+	 * @param forumStatus the status string
+	 *
+	 * NOTE: this function uses JQuery (not Dojo) for ajax
+	 */
+	function reallySubmitPost(text, forumStatus) {
+		$('#post-form button').fadeOut();
+		$('#post-form .input-group').fadeOut(); // subject line
+		$('#forum-status-area').fadeOut();
+		const xpath = $('#post-form input[name=xpath]').val();
+		const url = contextPath + "/SurveyAjax";
+		const replyTo = $('#post-form input[name=replyTo]').val();
+		const subj = $('#post-form input[name=subj]').val();
+		const ajaxParams = {
+			data: {
+				s: surveySessionId,
+				"_": surveyCurrentLocale,
+				replyTo: replyTo,
+				xpath: xpath,
+				text: text,
+				subj: subj,
+				forumStatus: forumStatus,
+				what: "forum_post"
+			},
+			type: "POST",
+			url: url,
+			contentType: "application/x-www-form-urlencoded;",
+			dataType: 'json',
+			success: function(data) {
+				if (data.err) {
+					const post = $('.post').first();
+					post.before("<p class='warn'>error: " + data.err + "</p>");
+				} else if (data.ret && data.ret.length > 0) {
+					const postModal = $('#post-modal');
+					postModal.modal('hide');
+					if (surveyCurrentSpecial && surveyCurrentSpecial === 'forum') {
+						reloadV();
+					} else {
+						updateInfoPanelForumPosts(null);
+					}
+				} else {
+					const post = $('.post').first();
+					post.before("<i>Your post was added, #" + data.postId + " but could not be shown.</i>");
+				}
+			},
+			error: function(err) {
+				const post = $('.post').first();
+				post.before("<p class='warn'>error! " + err + "</p>");
+			}
+		};
+		$.ajax(ajaxParams);
 	}
 
 	/**
@@ -521,8 +457,7 @@ const cldrStForum = (function() {
 							locale: surveyCurrentLocale,
 							//xpath: '',
 							replyTo: post.id,
-							replyData: post,
-							onReplyClose: opts.onReplyClose
+							replyData: post
 						});
 						stStopPropagation(e);
 						return false;
@@ -582,8 +517,6 @@ const cldrStForum = (function() {
 	 *   applyFilter = true if the currently menu-selected filter should be applied
 	 *
 	 *   showThreadCount = true to display the number of threads
-	 *
-	 *   onReplyClose = a callback function, or null
 	 */
 	function getOptionsForContext(context) {
 		let opts = getDefaultParseOptions();
@@ -592,15 +525,6 @@ const cldrStForum = (function() {
 			opts.showReplyButton = true;
 			opts.applyFilter = true;
 			opts.showThreadCount = true;
-			opts.onReplyClose = function(postModal, form, formDidChange) {
-				if (formDidChange) {
-					console.log('cldrStForum.getOptionsForContext calling reloadV for onReplyClose');
-					/*
-					 * TODO: encapsulate dependency on reloadV, or avoid this callback business entirely
-					 */
-					reloadV();
-				}
-			};
 		} else if (context === 'info') {
 			opts.showReplyButton = true;
 		} else if (context === 'new') {
@@ -627,7 +551,6 @@ const cldrStForum = (function() {
 		opts.fullSet = true;
 		opts.applyFilter = false;
 		opts.showThreadCount = false;
-		opts.onReplyClose = null;
 		return opts;
 	}
 
@@ -790,7 +713,6 @@ const cldrStForum = (function() {
 	 * Make only these functions accessible from other files:
 	 */
 	return {
-		openPostFromDashboard: openPostFromDashboard,
 		openPostOrReply: openPostOrReply,
 		parseContent: parseContent,
 	};

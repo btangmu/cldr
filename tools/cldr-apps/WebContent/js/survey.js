@@ -1882,33 +1882,32 @@ function showForumStuff(frag, forumDivClone, tr) {
 		}
 	}
 	var newButton = createChunk(stui.str(buttonTitle), "button", buttonClass);
-	if (!isDashboard()) {
-		frag.appendChild(newButton);
+	frag.appendChild(newButton);
 
-		(function(theRow, couldFlag) {
-			listenFor(newButton, "click", function(e) {
-				xpathMap.get({
-						hex: theRow.xpstrid
-					},
-					function(o) {
-						var subj = theRow.code + ' ' + theRow.xpstrid;
-						if (o.result && o.result.ph) {
-							subj = xpathMap.formatPathHeader(o.result.ph);
-						}
-						if (couldFlag) {
-							subj = subj + " (Flag for review)";
-						}
-						cldrStForum.openPostOrReply({
-							locale: surveyCurrentLocale,
-							xpath: theRow.xpstrid,
-							subject: subj,
-						});
+	(function(theRow, couldFlag) {
+		listenFor(newButton, "click", function(e) {
+			xpathMap.get({
+					hex: theRow.xpstrid
+				},
+				function(o) {
+					var subj = theRow.code + ' ' + theRow.xpstrid;
+					if (o.result && o.result.ph) {
+						subj = xpathMap.formatPathHeader(o.result.ph);
+					}
+					if (couldFlag) {
+						subj = subj + " (Flag for review)";
+					}
+					cldrStForum.openPostOrReply({
+						locale: surveyCurrentLocale,
+						xpath: theRow.xpstrid,
+						subject: subj,
 					});
-				stStopPropagation(e);
-				return false;
-			});
-		})(tr.theRow, couldFlag);
-	}
+				});
+			stStopPropagation(e);
+			return false;
+		});
+	})(tr.theRow, couldFlag);
+
 	var loader2 = createChunk(stui.str("loading"), "i");
 	frag.appendChild(loader2);
 

@@ -80,41 +80,14 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				showInPop2(stui.str(params.name+"Guidance"), null, null, null, true); /* show the box the first time */					
 				
 				var ourDiv = document.createElement("div");
-				
-				var postButton = createChunk(stui.str("forumNewPostButton"), "button", "btn btn-default btn-sm");
-				postButton.appendChild(createChunk("","span",""));
-				listenFor(postButton, "click", function(e) {
-					cldrStForum.openPostOrReply({
-						locale: surveyCurrentLocale,
-						onReplyClose: function(postModal, form, formDidChange) {
-							if (formDidChange) {
-								console.log('forum.js calling reloadV for forumNewPostButton.');
-								reloadV();
-							}
-						},
-						//xpath: '',
-						//replyTo: post.id,
-						//replyData: post
-					});
-					stStopPropagation(e);
-					return false;
-				});
+
 				ourDiv.appendChild(createChunk(stui.sub("forum_msg", {
 						forum: locmap.getLocaleName(locmap.getLanguage(surveyCurrentLocale)),
 						locale: surveyCurrentLocaleName}),
 					"h4", ""));
 
-				/*
-				 * Arrange the menu and the button side by side, with some space in between.
-				 */
-				let filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
-				let controlSpan = document.createElement('span');
-				let spacerSpan = document.createElement('span');
-				spacerSpan.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;";
-				controlSpan.appendChild(filterMenu);
-				controlSpan.appendChild(spacerSpan);
-				controlSpan.appendChild(postButton);
-				ourDiv.appendChild(controlSpan);
+				const filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
+				ourDiv.appendChild(filterMenu);
 
 				ourDiv.appendChild(document.createElement('hr'));
 				const posts = json.ret;
