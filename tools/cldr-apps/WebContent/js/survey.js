@@ -1980,10 +1980,9 @@ function updateInfoPanelForumPosts(tr) {
 	}
 	if (!tr || !tr.forumDiv || !tr.forumDiv.url) {
 		/*
-		 * This happens for updateInfoPanelForumPosts(null) called by success handler
-		 * for submitPost, from Dashboard
+		 * This is normal for updateInfoPanelForumPosts(null) called by success handler
+		 * for submitPost, from Dashboard, since Fix window is no longer open
 		 */
-		// console.log("updateInfoPanelForumPosts: !tr || !tr.forumDiv || !tr.forumDiv.url");
 		return;
 	}
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";

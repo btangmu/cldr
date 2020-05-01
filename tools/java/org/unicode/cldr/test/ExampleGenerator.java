@@ -306,6 +306,10 @@ public class ExampleGenerator {
             if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
                 value = cldrFile.getConstructedBaileyValue(xpath, null, null);
                 if (value == null) {
+                    /*
+                     * This can happen for some paths, such as
+                     * //ldml/dates/timeZoneNames/metazone[@type="Mawson"]/short/daylight
+                     */
                     return null;
                 }
             }
