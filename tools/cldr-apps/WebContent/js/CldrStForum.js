@@ -32,6 +32,8 @@ const cldrStForum = (function() {
 	 */
 	let postHash = {};
 
+	let postUpdateTime = null;
+
 	/**
 	 * Make a new forum post or a reply.
 	 *
@@ -563,6 +565,7 @@ const cldrStForum = (function() {
 		for (let num in posts) {
 			postHash[posts[num].id] = posts[num];
 		}
+		postUpdateTime = Date.now();
 	}
 
 	/**
@@ -709,11 +712,36 @@ const cldrStForum = (function() {
 			' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 	}
 
+	function getForumSummaryHtml() {
+		let html = '';
+		if (!postUpdateTime) {
+			html += "<p>Forum info has not been retrieved yet.</p>";
+		} else {
+			html += "<p>Retrieved " + fmtDateTime(postUpdateTime) + "</p>";
+			if (cldrStForumFilter) {
+				const c = cldrStForumFilter.getFilteredThreadCounts();
+				Object.keys(c).forEach(function(k) {
+					html += "<p>" + k + ": " + c[k] + "</p>";
+				});
+			}
+		}
+		return html;
+	}
+
+	function reload() {
+		window.surveyCurrentSpecial = 'forum';
+		surveyCurrentId = '';
+		surveyCurrentPage = '';
+		reloadV();
+	}
+
 	/*
 	 * Make only these functions accessible from other files:
 	 */
 	return {
 		openPostOrReply: openPostOrReply,
 		parseContent: parseContent,
+		getForumSummaryHtml: getForumSummaryHtml,
+		reload: reload,
 	};
 })();

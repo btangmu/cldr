@@ -87,8 +87,10 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 					"h4", ""));
 
 				const filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
+				const summaryDiv = document.createElement("div");
+				summaryDiv.innerHTML = cldrStForum.getForumSummaryHtml();
+				ourDiv.appendChild(summaryDiv);
 				ourDiv.appendChild(filterMenu);
-
 				ourDiv.appendChild(document.createElement('hr'));
 				const posts = json.ret;
 				if (posts.length == 0) {

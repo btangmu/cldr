@@ -15,28 +15,33 @@ const cldrStForumFilter = (function() {
 	 * An array of filter objects, each having a name and a boolean function
 	 */
 	const filters = [
-		{name: 'All threads', func: passAll},
-		{name: 'Open threads', func: passIfOpen},
-		{name: 'Closed threads', func: passIfClosed},
-		{name: 'Threads you have posted to', func: passIfYouPosted},
-		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost},
-		{name: 'Open threads you have not posted to', func: passIfOpenAndYouDidNotPost},
+		{name: 'All threads', func: passAll, keepCount: false},
+		{name: 'Open threads', func: passIfOpen, keepCount: true},
+
+		{name: 'Your open threads', func: passIfOpenAndYouStarted, keepCount: true},
+		{name: 'Open threads you have not posted to', func: passIfOpenAndYouDidNotPost, keepCount: true},
+
+		{name: 'Closed threads', func: passIfClosed, keepCount: false},
+		{name: 'Threads you have posted to', func: passIfYouPosted, keepCount: false},
+		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost, keepCount: false},
 	];
 
 	/**
 	 * The index of the current filter in the "filters" array
 	 */
-	var filterIndex = 0;
+	let filterIndex = 0;
 	
 	/**
 	 * The id of the current user
 	 */
-	var filterUserId = 0;
+	let filterUserId = 0;
 
 	/**
 	 * A function to call whenever a different filter is selected
 	 */
-	var filterReload = null;
+	let filterReload = null;
+
+	let filterCounts = {};
 
 	/**
 	 * Get a popup menu from which the user can choose a filter, and set the
@@ -90,7 +95,37 @@ const cldrStForumFilter = (function() {
 				filteredArray.push(threadId);
 			}
 		});
+		if (applyFilter) {
+			updateCounts(threadsToPosts, filteredArray.length);
+		}
 		return filteredArray;
+	}
+
+	function updateCounts(threadsToPosts, countCurrentFilter) {
+		clearCounts();
+		if (filters[filterIndex].keepCount) {
+			const name = filters[filterIndex].name;
+			filterCounts[name] = countCurrentFilter;
+		}
+		Object.keys(threadsToPosts).forEach(function(threadId) {
+			for (let i = 0; i < filters.length; i++) {
+				if (filters[i].keepCount && i !== countCurrentFilter) {
+					if (threadPassesI(threadsToPosts[threadId], i)) {
+						const name = filters[i].name;
+						filterCounts[name]++;
+					}
+				}
+			}
+		});
+	}
+
+	function clearCounts() {
+		for (let i = 0; i < filters.length; i++) {
+			if (filters[i].keepCount) {
+				const name = filters[i].name;
+				filterCounts[name] = 0;
+			}
+		}
 	}
 
 	/**
@@ -120,6 +155,19 @@ const cldrStForumFilter = (function() {
 	function threadPasses(threadPosts) {
 		return filters[filterIndex].func(threadPosts);
 	}
+
+	/**
+	 * Does the thread with the given array of posts pass the filter with the given index?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @param i the index
+	 * @return true or false
+	 */
+	function threadPassesI(threadPosts, i) {
+		return filters[i].func(threadPosts);
+	}
+
+	/**************************/
 
 	/**
 	 * Pass all threads
@@ -184,11 +232,55 @@ const cldrStForumFilter = (function() {
 		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
 	}
 
+	/**
+	 * Is the thread with the given array of posts open and does it include no posts by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfOpenAndYouDidNotPost(threadPosts) {
+		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
+	}
+
+	/**
+	 * Is the thread with the given array of posts open and was it started by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfOpenAndYouStarted(threadPosts) {
+		return passIfOpen(threadPosts) && passIfYouStarted(threadPosts);
+	}
+
+	/**
+	 * Was the thread with the given array of posts started by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfYouStarted(threadPosts) {
+		/*
+		 * The first (original) post in the thread is the last one in the array
+		 */
+		if (threadPosts.length < 1) {
+			return false;
+		}
+		const post = threadPosts[threadPosts.length - 1];
+		return post.poster === filterUserId;
+	}
+
+	/**************************/
+
+	function getFilteredThreadCounts() {
+		return filterCounts;
+	}
+
 	/*
 	 * Make only these functions accessible from other files
 	 */
 	return {
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
+		getFilteredThreadCounts: getFilteredThreadCounts,
 	};
 })();
