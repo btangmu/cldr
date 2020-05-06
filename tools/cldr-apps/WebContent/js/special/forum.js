@@ -3,14 +3,14 @@
  *
  * TODO: migrate to modern strict JavaScript module
  */
-define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "dojo/window"], 
+define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "dojo/window"],
 		function(SpecialPage, request, win) {
 	var _super;
-	
+
 	function Page() {
 		// constructor
 	}
-	
+
 	// set up the inheritance before defining other functions
 	_super = Page.prototype = new SpecialPage();
 
@@ -37,7 +37,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 			}
 		}
 	};
-	
+
 	Page.prototype.handleIdChanged = function handleIdChanged(strid) {
 		if(strid && strid != '') {
 			var id = new Number(strid);
@@ -77,8 +77,8 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 		        	return;
 				}
 				// set up the 'right sidebar'
-				showInPop2(stui.str(params.name+"Guidance"), null, null, null, true); /* show the box the first time */					
-				
+				showInPop2(stui.str(params.name+"Guidance"), null, null, null, true); /* show the box the first time */
+
 				var ourDiv = document.createElement("div");
 
 				ourDiv.appendChild(createChunk(stui.sub("forum_msg", {
@@ -87,8 +87,10 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 					"h4", ""));
 
 				const filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
+				const summaryDiv = document.createElement("div");
+				summaryDiv.innerHTML = cldrStForum.getForumSummaryHtml();
+				ourDiv.appendChild(summaryDiv);
 				ourDiv.appendChild(filterMenu);
-
 				ourDiv.appendChild(document.createElement('hr'));
 				const posts = json.ret;
 				if (posts.length == 0) {
@@ -97,7 +99,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 					const content = cldrStForum.parseContent(posts, 'main');
 					ourDiv.appendChild(content);
 				}
-				
+
 				// No longer loading
 				hideLoader(null);
 				params.flipper.flipTo(params.pages.other, ourDiv);
