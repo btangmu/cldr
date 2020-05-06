@@ -88,7 +88,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 
 				const filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
 				const summaryDiv = document.createElement("div");
-				summaryDiv.innerHTML = cldrStForum.getForumSummaryHtml();
+				summaryDiv.innerHTML = '';
 				ourDiv.appendChild(summaryDiv);
 				ourDiv.appendChild(filterMenu);
 				ourDiv.appendChild(document.createElement('hr'));
@@ -98,6 +98,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				} else {
 					const content = cldrStForum.parseContent(posts, 'main');
 					ourDiv.appendChild(content);
+					summaryDiv.innerHTML = cldrStForum.getForumSummaryHtml(); // after parseContent
 				}
 
 				// No longer loading

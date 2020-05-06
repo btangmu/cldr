@@ -43,12 +43,11 @@ const cldrStForum = (function() {
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
-		const isOriginalPoster = userIsOriginalPoster(parentPost);
-		const userCanClose = canUserClose(isReply, isOriginalPoster);
+		const firstPost = parentPost ? getFirstPostInThread(parentPost) : null;
 		const locale = params.locale ? params.locale : '';
 		const xpath = params.xpath ? params.xpath : '';
 		const subjectParam = params.subject ? params.subject : '';
-		const html = makePostHtml(isReply, userCanClose, isOriginalPoster, locale, xpath, replyTo);
+		const html = makePostHtml(isReply, firstPost, locale, xpath, replyTo);
 		const subject = makePostSubject(isReply, parentPost, subjectParam);
 
 		openPostWindow(subject, html, parentPost);
@@ -58,13 +57,12 @@ const cldrStForum = (function() {
 	 * Assemble the form and related html elements for creating a forum post
 	 *
 	 * @param isReply is this a reply? True or false
-	 * @param userCanClose true if this user is allowed to close, else false
-	 * @param isOriginalPoster true if the current user is the original poster in the thread
+	 * @param firstPost the original post in the thread
 	 * @param locale the locale string
 	 * @param xpath the xpath string
 	 * @param replyTo the post id of the post being replied to, or -1
 	 */
-	function makePostHtml(isReply, userCanClose, isOriginalPoster, locale, xpath, replyTo) {
+	function makePostHtml(isReply, firstPost, locale, xpath, replyTo) {
 		let html = '';
 
 		html += '<form role="form" id="post-form">';
@@ -72,7 +70,7 @@ const cldrStForum = (function() {
 		html += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
 		html += '<input class="form-control" name="subj" type="text" value=""></div>';
 		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
-		html += postStatusMenu(isReply, userCanClose, isOriginalPoster);
+		html += postStatusMenu(isReply, firstPost);
 		html += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		html += '<input type="hidden" name="forum" value="true">';
 		html += '<input type="hidden" name="_" value="' + locale + '">';
@@ -109,13 +107,12 @@ const cldrStForum = (function() {
 	 * Get the html content for the Status menu
 	 *
 	 * @param isReply true if this post is a reply, else false
-	 * @param userCanClose true if this user is allowed to close, else false
-	 * @param isOriginalPoster true if the current user is the original poster in the thread
+	 * @param firstPost the original post in the thread
 	 * @return the html
 	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
-	function postStatusMenu(isReply, userCanClose, isOriginalPoster) {
+	function postStatusMenu(isReply, firstPost) {
 		let content = '<p id="forum-status-area">Status: ';
 
 		content += '<select id="forum-status-menu" required>\n';
@@ -125,33 +122,18 @@ const cldrStForum = (function() {
 			content += '<option value="Request">Request a change</option>\n';
 		}
 		content += '<option value="Question">Ask a question</option>\n';
-		if (isReply && !isOriginalPoster) {
+		if (isReply) {
+			content += '<option value="Information">Information</option>\n';
+		}
+		if (isReply && firstPost && !userIsPoster(firstPost) && firstPost.status === 'Request') {
 			content += '<option value="Agreed">Agree</option>\n';
 			content += '<option value="Disputed">Disagree</option>\n';
 		}
-		if (userCanClose) {
+		if (canUserClose(isReply, firstPost)) {
 			content += '<option value="Closed">Close</option>\n';
 		}
 		content += '</select></p>\n';
 		return content;
-	}
-
-	/**
-	 * Is the current user the original poster in the thread containing this post?
-	 *
-	 * @param post either this post or its parent, for getFirstPostInThread
-	 * @returns true or false
-	 */
-	function userIsOriginalPoster(post) {
-		if (!post) {
-			return false;
-		}
-		if (typeof surveyUser !== 'undefined') {
-			if (surveyUser === getFirstPostInThread(post).poster) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
@@ -161,11 +143,26 @@ const cldrStForum = (function() {
 	 * or a TC (technical committee) member.
 	 *
 	 * @param isReply true if this post is a reply, else false
-	 * @param isOriginalPoster true if the current user is the original poster in the thread
+	 * @param firstPost the original post in the thread, or null
 	 * @return true if this user is allowed to close, else false
 	 */
-	function canUserClose(isReply, isOriginalPoster) {
-		return isReply && (isOriginalPoster || userIsTC());
+	function canUserClose(isReply, firstPost) {
+		return isReply && (userIsPoster(firstPost) || userIsTC());
+	}
+
+	/**
+	 * Is the current user the poster of this post?
+	 *
+	 * @param post the post, or null
+	 * @returns true or false
+	 */
+	function userIsPoster(post) {
+		if (post && typeof surveyUser !== 'undefined') {
+			if (surveyUser === post.poster) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -676,7 +673,7 @@ const cldrStForum = (function() {
 			}
 		});
 		if (showThreadCount) {
-			countEl.innerHTML = threadCount + ' threads';
+			countEl.innerHTML = threadCount + ((threadCount === 1) ? ' thread' : ' threads');
 		}
 		return forumDiv;
 	}
@@ -712,6 +709,11 @@ const cldrStForum = (function() {
 			' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
 	}
 
+	/**
+	 * Get a piece of html text summarizing the current Forum statistics
+	 *
+	 * @return the html
+	 */
 	function getForumSummaryHtml() {
 		let html = '';
 		if (!postUpdateTime) {
@@ -719,19 +721,24 @@ const cldrStForum = (function() {
 		} else {
 			html += "<p>Retrieved " + fmtDateTime(postUpdateTime) + "</p>";
 			if (cldrStForumFilter) {
+				html += "<ul>";
 				const c = cldrStForumFilter.getFilteredThreadCounts();
 				Object.keys(c).forEach(function(k) {
-					html += "<p>" + k + ": " + c[k] + "</p>";
+					html += "<li>" + k + ": " + c[k] + "</li>";
 				});
+				html += "</ul>";
 			}
 		}
 		return html;
 	}
 
+	/**
+	 * Load or reload the main Forum page
+	 */
 	function reload() {
 		window.surveyCurrentSpecial = 'forum';
-		surveyCurrentId = '';
-		surveyCurrentPage = '';
+		window.surveyCurrentId = '';
+		window.surveyCurrentPage = '';
 		reloadV();
 	}
 

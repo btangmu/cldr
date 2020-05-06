@@ -1006,7 +1006,8 @@ public class SurveyForum {
         QUESTION(1, "Question"),
         REQUEST(2, "Request"),
         DISPUTED(2, "Disputed"),
-        AGREED(3, "Agreed");
+        AGREED(3, "Agreed"),
+        INFORMATION(4, "Information");
 
         ForumStatus(int id, String name) {
             this.id = id;
