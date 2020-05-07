@@ -44,8 +44,8 @@ const cldrStForum = (function() {
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
 		const firstPost = parentPost ? getFirstPostInThread(parentPost) : null;
-		const locale = params.locale ? params.locale : '';
-		const xpath = params.xpath ? params.xpath : '';
+		const locale = isReply ? firstPost.locale : (params.locale ? params.locale : '');
+		const xpath = isReply ? firstPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
 		const html = makePostHtml(isReply, firstPost, locale, xpath, replyTo);
 		const subject = makePostSubject(isReply, parentPost, subjectParam);
@@ -240,13 +240,14 @@ const cldrStForum = (function() {
 		$('#post-form .input-group').fadeOut(); // subject line
 		$('#forum-status-area').fadeOut();
 		const xpath = $('#post-form input[name=xpath]').val();
+		const locale = $('#post-form input[name=_]').val();
 		const url = contextPath + "/SurveyAjax";
 		const replyTo = $('#post-form input[name=replyTo]').val();
 		const subj = $('#post-form input[name=subj]').val();
 		const ajaxParams = {
 			data: {
 				s: surveySessionId,
-				"_": surveyCurrentLocale,
+				"_": locale,
 				replyTo: replyTo,
 				xpath: xpath,
 				text: text,
@@ -453,8 +454,10 @@ const cldrStForum = (function() {
 					}
 					listenFor(replyButton, "click", function(e) {
 						openPostOrReply({
-							locale: surveyCurrentLocale,
-							//xpath: '',
+							/*
+							 * Don't specify locale or xpath for reply. Instead they will be set to
+							 * match the original post in the thread.
+							 */
 							replyTo: post.id,
 							replyData: post
 						});

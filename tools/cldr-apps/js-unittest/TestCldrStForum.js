@@ -40,9 +40,30 @@
 	});
 
 	describe('cldrStForum.getForumSummaryHtml', function() {
+		const html = cldrStForum.getForumSummaryHtml();
+
 		it('should not return null or empty', function() {
-			const html = cldrStForum.getForumSummaryHtml();
 			assert((html != null && html !== ''), "html is neither null nor empty");
+		});
+
+		const domParser = new DOMParser();
+		const serializer = new XMLSerializer();
+		const xmlDoc = domParser.parseFromString(html, 'application/xml');
+		const xmlStr = serializer.serializeToString(xmlDoc);
+
+		it('should return valid xml', function() {
+			assert(xmlStr.indexOf('error') === -1, 'xml does not contain error'); // as in '... parsererror ...'
+		});
+
+		const htmlDoc = domParser.parseFromString(html, 'text/html');
+		const htmlStr = serializer.serializeToString(xmlDoc);
+
+		it('should return OK html', function() {
+			assert(htmlStr.indexOf('error') === -1, 'html does not contain error'); // as in '... parsererror ...'
+		});
+
+		it('should contain angle brackets', function() {
+			assert((htmlStr.indexOf('<') !== -1) && (htmlStr.indexOf('>') !== -1), 'does contain angle brackets');
 		});
 	});
 
