@@ -12,6 +12,11 @@
 const cldrStForumFilter = (function() {
 
 	/**
+	 * The index of 'Open threads' in the filters array
+	 */
+	const OPEN_THREADS_INDEX = 0;
+
+	/**
 	 * An array of filter objects, each having a name and a boolean function
 	 */
 	const filters = [
@@ -40,6 +45,9 @@ const cldrStForumFilter = (function() {
 	 */
 	let filterReload = null;
 
+	/**
+	 * An object mapping filter names to the counts of threads passing those filters
+	 */
 	let filterCounts = {};
 
 	/**
@@ -94,7 +102,7 @@ const cldrStForumFilter = (function() {
 	function getFilteredThreadIds(posts, applyFilter) {
 		const threadsToPosts = getThreadsToPosts(posts);
 
-		let filteredArray = [];
+		const filteredArray = [];
 		Object.keys(threadsToPosts).forEach(function(threadId) {
 			if (!applyFilter || threadPasses(threadsToPosts[threadId])) {
 				filteredArray.push(threadId);
@@ -109,6 +117,9 @@ const cldrStForumFilter = (function() {
 	/**
 	 * Update the filterCounts map by calculating all the filter counts
 	 * for filters with keepCount true
+	 *
+	 * @param threadsToPosts an object mapping each threadId to an array of all the posts in that thread
+	 * @param countCurrentFilter the count for the current filter, already calculated
 	 */
 	function updateCounts(threadsToPosts, countCurrentFilter) {
 		clearCounts();
@@ -124,6 +135,7 @@ const cldrStForumFilter = (function() {
 				}
 			}
 		});
+		simplifyCounts();
 	}
 
 	/**
@@ -131,9 +143,23 @@ const cldrStForumFilter = (function() {
 	 * for filters with keepCount true
 	 */
 	function clearCounts() {
-		for (let i = 0; i < filters.length; i++) {
-			if (filters[i].keepCount) {
-				filterCounts[filters[i].name] = 0;
+		filters.forEach(function(filter) {
+			if (filter.keepCount) {
+				filterCounts[filter.name] = 0;
+			}
+		});
+	}
+
+	/**
+	 * If the count for 'Open threads' is zero, simplify filterCounts, since then there is
+	 * no need to display counts for 'Your open threads' or 'Open threads you have not posted to'
+	 */
+	function simplifyCounts() {
+		if (filterCounts[filters[OPEN_THREADS_INDEX].name] === 0) {
+			for (let i = 0; i < filters.length; i++) {
+				if (i !== OPEN_THREADS_INDEX && filters[i].keepCount) {
+					delete filterCounts[filters[i].name];
+				}
 			}
 		}
 	}
@@ -142,7 +168,7 @@ const cldrStForumFilter = (function() {
 	 * Get an object mapping from certain filter names to the number
 	 * of threads currently passing those filters
 	 *
-	 * This assumes getFilteredThreadIds was called
+	 * This only works right if getFilteredThreadIds was called
 	 */
 	function getFilteredThreadCounts() {
 		return filterCounts;
@@ -155,9 +181,9 @@ const cldrStForumFilter = (function() {
 	 * @return the mapping object
 	 */
 	function getThreadsToPosts(posts) {
-		let threadsToPosts = {};
+		const threadsToPosts = {};
 		posts.forEach(function(post) {
-			let threadId = post.threadId;
+			const threadId = post.threadId;
 			if (!(threadId in threadsToPosts)) {
 				threadsToPosts[threadId] = [];
 			}

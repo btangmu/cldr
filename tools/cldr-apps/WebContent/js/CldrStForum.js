@@ -89,7 +89,6 @@ const cldrStForum = (function() {
 				ourDiv.appendChild(content);
 				summaryDiv.innerHTML = getForumSummaryHtml(forumLocale); // after parseContent
 			}
-
 			// No longer loading
 			hideLoader(null);
 			params.flipper.flipTo(params.pages.other, ourDiv);
@@ -366,7 +365,8 @@ const cldrStForum = (function() {
 	 *
 	 * TODO: shorten this function by moving code into subroutines. Also, postpone creating
 	 * DOM elements until finished constructing the filtered list of threads, to make the code
-	 * cleaner, faster, and more testable.
+	 * cleaner, faster, and more testable. If context is 'summary', all DOM element creation here
+	 * is a waste of time. 
 	 *
 	 * Threading has been revised, so that the same locale+path can have multiple distinct threads,
 	 * rather than always combining posts with the same locale+path into a single "thread".
@@ -407,18 +407,18 @@ const cldrStForum = (function() {
 				if (!post.xpath) {
 					topicInfo.appendChild(forumCreateChunk(post2text(post.subject), "span", "topicSubject"));
 				} else if (opts.showItemLink) {
-					var itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
+					const itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
 					itemLink.href = "#/" + post.locale + "//" + post.xpath;
 					topicInfo.appendChild(itemLink);
 					(function(topicInfo) {
-						var loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
+						const loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
 						topicInfo.appendChild(loadingMsg);
 						xpathMap.get({
 							hex: post.xpath
 						}, function(o) {
 							if (o.result) {
 								topicInfo.removeChild(loadingMsg);
-								var itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
+								const itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
 								itemPh.title = o.result.path;
 								topicInfo.appendChild(itemPh);
 							}
@@ -431,13 +431,13 @@ const cldrStForum = (function() {
 		}
 		// Now, top to bottom, just create the post divs
 		for (let num in posts) {
-			var post = posts[num];
+			const post = posts[num];
 
-			var subpost = forumCreateChunk("", "div", "post");
+			const subpost = forumCreateChunk("", "div", "post");
 			postDivs[post.id] = subpost;
 			subpost.id = "fp" + post.id;
 
-			var headingLine = forumCreateChunk("", "h4", "selected");
+			const headingLine = forumCreateChunk("", "h4", "selected");
 
 			// If post.posterInfo is undefined, don't crash; insert "[Poster no longer active]".
 			if (!post.posterInfo) {
@@ -446,7 +446,7 @@ const cldrStForum = (function() {
 				/*
 				 * TODO: encapsulate "createGravitar" dependency
 				 */
-				var gravitar;
+				let gravitar;
 				if (typeof createGravitar !== 'undefined') {
 					gravitar = createGravitar(post.posterInfo);
 				} else {
@@ -460,7 +460,7 @@ const cldrStForum = (function() {
 				if (typeof surveyUser !== 'undefined' && post.posterInfo.id === surveyUser.id) {
 					headingLine.appendChild(forumCreateChunk(forumStr("user_me"), "span", "forum-me"));
 				} else {
-					var usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
+					const usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
 					if (post.posterInfo.email) {
 						usera.appendChild(forumCreateChunk("", "span", "glyphicon glyphicon-envelope"));
 						usera.href = "mailto:" + post.posterInfo.email;
@@ -468,15 +468,15 @@ const cldrStForum = (function() {
 					headingLine.appendChild(usera);
 					headingLine.appendChild(document.createTextNode(' (' + post.posterInfo.org + ') '));
 				}
-				var userLevelChunk = forumCreateChunk(forumStr("userlevel_" + post.posterInfo.userlevelName), "span", "userLevelName label-info label");
+				const userLevelChunk = forumCreateChunk(forumStr("userlevel_" + post.posterInfo.userlevelName), "span", "userLevelName label-info label");
 				userLevelChunk.title = forumStr("userlevel_" + post.posterInfo.userlevelName + "_desc");
 				headingLine.appendChild(userLevelChunk);
 			}
-			var date = fmtDateTime(post.date_long);
+			let date = fmtDateTime(post.date_long);
 			if (post.version) {
 				date = "[v" + post.version + "] " + date;
 			}
-			var dateChunk = forumCreateChunk(date, "span", "label label-primary pull-right forumLink");
+			const dateChunk = forumCreateChunk(date, "span", "label label-primary pull-right forumLink");
 			(function(post) {
 				/*
 				 * TODO: encapsulate "listenFor" and "reloadV" dependencies
@@ -501,22 +501,22 @@ const cldrStForum = (function() {
 			headingLine.appendChild(dateChunk);
 			subpost.appendChild(headingLine);
 
-			var subSubChunk = forumCreateChunk("", "div", "postHeaderInfoGroup");
+			const subSubChunk = forumCreateChunk("", "div", "postHeaderInfoGroup");
 			subpost.appendChild(subSubChunk); {
-				var subChunk = forumCreateChunk("", "div", "postHeaderItem");
+				const subChunk = forumCreateChunk("", "div", "postHeaderItem");
 				subSubChunk.appendChild(subChunk);
 				subChunk.appendChild(forumCreateChunk(post2text(post.subject), "b", "postSubject"));
 			}
 
 			// actual text
-			var postText = post2text(post.text);
-			var postContent = forumCreateChunk(postText, "div", "postContent");
+			const postText = post2text(post.text);
+			const postContent = forumCreateChunk(postText, "div", "postContent");
 			subpost.appendChild(postContent);
 
 			subpost.appendChild(forumCreateChunk('【' + post.forumStatus + '】', 'div', ''));
 
 			if (opts.showReplyButton) {
-				var replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
+				const replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
 				(function(post) {
 					/*
 					 * TODO: encapsulate "listenFor" dependency
@@ -542,7 +542,7 @@ const cldrStForum = (function() {
 		}
 		// reparent any nodes that we can
 		for (let num in posts) {
-			var post = posts[num];
+			const post = posts[num];
 			if (post.parent != -1) {
 				forumDebug("reparenting " + post.id + " to " + post.parent);
 				if (postDivs[post.parent]) {
@@ -593,12 +593,14 @@ const cldrStForum = (function() {
 	 *   showThreadCount = true to display the number of threads
 	 */
 	function getOptionsForContext(context) {
-		let opts = getDefaultParseOptions();
+		const opts = getDefaultParseOptions();
 		if (context === 'main') {
 			opts.showItemLink = true;
 			opts.showReplyButton = true;
 			opts.applyFilter = true;
 			opts.showThreadCount = true;
+		} else if (context === 'summary') {
+			opts.applyFilter = true;
 		} else if (context === 'info') {
 			opts.showReplyButton = true;
 		} else if (context === 'new') {
@@ -649,7 +651,7 @@ const cldrStForum = (function() {
 		if (text === undefined || text === null) {
 			text = "(empty)";
 		}
-		var out = text;
+		let out = text;
 		out = out.replace(/<p>/g, '\n');
 		out = out.replace(/&quot;/g, '"');
 		out = out.replace(/&lt;/g, '<');
@@ -672,7 +674,7 @@ const cldrStForum = (function() {
 		if (!tag) {
 			tag = "span";
 		}
-		var chunk = document.createElement(tag);
+		const chunk = document.createElement(tag);
 		if (className) {
 			chunk.className = className;
 		}
@@ -795,29 +797,38 @@ const cldrStForum = (function() {
 		return reallyGetForumSummaryHtml(true /* canDoAjax */);
 	}
 
+	/**
+	 * Get a piece of html text summarizing the current Forum statistics
+	 *
+	 * @param canDoAjax true to call loadForumForSummaryOnly if needed, false otherwise; should
+	 *                  be false if the caller is the loadHandler for loadForumForSummaryOnly,
+	 *                  to prevent endless back-and-forth if things go wrong 
+	 * @return the html
+	 */
 	function reallyGetForumSummaryHtml(canDoAjax) {
-		let html = '';
 		const id = 'forumSummary';
-		html += '<div id=\'' + id + '\'>';
+		let html = "<div id='" + id + "'>\n";
 		if (!forumUpdateTime) {
 			if (canDoAjax) {
-				html += "<p>Loading Forum Summary...</p>";
-				loadForumForSummaryOnly(forumLocale, id);
+				html += "<p>Loading Forum Summary...</p>\n";
+				loadForumForSummaryOnly(forumLocale, id)
 			} else {
-				html += "<p>Load failed</p>";
+				html += "<p>Load failed</p>n";
 			}
 		} else {
-			html += "<p>Retrieved " + fmtDateTime(forumUpdateTime) + "</p>";
+			if (FORUM_DEBUG) {
+				html += "<p>Retrieved " + fmtDateTime(forumUpdateTime) + "</p>\n";				
+			}
 			if (cldrStForumFilter) {
-				html += "<ul>";
 				const c = cldrStForumFilter.getFilteredThreadCounts();
+				html += "<ul>\n";
 				Object.keys(c).forEach(function(k) {
-					html += "<li>" + k + ": " + c[k] + "</li>";
+					html += "<li>" + k + ": " + c[k] + "</li>\n";
 				});
-				html += "</ul>";
+				html += "</ul>\n";
 			}
 		}
-		html += '</div>';
+		html += '</div>\n';
 		return html;
 	}
 
@@ -849,7 +860,7 @@ const cldrStForum = (function() {
 				return;
 			}
 			const posts = json.ret;
-			parseContent(posts, 'main');
+			parseContent(posts, 'summary');
 			el.innerHTML = reallyGetForumSummaryHtml(false /* do not reload recursively */); // after parseContent
 		};
 		const xhrArgs = {
@@ -871,11 +882,15 @@ const cldrStForum = (function() {
 		reloadV();
 	}
 
+	/**
+	 * Get the URL to use for loading the Forum
+	 */
 	function getLoadForumUrl() {
-		if (typeof surveySessionId !== 'undefined') {
-			return 'SurveyAjax?s=' + surveySessionId + '&what=forum_fetch&xpath=0&_=' + forumLocale;
+		if (typeof surveySessionId === 'undefined') {
+			console.log('Error: surveySessionId undefined in getLoadForumUrl');
+			return '';
 		}
-		return '';
+		return 'SurveyAjax?s=' + surveySessionId + '&what=forum_fetch&xpath=0&_=' + forumLocale;
 	}
 
 	/**
