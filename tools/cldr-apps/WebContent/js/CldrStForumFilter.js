@@ -15,12 +15,11 @@ const cldrStForumFilter = (function() {
 	 * An array of filter objects, each having a name and a boolean function
 	 */
 	const filters = [
-		{name: 'All threads', func: passAll, keepCount: false},
 		{name: 'Open threads', func: passIfOpen, keepCount: true},
-
 		{name: 'Your open threads', func: passIfOpenAndYouStarted, keepCount: true},
 		{name: 'Open threads you have not posted to', func: passIfOpenAndYouDidNotPost, keepCount: true},
 
+		{name: 'All threads', func: passAll, keepCount: false},
 		{name: 'Closed threads', func: passIfClosed, keepCount: false},
 		{name: 'Threads you have posted to', func: passIfYouPosted, keepCount: false},
 		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost, keepCount: false},
@@ -44,20 +43,26 @@ const cldrStForumFilter = (function() {
 	let filterCounts = {};
 
 	/**
-	 * Get a popup menu from which the user can choose a filter, and set the
-	 * user id and reload function
+	 * Set the user id (the "you" in "you posted")
 	 *
-	 * @param userId the id of the current user, for setting filterUserId
+	 * @param userId the id of the current user
+	 */
+	function setUserId(userId) {
+		filterUserId = userId;
+	}
+
+	/**
+	 * Get a popup menu from which the user can choose a filter, and set the reload function
+	 *
 	 * @param reloadFunction the reload function, for setting filterReload
 	 * @return the select element containing the menu
 	 */
-	function createMenu(userId, reloadFunction) {
-		filterUserId = userId;
+	function createMenu(reloadFunction) {
 		filterReload = reloadFunction;
-		let select = document.createElement('select');
+		const select = document.createElement('select');
 		select.id = 'forumFilterMenu';
 		for (let i = 0; i < filters.length; i++) {
-			let item = document.createElement('option');
+			const item = document.createElement('option');
 			item.setAttribute('value', i);
 			if (i === filterIndex) {
 				item.setAttribute('selected', 'selected');
@@ -66,9 +71,9 @@ const cldrStForumFilter = (function() {
 			select.appendChild(item);
 		}
 		select.addEventListener('change', function() {
-			let i = parseInt(select.value, 10);
-			if (i !== filterIndex) {
-				filterIndex = i;
+			const index = parseInt(select.value, 10);
+			if (index !== filterIndex) {
+				filterIndex = index;
 				if (filterReload) {
 					filterReload();
 				}
@@ -101,6 +106,10 @@ const cldrStForumFilter = (function() {
 		return filteredArray;
 	}
 
+	/**
+	 * Update the filterCounts map by calculating all the filter counts
+	 * for filters with keepCount true
+	 */
 	function updateCounts(threadsToPosts, countCurrentFilter) {
 		clearCounts();
 		if (filters[filterIndex].keepCount) {
@@ -108,7 +117,7 @@ const cldrStForumFilter = (function() {
 		}
 		Object.keys(threadsToPosts).forEach(function(threadId) {
 			for (let i = 0; i < filters.length; i++) {
-				if (filters[i].keepCount && i !== countCurrentFilter) {
+				if (filters[i].keepCount && i !== filterIndex) {
 					if (threadPassesI(threadsToPosts[threadId], i)) {
 						filterCounts[filters[i].name]++;
 					}
@@ -117,6 +126,10 @@ const cldrStForumFilter = (function() {
 		});
 	}
 
+	/**
+	 * Initialize the filterCounts map by setting to zero all the filter counts
+	 * for filters with keepCount true
+	 */
 	function clearCounts() {
 		for (let i = 0; i < filters.length; i++) {
 			if (filters[i].keepCount) {
@@ -128,6 +141,8 @@ const cldrStForumFilter = (function() {
 	/**
 	 * Get an object mapping from certain filter names to the number
 	 * of threads currently passing those filters
+	 *
+	 * This assumes getFilteredThreadIds was called
 	 */
 	function getFilteredThreadCounts() {
 		return filterCounts;
@@ -278,6 +293,7 @@ const cldrStForumFilter = (function() {
 	 * Make only these functions accessible from other files
 	 */
 	return {
+		setUserId: setUserId,
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
 		getFilteredThreadCounts: getFilteredThreadCounts,

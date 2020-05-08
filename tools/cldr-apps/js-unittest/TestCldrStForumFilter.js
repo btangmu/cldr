@@ -5,7 +5,8 @@
 
 	describe('cldrStForumFilter.createMenu', function() {
 		it('should not return null', function() {
-			const actualOutput = cldrStForumFilter.createMenu(1, null);
+			cldrStForumFilter.setUserId(1);
+			const actualOutput = cldrStForumFilter.createMenu(null);
 			assert(actualOutput != null, "not null");
 		});
 	});

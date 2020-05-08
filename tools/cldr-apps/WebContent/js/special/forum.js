@@ -69,46 +69,13 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 			hideLoader(null);
 			params.flipper.flipTo(params.pages.other, createChunk(stui.str("generic_nolocale"),"p","helpContent"));
 		} else {
-			request
-			.get('SurveyAjax?s='+surveySessionId+'&what=forum_fetch&xpath=0&_='+surveyCurrentLocale, {handleAs: 'json'})
-			.then(function(json) {
-				if(json.err) {
-		        	params.special.showError(params, json, {what: "Loading forum data"});
-		        	return;
-				}
-				// set up the 'right sidebar'
-				showInPop2(stui.str(params.name+"Guidance"), null, null, null, true); /* show the box the first time */
-
-				var ourDiv = document.createElement("div");
-
-				ourDiv.appendChild(createChunk(stui.sub("forum_msg", {
-						forum: locmap.getLocaleName(locmap.getLanguage(surveyCurrentLocale)),
-						locale: surveyCurrentLocaleName}),
-					"h4", ""));
-
-				const filterMenu = cldrStForumFilter.createMenu(surveyUser.id, reloadV);
-				const summaryDiv = document.createElement("div");
-				summaryDiv.innerHTML = '';
-				ourDiv.appendChild(summaryDiv);
-				ourDiv.appendChild(filterMenu);
-				ourDiv.appendChild(document.createElement('hr'));
-				const posts = json.ret;
-				if (posts.length == 0) {
-					ourDiv.appendChild(createChunk(stui.str("forum_noposts"),"p","helpContent"));
-				} else {
-					const content = cldrStForum.parseContent(posts, 'main');
-					ourDiv.appendChild(content);
-					summaryDiv.innerHTML = cldrStForum.getForumSummaryHtml(); // after parseContent
-				}
-
-				// No longer loading
-				hideLoader(null);
-				params.flipper.flipTo(params.pages.other, ourDiv);
-				params.special.handleIdChanged(surveyCurrentId); // rescroll.
-			})
-			.otherwise(function(err) {
-	        	params.special.showError(params, null, {err: err, what: "Loading forum data"});
+			const forumName = locmap.getLocaleName(locmap.getLanguage(surveyCurrentLocale));
+			const forumMessage = stui.sub("forum_msg", {
+				forum: forumName,
+				locale: surveyCurrentLocaleName
 			});
+			cldrStForumFilter.setUserId(surveyUser.id);
+			cldrStForum.loadForum(surveyCurrentLocale, forumMessage, params);
 		}
 	};
 
