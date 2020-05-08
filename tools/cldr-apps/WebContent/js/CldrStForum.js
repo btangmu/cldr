@@ -753,5 +753,11 @@ const cldrStForum = (function() {
 		parseContent: parseContent,
 		getForumSummaryHtml: getForumSummaryHtml,
 		reload: reload,
+		/*
+		 * The following are meant to be accessible for unit testing only:
+		 */
+		test: {
+			postStatusMenu: postStatusMenu,
+		}
 	};
 })();

@@ -58,7 +58,7 @@
 		const htmlDoc = domParser.parseFromString(html, 'text/html');
 		const htmlStr = serializer.serializeToString(xmlDoc);
 
-		it('should return OK html', function() {
+		it('should return good html', function() {
 			assert(htmlStr.indexOf('error') === -1, 'html does not contain error'); // as in '... parsererror ...'
 		});
 
@@ -67,10 +67,49 @@
 		});
 	});
 
+	describe('cldrStForum.test.postStatusMenu', function() {
+		const html = cldrStForum.test.postStatusMenu();
+
+		it('should not return null or empty', function() {
+			assert((html != null && html !== ''), "html is neither null nor empty");
+		});
+
+		it('should return good html', function() {
+			assert(markupParsesOk(html, 'text/html'), 'parses OK as text/html');
+		});
+
+		// not xml: status menu uses "<select required>". Could make it "<select required='required'>".
+
+		it('should contain angle brackets', function() {
+			assert((html.indexOf('<') !== -1) && (html.indexOf('>') !== -1), 'does contain angle brackets');
+		});
+	});
+
 	/**
 	 * Remove any leading or trailing whitespace, and replace any sequence of whitespace with a single space
 	 */
 	function normalizeWhitespace(s) {
 		return s.replace(/^(\s*)|(\s*)$/g, '').replace(/\s+/g, ' ');
+	}
+
+	/**
+	 * Does the given string parse OK with the given mime type?
+	 */
+	function markupParsesOk(inputString, mimeType) {
+		const doc = new DOMParser().parseFromString(inputString, mimeType);
+		if (!doc) {
+			console.log('no doc for ' + mimeType + ', ' + inputString);
+			return false;
+		}
+		const outputString = new XMLSerializer().serializeToString(doc);
+		if (!outputString) {
+			console.log('no output string for ' + mimeType + ', ' + inputString);
+			return false;
+		}
+		if (outputString.indexOf('error') !== -1) {
+			console.log('parser error for ' + mimeType + ', ' + inputString + ', ' + outputString);
+			return false;
+		}
+		return true;
 	}
 }

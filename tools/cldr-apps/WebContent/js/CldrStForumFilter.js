@@ -104,15 +104,13 @@ const cldrStForumFilter = (function() {
 	function updateCounts(threadsToPosts, countCurrentFilter) {
 		clearCounts();
 		if (filters[filterIndex].keepCount) {
-			const name = filters[filterIndex].name;
-			filterCounts[name] = countCurrentFilter;
+			filterCounts[filters[filterIndex].name] = countCurrentFilter;
 		}
 		Object.keys(threadsToPosts).forEach(function(threadId) {
 			for (let i = 0; i < filters.length; i++) {
 				if (filters[i].keepCount && i !== countCurrentFilter) {
 					if (threadPassesI(threadsToPosts[threadId], i)) {
-						const name = filters[i].name;
-						filterCounts[name]++;
+						filterCounts[filters[i].name]++;
 					}
 				}
 			}
@@ -122,10 +120,17 @@ const cldrStForumFilter = (function() {
 	function clearCounts() {
 		for (let i = 0; i < filters.length; i++) {
 			if (filters[i].keepCount) {
-				const name = filters[i].name;
-				filterCounts[name] = 0;
+				filterCounts[filters[i].name] = 0;
 			}
 		}
+	}
+
+	/**
+	 * Get an object mapping from certain filter names to the number
+	 * of threads currently passing those filters
+	 */
+	function getFilteredThreadCounts() {
+		return filterCounts;
 	}
 
 	/**
@@ -267,12 +272,6 @@ const cldrStForumFilter = (function() {
 		}
 		const post = threadPosts[threadPosts.length - 1];
 		return post.poster === filterUserId;
-	}
-
-	/**************************/
-
-	function getFilteredThreadCounts() {
-		return filterCounts;
 	}
 
 	/*
