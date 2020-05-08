@@ -15,44 +15,54 @@ const cldrStForumFilter = (function() {
 	 * An array of filter objects, each having a name and a boolean function
 	 */
 	const filters = [
-		{name: 'All threads', func: passAll},
-		{name: 'Open threads', func: passIfOpen},
-		{name: 'Closed threads', func: passIfClosed},
-		{name: 'Threads you have posted to', func: passIfYouPosted},
-		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost},
-		{name: 'Open threads you have not posted to', func: passIfOpenAndYouDidNotPost},
+		{name: 'Open threads', func: passIfOpen, keepCount: true},
+		{name: 'Your open threads', func: passIfOpenAndYouStarted, keepCount: true},
+		{name: 'Open threads you have not posted to', func: passIfOpenAndYouDidNotPost, keepCount: true},
+
+		{name: 'All threads', func: passAll, keepCount: false},
+		{name: 'Closed threads', func: passIfClosed, keepCount: false},
+		{name: 'Threads you have posted to', func: passIfYouPosted, keepCount: false},
+		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost, keepCount: false},
 	];
 
 	/**
 	 * The index of the current filter in the "filters" array
 	 */
-	var filterIndex = 0;
-	
+	let filterIndex = 0;
+
 	/**
 	 * The id of the current user
 	 */
-	var filterUserId = 0;
+	let filterUserId = 0;
 
 	/**
 	 * A function to call whenever a different filter is selected
 	 */
-	var filterReload = null;
+	let filterReload = null;
+
+	let filterCounts = {};
 
 	/**
-	 * Get a popup menu from which the user can choose a filter, and set the
-	 * user id and reload function
+	 * Set the user id (the "you" in "you posted")
 	 *
-	 * @param userId the id of the current user, for setting filterUserId
+	 * @param userId the id of the current user
+	 */
+	function setUserId(userId) {
+		filterUserId = userId;
+	}
+
+	/**
+	 * Get a popup menu from which the user can choose a filter, and set the reload function
+	 *
 	 * @param reloadFunction the reload function, for setting filterReload
 	 * @return the select element containing the menu
 	 */
-	function createMenu(userId, reloadFunction) {
-		filterUserId = userId;
+	function createMenu(reloadFunction) {
 		filterReload = reloadFunction;
-		let select = document.createElement('select');
+		const select = document.createElement('select');
 		select.id = 'forumFilterMenu';
 		for (let i = 0; i < filters.length; i++) {
-			let item = document.createElement('option');
+			const item = document.createElement('option');
 			item.setAttribute('value', i);
 			if (i === filterIndex) {
 				item.setAttribute('selected', 'selected');
@@ -61,9 +71,9 @@ const cldrStForumFilter = (function() {
 			select.appendChild(item);
 		}
 		select.addEventListener('change', function() {
-			let i = parseInt(select.value, 10);
-			if (i !== filterIndex) {
-				filterIndex = i;
+			const index = parseInt(select.value, 10);
+			if (index !== filterIndex) {
+				filterIndex = index;
 				if (filterReload) {
 					filterReload();
 				}
@@ -90,7 +100,52 @@ const cldrStForumFilter = (function() {
 				filteredArray.push(threadId);
 			}
 		});
+		if (applyFilter) {
+			updateCounts(threadsToPosts, filteredArray.length);
+		}
 		return filteredArray;
+	}
+
+	/**
+	 * Update the filterCounts map by calculating all the filter counts
+	 * for filters with keepCount true
+	 */
+	function updateCounts(threadsToPosts, countCurrentFilter) {
+		clearCounts();
+		if (filters[filterIndex].keepCount) {
+			filterCounts[filters[filterIndex].name] = countCurrentFilter;
+		}
+		Object.keys(threadsToPosts).forEach(function(threadId) {
+			for (let i = 0; i < filters.length; i++) {
+				if (filters[i].keepCount && i !== filterIndex) {
+					if (threadPassesI(threadsToPosts[threadId], i)) {
+						filterCounts[filters[i].name]++;
+					}
+				}
+			}
+		});
+	}
+
+	/**
+	 * Initialize the filterCounts map by setting to zero all the filter counts
+	 * for filters with keepCount true
+	 */
+	function clearCounts() {
+		for (let i = 0; i < filters.length; i++) {
+			if (filters[i].keepCount) {
+				filterCounts[filters[i].name] = 0;
+			}
+		}
+	}
+
+	/**
+	 * Get an object mapping from certain filter names to the number
+	 * of threads currently passing those filters
+	 *
+	 * This assumes getFilteredThreadIds was called
+	 */
+	function getFilteredThreadCounts() {
+		return filterCounts;
 	}
 
 	/**
@@ -120,6 +175,19 @@ const cldrStForumFilter = (function() {
 	function threadPasses(threadPosts) {
 		return filters[filterIndex].func(threadPosts);
 	}
+
+	/**
+	 * Does the thread with the given array of posts pass the filter with the given index?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @param i the index
+	 * @return true or false
+	 */
+	function threadPassesI(threadPosts, i) {
+		return filters[i].func(threadPosts);
+	}
+
+	/**************************/
 
 	/**
 	 * Pass all threads
@@ -184,11 +252,50 @@ const cldrStForumFilter = (function() {
 		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
 	}
 
+	/**
+	 * Is the thread with the given array of posts open and does it include no posts by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfOpenAndYouDidNotPost(threadPosts) {
+		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
+	}
+
+	/**
+	 * Is the thread with the given array of posts open and was it started by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfOpenAndYouStarted(threadPosts) {
+		return passIfOpen(threadPosts) && passIfYouStarted(threadPosts);
+	}
+
+	/**
+	 * Was the thread with the given array of posts started by the current user?
+	 *
+	 * @param threadPosts the array of posts in the thread
+	 * @return true or false
+	 */
+	function passIfYouStarted(threadPosts) {
+		/*
+		 * The first (original) post in the thread is the last one in the array
+		 */
+		if (threadPosts.length < 1) {
+			return false;
+		}
+		const post = threadPosts[threadPosts.length - 1];
+		return post.poster === filterUserId;
+	}
+
 	/*
 	 * Make only these functions accessible from other files
 	 */
 	return {
+		setUserId: setUserId,
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
+		getFilteredThreadCounts: getFilteredThreadCounts,
 	};
 })();
