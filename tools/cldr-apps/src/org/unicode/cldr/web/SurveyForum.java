@@ -46,13 +46,12 @@ public class SurveyForum {
      */
     private ConcurrentHashMap<Integer, ForumStatus> allStatus = new ConcurrentHashMap<Integer, ForumStatus>();
 
-    public static String DB_FORA = "sf_fora"; // forum name -> id
-    public static String DB_READERS = "sf_readers"; //
+    private static String DB_FORA = "sf_fora"; // forum name -> id
 
-    public static String DB_LOC2FORUM = "sf_loc2forum"; // locale -> forum.. for selects.
+    private static String DB_LOC2FORUM = "sf_loc2forum"; // locale -> forum.. for selects.
 
-    /* --------- FORUM ------------- */
-    static final String F_FORUM = "forum";
+    private static final String F_FORUM = "forum";
+
     public static final String F_XPATH = "xpath";
 
     /**
@@ -109,8 +108,6 @@ public class SurveyForum {
         if ((forum == null) || (forum.indexOf('_') >= 0) || !sm.isValidLocale(CLDRLocale.getInstance(forum))) {
             return BAD_FORUM;
         }
-
-        // now with that out of the way..
         Integer i = (Integer) nameToNum.get(forum);
         if (i == null) {
             return createForum(forum);
@@ -486,6 +483,12 @@ public class SurveyForum {
         }
     }
 
+    /**
+     * Get the status of the post with the given id
+     *
+     * @param postId
+     * @return the ForumStatus
+     */
     private ForumStatus getStatusOfPost(int postId) {
         ForumStatus forumStatus = allStatus.get(postId);
         if (forumStatus == null) {
@@ -523,10 +526,9 @@ public class SurveyForum {
     /**
      * Called by SM to create the reg
      *
-     * @param xlogger
-     *            the logger to use
-     * @param ourConn
-     *            the conn to use
+     * @param xlogger the logger to use
+     * @param ourConn the conn to use
+     * @return the SurveyForum
      */
     public static SurveyForum createTable(java.util.logging.Logger xlogger, Connection ourConn, SurveyMain sm)
         throws SQLException {
@@ -739,20 +741,17 @@ public class SurveyForum {
         return localeToForum(locale.toULocale());
     }
 
-    private static String forumUrl(WebContext ctx, String forum) {
-        return (ctx.base() + "?" + F_FORUM + "=" + forum);
-    }
-
     /**
      *
      * @param ctx
      * @param forum
      * @return
      *
-     * Possibly called by tmpl/usermenu.jsp
+     * Possibly called by tmpl/usermenu.jsp -- maybe dead code?
      */
     public static String forumLink(WebContext ctx, String forum) {
-        return "<a " + ctx.atarget(WebContext.TARGET_DOCS) + " class='forumlink' href='" + forumUrl(ctx, forum) + "' >" // title='"+title+"'
+        String url = ctx.base() + "?" + F_FORUM + "=" + forum;
+        return "<a " + ctx.atarget(WebContext.TARGET_DOCS) + " class='forumlink' href='" + url + "' >" // title='"+title+"'
             + "Forum" + "</a>";
     }
 
