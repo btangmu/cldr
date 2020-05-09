@@ -54,10 +54,6 @@ public class SurveyForum {
     /* --------- FORUM ------------- */
     static final String F_FORUM = "forum";
     public static final String F_XPATH = "xpath";
-    static final String F_DO = "d";
-    static final String F_VIEW = "view";
-
-    static final String POST_SPIEL = "Post a comment to other vetters. (Don't use this to report SurveyTool issues or propose data changes: use the bug forms.)";
 
     /**
      * prepare text for posting
@@ -104,12 +100,8 @@ public class SurveyForum {
      */
     public static final int NO_PARENT = -1;
 
-    /**
-     * May return
-     * @param forum
-     * @return forum number, or BAD_FORUM or NO_FORUM
-     */
-    private synchronized int getForumNumber(String forum) {
+    private int getForumNumber(CLDRLocale locale) {
+        String forum = localeToForum(locale);
         if (forum.length() == 0) {
             return NO_FORUM; // all forums
         }
@@ -125,10 +117,6 @@ public class SurveyForum {
         } else {
             return i.intValue();
         }
-    }
-
-    private int getForumNumber(CLDRLocale locale) {
-        return getForumNumber(localeToForum(locale));
     }
 
     private int getForumNumberFromDB(String forum) {
@@ -239,19 +227,8 @@ public class SurveyForum {
     }
 
     /**
-     * 
-     * @param replyTo
-     * @return
-     * 
-     * Called by doXpathPost and by doPost
-     */
-    private int getXpathForPost(int replyTo) {
-        int base_xpath;
-        base_xpath = DBUtils.sqlCount("select xpath from " + DBUtils.Table.FORUM_POSTS + " where id=?", replyTo); // default to -1
-        return base_xpath;
-    }
-
-    /**
+     * Send email notification to a set of users
+     *
      * @param ctx
      * @param forum
      * @param base_xpath
@@ -924,7 +901,9 @@ public class SurveyForum {
     }
 
     private void assertCanAccessForum(CookieSession session, CLDRLocale locale) throws SurveyException {
-        if (session == null || session.user == null) throw new SurveyException(ErrorCode.E_NOT_LOGGED_IN);
+        if (session == null || session.user == null) {
+            throw new SurveyException(ErrorCode.E_NOT_LOGGED_IN);
+        }
         assertCanAccessForum(session.user, locale);
     }
 
@@ -974,7 +953,7 @@ public class SurveyForum {
             replyTo = NO_PARENT;
             base_xpath = sm.xpt.getXpathIdOrNoneFromStringID(xpath);
         } else {
-            base_xpath = getXpathForPost(replyTo); // base_xpath is ignored on replies.
+            base_xpath = DBUtils.sqlCount("select xpath from " + DBUtils.Table.FORUM_POSTS + " where id=?", replyTo); // default to -1
         }
         final boolean couldFlagOnLosing = couldFlagOnLosing(mySession.user, sm.xpt.getById(base_xpath), l) && !sm.getSTFactory().getFlag(l, base_xpath);
 
@@ -1005,9 +984,9 @@ public class SurveyForum {
         CLOSED(0, "Closed"),
         QUESTION(1, "Question"),
         REQUEST(2, "Request"),
-        DISPUTED(2, "Disputed"),
-        AGREED(3, "Agreed"),
-        INFORMATION(4, "Information");
+        INFORMATION(3, "Information"),
+        AGREED(4, "Agreed"),
+        DISPUTED(5, "Disputed");
 
         ForumStatus(int id, String name) {
             this.id = id;
