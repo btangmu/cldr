@@ -99,7 +99,7 @@ public class SurveyForum {
      */
     public static final int NO_PARENT = -1;
 
-    private int getForumNumber(CLDRLocale locale) {
+    private synchronized int getForumNumber(CLDRLocale locale) {
         String forum = localeToForum(locale);
         if (forum.length() == 0) {
             return NO_FORUM; // all forums
