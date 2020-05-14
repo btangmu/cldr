@@ -1927,12 +1927,12 @@ function showForumStuff(frag, forumDivClone, tr) {
 		'use strict';
 		if (surveyUser && surveyUser.id) {
 			if (theRow.voteVhash && theRow.voteVhash !== '') {
-				const voteForItem = theRow.items[theRow.voteVhash];
-				if (voteForItem && voteForItem.votes && voteForItem.votes[surveyUser.id]) {
-					if (voteForItem.value === INHERITANCE_MARKER) {
+				const item = theRow.items[theRow.voteVhash];
+				if (item && item.votes && item.votes[surveyUser.id]) {
+					if (item.value === INHERITANCE_MARKER) {
 						return theRow.inheritedValue;
 					}
-					return voteForItem.value;
+					return item.value;
 				}
 			}
 		}

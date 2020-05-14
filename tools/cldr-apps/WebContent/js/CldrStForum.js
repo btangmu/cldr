@@ -449,7 +449,7 @@ const cldrStForum = (function() {
 
 			// actual text
 			const postText = post2text(post.text);
-			const postContent = forumCreateChunk(postText, "div", "postContent postBorder");
+			const postContent = forumCreateChunk(postText, "div", "postContent postTextBorder");
 			subpost.appendChild(postContent);
 
 			if (opts.showReplyButton) {

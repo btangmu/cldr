@@ -262,21 +262,22 @@ function refreshCounter() {
 	menus.each(function(index) {
 		var element = $(this);
 		var href = element.attr('href');
-		if (href) {
-			var id = href.slice(1, href.length);
-			var selection = $('div[data-type="' + id + '"] tr.data-review');
-			var total = selection.length;
-			var remaining = selection.not('.hidden-line').length;
-			var counterList = $('#' + id).closest('h3');
-
-			element.children('.remaining-count').text(remaining);
-			element.children('.total-count').text(total);
-			if (total == 0) {
-				element.closest('li').remove();
-			}
-			counterList.children('.remaining-count').text(remaining);
-			counterList.children('.total-count').text(total);
+		if (!href) {
+			return;
 		}
+		var id = href.slice(1, href.length);
+		var selection = $('div[data-type="' + id + '"] tr.data-review');
+		var total = selection.length;
+		var remaining = selection.not('.hidden-line').length;
+		var counterList = $('#' + id).closest('h3');
+
+		element.children('.remaining-count').text(remaining);
+		element.children('.total-count').text(total);
+		if (total == 0) {
+			element.closest('li').remove();
+		}
+		counterList.children('.remaining-count').text(remaining);
+		counterList.children('.total-count').text(total);
 	});
 }
 
