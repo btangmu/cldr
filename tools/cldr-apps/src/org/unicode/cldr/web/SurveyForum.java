@@ -364,7 +364,7 @@ public class SurveyForum {
      * @throws SurveyException
      */
     private boolean userCanPostWithStatus(User user, ForumStatus forumStatus, int replyTo) throws SurveyException {
-        if (forumStatus != ForumStatus.CLOSED) {
+        if (forumStatus != ForumStatus.CLOSE) {
             return true;
         }
         if (replyTo == NO_PARENT) {
@@ -469,8 +469,8 @@ public class SurveyForum {
             while (rs.next()) {
                 int id = rs.getInt(1);
                 int si = rs.getInt(2);
-                ForumStatus status = ForumStatus.fromInt(si, ForumStatus.CLOSED);
-                if (status != ForumStatus.CLOSED) {
+                ForumStatus status = ForumStatus.fromInt(si, ForumStatus.CLOSE);
+                if (status != ForumStatus.CLOSE) {
                     allStatus.put(id, status);
                 }
             }
@@ -492,7 +492,7 @@ public class SurveyForum {
     private ForumStatus getStatusOfPost(int postId) {
         ForumStatus forumStatus = allStatus.get(postId);
         if (forumStatus == null) {
-            return ForumStatus.CLOSED;
+            return ForumStatus.CLOSE;
         }
         return forumStatus;
     }
@@ -973,19 +973,18 @@ public class SurveyForum {
      * @throws SurveyException
      */
     public int postFlagRemoved(int xpathId, CLDRLocale locale, User user) throws SurveyException {
-        return doPostInternal(xpathId, -1, locale, "Flag Removed", "(The flag was removed.)", ForumStatus.CLOSED.toName(), false, user);
+        return doPostInternal(xpathId, -1, locale, "Flag Removed", "(The flag was removed.)", ForumStatus.CLOSE.toName(), false, user);
     }
 
     /**
      * Status values associated with forum posts and threads
      */
     private enum ForumStatus {
-        CLOSED(0, "Closed"),
-        QUESTION(1, "Question"),
+        CLOSE(0, "Close"),
+        DISCUSS(1, "Discuss"),
         REQUEST(2, "Request"),
-        INFORMATION(3, "Information"),
-        AGREED(4, "Agreed"),
-        DISPUTED(5, "Disputed");
+        AGREE(3, "Agree"),
+        DISAGREE(4, "Disagree");
 
         ForumStatus(int id, String name) {
             this.id = id;
@@ -1057,7 +1056,7 @@ public class SurveyForum {
          * @return true or false
          */
         public boolean belongsInTable() {
-            return this != CLOSED;
+            return this != CLOSE;
         }
     }
 }

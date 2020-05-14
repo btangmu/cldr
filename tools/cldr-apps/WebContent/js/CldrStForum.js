@@ -55,7 +55,7 @@ const cldrStForum = (function() {
 	 * @param forumMessage the forum message
 	 * @param params an object with various properties such as exports, special, flipper, otherSpecial, name, ...
 	 */
-	function loadForum(locale, forumMessage, params) {
+	function loadForum(locale, userId, forumMessage, params) {
 		setLocale(locale);
 		const url = getLoadForumUrl();
 		const errorHandler = function(err) {
@@ -87,7 +87,7 @@ const cldrStForum = (function() {
 			} else {
 				const content = parseContent(posts, 'main');
 				ourDiv.appendChild(content);
-				summaryDiv.innerHTML = getForumSummaryHtml(forumLocale); // after parseContent
+				summaryDiv.innerHTML = getForumSummaryHtml(forumLocale, userId); // after parseContent
 			}
 			// No longer loading
 			hideLoader(null);
@@ -116,30 +116,35 @@ const cldrStForum = (function() {
 		const locale = isReply ? firstPost.locale : (params.locale ? params.locale : '');
 		const xpath = isReply ? firstPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
-		const html = makePostHtml(isReply, firstPost, locale, xpath, replyTo);
+		const postVerb = params.postVerb ? params.postVerb : null;
+		const html = makePostHtml(postVerb, locale, xpath, replyTo);
 		const subject = makePostSubject(isReply, parentPost, subjectParam);
+		const myValue = params.myValue ? params.myValue : null;
+		const text = makePostText(postVerb, myValue);
 
-		openPostWindow(subject, html, parentPost);
+		openPostWindow(html, subject, text, parentPost);
 	}
 
 	/**
 	 * Assemble the form and related html elements for creating a forum post
 	 *
-	 * @param isReply is this a reply? True or false
-	 * @param firstPost the original post in the thread
+	 * @param postVerb the verb, such as 'Discuss'
 	 * @param locale the locale string
 	 * @param xpath the xpath string
 	 * @param replyTo the post id of the post being replied to, or -1
 	 */
-	function makePostHtml(isReply, firstPost, locale, xpath, replyTo) {
+	function makePostHtml(postVerb, locale, xpath, replyTo) {
 		let html = '';
 
 		html += '<form role="form" id="post-form">';
 		html += '<div class="form-group">';
-		html += '<div class="input-group"><span class="input-group-addon">Subject:</span>';
-		html += '<input class="form-control" name="subj" type="text" value=""></div>';
-		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea></div>';
-		html += postStatusMenu(isReply, firstPost);
+		html += '<div class="input-group">';
+		html += '<span class="input-group-addon">Subject:</span>';
+		html += '<input class="form-control" name="subj" type="text" value="">';
+		html += '</div>'; // input-group
+		html += '<div id="postVerb" class="pull-right postVerb">' + postVerb + '</div>';
+		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>';
+		html += '</div>'; // form-group
 		html += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		html += '<input type="hidden" name="forum" value="true">';
 		html += '<input type="hidden" name="_" value="' + locale + '">';
@@ -172,78 +177,13 @@ const cldrStForum = (function() {
 		return subjectParam;
 	}
 
-	/**
-	 * Get the html content for the Status menu
-	 *
-	 * @param isReply true if this post is a reply, else false
-	 * @param firstPost the original post in the thread
-	 * @return the html
-	 *
-	 * Compare SurveyForum.ForumStatus on server
-	 */
-	function postStatusMenu(isReply, firstPost) {
-		let content = '<p id="forum-status-area">Status: ';
-
-		content += '<select id="forum-status-menu" required>\n';
-		content += '<option value="" disabled selected>Select one</option>\n';
-
-		if (!isReply) {
-			content += '<option value="Request">Request a change</option>\n';
+	function makePostText(postVerb, myValue) {
+		if (postVerb === 'Request' && myValue) {
+			return 'Please vote for ' + myValue + '\n';
+		} else if (postVerb === 'Close') {
+			return "I'm closing this thread";
 		}
-		content += '<option value="Question">Ask a question</option>\n';
-		if (isReply) {
-			content += '<option value="Information">Information</option>\n';
-		}
-		if (isReply && firstPost && !userIsPoster(firstPost) && firstPost.status === 'Request') {
-			content += '<option value="Agreed">Agree</option>\n';
-			content += '<option value="Disputed">Disagree</option>\n';
-		}
-		if (canUserClose(isReply, firstPost)) {
-			content += '<option value="Closed">Close</option>\n';
-		}
-		content += '</select></p>\n';
-		return content;
-	}
-
-	/**
-	 * Is this user allowed to close the thread now?
-	 *
-	 * The user is only allowed if they are the original poster of the thread,
-	 * or a TC (technical committee) member.
-	 *
-	 * @param isReply true if this post is a reply, else false
-	 * @param firstPost the original post in the thread, or null
-	 * @return true if this user is allowed to close, else false
-	 */
-	function canUserClose(isReply, firstPost) {
-		return isReply && (userIsPoster(firstPost) || userIsTC());
-	}
-
-	/**
-	 * Is the current user the poster of this post?
-	 *
-	 * @param post the post, or null
-	 * @returns true or false
-	 */
-	function userIsPoster(post) {
-		if (post && typeof surveyUser !== 'undefined') {
-			if (surveyUser === post.poster) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Is the current user a TC (Technical Committee) member?
-	 *
-	 * @returns true or false
-	 */
-	function userIsTC() {
-		if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
-			return true;
-		}
-		return false;
+		return '';
 	}
 
 	/**
@@ -255,10 +195,11 @@ const cldrStForum = (function() {
 	 *
 	 * Reference: Bootstrap.js post-modal: https://getbootstrap.com/docs/4.1/components/modal/
 	 */
-	function openPostWindow(subject, html, parentPost) {
+	function openPostWindow(html, subject, text, parentPost) {
 		const postModal = $('#post-modal');
 		postModal.find('.modal-body').html(html);
 		postModal.find('input[name=subj]')[0].value = subject;
+		$('#post-form textarea[name=text]').val(text);
 
 		if (parentPost) {
 			const forumDiv = parseContent([parentPost], 'new');
@@ -279,18 +220,9 @@ const cldrStForum = (function() {
 	 * @param event
 	 */
 	function submitPost(event) {
-		const forumStatus = document.getElementById('forum-status-menu').value;
-		if (!forumStatus) {
-			/*
-			 * Normally this won't happen, since the menu has the attribute "required".
-			 * The browser should prevent the form from being submitted, and it should ask
-			 * the user to make a selection. If we do get here anyway, return silently.
-			 */
-			return;
-		}
 		const text = $('#post-form textarea[name=text]').val();
 		if (text) {
-			reallySubmitPost(text, forumStatus);
+			reallySubmitPost(text);
 		}
 		event.preventDefault();
 		event.stopPropagation();
@@ -300,18 +232,17 @@ const cldrStForum = (function() {
 	 * Submit a forum post
 	 *
 	 * @param text the non-empty body of the message
-	 * @param forumStatus the status string
 	 */
-	function reallySubmitPost(text, forumStatus) {
+	function reallySubmitPost(text) {
 		$('#post-form button').fadeOut();
 		$('#post-form .input-group').fadeOut(); // subject line
-		$('#forum-status-area').fadeOut();
 
 		const xpath = $('#post-form input[name=xpath]').val();
 		const locale = $('#post-form input[name=_]').val();
-		const url = contextPath + "/SurveyAjax";
 		const replyTo = $('#post-form input[name=replyTo]').val();
 		const subj = $('#post-form input[name=subj]').val();
+		const postVerb = document.getElementById('postVerb').innerHTML;
+		const url = contextPath + "/SurveyAjax";
 
 		const errorHandler = function(err) {
 			const responseText = cldrStAjax.errResponseText(err);
@@ -342,7 +273,7 @@ const cldrStForum = (function() {
 			xpath: xpath,
 			text: text,
 			subj: subj,
-			forumStatus: forumStatus,
+			forumStatus: postVerb,
 			what: "forum_post"
 		};
 		const xhrArgs = {
@@ -366,7 +297,7 @@ const cldrStForum = (function() {
 	 * TODO: shorten this function by moving code into subroutines. Also, postpone creating
 	 * DOM elements until finished constructing the filtered list of threads, to make the code
 	 * cleaner, faster, and more testable. If context is 'summary', all DOM element creation here
-	 * is a waste of time. 
+	 * is a waste of time.
 	 *
 	 * Threading has been revised, so that the same locale+path can have multiple distinct threads,
 	 * rather than always combining posts with the same locale+path into a single "thread".
@@ -506,38 +437,16 @@ const cldrStForum = (function() {
 				const subChunk = forumCreateChunk("", "div", "postHeaderItem");
 				subSubChunk.appendChild(subChunk);
 				subChunk.appendChild(forumCreateChunk(post2text(post.subject), "b", "postSubject"));
+				subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'pull-right postVerb'));
 			}
 
 			// actual text
 			const postText = post2text(post.text);
-			const postContent = forumCreateChunk(postText, "div", "postContent");
+			const postContent = forumCreateChunk(postText, "div", "postContent postBorder");
 			subpost.appendChild(postContent);
 
-			subpost.appendChild(forumCreateChunk('【' + post.forumStatus + '】', 'div', ''));
-
 			if (opts.showReplyButton) {
-				const replyButton = forumCreateChunk(forumStr("forum_reply"), "button", "btn btn-default btn-sm");
-				(function(post) {
-					/*
-					 * TODO: encapsulate "listenFor" dependency
-					 */
-					if (typeof listenFor === 'undefined') {
-						return;
-					}
-					listenFor(replyButton, "click", function(e) {
-						openPostOrReply({
-							/*
-							 * Don't specify locale or xpath for reply. Instead they will be set to
-							 * match the original post in the thread.
-							 */
-							replyTo: post.id,
-							replyData: post
-						});
-						stStopPropagation(e);
-						return false;
-					});
-				})(post);
-				subpost.appendChild(replyButton);
+				addReplyButtons(subpost, post);
 			}
 		}
 		// reparent any nodes that we can
@@ -566,6 +475,163 @@ const cldrStForum = (function() {
 			}
 		}
 		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter, opts.showThreadCount);
+	}
+
+	function addNewPostButtons(el, locale, couldFlag, xpstrid, code, myValue) {
+		const options = getStatusOptions(false /* isReply */, null /* firstPost */, myValue);
+
+		Object.keys(options).forEach(function(postVerb) {
+			el.appendChild(makeOneNewPostButton(postVerb, options[postVerb], locale, couldFlag, xpstrid, code, myValue));
+		});
+	}
+
+	/**
+	 * Make one or more Reply buttons for the given post, and append them to the given element
+	 *
+	 * @param el the DOM element to append to
+	 * @param post the post
+	 */
+	function addReplyButtons(el, post) {
+		/*
+		 * addReplyButton is called from parseContent, before parseContent has finished, but after
+		 * updatePostHash, so it's OK to call getFirstPostInThread here
+		 */
+		const firstPost = getFirstPostInThread(post);
+		const options = getStatusOptions(true /* isReply */, firstPost, null /* myValue */);
+
+		Object.keys(options).forEach(function(postVerb) {
+			el.appendChild(makeOneReplyButton(post, postVerb, options[postVerb]));
+		});
+	}
+
+	function makeOneNewPostButton(postVerb, label, locale, couldFlag, xpstrid, code, myValue) {
+
+		const buttonTitle = couldFlag ? "forumNewPostFlagButton" : "forumNewPostButton";
+
+		const buttonClass = couldFlag ? "forumNewPostFlagButton btn btn-default btn-sm"
+									: "forumNewButton btn btn-default btn-sm";
+
+		const newButton = forumCreateChunk(label, "button", buttonClass);
+
+		// (function(couldFlag, xpstrid, code, locale, myValue) {
+			listenFor(newButton, "click", function(e) {
+				xpathMap.get({
+					hex: xpstrid
+				},
+				function(o) {
+					let subj = code + ' ' + xpstrid;
+					if (o.result && o.result.ph) {
+						subj = xpathMap.formatPathHeader(o.result.ph);
+					}
+					if (couldFlag) {
+						subj += " (Flag for review)";
+					}
+					openPostOrReply({
+						locale: locale,
+						xpath: xpstrid,
+						subject: subj,
+						postVerb: postVerb,
+						myValue: myValue
+					});
+				});
+				stStopPropagation(e);
+				return false;
+			});
+		// })(couldFlag, xpstrid, code, locale, myValue);
+		return newButton;
+	}
+
+	function makeOneReplyButton(post, postVerb, label) {
+		const replyButton = forumCreateChunk(forumStr(label), "button", "btn btn-default btn-sm");
+		/*
+		 * TODO: encapsulate "listenFor" dependency
+		 */
+		if (typeof listenFor !== 'undefined') {
+			listenFor(replyButton, "click", function(e) {
+				openPostOrReply({
+					/*
+					 * Don't specify locale or xpath for reply. Instead they will be set to
+					 * match the original post in the thread.
+					 */
+					replyTo: post.id,
+					replyData: post,
+					postVerb: postVerb
+				});
+				stStopPropagation(e);
+				return false;
+			});
+		}
+		return replyButton;
+	}
+
+	/**
+	 * Get an object defining the currently allowed forum status values
+	 * for making a new post, for the current user and given parameters
+	 *
+	 * @param isReply true if this post is a reply, else false
+	 * @param firstPost the original post in the thread
+	 * @param myValue the value the current user voted for, or null
+	 * @return the object, mapping status like 'Request' to string like 'Request a change'
+	 *
+	 * Compare SurveyForum.ForumStatus on server
+	 */
+	function getStatusOptions(isReply, firstPost, myValue) {
+		const options = {};
+		if (myValue && !isReply) { // only allow Request if this user has voted
+			options['Request'] = 'Request';
+		}
+		options['Discuss'] = 'Discuss';
+		if (isReply && firstPost && !userIsPoster(firstPost) && firstPost.status === 'Request') {
+			options['Agree'] = 'Agree';
+			options['Disagree'] = 'Disagree';
+		}
+		if (canUserClose(isReply, firstPost)) {
+			options['Close'] = 'Close';
+		}
+		return options;
+	}
+
+	/**
+	 * Is the current user the poster of this post?
+	 *
+	 * @param post the post, or null
+	 * @returns true or false
+	 */
+	function userIsPoster(post) {
+		if (post && typeof surveyUser !== 'undefined') {
+			if (surveyUser === post.poster) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Is the current user a TC (Technical Committee) member?
+	 *
+	 * @return true or false
+	 */
+	function userIsTC() {
+		if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Is this user allowed to close the thread now?
+	 *
+	 * The user is only allowed if they are the original poster of the thread,
+	 * or a TC (technical committee) member.
+	 *
+	 * @param isReply true if this post is a reply, else false
+	 * @param firstPost the original post in the thread, or null
+	 * @return true if this user is allowed to close, else false
+	 */
+	function canUserClose(isReply, firstPost) {
+		return isReply
+			// && !threadIsClosed(firstPost)
+			&& (userIsPoster(firstPost) || userIsTC());
 	}
 
 	/**
@@ -790,10 +856,12 @@ const cldrStForum = (function() {
 	 * Get a piece of html text summarizing the current Forum statistics
 	 *
 	 * @param locale the locale string
+	 * @param userId the current user's id, for cldrStForumFilter
 	 * @return the html
 	 */
-	function getForumSummaryHtml(locale) {
+	function getForumSummaryHtml(locale, userId) {
 		setLocale(locale);
+		cldrStForumFilter.setUserId(userId);
 		return reallyGetForumSummaryHtml(true /* canDoAjax */);
 	}
 
@@ -802,7 +870,7 @@ const cldrStForum = (function() {
 	 *
 	 * @param canDoAjax true to call loadForumForSummaryOnly if needed, false otherwise; should
 	 *                  be false if the caller is the loadHandler for loadForumForSummaryOnly,
-	 *                  to prevent endless back-and-forth if things go wrong 
+	 *                  to prevent endless back-and-forth if things go wrong
 	 * @return the html
 	 */
 	function reallyGetForumSummaryHtml(canDoAjax) {
@@ -817,16 +885,14 @@ const cldrStForum = (function() {
 			}
 		} else {
 			if (FORUM_DEBUG) {
-				html += "<p>Retrieved " + fmtDateTime(forumUpdateTime) + "</p>\n";				
+				html += "<p>Retrieved " + fmtDateTime(forumUpdateTime) + "</p>\n";
 			}
-			if (cldrStForumFilter) {
-				const c = cldrStForumFilter.getFilteredThreadCounts();
-				html += "<ul>\n";
-				Object.keys(c).forEach(function(k) {
-					html += "<li>" + k + ": " + c[k] + "</li>\n";
-				});
-				html += "</ul>\n";
-			}
+			const c = cldrStForumFilter.getFilteredThreadCounts();
+			html += "<ul>\n";
+			Object.keys(c).forEach(function(k) {
+				html += "<li>" + k + ": " + c[k] + "</li>\n";
+			});
+			html += "</ul>\n";
 		}
 		html += '</div>\n';
 		return html;
@@ -911,16 +977,10 @@ const cldrStForum = (function() {
 	 * Make only these functions accessible from other files:
 	 */
 	return {
-		openPostOrReply: openPostOrReply,
 		parseContent: parseContent,
 		getForumSummaryHtml: getForumSummaryHtml,
 		loadForum: loadForum,
 		reload: reload,
-		/*
-		 * The following are meant to be accessible for unit testing only:
-		 */
-		test: {
-			postStatusMenu: postStatusMenu,
-		}
+		addNewPostButtons: addNewPostButtons,
 	};
 })();

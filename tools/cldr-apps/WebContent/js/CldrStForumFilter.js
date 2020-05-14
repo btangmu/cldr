@@ -87,7 +87,12 @@ const cldrStForumFilter = (function() {
 				}
 			}
 		});
-		return select;
+		const label = document.createElement('span');
+		label.innerHTML = 'Filter: ';
+		const container = document.createElement('div');
+		container.appendChild(label);
+		container.appendChild(select);
+		return container;
 	}
 
 	/**

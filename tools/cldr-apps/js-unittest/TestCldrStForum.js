@@ -31,9 +31,8 @@
 
 			assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
 
-			const s = "n "
-				+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:26Reviewtest【Closed】forum_replyn "
-				+ "(Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: Reviewtest reply blah!【Closed】forum_reply";
+			const s = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:26ReviewClosedtestDiscuss"
+				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: ReviewClosedtest reply blah!Discuss";
 
 			assert.equal(normalizeWhitespace(s), normalizeWhitespace(content.firstChild.textContent));
 		});
@@ -64,24 +63,6 @@
 
 		it('should contain angle brackets', function() {
 			assert((htmlStr.indexOf('<') !== -1) && (htmlStr.indexOf('>') !== -1), 'does contain angle brackets');
-		});
-	});
-
-	describe('cldrStForum.test.postStatusMenu', function() {
-		const html = cldrStForum.test.postStatusMenu();
-
-		it('should not return null or empty', function() {
-			assert((html != null && html !== ''), "html is neither null nor empty");
-		});
-
-		it('should return good html', function() {
-			assert(markupParsesOk(html, 'text/html'), 'parses OK as text/html');
-		});
-
-		// not xml: status menu uses "<select required>". Could make it "<select required='required'>".
-
-		it('should contain angle brackets', function() {
-			assert((html.indexOf('<') !== -1) && (html.indexOf('>') !== -1), 'does contain angle brackets');
 		});
 	});
 
