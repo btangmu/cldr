@@ -177,6 +177,13 @@ const cldrStForum = (function() {
 		return subjectParam;
 	}
 
+	/**
+	 * Make the text (body) string for a forum post
+	 *
+	 * @param postVerb the verb such as 'Request', 'Discuss', ...
+	 * @param myValue the value the current user voted for, or null
+	 * @return the string
+	 */
 	function makePostText(postVerb, myValue) {
 		if (postVerb === 'Request' && myValue) {
 			return 'Please vote for ' + myValue + '\n';
@@ -437,7 +444,7 @@ const cldrStForum = (function() {
 				const subChunk = forumCreateChunk("", "div", "postHeaderItem");
 				subSubChunk.appendChild(subChunk);
 				subChunk.appendChild(forumCreateChunk(post2text(post.subject), "b", "postSubject"));
-				subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'pull-right postVerb'));
+				subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postVerbLabel'));
 			}
 
 			// actual text
@@ -477,6 +484,16 @@ const cldrStForum = (function() {
 		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter, opts.showThreadCount);
 	}
 
+	/**
+	 * Make one or more new-post buttons for the given post, and append them to the given element
+	 *
+	 * @param el the DOM element to append to
+	 * @param locale the locale
+	 * @param couldFlag true if the user could add a flag for this path, else false
+	 * @param xpstrid the xpath string id
+	 * @param code the "code" for the xpath
+	 * @param myValue the value the current user voted for, or null
+	 */
 	function addNewPostButtons(el, locale, couldFlag, xpstrid, code, myValue) {
 		const options = getStatusOptions(false /* isReply */, null /* firstPost */, myValue);
 
@@ -486,7 +503,7 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Make one or more Reply buttons for the given post, and append them to the given element
+	 * Make one or more reply buttons for the given post, and append them to the given element
 	 *
 	 * @param el the DOM element to append to
 	 * @param post the post
@@ -513,7 +530,7 @@ const cldrStForum = (function() {
 
 		const newButton = forumCreateChunk(label, "button", buttonClass);
 
-		// (function(couldFlag, xpstrid, code, locale, myValue) {
+		if (typeof listenFor !== 'undefined') {
 			listenFor(newButton, "click", function(e) {
 				xpathMap.get({
 					hex: xpstrid
@@ -537,12 +554,12 @@ const cldrStForum = (function() {
 				stStopPropagation(e);
 				return false;
 			});
-		// })(couldFlag, xpstrid, code, locale, myValue);
+		}
 		return newButton;
 	}
 
 	function makeOneReplyButton(post, postVerb, label) {
-		const replyButton = forumCreateChunk(forumStr(label), "button", "btn btn-default btn-sm");
+		const replyButton = forumCreateChunk(label, "button", "btn btn-default btn-sm");
 		/*
 		 * TODO: encapsulate "listenFor" dependency
 		 */
@@ -757,9 +774,10 @@ const cldrStForum = (function() {
 	 *
 	 * For post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
 	 *
-	 * Caution: strangely, a post may have a different locale than the first post in its thread.
-	 * For example, even though post 32034 is fr_CA, its child 32036 is fr.
-	 * The thread id must use the locale of of the first post, for consistency.
+	 * Make sure that the thread id uses the locale of the first post in its thread, for consistency.
+	 * Formerly, a post could have a different locale than the first post. For example, even though
+	 * post 32034 is fr_CA, its child 32036 was fr. That bug is believed to have been fixed, in the
+	 * code and in the db.
 	 *
 	 * @param post the post object
 	 * @return the thread id string

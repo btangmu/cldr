@@ -1,5 +1,6 @@
-.postVerb {
+.postVerbLabel {
 	font-size: larger;
+	text-align: right;
 	color: red;
 }
 
