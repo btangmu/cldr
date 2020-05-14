@@ -18,23 +18,30 @@
 			this.timeout(5000);
 
 			const posts = json.ret;
-
 			assert(posts != null, "posts is not null");
 
 			const content = cldrStForum.parseContent(posts, 'info');
-
 			assert(content != null, "content is not null");
 
 			assert.equal(content.childElementCount, 1065, "content has 1065 children");
 
 			assert(content.firstChild != null, "first child is not null");
-
 			assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
+			const s1 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:26ReviewClosedtest"
+				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: ReviewClosedtest reply blah!";
+			assert.equal(normalizeWhitespace(content.firstChild.textContent), normalizeWhitespace(s1));
 
-			const s = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:26ReviewClosedtestDiscuss"
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: ReviewClosedtest reply blah!Discuss";
+			const nextSibling = content.firstChild.nextSibling;
+			assert(nextSibling != null, "next sibling is not null");
+			assert.equal(nextSibling.id, "fthr_fr_CA|45346");
+			const s2 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:20ReviewClosedFUrthermore";
+			assert.equal(normalizeWhitespace(nextSibling.textContent), normalizeWhitespace(s2));
 
-			assert.equal(normalizeWhitespace(s), normalizeWhitespace(content.firstChild.textContent));
+			assert(content.lastChild != null, "last child is not null");
+			assert.equal(content.lastChild.id, "fthr_fr|363");
+			const s3 = "n (Microsoft) userlevel_vetter[v28] 2015-05-19 11:58DateTime "
+				+ "| Gregorian | Months - abbreviated - Standalone | Jul (Flag for review)Closed...";
+			assert.equal(normalizeWhitespace(content.lastChild.textContent), normalizeWhitespace(s3));
 		});
 	});
 

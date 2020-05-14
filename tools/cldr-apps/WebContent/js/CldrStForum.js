@@ -318,15 +318,14 @@ const cldrStForum = (function() {
 			postHash = {};
 		}
 		updatePostHash(posts);
+		addThreadIds(posts);
 
 		const postDivs = {}; //  postid -> div
 		const topicDivs = {}; // xpath -> div or "#123" -> div
 
-		// next, add threadIds and create the topic divs
+		// create the topic (thread) divs
 		for (let num in posts) {
 			const post = posts[num];
-			post.threadId = getThreadId(post);
-
 			if (!topicDivs[post.threadId]) {
 				// add the topic div
 				const topicDiv = document.createElement('div');
@@ -452,7 +451,7 @@ const cldrStForum = (function() {
 			const postContent = forumCreateChunk(postText, "div", "postContent postTextBorder");
 			subpost.appendChild(postContent);
 
-			if (opts.showReplyButton) {
+			if (opts.showReplyButton && isLastInThread(post)) {
 				addReplyButtons(subpost, post);
 			}
 		}
@@ -768,7 +767,7 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Get the "thread id" for the given post.
+	 * Add a "threadId" attribute to each post object in the given array
 	 *
 	 * For a post with a parent, the thread id is the same as the thread id of the parent.
 	 *
@@ -779,12 +778,13 @@ const cldrStForum = (function() {
 	 * post 32034 is fr_CA, its child 32036 was fr. That bug is believed to have been fixed, in the
 	 * code and in the db.
 	 *
-	 * @param post the post object
-	 * @return the thread id string
+	 * @param posts the array of post objects
 	 */
-	function getThreadId(post) {
-		const firstPost = getFirstPostInThread(post);
-		return firstPost.locale + "|" + firstPost.id;
+	function addThreadIds(posts) {
+		posts.forEach(function(post) {
+			const firstPost = getFirstPostInThread(post);
+			post.threadId = firstPost.locale + "|" + firstPost.id;
+		});
 	}
 
 	/**
@@ -798,6 +798,19 @@ const cldrStForum = (function() {
 			post = postHash[post.parent];
 		}
 		return post;
+	}
+
+	function isLastInThread(post) {
+		// TODO
+		return true;
+/*		posts.forEach(function(post) {
+			const threadId = post.threadId;
+			if (!(threadId in threadsToPosts)) {
+				threadsToPosts[threadId] = [];
+			}
+			threadsToPosts[threadId].push(post);
+		});
+*/
 	}
 
 	/**

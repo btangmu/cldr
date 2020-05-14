@@ -263,7 +263,7 @@ function refreshCounter() {
 		var element = $(this);
 		var href = element.attr('href');
 		if (!href) {
-			return;
+			return; // skip, dashToForum
 		}
 		var id = href.slice(1, href.length);
 		var selection = $('div[data-type="' + id + '"] tr.data-review');
