@@ -1053,7 +1053,7 @@ const cldrStForum = (function() {
 		}
 	}
 
-	function getThreadHashForPosts(posts) {
+	function getThreadHash(posts) {
 		updateForumData(posts, true /* fullSet */);
 		return threadHash;
 	}
@@ -1067,7 +1067,11 @@ const cldrStForum = (function() {
 		loadForum: loadForum,
 		reload: reload,
 		addNewPostButtons: addNewPostButtons,
-		// for unit-testing only:
-		getThreadHashForPosts: getThreadHashForPosts
+		/*
+		 * The following are meant to be accessible for unit testing only:
+		 */
+		test: {
+			getThreadHash: getThreadHash,
+		}
 	};
 })();

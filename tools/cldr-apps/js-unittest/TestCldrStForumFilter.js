@@ -17,7 +17,7 @@
 				{id: 1, parent: -1, poster: 100, locale: 'am'},
 				{id: 2, parent: 1,  poster: 200, locale: 'am'},
 			];
-			const threadHash = cldrStForum.getThreadHashForTest(posts);
+			const threadHash = cldrStForum.test.getThreadHash(posts);
 			const actualOutput = cldrStForumFilter.getFilteredThreadIds(threadHash, false);
 			const expectedOutput = ['am|1'];
 			assert.deepEqual(actualOutput, expectedOutput);
@@ -28,7 +28,7 @@
 				{id: 2, parent: 1,  poster: 200, locale: 'zh'},
 				{id: 3, parent: 2,  poster: 300, locale: 'zh'},
 			];
-			const threadHash = cldrStForum.getThreadHashForTest(posts);
+			const threadHash = cldrStForum.test.getThreadHash(posts);
 			const actualOutput = cldrStForumFilter.getFilteredThreadIds(threadHash, false);
 			const expectedOutput = ['zh|1'];
 			assert.deepEqual(actualOutput, expectedOutput);
@@ -38,7 +38,7 @@
 				{id: 1, parent: -1, poster: 100, locale: 'pt_PT'},
 				{id: 2, parent: -1, poster: 200, locale: 'pt_PT'},
 			];
-			const threadHash = cldrStForum.getThreadHashForTest(posts);
+			const threadHash = cldrStForum.test.getThreadHash(posts);
 			const actualOutput = cldrStForumFilter.getFilteredThreadIds(threadHash, false);
 			const expectedOutput = ['pt_PT|1', 'pt_PT|2'];
 			assert.deepEqual(actualOutput, expectedOutput);
