@@ -100,21 +100,19 @@ const cldrStForumFilter = (function() {
 	 *
 	 * Assume each post has post.threadId.
 	 *
-	 * @param posts the array of post objects, from newest to oldest
+	 * @param threadHash an object mapping each threadId to an array of all the posts in that thread
 	 * @param applyFilter true if the currently menu-selected filter should be applied
 	 * @return the filtered array of threadId strings
 	 */
-	function getFilteredThreadIds(posts, applyFilter) {
-		const threadsToPosts = getThreadsToPosts(posts);
-
+	function getFilteredThreadIds(threadHash, applyFilter) {
 		const filteredArray = [];
-		Object.keys(threadsToPosts).forEach(function(threadId) {
-			if (!applyFilter || threadPasses(threadsToPosts[threadId])) {
+		Object.keys(threadHash).forEach(function(threadId) {
+			if (!applyFilter || threadPasses(threadHash[threadId])) {
 				filteredArray.push(threadId);
 			}
 		});
 		if (applyFilter) {
-			updateCounts(threadsToPosts, filteredArray.length);
+			updateCounts(threadHash, filteredArray.length);
 		}
 		return filteredArray;
 	}
@@ -123,18 +121,18 @@ const cldrStForumFilter = (function() {
 	 * Update the filterCounts map by calculating all the filter counts
 	 * for filters with keepCount true
 	 *
-	 * @param threadsToPosts an object mapping each threadId to an array of all the posts in that thread
+	 * @param threadHash an object mapping each threadId to an array of all the posts in that thread
 	 * @param countCurrentFilter the count for the current filter, already calculated
 	 */
-	function updateCounts(threadsToPosts, countCurrentFilter) {
+	function updateCounts(threadHash, countCurrentFilter) {
 		clearCounts();
 		if (filters[filterIndex].keepCount) {
 			filterCounts[filters[filterIndex].name] = countCurrentFilter;
 		}
-		Object.keys(threadsToPosts).forEach(function(threadId) {
+		Object.keys(threadHash).forEach(function(threadId) {
 			for (let i = 0; i < filters.length; i++) {
 				if (filters[i].keepCount && i !== filterIndex) {
-					if (threadPassesI(threadsToPosts[threadId], i)) {
+					if (threadPassesI(threadHash[threadId], i)) {
 						filterCounts[filters[i].name]++;
 					}
 				}
@@ -177,24 +175,6 @@ const cldrStForumFilter = (function() {
 	 */
 	function getFilteredThreadCounts() {
 		return filterCounts;
-	}
-
-	/**
-	 * Get an object mapping each threadId to an array of all the posts in that thread
-	 *
-	 * @param posts the array of post objects, from newest to oldest
-	 * @return the mapping object
-	 */
-	function getThreadsToPosts(posts) {
-		const threadsToPosts = {};
-		posts.forEach(function(post) {
-			const threadId = post.threadId;
-			if (!(threadId in threadsToPosts)) {
-				threadsToPosts[threadId] = [];
-			}
-			threadsToPosts[threadId].push(post);
-		});
-		return threadsToPosts;
 	}
 
 	/**

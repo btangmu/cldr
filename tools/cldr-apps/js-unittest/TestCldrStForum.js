@@ -28,19 +28,19 @@
 			assert(content.firstChild != null, "first child is not null");
 			assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
 			const s1 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:26ReviewClosedtest"
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: ReviewClosedtest reply blah!";
+				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:28Re: ReviewClosedtest reply blah!Discuss";
 			assert.equal(normalizeWhitespace(content.firstChild.textContent), normalizeWhitespace(s1));
 
 			const nextSibling = content.firstChild.nextSibling;
 			assert(nextSibling != null, "next sibling is not null");
 			assert.equal(nextSibling.id, "fthr_fr_CA|45346");
-			const s2 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:20ReviewClosedFUrthermore";
+			const s2 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 12:20ReviewClosedFUrthermoreDiscuss";
 			assert.equal(normalizeWhitespace(nextSibling.textContent), normalizeWhitespace(s2));
 
 			assert(content.lastChild != null, "last child is not null");
 			assert.equal(content.lastChild.id, "fthr_fr|363");
 			const s3 = "n (Microsoft) userlevel_vetter[v28] 2015-05-19 11:58DateTime "
-				+ "| Gregorian | Months - abbreviated - Standalone | Jul (Flag for review)Closed...";
+				+ "| Gregorian | Months - abbreviated - Standalone | Jul (Flag for review)Closed...Discuss";
 			assert.equal(normalizeWhitespace(content.lastChild.textContent), normalizeWhitespace(s3));
 		});
 	});

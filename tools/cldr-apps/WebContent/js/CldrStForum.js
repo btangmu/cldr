@@ -49,6 +49,12 @@ const cldrStForum = (function() {
 	let postHash = {};
 
 	/**
+	 * Mapping from thread id to array of post objects, describing the most recently parsed
+	 * full set of posts from the server
+	 */
+	let threadHash = {};
+
+	/**
 	 * Fetch the Forum data from the server, and "load" it
 	 *
 	 * @param locale the locale string, like "fr_CA" (surveyCurrentLocale)
@@ -112,7 +118,7 @@ const cldrStForum = (function() {
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
-		const firstPost = parentPost ? getFirstPostInThread(parentPost) : null;
+		const firstPost = parentPost ? getOldestPostInThread(parentPost) : null;
 		const locale = isReply ? firstPost.locale : (params.locale ? params.locale : '');
 		const xpath = isReply ? firstPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
@@ -311,14 +317,9 @@ const cldrStForum = (function() {
 	 * Reference: https://unicode-org.atlassian.net/browse/CLDR-13695
 	 */
 	function parseContent(posts, context) {
-
 		const opts = getOptionsForContext(context);
 
-		if (opts.fullSet) {
-			postHash = {};
-		}
-		updatePostHash(posts);
-		addThreadIds(posts);
+		updateForumData(posts, opts.fullSet);
 
 		const postDivs = {}; //  postid -> div
 		const topicDivs = {}; // xpath -> div or "#123" -> div
@@ -451,7 +452,7 @@ const cldrStForum = (function() {
 			const postContent = forumCreateChunk(postText, "div", "postContent postTextBorder");
 			subpost.appendChild(postContent);
 
-			if (opts.showReplyButton && isLastInThread(post)) {
+			if (opts.showReplyButton && (post === getNewestPostInThread(post))) {
 				addReplyButtons(subpost, post);
 			}
 		}
@@ -484,6 +485,87 @@ const cldrStForum = (function() {
 	}
 
 	/**
+	 * Update several persistent data structures to describe the given set of posts
+	 *
+	 * @param posts the array of post objects, from newest to oldest
+	 * @param fullSet true if we should start fresh with these posts
+	 */
+	function updateForumData(posts, fullSet) {
+		if (fullSet) {
+			postHash = {};
+			threadHash = {};
+		}
+		updatePostHash(posts);
+		addThreadIds(posts);
+		updateThreadHash(posts);
+		forumUpdateTime = Date.now();
+	}
+
+	/**
+	 * Update the postHash mapping from post id to post object
+	 *
+	 * @param posts the array of post objects, from newest to oldest
+	 */
+	function updatePostHash(posts) {
+		posts.forEach(function(post) {
+			postHash[post.id] = post;
+		});
+	}
+
+	/**
+	 * Add a "threadId" attribute to each post object in the given array
+	 *
+	 * For a post with a parent, the thread id is the same as the thread id of the parent.
+	 *
+	 * Fora  post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
+	 *
+	 * Make sure that the thread id uses the locale of the first post in its thread, for consistency.
+	 * Formerly, a post could have a different locale than the first post. For example, even though
+	 * post 32034 is fr_CA, its child 32036 was fr. That bug is believed to have been fixed, in the
+	 * code and in the db.
+	 *
+	 * @param posts the array of post objects
+	 */
+	function addThreadIds(posts) {
+		posts.forEach(function(post) {
+			const firstPost = getOldestPostInThread(post);
+			post.threadId = firstPost.locale + "|" + firstPost.id;
+		});
+	}
+
+	/**
+	 * Update the threadHash mapping from threadId to an array of all the posts in that thread
+	 *
+	 * @param posts the array of post objects, from newest to oldest
+	 *
+	 * The posts are assumed to have threadId set already by addThreadIds.
+	 */
+	function updateThreadHash(posts) {
+		posts.forEach(function(post) {
+			const threadId = post.threadId;
+			if (!(threadId in threadHash)) {
+				threadHash[threadId] = [];
+			}
+			threadHash[threadId].push(post);
+		});
+	}
+
+	/**
+	 * Get the default parseContent options
+	 *
+	 * @return a new object with the default properties
+	 */
+	function getDefaultParseOptions() {
+		const opts = {};
+		opts.showItemLink = false;
+		opts.showReplyButton = false;
+		opts.fullSet = true;
+		opts.applyFilter = false;
+		opts.showThreadCount = false;
+		return opts;
+	}
+
+	/**
 	 * Make one or more new-post buttons for the given post, and append them to the given element
 	 *
 	 * @param el the DOM element to append to
@@ -510,9 +592,9 @@ const cldrStForum = (function() {
 	function addReplyButtons(el, post) {
 		/*
 		 * addReplyButton is called from parseContent, before parseContent has finished, but after
-		 * updatePostHash, so it's OK to call getFirstPostInThread here
+		 * updatePostHash, so it's OK to call getOldestPostInThread here
 		 */
-		const firstPost = getFirstPostInThread(post);
+		const firstPost = getOldestPostInThread(post);
 		const options = getStatusOptions(true /* isReply */, firstPost, null /* myValue */);
 
 		Object.keys(options).forEach(function(postVerb) {
@@ -713,18 +795,6 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Update the postHash mapping from post id to post object
-	 *
-	 * @param posts the array of posts
-	 */
-	function updatePostHash(posts) {
-		for (let num in posts) {
-			postHash[posts[num].id] = posts[num];
-		}
-		forumUpdateTime = Date.now();
-	}
-
-	/**
 	 * Convert the given text by replacing some html with plain text
 	 *
 	 * @param the plain text
@@ -750,7 +820,7 @@ const cldrStForum = (function() {
 	 * @param className CSS className, or null for none.
 	 * @return new DOM object
 	 *
-	 * This duplicated a function in survey.js; copied here to avoid the dependency, at least while testing/refactoring
+	 * This duplicated a function in survey.js; copied here to avoid the dependency
 	 */
 	function forumCreateChunk(text, tag, className) {
 		if (!tag) {
@@ -767,50 +837,30 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Add a "threadId" attribute to each post object in the given array
-	 *
-	 * For a post with a parent, the thread id is the same as the thread id of the parent.
-	 *
-	 * For post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
-	 *
-	 * Make sure that the thread id uses the locale of the first post in its thread, for consistency.
-	 * Formerly, a post could have a different locale than the first post. For example, even though
-	 * post 32034 is fr_CA, its child 32036 was fr. That bug is believed to have been fixed, in the
-	 * code and in the db.
-	 *
-	 * @param posts the array of post objects
-	 */
-	function addThreadIds(posts) {
-		posts.forEach(function(post) {
-			const firstPost = getFirstPostInThread(post);
-			post.threadId = firstPost.locale + "|" + firstPost.id;
-		});
-	}
-
-	/**
 	 * Get the first (original) post in the thread containing this post
 	 *
 	 * @param post the post object
 	 * @return the first post in the thread
 	 */
-	function getFirstPostInThread(post) {
+	function getOldestPostInThread(post) {
 		while (post.parent >= 0 && postHash[post.parent]) {
 			post = postHash[post.parent];
 		}
 		return post;
 	}
 
-	function isLastInThread(post) {
-		// TODO
-		return true;
-/*		posts.forEach(function(post) {
-			const threadId = post.threadId;
-			if (!(threadId in threadsToPosts)) {
-				threadsToPosts[threadId] = [];
-			}
-			threadsToPosts[threadId].push(post);
-		});
-*/
+	/**
+	 * Get the last (most recent) post in the thread containing this post
+	 *
+	 * @param post the post object
+	 * @return the first post in the thread
+	 */
+	function getNewestPostInThread(post) {
+		const threadPosts = threadHash[post.threadId];
+		/*
+		 * threadPosts is ordered from newest to oldest
+		 */
+		return threadPosts[0];
 	}
 
 	/**
@@ -825,8 +875,7 @@ const cldrStForum = (function() {
 	 * @return the new document fragment
 	 */
 	function filterAndAssembleForumThreads(posts, topicDivs, applyFilter, showThreadCount) {
-
-		let filteredArray = cldrStForumFilter.getFilteredThreadIds(posts, applyFilter);
+		let filteredArray = cldrStForumFilter.getFilteredThreadIds(threadHash, applyFilter);
 		const forumDiv = document.createDocumentFragment();
 		let countEl = null;
 		if (showThreadCount) {
@@ -1004,6 +1053,11 @@ const cldrStForum = (function() {
 		}
 	}
 
+	function getThreadHashForPosts(posts) {
+		updateForumData(posts, true /* fullSet */);
+		return threadHash;
+	}
+
 	/*
 	 * Make only these functions accessible from other files:
 	 */
@@ -1013,5 +1067,7 @@ const cldrStForum = (function() {
 		loadForum: loadForum,
 		reload: reload,
 		addNewPostButtons: addNewPostButtons,
+		// for unit-testing only:
+		getThreadHashForPosts: getThreadHashForPosts
 	};
 })();
