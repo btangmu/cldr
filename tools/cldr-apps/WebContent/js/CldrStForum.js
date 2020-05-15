@@ -122,11 +122,11 @@ const cldrStForum = (function() {
 		const locale = isReply ? firstPost.locale : (params.locale ? params.locale : '');
 		const xpath = isReply ? firstPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
-		const postVerb = params.postVerb ? params.postVerb : null;
-		const html = makePostHtml(postVerb, locale, xpath, replyTo);
+		const postType = params.postType ? params.postType : null;
+		const html = makePostHtml(postType, locale, xpath, replyTo);
 		const subject = makePostSubject(isReply, parentPost, subjectParam);
 		const myValue = params.myValue ? params.myValue : null;
-		const text = makePostText(postVerb, myValue);
+		const text = makePostText(postType, myValue);
 
 		openPostWindow(html, subject, text, parentPost);
 	}
@@ -134,12 +134,12 @@ const cldrStForum = (function() {
 	/**
 	 * Assemble the form and related html elements for creating a forum post
 	 *
-	 * @param postVerb the verb, such as 'Discuss'
+	 * @param postType the verb, such as 'Discuss'
 	 * @param locale the locale string
 	 * @param xpath the xpath string
 	 * @param replyTo the post id of the post being replied to, or -1
 	 */
-	function makePostHtml(postVerb, locale, xpath, replyTo) {
+	function makePostHtml(postType, locale, xpath, replyTo) {
 		let html = '';
 
 		html += '<form role="form" id="post-form">';
@@ -148,7 +148,7 @@ const cldrStForum = (function() {
 		html += '<span class="input-group-addon">Subject:</span>';
 		html += '<input class="form-control" name="subj" type="text" value="">';
 		html += '</div>'; // input-group
-		html += '<div id="postVerb" class="pull-right postVerb">' + postVerb + '</div>';
+		html += '<div id="postType" class="pull-right postType">' + postType + '</div>';
 		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>';
 		html += '</div>'; // form-group
 		html += '<button class="btn btn-success submit-post btn-block">Submit</button>';
@@ -186,14 +186,14 @@ const cldrStForum = (function() {
 	/**
 	 * Make the text (body) string for a forum post
 	 *
-	 * @param postVerb the verb such as 'Request', 'Discuss', ...
+	 * @param postType the verb such as 'Request', 'Discuss', ...
 	 * @param myValue the value the current user voted for, or null
 	 * @return the string
 	 */
-	function makePostText(postVerb, myValue) {
-		if (postVerb === 'Request' && myValue) {
+	function makePostText(postType, myValue) {
+		if (postType === 'Request' && myValue) {
 			return 'Please consider voting for ' + myValue + '\n';
-		} else if (postVerb === 'Close') {
+		} else if (postType === 'Close') {
 			return "I'm closing this thread";
 		}
 		return '';
@@ -254,7 +254,7 @@ const cldrStForum = (function() {
 		const locale = $('#post-form input[name=_]').val();
 		const replyTo = $('#post-form input[name=replyTo]').val();
 		const subj = $('#post-form input[name=subj]').val();
-		const postVerb = document.getElementById('postVerb').innerHTML;
+		const postType = document.getElementById('postType').innerHTML;
 		const url = contextPath + "/SurveyAjax";
 
 		const errorHandler = function(err) {
@@ -286,7 +286,7 @@ const cldrStForum = (function() {
 			xpath: xpath,
 			text: text,
 			subj: subj,
-			forumStatus: postVerb,
+			forumStatus: postType,
 			what: "forum_post"
 		};
 		const xhrArgs = {
@@ -431,7 +431,7 @@ const cldrStForum = (function() {
 			subpost.appendChild(subSubChunk);
 			const subChunk = forumCreateChunk("", "div", "postHeaderItem");
 			subSubChunk.appendChild(subChunk);
-			subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postVerbLabel'));
+			subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postTypeLabel'));
 
 			// actual text
 			const postText = post2text(post.text);
@@ -601,8 +601,8 @@ const cldrStForum = (function() {
 	function addNewPostButtons(el, locale, couldFlag, xpstrid, code, myValue) {
 		const options = getStatusOptions(false /* isReply */, null /* firstPost */, myValue);
 
-		Object.keys(options).forEach(function(postVerb) {
-			el.appendChild(makeOneNewPostButton(postVerb, options[postVerb], locale, couldFlag, xpstrid, code, myValue));
+		Object.keys(options).forEach(function(postType) {
+			el.appendChild(makeOneNewPostButton(postType, options[postType], locale, couldFlag, xpstrid, code, myValue));
 		});
 	}
 
@@ -620,12 +620,12 @@ const cldrStForum = (function() {
 		const firstPost = getOldestPostInThread(post);
 		const options = getStatusOptions(true /* isReply */, firstPost, null /* myValue */);
 
-		Object.keys(options).forEach(function(postVerb) {
-			el.appendChild(makeOneReplyButton(post, postVerb, options[postVerb]));
+		Object.keys(options).forEach(function(postType) {
+			el.appendChild(makeOneReplyButton(post, postType, options[postType]));
 		});
 	}
 
-	function makeOneNewPostButton(postVerb, label, locale, couldFlag, xpstrid, code, myValue) {
+	function makeOneNewPostButton(postType, label, locale, couldFlag, xpstrid, code, myValue) {
 
 		const buttonTitle = couldFlag ? "forumNewPostFlagButton" : "forumNewPostButton";
 
@@ -651,7 +651,7 @@ const cldrStForum = (function() {
 						locale: locale,
 						xpath: xpstrid,
 						subject: subj,
-						postVerb: postVerb,
+						postType: postType,
 						myValue: myValue
 					});
 				});
@@ -662,7 +662,7 @@ const cldrStForum = (function() {
 		return newButton;
 	}
 
-	function makeOneReplyButton(post, postVerb, label) {
+	function makeOneReplyButton(post, postType, label) {
 		const replyButton = forumCreateChunk(label, "button", "btn btn-default btn-sm");
 		/*
 		 * TODO: encapsulate "listenFor" dependency
@@ -676,7 +676,7 @@ const cldrStForum = (function() {
 					 */
 					replyTo: post.id,
 					replyData: post,
-					postVerb: postVerb
+					postType: postType
 				});
 				stStopPropagation(e);
 				return false;
