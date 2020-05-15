@@ -27,7 +27,7 @@ const cldrStForumFilter = (function() {
 		{name: 'All threads', func: passAll, keepCount: false},
 		{name: 'Closed threads', func: passIfClosed, keepCount: false},
 		{name: 'Threads you have posted to', func: passIfYouPosted, keepCount: false},
-		{name: 'Threads you have NOT posted to', func: passIfYouDidNotPost, keepCount: false},
+		{name: 'Threads you have not posted to', func: passIfYouDidNotPost, keepCount: false},
 	];
 
 	/**
@@ -250,7 +250,7 @@ const cldrStForumFilter = (function() {
 	 * @return true or false
 	 */
 	function passIfClosed(threadPosts) {
-		return threadPosts.some(post => post.forumStatus && (post.forumStatus === 'Closed'));
+		return threadPosts.some(post => post.forumStatus && (post.forumStatus === 'Close'));
 	}
 
 	/**
@@ -308,5 +308,6 @@ const cldrStForumFilter = (function() {
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
 		getFilteredThreadCounts: getFilteredThreadCounts,
+		passIfClosed, passIfClosed
 	};
 })();

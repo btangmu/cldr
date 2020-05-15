@@ -707,7 +707,7 @@ const cldrStForum = (function() {
 			options['Agree'] = 'Agree';
 			options['Decline'] = 'Decline';
 		}
-		if (canUserClose(isReply, firstPost)) {
+		if (userCanClose(isReply, firstPost)) {
 			options['Close'] = 'Close';
 		}
 		return options;
@@ -750,10 +750,21 @@ const cldrStForum = (function() {
 	 * @param firstPost the original post in the thread, or null
 	 * @return true if this user is allowed to close, else false
 	 */
-	function canUserClose(isReply, firstPost) {
+	function userCanClose(isReply, firstPost) {
 		return isReply
-			// && !threadIsClosed(firstPost)
+			&& !threadIsClosed(firstPost)
 			&& (userIsPoster(firstPost) || userIsTC());
+	}
+
+	/**
+	 * Is this thread closed?
+	 *
+	 * @param firstPost the original post in the thread, or null
+	 * @return true if this user is allowed to close, else false
+	 */
+	function threadIsClosed(firstPost) {
+		const threadPosts = threadHash[firstPost.threadId];
+		return cldrStForumFilter.passIfClosed(threadPosts);
 	}
 
 	/**
