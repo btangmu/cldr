@@ -333,7 +333,7 @@ const cldrStForum = (function() {
 		/*
 		 * create the topic (thread) divs -- populate topicDivs with DOM elements
 		 *
-		 * TODO: skip this loop if opts.createDomElements if false. Currently we have to do this even
+		 * TODO: skip this loop if opts.createDomElements is false. Currently we have to do this even
 		 * if opts.createDomElements if false, since filterAndAssembleForumThreads depends on topicDivs.
 		 */
 		for (let num in posts) {
@@ -509,7 +509,7 @@ const cldrStForum = (function() {
 	 *
 	 * For a post with a parent, the thread id is the same as the thread id of the parent.
 	 *
-	 * Fora  post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
+	 * For a post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
 	 *
 	 * Make sure that the thread id uses the locale of the first post in its thread, for consistency.
 	 * Formerly, a post could have a different locale than the first post. For example, even though
@@ -619,10 +619,6 @@ const cldrStForum = (function() {
 	 * @param post the post
 	 */
 	function addReplyButtons(el, post) {
-		/*
-		 * addReplyButton is called from parseContent, before parseContent has finished, but after
-		 * updatePostHash, so it's OK to call getOldestPostInThread here
-		 */
 		const firstPost = getOldestPostInThread(post);
 		const options = getStatusOptions(true /* isReply */, firstPost, null /* myValue */);
 
