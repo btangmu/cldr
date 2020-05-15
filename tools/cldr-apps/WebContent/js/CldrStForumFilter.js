@@ -250,7 +250,7 @@ const cldrStForumFilter = (function() {
 	 * @return true or false
 	 */
 	function passIfClosed(threadPosts) {
-		return threadPosts.some(post => post.forumStatus && (post.forumStatus === 'Close'));
+		return threadPosts.some(post => post.postType && (post.postType === 'Close'));
 	}
 
 	/**

@@ -419,7 +419,7 @@ public class SurveyForum {
     }
 
     /**
-     * Add a row to the FORUM_STATUS db table for the given post and PostType
+     * Add a row to the FORUM_TYPES db table for the given post and PostType
      * and add it to allPostType, unless this PostType doesn't belong in the table
      *
      * @param postId the post id
@@ -464,7 +464,7 @@ public class SurveyForum {
         PreparedStatement pList = null;
         try {
             conn = sm.dbUtils.getDBConnection();
-            pList = DBUtils.prepareStatement(conn, "pList", "SELECT id,type FROM " + DBUtils.Table.FORUM_STATUS.toString());
+            pList = DBUtils.prepareStatement(conn, "pList", "SELECT id,type FROM " + DBUtils.Table.FORUM_TYPES.toString());
             ResultSet rs = pList.executeQuery();
             while (rs.next()) {
                 int id = rs.getInt(1);
@@ -675,14 +675,14 @@ public class SurveyForum {
             s.close();
             conn.commit();
         }
-        if (!DBUtils.hasTable(conn, DBUtils.Table.FORUM_STATUS.toString())) {
+        if (!DBUtils.hasTable(conn, DBUtils.Table.FORUM_TYPES.toString())) {
             /*
-             * Create a new forum-post-type table.
+             * Create a new FORUM_TYPES table.
              */
             Statement s = conn.createStatement();
-            sql = "CREATE TABLE " + DBUtils.Table.FORUM_STATUS + " (id INT NOT NULL, type INT NOT NULL)";
+            sql = "CREATE TABLE " + DBUtils.Table.FORUM_TYPES + " (id INT NOT NULL, type INT NOT NULL)";
             s.execute(sql);
-            sql = "CREATE UNIQUE INDEX " + DBUtils.Table.FORUM_STATUS + "_id ON " + DBUtils.Table.FORUM_STATUS + " (id)";
+            sql = "CREATE UNIQUE INDEX " + DBUtils.Table.FORUM_TYPES + "_id ON " + DBUtils.Table.FORUM_TYPES + " (id)";
             s.execute(sql);
             s.close();
             conn.commit();
@@ -716,7 +716,7 @@ public class SurveyForum {
     }
 
     /**
-     * Prepare a statement for adding a new post to the forum-post-type table.
+     * Prepare a statement for adding a new post to the FORUM_TYPES table.
      *
      * @param conn the Connection
      * @return the PreparedStatement
@@ -725,7 +725,7 @@ public class SurveyForum {
      * Called only by addStatusToTable
      */
     private static PreparedStatement prepare_pAddStatus(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pAdd", "INSERT INTO " + DBUtils.Table.FORUM_STATUS.toString()
+        return DBUtils.prepareStatement(conn, "pAdd", "INSERT INTO " + DBUtils.Table.FORUM_TYPES.toString()
             + " (id,type) values (?,?)");
     }
 
@@ -1049,7 +1049,7 @@ public class SurveyForum {
         }
 
         /**
-         * Does the given PostType belong in the FORUM_STATUS db table?
+         * Does the given PostType belong in the FORUM_TYPES db table?
          *
          * Keep the table smaller by not storing rows in it for CLOSE.
          *

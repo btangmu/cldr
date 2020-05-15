@@ -286,7 +286,7 @@ const cldrStForum = (function() {
 			xpath: xpath,
 			text: text,
 			subj: subj,
-			forumStatus: postType,
+			postType: postType,
 			what: "forum_post"
 		};
 		const xhrArgs = {
@@ -431,7 +431,7 @@ const cldrStForum = (function() {
 			subpost.appendChild(subSubChunk);
 			const subChunk = forumCreateChunk("", "div", "postHeaderItem");
 			subSubChunk.appendChild(subChunk);
-			subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postTypeLabel'));
+			subChunk.appendChild(forumCreateChunk(post.postType, 'div', 'postTypeLabel'));
 
 			// actual text
 			const postText = post2text(post.text);
