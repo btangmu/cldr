@@ -197,7 +197,7 @@ const cldrStForum = (function() {
 			if (myValue) {
 				return 'Please consider voting for ' + myValue + '\n';
 			}
-		} else  else if (postType === 'Agree') {
+		} else if (postType === 'Agree') {
 			return 'I agree';
 		} else if (postType === 'Decline') {
 			return 'I decline, since ';
