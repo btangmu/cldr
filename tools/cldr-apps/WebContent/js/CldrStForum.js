@@ -192,7 +192,7 @@ const cldrStForum = (function() {
 	 */
 	function makePostText(postVerb, myValue) {
 		if (postVerb === 'Request' && myValue) {
-			return 'Please vote for ' + myValue + '\n';
+			return 'Please consider voting for ' + myValue + '\n';
 		} else if (postVerb === 'Close') {
 			return "I'm closing this thread";
 		}
@@ -215,7 +215,7 @@ const cldrStForum = (function() {
 		$('#post-form textarea[name=text]').val(text);
 
 		if (parentPost) {
-			const forumDiv = parseContent([parentPost], 'new');
+			const forumDiv = parseContent([parentPost], 'parent');
 			const postHolder = postModal.find('.modal-body').find('.forumDiv');
 			postHolder[0].appendChild(forumDiv);
 		}
@@ -324,15 +324,20 @@ const cldrStForum = (function() {
 		const postDivs = {}; //  postid -> div
 		const topicDivs = {}; // xpath -> div or "#123" -> div
 
-		// create the topic (thread) divs
+		/*
+		 * create the topic (thread) divs -- populate topicDivs with DOM elements
+		 *
+		 * TODO: skip this loop if opts.createDomElements if false. Currently we have to do this even
+		 * if opts.createDomElements if false, since filterAndAssembleForumThreads depends on topicDivs.
+		 */
 		for (let num in posts) {
 			const post = posts[num];
 			if (!topicDivs[post.threadId]) {
 				// add the topic div
 				const topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
-				const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
 				if (opts.showItemLink) {
+					const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
 					topicDiv.appendChild(topicInfo);
 					if (post.locale) {
 						const localeLink = forumCreateChunk(locmap.getLocaleName(post.locale), "a", "localeName");
@@ -341,27 +346,10 @@ const cldrStForum = (function() {
 						}
 						topicInfo.appendChild(localeLink);
 					}
-				}
-				if (!post.xpath) {
-					topicInfo.appendChild(forumCreateChunk(post2text(post.subject), "span", "topicSubject"));
-				} else if (opts.showItemLink) {
-					const itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
-					itemLink.href = "#/" + post.locale + "//" + post.xpath;
-					topicInfo.appendChild(itemLink);
-					(function(topicInfo) {
-						const loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
-						topicInfo.appendChild(loadingMsg);
-						xpathMap.get({
-							hex: post.xpath
-						}, function(o) {
-							if (o.result) {
-								topicInfo.removeChild(loadingMsg);
-								const itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
-								itemPh.title = o.result.path;
-								topicInfo.appendChild(itemPh);
-							}
-						});
-					})(topicInfo);
+					if (post.xpath) {
+						topicInfo.appendChild(makeItemLink(post));
+					}
+					addThreadSubjectSpan(topicInfo, getOldestPostInThread(post));
 				}
 				topicDivs[post.threadId] = topicDiv;
 				topicDiv.id = "fthr_" + post.threadId;
@@ -440,12 +428,10 @@ const cldrStForum = (function() {
 			subpost.appendChild(headingLine);
 
 			const subSubChunk = forumCreateChunk("", "div", "postHeaderInfoGroup");
-			subpost.appendChild(subSubChunk); {
-				const subChunk = forumCreateChunk("", "div", "postHeaderItem");
-				subSubChunk.appendChild(subChunk);
-				subChunk.appendChild(forumCreateChunk(post2text(post.subject), "b", "postSubject"));
-				subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postVerbLabel'));
-			}
+			subpost.appendChild(subSubChunk);
+			const subChunk = forumCreateChunk("", "div", "postHeaderItem");
+			subSubChunk.appendChild(subChunk);
+			subChunk.appendChild(forumCreateChunk(post.forumStatus, 'div', 'postVerbLabel'));
 
 			// actual text
 			const postText = post2text(post.text);
@@ -551,18 +537,55 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Get the default parseContent options
+	 * Make a hyperlink from the given post to the the same post in the main Forum window
 	 *
-	 * @return a new object with the default properties
+	 * @param post the post object
+	 * @return the DOM element
 	 */
-	function getDefaultParseOptions() {
-		const opts = {};
-		opts.showItemLink = false;
-		opts.showReplyButton = false;
-		opts.fullSet = true;
-		opts.applyFilter = false;
-		opts.showThreadCount = false;
-		return opts;
+	function makeItemLink(post) {
+		const itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
+		itemLink.href = "#/" + post.locale + "//" + post.xpath;
+		return itemLink;
+	}
+
+	/**
+	 * Make a span containing a subject line for the specified thread
+	 *
+	 * @param topicInfo the DOM element to which to attach the span
+	 * @param firstPost the oldest post in the thread
+	 */
+	function addThreadSubjectSpan(topicInfo, firstPost) {
+		/*
+		 * Starting with CLDR v38, posts should all have post.xpath, and post.subject
+		 * should be like "Characters | Typography | Style | wght-900-heavy" (recognizable
+		 * by containing the character '|'), constructed from the xpath and path-header when
+		 * the post is created.
+		 *
+		 * In such normal cases (or if there is no xpath), the thread subject is the same as
+		 * the subject of the oldest post in the thread.
+		 */
+		if (firstPost.subject.indexOf('|') >= 0 || !firstPost.xpath) {
+			topicInfo.appendChild(forumCreateChunk(post2text(firstPost.subject), "span", "topicSubject"));
+			return;
+		}
+		/*
+		 * Some old posts have subjects like "Review" or "Flag Removed".
+		 * In this case, construct a new subject based on the xpath and path-header.
+		 * This is awkward since xpathMap.get is asynchronous. Display the word
+		 * "Loading" as a place-holder while waiting for the result.
+		 */
+		const loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
+		topicInfo.appendChild(loadingMsg);
+		xpathMap.get({
+			hex: firstPost.xpath
+		}, function(o) {
+			if (o.result) {
+				topicInfo.removeChild(loadingMsg);
+				const itemPh = forumCreateChunk(xpathMap.formatPathHeader(o.result.ph), "span", "topicSubject");
+				itemPh.title = o.result.path;
+				topicInfo.appendChild(itemPh);
+			}
+		});
 	}
 
 	/**
@@ -669,7 +692,8 @@ const cldrStForum = (function() {
 	 * @param isReply true if this post is a reply, else false
 	 * @param firstPost the original post in the thread
 	 * @param myValue the value the current user voted for, or null
-	 * @return the object, mapping status like 'Request' to string like 'Request a change'
+	 * @return the object mapping verbs like 'Request' to label strings like 'Request'
+	 *         (Currently the labels are the same as the verbs)
 	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
@@ -681,7 +705,7 @@ const cldrStForum = (function() {
 		options['Discuss'] = 'Discuss';
 		if (isReply && firstPost && !userIsPoster(firstPost) && firstPost.status === 'Request') {
 			options['Agree'] = 'Agree';
-			options['Disagree'] = 'Disagree';
+			options['Decline'] = 'Decline';
 		}
 		if (canUserClose(isReply, firstPost)) {
 			options['Close'] = 'Close';
@@ -740,9 +764,11 @@ const cldrStForum = (function() {
 	 *
 	 *   'main' for the context in which "Forum" is chosen from the left sidebar
 	 *
+	 *   'summary' for the context of getForumSummaryHtml
+	 *
 	 *   'info' for the "Info Panel" context (either main vetting view row, or Dashboard "Fix" button)
 	 *
-	 *   'new' for creation of a new post or reply
+	 *   'parent' for the replied-to post at the bottom of the create-reply dialog
 	 *
 	 * @return an object with these properties:
 	 *
@@ -755,6 +781,8 @@ const cldrStForum = (function() {
 	 *   applyFilter = true if the currently menu-selected filter should be applied
 	 *
 	 *   showThreadCount = true to display the number of threads
+	 *
+	 *   createDomElements = true to create the DOM objects (false for summary)
 	 */
 	function getOptionsForContext(context) {
 		const opts = getDefaultParseOptions();
@@ -765,13 +793,10 @@ const cldrStForum = (function() {
 			opts.showThreadCount = true;
 		} else if (context === 'summary') {
 			opts.applyFilter = true;
+			opts.createDomElements = false;
 		} else if (context === 'info') {
 			opts.showReplyButton = true;
-		} else if (context === 'new') {
-			/*
-			 * posts may have zero, one, or more elements here, for parent(s),
-			 * if any, of a new post in the process of being created
-			 */
+		} else if (context === 'parent') {
 			opts.fullSet = false;
 		} else {
 			console.log('Unrecognized context in getOptionsForContext: ' + context)
@@ -791,6 +816,7 @@ const cldrStForum = (function() {
 		opts.fullSet = true;
 		opts.applyFilter = false;
 		opts.showThreadCount = false;
+		opts.createDomElements = true;
 		return opts;
 	}
 

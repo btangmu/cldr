@@ -984,7 +984,7 @@ public class SurveyForum {
         DISCUSS(1, "Discuss"),
         REQUEST(2, "Request"),
         AGREE(3, "Agree"),
-        DISAGREE(4, "Disagree");
+        DECLINE(4, "Decline");
 
         ForumStatus(int id, String name) {
             this.id = id;
