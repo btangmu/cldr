@@ -126,7 +126,7 @@ const cldrStForum = (function() {
 		const html = makePostHtml(postType, locale, xpath, replyTo);
 		const subject = makePostSubject(isReply, parentPost, subjectParam);
 		const myValue = params.myValue ? params.myValue : null;
-		const text = makePostText(postType, myValue);
+		const text = prefillPostText(postType, myValue);
 
 		openPostWindow(html, subject, text, parentPost);
 	}
@@ -190,11 +190,17 @@ const cldrStForum = (function() {
 	 * @param myValue the value the current user voted for, or null
 	 * @return the string
 	 */
-	function makePostText(postType, myValue) {
-		if (postType === 'Request' && myValue) {
-			return 'Please consider voting for ' + myValue + '\n';
-		} else if (postType === 'Close') {
+	function prefillPostText(postType, myValue) {
+		if (postType === 'Close') {
 			return "I'm closing this thread";
+		} else if (postType === 'Request') {
+			if (myValue) {
+				return 'Please consider voting for ' + myValue + '\n';
+			}
+		} else  else if (postType === 'Agree') {
+			return 'I agree';
+		} else if (postType === 'Decline') {
+			return 'I decline, since ';
 		}
 		return '';
 	}
