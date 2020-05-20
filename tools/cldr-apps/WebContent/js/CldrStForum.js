@@ -195,12 +195,14 @@ const cldrStForum = (function() {
 			return "I'm closing this thread";
 		} else if (postType === 'Request') {
 			if (myValue) {
-				return 'Please consider voting for ' + myValue + '\n';
+				return 'Please consider voting for “' + myValue + '”\n';
 			}
 		} else if (postType === 'Agree') {
-			return 'I agree';
+			return 'I agree; am changing my vote to the requested value';
+			// return 'I agree; am changing my vote to the requested “' + requestedValue + '”'; // TODO: get requestedValue
 		} else if (postType === 'Decline') {
-			return 'I decline, since ';
+			return 'I decline changing my vote to the requested value. My reasons are:\n';
+			// TODO: get requestedValue
 		}
 		return '';
 	}

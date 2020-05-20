@@ -627,7 +627,7 @@ function createLinkToFn(strid, fn, tag) {
 function createGravitar(user) {
 	if (user.emailHash) {
 		var gravatar = document.createElement("img");
-		gravatar.src = 'http://www.gravatar.com/avatar/' + user.emailHash + '?d=identicon&r=g&s=32';
+		gravatar.src = 'https://www.gravatar.com/avatar/' + user.emailHash + '?d=identicon&r=g&s=32';
 		gravatar.title = 'gravatar - http://www.gravatar.com';
 		return gravatar;
 	} else {
