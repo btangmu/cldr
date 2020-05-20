@@ -123,12 +123,12 @@ const cldrStForum = (function() {
 		const xpath = isReply ? firstPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
 		const postType = params.postType ? params.postType : null;
-		const html = makePostHtml(postType, locale, xpath, replyTo);
-		const subject = makePostSubject(isReply, parentPost, subjectParam);
+		const subject = makePostSubject(isReply, firstPost, subjectParam);
+		const html = makePostHtml(postType, locale, xpath, subject, replyTo);
 		const myValue = params.myValue ? params.myValue : null;
 		const text = prefillPostText(postType, myValue);
 
-		openPostWindow(html, subject, text, parentPost);
+		openPostWindow(html, text, parentPost);
 	}
 
 	/**
@@ -137,20 +137,21 @@ const cldrStForum = (function() {
 	 * @param postType the verb, such as 'Discuss'
 	 * @param locale the locale string
 	 * @param xpath the xpath string
+	 * @param subject the subject string (path-header)
 	 * @param replyTo the post id of the post being replied to, or -1
 	 */
-	function makePostHtml(postType, locale, xpath, replyTo) {
+	function makePostHtml(postType, locale, xpath, subject, replyTo) {
 		let html = '';
 
+		html += '<div id="postSubject" class="topicSubject">' + subject + '</div>';
+		html += '<div id="postType" class="postTypeLabel">' + postType + '</div>';
 		html += '<form role="form" id="post-form">';
 		html += '<div class="form-group">';
-		html += '<div class="input-group">';
-		html += '<span class="input-group-addon">Subject:</span>';
-		html += '<input class="form-control" name="subj" type="text" value="">';
-		html += '</div>'; // input-group
-		html += '<div id="postType" class="pull-right postType">' + postType + '</div>';
-		html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>';
-		html += '</div>'; // form-group
+		// html += '<div class="input-group">';
+		/// html += '<textarea name="text" placeholder="Write your post here"></textarea>';
+		html += '<textarea name="text" style="width: 100%; box-sizing: border-box; margin-bottom: 1em" placeholder="Write your post here"></textarea>';
+		/// html += '<textarea name="text" class="form-control" placeholder="Write your post here"></textarea>';
+		// html += '</div>';
 		html += '<button class="btn btn-success submit-post btn-block">Submit</button>';
 		html += '<input type="hidden" name="forum" value="true">';
 		html += '<input type="hidden" name="_" value="' + locale + '">';
@@ -168,16 +169,18 @@ const cldrStForum = (function() {
 	 * Make the subject string for a forum post
 	 *
 	 * @param isReply is this a reply? True or false
-	 * @param parentPost the post object for the post being replied to, or null
+	 * @param firstPost the first post in the thread, or null
 	 * @param subjectParam the subject for this post supplied in parameters
 	 * @return the string
 	 */
-	function makePostSubject(isReply, parentPost, subjectParam) {
-		if (isReply && parentPost) {
-			let subject = post2text(parentPost.subject);
+	function makePostSubject(isReply, firstPost, subjectParam) {
+		if (isReply && firstPost) {
+			let subject = post2text(firstPost.subject);
+			/***
 			if (subject.substring(0, 3) != 'Re:') {
 				subject = 'Re: ' + subject;
 			}
+			***/
 			return subject;
 		}
 		return subjectParam;
@@ -210,16 +213,14 @@ const cldrStForum = (function() {
 	/**
 	 * Open a window displaying the form for creating a post
 	 *
-	 * @param subject the subject string
 	 * @param html the main html for the form
 	 * @param parentPost the post object, if any, to which this is a reply, for display at the bottom of the window
 	 *
 	 * Reference: Bootstrap.js post-modal: https://getbootstrap.com/docs/4.1/components/modal/
 	 */
-	function openPostWindow(html, subject, text, parentPost) {
+	function openPostWindow(html, text, parentPost) {
 		const postModal = $('#post-modal');
 		postModal.find('.modal-body').html(html);
-		postModal.find('input[name=subj]')[0].value = subject;
 		$('#post-form textarea[name=text]').val(text);
 
 		if (parentPost) {
@@ -261,7 +262,7 @@ const cldrStForum = (function() {
 		const xpath = $('#post-form input[name=xpath]').val();
 		const locale = $('#post-form input[name=_]').val();
 		const replyTo = $('#post-form input[name=replyTo]').val();
-		const subj = $('#post-form input[name=subj]').val();
+		const subj = document.getElementById('postSubject').innerHTML;
 		const postType = document.getElementById('postType').innerHTML;
 		const url = contextPath + "/SurveyAjax";
 
@@ -622,7 +623,7 @@ const cldrStForum = (function() {
 	 */
 	function addReplyButtons(el, post) {
 		const firstPost = getOldestPostInThread(post);
-		const options = getStatusOptions(true /* isReply */, firstPost, null /* myValue */);
+		const options = getStatusOptions(true /* isReply */, firstPost, firstPost.value);
 
 		Object.keys(options).forEach(function(postType) {
 			el.appendChild(makeOneReplyButton(post, postType, options[postType]));
