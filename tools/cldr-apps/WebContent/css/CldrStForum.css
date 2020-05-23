@@ -1,5 +1,10 @@
+.forumThreadStatus {
+	display: block;
+	text-align: right;
+	color: red;
+}
+
 .postTypeLabel {
-	font-size: larger;
 	text-align: right;
 	clear: right;
 	color: red;

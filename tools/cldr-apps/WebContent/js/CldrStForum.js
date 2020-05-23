@@ -349,6 +349,9 @@ const cldrStForum = (function() {
 				// add the topic div
 				const topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
+				const rootPost = getOldestPostInThread(post);
+				const openOrClosed = rootPost.open ? "Open" : "Closed";
+				topicDiv.appendChild(forumCreateChunk(openOrClosed, "span", "forumThreadStatus"));
 				if (opts.showItemLink) {
 					const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
 					topicDiv.appendChild(topicInfo);
@@ -362,7 +365,7 @@ const cldrStForum = (function() {
 					if (post.xpath) {
 						topicInfo.appendChild(makeItemLink(post));
 					}
-					addThreadSubjectSpan(topicInfo, getOldestPostInThread(post));
+					addThreadSubjectSpan(topicInfo, rootPost);
 				}
 				topicDivs[post.threadId] = topicDiv;
 				topicDiv.id = "fthr_" + post.threadId;

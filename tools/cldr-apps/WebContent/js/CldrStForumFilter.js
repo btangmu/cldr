@@ -240,7 +240,7 @@ const cldrStForumFilter = (function() {
 	 * @return true or false
 	 */
 	function passIfOpen(threadPosts) {
-		return !passIfClosed(threadPosts);
+		return threadPosts[0].open;
 	}
 
 	/**
@@ -250,7 +250,7 @@ const cldrStForumFilter = (function() {
 	 * @return true or false
 	 */
 	function passIfClosed(threadPosts) {
-		return threadPosts.some(post => post.postType && (post.postType === 'Close'));
+		return !passIfOpen(threadPosts);
 	}
 
 	/**
@@ -260,17 +260,7 @@ const cldrStForumFilter = (function() {
 	 * @return true or false
 	 */
 	function passIfOpenAndYouDidNotPost(threadPosts) {
-		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
-	}
-
-	/**
-	 * Is the thread with the given array of posts open and does it include no posts by the current user?
-	 *
-	 * @param threadPosts the array of posts in the thread
-	 * @return true or false
-	 */
-	function passIfOpenAndYouDidNotPost(threadPosts) {
-		return passIfYouDidNotPost(threadPosts) && passIfOpen(threadPosts);
+		return passIfOpen(threadPosts) && passIfYouDidNotPost(threadPosts);
 	}
 
 	/**
@@ -291,13 +281,13 @@ const cldrStForumFilter = (function() {
 	 */
 	function passIfYouStarted(threadPosts) {
 		/*
-		 * The first (original) post in the thread is the last one in the array
+		 * The root (original) post in the thread is the last one in the array
 		 */
 		if (threadPosts.length < 1) {
 			return false;
 		}
-		const post = threadPosts[threadPosts.length - 1];
-		return post.poster === filterUserId;
+		const rootPost = threadPosts[threadPosts.length - 1];
+		return rootPost.poster === filterUserId;
 	}
 
 	/*
@@ -307,7 +297,6 @@ const cldrStForumFilter = (function() {
 		setUserId: setUserId,
 		createMenu: createMenu,
 		getFilteredThreadIds: getFilteredThreadIds,
-		getFilteredThreadCounts: getFilteredThreadCounts,
-		passIfClosed, passIfClosed
+		getFilteredThreadCounts: getFilteredThreadCounts
 	};
 })();
