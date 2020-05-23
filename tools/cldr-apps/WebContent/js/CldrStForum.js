@@ -58,6 +58,7 @@ const cldrStForum = (function() {
 	 * Fetch the Forum data from the server, and "load" it
 	 *
 	 * @param locale the locale string, like "fr_CA" (surveyCurrentLocale)
+	 * @param userId the id of the current user
 	 * @param forumMessage the forum message
 	 * @param params an object with various properties such as exports, special, flipper, otherSpecial, name, ...
 	 */
@@ -118,13 +119,13 @@ const cldrStForum = (function() {
 		const isReply = (params.replyTo && params.replyTo >= 0) ? true : false
 		const replyTo = isReply ? params.replyTo : -1;
 		const parentPost = (isReply && params.replyData) ? params.replyData : null;
-		const rootPost = parentPost ? getOldestPostInThread(parentPost) : null;
+		const rootPost = parentPost ? getThreadRootPost(parentPost) : null;
 		const locale = isReply ? rootPost.locale : (params.locale ? params.locale : '');
 		const xpath = isReply ? rootPost.xpath : (params.xpath ? params.xpath : '');
 		const subjectParam = params.subject ? params.subject : '';
 		const postType = params.postType ? params.postType : null;
 		const subject = makePostSubject(isReply, rootPost, subjectParam);
-		const value = params.value ? params.value : rootPost.value;
+		const value = params.value ? params.value : ((rootPost && rootPost.value) ? rootPost.value : null);
 		const root = isReply ? rootPost.id : -1;
 		const open = isReply ? rootPost.open : true;
 		const html = makePostHtml(postType, locale, xpath, subject, replyTo, root, open, value);
@@ -144,6 +145,7 @@ const cldrStForum = (function() {
 	 * @param root the post id of the original post in the thread, or -1
 	 * @param open true or false, is this thread open
 	 * @param value the value that was requested in the root post, or null
+	 * @return the html
 	 */
 	function makePostHtml(postType, locale, xpath, subject, replyTo, root, open, value) {
 		let html = '';
@@ -200,7 +202,7 @@ const cldrStForum = (function() {
 				return 'Please consider voting for “' + value + '”\n';
 			}
 		} else if (postType === 'Agree') {
-			return 'I agree; am changing my vote to the requested “' + value + '”';
+			return 'I agree. I am changing my vote to the requested “' + value + '”';
 		} else if (postType === 'Decline') {
 			return 'I decline changing my vote to the requested “' + value + '”. My reasons are:\n';
 		}
@@ -219,7 +221,6 @@ const cldrStForum = (function() {
 		const postModal = $('#post-modal');
 		postModal.find('.modal-body').html(html);
 		$('#post-form textarea[name=text]').val(text);
-
 		if (parentPost) {
 			const forumDiv = parseContent([parentPost], 'parent');
 			const postHolder = postModal.find('.modal-body').find('.forumDiv');
@@ -349,9 +350,7 @@ const cldrStForum = (function() {
 				// add the topic div
 				const topicDiv = document.createElement('div');
 				topicDiv.className = 'well well-sm postTopic';
-				const rootPost = getOldestPostInThread(post);
-				const openOrClosed = rootPost.open ? "Open" : "Closed";
-				topicDiv.appendChild(forumCreateChunk(openOrClosed, "span", "forumThreadStatus"));
+				const rootPost = getThreadRootPost(post);
 				if (opts.showItemLink) {
 					const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
 					topicDiv.appendChild(topicInfo);
@@ -443,11 +442,17 @@ const cldrStForum = (function() {
 			headingLine.appendChild(dateChunk);
 			subpost.appendChild(headingLine);
 
-			const subSubChunk = forumCreateChunk("", "div", "postHeaderInfoGroup");
-			subpost.appendChild(subSubChunk);
-			const subChunk = forumCreateChunk("", "div", "postHeaderItem");
-			subSubChunk.appendChild(subChunk);
-			subChunk.appendChild(forumCreateChunk(post.postType, 'div', 'postTypeLabel'));
+			const subChunk = forumCreateChunk("", "div", '');
+			subpost.appendChild(subChunk);
+
+			if (post.parent === -1) {
+				const openOrClosed = post.open ? 'Open' : 'Closed';
+				const comboChunk = forumCreateChunk(openOrClosed, 'div', 'forumThreadStatus');
+				comboChunk.appendChild(forumCreateChunk(post.postType, 'span', 'postTypeComboLabel'));
+				subChunk.appendChild(comboChunk);
+			} else {
+				subChunk.appendChild(forumCreateChunk(post.postType, 'div', 'postTypeLabel'));
+			}
 
 			// actual text
 			const postText = post2text(post.text);
@@ -534,7 +539,7 @@ const cldrStForum = (function() {
 	 */
 	function addThreadIds(posts) {
 		posts.forEach(function(post) {
-			const rootPost = getOldestPostInThread(post);
+			const rootPost = getThreadRootPost(post);
 			post.threadId = rootPost.locale + "|" + rootPost.id;
 		});
 	}
@@ -619,7 +624,7 @@ const cldrStForum = (function() {
 	 * @param value the value the current user voted for, or null
 	 */
 	function addNewPostButtons(el, locale, couldFlag, xpstrid, code, value) {
-		const options = getStatusOptions(false /* isReply */, null /* rootPost */, value);
+		const options = getPostTypeOptions(false /* isReply */, null /* rootPost */, value);
 
 		Object.keys(options).forEach(function(postType) {
 			el.appendChild(makeOneNewPostButton(postType, options[postType], locale, couldFlag, xpstrid, code, value));
@@ -633,8 +638,8 @@ const cldrStForum = (function() {
 	 * @param post the post
 	 */
 	function addReplyButtons(el, post) {
-		const rootPost = getOldestPostInThread(post);
-		const options = getStatusOptions(true /* isReply */, rootPost, rootPost.value);
+		const rootPost = getThreadRootPost(post);
+		const options = getPostTypeOptions(true /* isReply */, rootPost, rootPost.value);
 
 		Object.keys(options).forEach(function(postType) {
 			el.appendChild(makeOneReplyButton(post, postType, options[postType]));
@@ -645,8 +650,8 @@ const cldrStForum = (function() {
 
 		const buttonTitle = couldFlag ? "forumNewPostFlagButton" : "forumNewPostButton";
 
-		const buttonClass = couldFlag ? "forumNewPostFlagButton btn btn-default btn-sm addPostButton"
-									: "forumNewButton btn btn-default btn-sm addPostButton";
+		const buttonClass = couldFlag ? "addPostButton forumNewPostFlagButton btn btn-default btn-sm"
+									: "addPostButton forumNewButton btn btn-default btn-sm";
 
 		const newButton = forumCreateChunk(label, "button", buttonClass);
 
@@ -679,7 +684,7 @@ const cldrStForum = (function() {
 	}
 
 	function makeOneReplyButton(post, postType, label) {
-		const replyButton = forumCreateChunk(label, "button", "btn btn-default btn-sm addPostButton");
+		const replyButton = forumCreateChunk(label, "button", "addPostButton btn btn-default btn-sm");
 		/*
 		 * TODO: encapsulate "listenFor" dependency
 		 */
@@ -702,32 +707,49 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Get an object defining the currently allowed forum status values
+	 * Get an object defining the currently allowed post-type values
 	 * for making a new post, for the current user and given parameters
 	 *
 	 * @param isReply true if this post is a reply, else false
-	 * @param rootPost the original post in the thread
+	 * @param rootPost the original post in the thread, or null if not replying
 	 * @param value the value the root post requested, or null
 	 * @return the object mapping verbs like 'Request' to label strings like 'Request'
 	 *         (Currently the labels are the same as the verbs)
 	 *
 	 * Compare SurveyForum.ForumStatus on server
 	 */
-	function getStatusOptions(isReply, rootPost, value) {
+	function getPostTypeOptions(isReply, rootPost, value) {
 		const options = {};
-		options['Discuss'] = 'Discuss';
-		if (value) {
-			if (!isReply) {
-				options['Request'] = 'Request';
-			} else if (rootPost && !userIsPoster(rootPost) && rootPost.status === 'Request') {
-				options['Agree'] = 'Agree';
-				options['Decline'] = 'Decline';
+		if (rootPost === null || rootPost.open) {
+			options['Discuss'] = 'Discuss';
+			if (value) {
+				if (!isReply) {
+					options['Request'] = 'Request';
+				} else if (rootPost && !userIsPoster(rootPost) && rootPost.postType === 'Request') {
+					options['Agree'] = 'Agree';
+					options['Decline'] = 'Decline';
+				}
+			}
+			if (userCanClose(isReply, rootPost)) {
+				options['Close'] = 'Close';
 			}
 		}
-		if (userCanClose(isReply, rootPost)) {
-			options['Close'] = 'Close';
-		}
 		return options;
+	}
+
+	/**
+	 * Is this user allowed to close the thread now?
+	 *
+	 * The user is only allowed if they are the original poster of the thread,
+	 * or a TC (technical committee) member.
+	 *
+	 * @param isReply true if this post is a reply, else false
+	 * @param rootPost the original post in the thread, or null
+	 * @return true if this user is allowed to close, else false
+	 */
+	function userCanClose(isReply, rootPost) {
+		return isReply && rootPost.open
+			&& (userIsPoster(rootPost) || userIsTC());
 	}
 
 	/**
@@ -738,7 +760,7 @@ const cldrStForum = (function() {
 	 */
 	function userIsPoster(post) {
 		if (post && typeof surveyUser !== 'undefined') {
-			if (surveyUser === post.poster) {
+			if (surveyUser.id === post.poster) {
 				return true;
 			}
 		}
@@ -755,21 +777,6 @@ const cldrStForum = (function() {
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * Is this user allowed to close the thread now?
-	 *
-	 * The user is only allowed if they are the original poster of the thread,
-	 * or a TC (technical committee) member.
-	 *
-	 * @param isReply true if this post is a reply, else false
-	 * @param rootPost the original post in the thread, or null
-	 * @return true if this user is allowed to close, else false
-	 */
-	function userCanClose(isReply, rootPost) {
-		return isReply && rootPost.open
-			&& (userIsPoster(rootPost) || userIsTC());
 	}
 
 	/**
@@ -884,7 +891,7 @@ const cldrStForum = (function() {
 	 * @param post the post object
 	 * @return the original post in the thread
 	 */
-	function getOldestPostInThread(post) {
+	function getThreadRootPost(post) {
 		if (postHash[post.root]) {
 			return postHash[post.root];
 		}

@@ -50,13 +50,6 @@ public class SurveyForum {
     public static final String F_XPATH = "xpath";
 
     /**
-     * prepare text for posting
-     */
-    static private String preparePostText(String intext) {
-        return intext.replaceAll("\r", "").replaceAll("\n", "<p>");
-    }
-
-    /**
      * Make an "html-safe" version of the given string
      *
      * @param s
@@ -509,11 +502,13 @@ public class SurveyForum {
      * @return the PreparedStatement
      * @throws SQLException
      *
-     * Called only by doPostInternal
+     * Called only by savePostToDb
      */
     private static PreparedStatement prepare_pAdd(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pAdd", "INSERT INTO " + DBUtils.Table.FORUM_POSTS.toString()
-            + " (poster,subj,text,forum,parent,loc,xpath,version) values (?,?,?,?,?,?,?,?)");
+        return DBUtils.prepareStatement(conn, "pAdd", "INSERT INTO "
+            + DBUtils.Table.FORUM_POSTS.toString()
+            + " (poster,subj,text,forum,parent,loc,xpath,version,root,type,open,value)"
+            + " values (?,?,?,?,?,?,?,?,?,?,?,?)");
     }
 
     /**
@@ -523,10 +518,11 @@ public class SurveyForum {
      * @return the PreparedStatement
      * @throws SQLException
      *
-     * Called only by doPostInternal
+     * Called only by savePostToDb
      */
     private static PreparedStatement prepare_pCloseThread(Connection conn) throws SQLException {
-        return DBUtils.prepareStatement(conn, "pAdd", "UPDATE " + DBUtils.Table.FORUM_POSTS.toString()
+        return DBUtils.prepareStatement(conn, "pAdd", "UPDATE "
+            + DBUtils.Table.FORUM_POSTS.toString()
             + " SET open=false WHERE id=? OR root=?");
     }
 
@@ -842,6 +838,7 @@ public class SurveyForum {
         final PostType type = postInfo.getType();
         final boolean open = (type == PostType.CLOSE) ? false : postInfo.getOpen();
         final int root = postInfo.getRoot();
+        final String text = postInfo.getText().replaceAll("\r", "").replaceAll("\n", "<p>");
         try {
             Connection conn = null;
             PreparedStatement pAdd = null, pCloseThread = null;
@@ -856,7 +853,7 @@ public class SurveyForum {
                 pAdd = prepare_pAdd(conn);
                 pAdd.setInt(1, user.id);
                 DBUtils.setStringUTF8(pAdd, 2, postInfo.getSubj());
-                DBUtils.setStringUTF8(pAdd, 3, preparePostText(postInfo.getText()));
+                DBUtils.setStringUTF8(pAdd, 3, text);
                 pAdd.setInt(4, forumNumber);
                 pAdd.setInt(5, postInfo.getReplyTo()); // record parent
                 pAdd.setString(6, localeStr); // real locale of item, not forum #
@@ -865,7 +862,7 @@ public class SurveyForum {
                 pAdd.setInt(9, root);
                 pAdd.setInt(10, type.toInt());
                 pAdd.setBoolean(11, open);
-                pAdd.setString(12, postInfo.getValue());
+                DBUtils.setStringUTF8(pAdd, 12, postInfo.getValue());
 
                 int n = pAdd.executeUpdate();
                 if (postInfo.couldFlagOnLosing()) {

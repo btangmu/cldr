@@ -1,7 +1,11 @@
 .forumThreadStatus {
-	display: block;
-	text-align: right;
 	color: red;
+}
+
+.postTypeComboLabel {
+	text-align: right;
+	float: right;
+	clear: right;
 }
 
 .postTypeLabel {
