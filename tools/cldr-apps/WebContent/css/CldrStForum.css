@@ -31,3 +31,7 @@
 .addPostButton {
 	margin: 0.5em !important; /* override bootstrap btn margin-bottom 0 */
 }
+
+hr.postRule {
+	border-top: 1px solid #3399f3;
+}

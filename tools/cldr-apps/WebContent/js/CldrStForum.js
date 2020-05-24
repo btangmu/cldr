@@ -458,47 +458,10 @@ const cldrStForum = (function() {
 			const postText = post2text(post.text);
 			const postContent = forumCreateChunk(postText, "div", "postContent postTextBorder");
 			subpost.appendChild(postContent);
-
-			if (false && opts.showReplyButton && (post === getNewestPostInThread(post))) {
-				addReplyButtons(subpost, post);
-			}
 		}
-		// reparent any nodes that we can
-		for (let num in posts) {
-			const post = posts[num];
-			if (post.parent != -1) {
-				forumDebug("reparenting " + post.id + " to " + post.parent);
-				if (postDivs[post.parent]) {
-					if (!postDivs[post.parent].replies) {
-						// add the "replies" area
-						forumDebug("Adding replies area to " + post.parent);
-						postDivs[post.parent].replies = forumCreateChunk("", "div", "postReplies");
-						postDivs[post.parent].appendChild(postDivs[post.parent].replies);
-					}
-					// add to new location
-					postDivs[post.parent].replies.appendChild(postDivs[post.id]);
-				} else {
-					// The parent of this post was deleted.
-					forumDebug("The parent of post #" + post.id + " is " + post.parent + " but it was deleted or not visible");
-					// link it in somewhere
-					topicDivs[post.threadId].appendChild(postDivs[post.id]);
-				}
-			} else {
-				// 'top level' post
-				topicDivs[post.threadId].appendChild(postDivs[post.id]);
-			}
-		}
+		appendPostDivsToTopicDivs(posts, topicDivs, postDivs);
 		if (opts.createDomElements) {
-			Object.keys(topicDivs).forEach(function(threadId) {
-				/*
-				 * Get root post id from threadId.
-				 * e.g., threadId = 'aa|1234'; postId = 1234
-				 * TODO: avoid hasty assumption here that addThreadIds makes threadId
-				 * non-numeric followed by numeric postId.
-				 */
-				const postId = threadId.replace(/^[^0-9]+/, '');
-				addReplyButtons(topicDivs[threadId], postHash[postId]);
-			});
+			addReplyButtonsToEachTopic(topicDivs);
 		}
 		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter, opts.showThreadCount);
 	}
@@ -546,15 +509,25 @@ const cldrStForum = (function() {
 	 * @param posts the array of post objects
 	 * 
 	 * TODO: simplify this and related code, given that post objects from server now have
-     * post.root; probably there is no longer any reason to include locale in thread id,
-     * nor to distinguish between thread id and rootPost.id.
+     * post.root. Probably there is no longer any reason to include locale in thread id,
+     * nor to distinguish between thread id and rootPost.id, then no need for getRootIdFromThreadId?
 	 */
 	function addThreadIds(posts) {
 		posts.forEach(function(post) {
 			const rootPost = getThreadRootPost(post);
-			// post.threadId = rootPost.id;
 			post.threadId = rootPost.locale + "|" + rootPost.id;
 		});
+	}
+
+	/**
+	 * Get root post id from threadId.
+	 * e.g., threadId = 'aa|1234'; postId = 1234
+	 *
+	 * TODO: avoid dependency here that addThreadIds makes threadId
+	 * non-numeric followed by numeric postId.
+	 */
+	function getRootIdFromThreadId(threadId) {
+		return threadId.replace(/^[^0-9]+/, '');
 	}
 
 	/**
@@ -623,6 +596,56 @@ const cldrStForum = (function() {
 				itemPh.title = o.result.path;
 				topicInfo.appendChild(itemPh);
 			}
+		});
+	}
+
+	/**
+	 * Append post divs to their topic divs.
+	 * Within each thread, put old posts before new posts.
+	 * Go through the posts array in reverse order, old before new.
+	 */
+	function appendPostDivsToTopicDivs(posts, topicDivs, postDivs) {
+		for (let i = posts.length - 1; i >= 0; i--) {
+			const USE_HORIZONTAL_RULE = true;
+			const post = posts[i];
+			if (post.root === -1) { // this post is the root of its thread, not a reply
+				topicDivs[post.threadId].appendChild(postDivs[post.id]);
+			}
+			else { // this is a reply
+				if (USE_HORIZONTAL_RULE) {
+					const horizontalRule = forumCreateChunk('', 'hr', 'postRule');
+					topicDivs[post.threadId].appendChild(horizontalRule);
+					topicDivs[post.threadId].appendChild(postDivs[post.id]);
+				} else {
+					if (postDivs[post.root]) {
+						if (!postDivs[post.root].replies) {
+							// add the "replies" area
+							forumDebug("Adding replies area to " + post.root);
+							postDivs[post.root].replies = forumCreateChunk("", "div", "postReplies");
+							postDivs[post.root].appendChild(postDivs[post.root].replies);
+						}
+						// add to new location
+						postDivs[post.root].replies.appendChild(postDivs[post.id]);
+					} else {
+						// The root of this post was deleted.
+						forumDebug("The root of post #" + post.id + " is " + post.root + " but it was deleted or not visible");
+						// link it in somewhere
+						topicDivs[post.threadId].appendChild(postDivs[post.id]);
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Add a set of reply buttons for each div in topicDivs
+	 *
+	 * @param topicDivs the map from threadId to DOM elements
+	 */
+	function addReplyButtonsToEachTopic(topicDivs) {
+		Object.keys(topicDivs).forEach(function(threadId) {
+			const postId = getRootIdFromThreadId(threadId);
+			addReplyButtons(topicDivs[threadId], postHash[postId]);
 		});
 	}
 
