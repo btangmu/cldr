@@ -524,7 +524,7 @@ const cldrStForum = (function() {
 	 * e.g., threadId = 'aa|1234'; postId = 1234
 	 *
 	 * TODO: avoid dependency here that addThreadIds makes threadId
-	 * non-numeric followed by numeric postId.
+	 * non-numeric followed by numeric root postId.
 	 */
 	function getRootIdFromThreadId(threadId) {
 		return threadId.replace(/^[^0-9]+/, '');
@@ -603,10 +603,14 @@ const cldrStForum = (function() {
 	 * Append post divs to their topic divs.
 	 * Within each thread, put old posts before new posts.
 	 * Go through the posts array in reverse order, old before new.
+	 *
+	 * @param posts the array of forum post objects, newest first
+	 * @param topicDivs the map from threadId to DOM elements
+	 * @param postDivs the map from post id to DOM elements
 	 */
 	function appendPostDivsToTopicDivs(posts, topicDivs, postDivs) {
+		const USE_HORIZONTAL_RULE = true;
 		for (let i = posts.length - 1; i >= 0; i--) {
-			const USE_HORIZONTAL_RULE = true;
 			const post = posts[i];
 			if (post.root === -1) { // this post is the root of its thread, not a reply
 				topicDivs[post.threadId].appendChild(postDivs[post.id]);
