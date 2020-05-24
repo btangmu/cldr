@@ -3986,6 +3986,11 @@ function refreshCounterVetting() {
 	}
 	document.getElementById('progress-voted').style.width = voted * 100 / total + '%';
 	document.getElementById('progress-abstain').style.width = abstain * 100 / total + '%';
+
+	if (cldrStForum && surveyCurrentLocale && surveyUser && surveyUser.id) {
+		const forumSummary = cldrStForum.getForumSummaryHtml(surveyCurrentLocale, surveyUser.id, false);
+		document.getElementById('vForum').innerHTML = forumSummary;
+	}
 }
 
 /**

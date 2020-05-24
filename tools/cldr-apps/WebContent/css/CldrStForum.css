@@ -1,17 +1,17 @@
 .forumThreadStatus {
 	color: red;
+	clear: left;
 }
 
 .postTypeComboLabel {
-	text-align: right;
 	float: right;
 	clear: right;
 }
 
 .postTypeLabel {
+	color: red;
 	text-align: right;
 	clear: right;
-	color: red;
 }
 
 .postTextBorder {
@@ -29,5 +29,5 @@
 }
 
 .addPostButton {
-	margin: 0.5em;
+	margin: 0.5em !important; /* override bootstrap btn margin-bottom 0 */
 }

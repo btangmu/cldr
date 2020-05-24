@@ -94,7 +94,7 @@ const cldrStForum = (function() {
 			} else {
 				const content = parseContent(posts, 'main');
 				ourDiv.appendChild(content);
-				summaryDiv.innerHTML = getForumSummaryHtml(forumLocale, userId); // after parseContent
+				summaryDiv.innerHTML = getForumSummaryHtml(forumLocale, userId, true); // after parseContent
 			}
 			// No longer loading
 			hideLoader(null);
@@ -992,12 +992,13 @@ const cldrStForum = (function() {
 	 *
 	 * @param locale the locale string
 	 * @param userId the current user's id, for cldrStForumFilter
+	 * @param getTable true to get a table, false to get a one-liner
 	 * @return the html
 	 */
-	function getForumSummaryHtml(locale, userId) {
+	function getForumSummaryHtml(locale, userId, getTable) {
 		setLocale(locale);
 		cldrStForumFilter.setUserId(userId);
-		return reallyGetForumSummaryHtml(true /* canDoAjax */);
+		return reallyGetForumSummaryHtml(true /* canDoAjax */, getTable);
 	}
 
 	/**
@@ -1006,30 +1007,45 @@ const cldrStForum = (function() {
 	 * @param canDoAjax true to call loadForumForSummaryOnly if needed, false otherwise; should
 	 *                  be false if the caller is the loadHandler for loadForumForSummaryOnly,
 	 *                  to prevent endless back-and-forth if things go wrong
+	 * @param getTable true to get a table, false to get a one-liner like "27/0/27"
 	 * @return the html
 	 */
-	function reallyGetForumSummaryHtml(canDoAjax) {
+	function reallyGetForumSummaryHtml(canDoAjax, getTable) {
 		const id = 'forumSummary';
-		let html = "<div id='" + id + "'>\n";
+		const el = getTable ? 'div' : 'span';
+		let html = "<" + el + " id='" + id + "'>\n";
 		if (!forumUpdateTime) {
 			if (canDoAjax) {
-				html += "<p>Loading Forum Summary...</p>\n";
-				loadForumForSummaryOnly(forumLocale, id)
-			} else {
+				if (getTable) {
+					html += "<p>Loading Forum Summary...</p>\n";
+				}
+				loadForumForSummaryOnly(forumLocale, id, getTable)
+			} else if (getTable) {
 				html += "<p>Load failed</p>n";
 			}
 		} else {
-			if (FORUM_DEBUG) {
+			if (FORUM_DEBUG && getTable) {
 				html += "<p>Retrieved " + fmtDateTime(forumUpdateTime) + "</p>\n";
 			}
 			const c = cldrStForumFilter.getFilteredThreadCounts();
-			html += "<ul>\n";
-			Object.keys(c).forEach(function(k) {
-				html += "<li>" + k + ": " + c[k] + "</li>\n";
-			});
-			html += "</ul>\n";
+			if (getTable) {
+				html += "<ul>\n";
+				Object.keys(c).forEach(function(k) {
+					html += "<li>" + k + ": " + c[k] + "</li>\n";
+				});
+				html += "</ul>\n";
+			} else {
+				let first = true;
+				Object.keys(c).forEach(function(k) {
+					if (!first) {
+						html += '/';
+					}
+					html += c[k];
+					first = false;
+				});
+			}
 		}
-		html += '</div>\n';
+		html += '</' + el + '>\n';
 		return html;
 	}
 
@@ -1038,8 +1054,9 @@ const cldrStForum = (function() {
 	 *
 	 * @param locale the locale
 	 * @param id the id of the element to display the summary
+	 * @param getTable true to get a table, false to get a one-liner
 	 */
-	function loadForumForSummaryOnly(locale, id) {
+	function loadForumForSummaryOnly(locale, id, getTable) {
 		if (typeof cldrStAjax === 'undefined') {
 			return;
 		}
@@ -1062,7 +1079,7 @@ const cldrStForum = (function() {
 			}
 			const posts = json.ret;
 			parseContent(posts, 'summary');
-			el.innerHTML = reallyGetForumSummaryHtml(false /* do not reload recursively */); // after parseContent
+			el.innerHTML = reallyGetForumSummaryHtml(false /* do not reload recursively */, getTable); // after parseContent
 		};
 		const xhrArgs = {
 			url: url,

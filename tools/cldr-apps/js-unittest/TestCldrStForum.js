@@ -60,7 +60,7 @@
 	});
 
 	describe('cldrStForum.getForumSummaryHtml', function() {
-		const html = cldrStForum.getForumSummaryHtml();
+		const html = cldrStForum.getForumSummaryHtml('aa', 1, true);
 
 		it('should not return null or empty', function() {
 			assert((html != null && html !== ''), "html is neither null nor empty");
