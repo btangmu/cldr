@@ -459,7 +459,7 @@ const cldrStForum = (function() {
 			const postContent = forumCreateChunk(postText, "div", "postContent postTextBorder");
 			subpost.appendChild(postContent);
 
-			if (opts.showReplyButton && (post === getNewestPostInThread(post))) {
+			if (false && opts.showReplyButton && (post === getNewestPostInThread(post))) {
 				addReplyButtons(subpost, post);
 			}
 		}
@@ -487,6 +487,18 @@ const cldrStForum = (function() {
 				// 'top level' post
 				topicDivs[post.threadId].appendChild(postDivs[post.id]);
 			}
+		}
+		if (opts.createDomElements) {
+			Object.keys(topicDivs).forEach(function(threadId) {
+				/*
+				 * Get root post id from threadId.
+				 * e.g., threadId = 'aa|1234'; postId = 1234
+				 * TODO: avoid hasty assumption here that addThreadIds makes threadId
+				 * non-numeric followed by numeric postId.
+				 */
+				const postId = threadId.replace(/^[^0-9]+/, '');
+				addReplyButtons(topicDivs[threadId], postHash[postId]);
+			});
 		}
 		return filterAndAssembleForumThreads(posts, topicDivs, opts.applyFilter, opts.showThreadCount);
 	}
@@ -522,9 +534,9 @@ const cldrStForum = (function() {
 	/**
 	 * Add a "threadId" attribute to each post object in the given array
 	 *
-	 * For a post with a parent, the thread id is the same as the thread id of the parent.
-	 *
 	 * For a post without a parent, the thread id is like "aa|1234", where aa is the locale and 1234 is the post id.
+	 *
+	 * For a post without a parent, the thread id is the same as the root post id.
 	 *
 	 * Make sure that the thread id uses the locale of the original post in its thread, for consistency.
 	 * Formerly, a post could have a different locale than the original post. For example, even though
@@ -532,14 +544,15 @@ const cldrStForum = (function() {
 	 * code and in the db.
 	 *
 	 * @param posts the array of post objects
-	 *
+	 * 
 	 * TODO: simplify this and related code, given that post objects from server now have
-	 * post.root; probably there is no longer any reason to include locale in thread id,
-	 * nor to distinguish between thread id and rootPost.id.
+     * post.root; probably there is no longer any reason to include locale in thread id,
+     * nor to distinguish between thread id and rootPost.id.
 	 */
 	function addThreadIds(posts) {
 		posts.forEach(function(post) {
 			const rootPost = getThreadRootPost(post);
+			// post.threadId = rootPost.id;
 			post.threadId = rootPost.locale + "|" + rootPost.id;
 		});
 	}
@@ -639,10 +652,11 @@ const cldrStForum = (function() {
 	 */
 	function addReplyButtons(el, post) {
 		const rootPost = getThreadRootPost(post);
+		const newestPost = getNewestPostInThread(post);
 		const options = getPostTypeOptions(true /* isReply */, rootPost, rootPost.value);
 
 		Object.keys(options).forEach(function(postType) {
-			el.appendChild(makeOneReplyButton(post, postType, options[postType]));
+			el.appendChild(makeOneReplyButton(newestPost, postType, options[postType]));
 		});
 	}
 
@@ -1012,8 +1026,8 @@ const cldrStForum = (function() {
 	 */
 	function reallyGetForumSummaryHtml(canDoAjax, getTable) {
 		const id = 'forumSummary';
-		const el = getTable ? 'div' : 'span';
-		let html = "<" + el + " id='" + id + "'>\n";
+		const tag = getTable ? 'div' : 'span';
+		let html = "<" + tag + " id='" + id + "'>\n";
 		if (!forumUpdateTime) {
 			if (canDoAjax) {
 				if (getTable) {
@@ -1045,7 +1059,7 @@ const cldrStForum = (function() {
 				});
 			}
 		}
-		html += '</' + el + '>\n';
+		html += '</' + tag + '>\n';
 		return html;
 	}
 
@@ -1108,7 +1122,7 @@ const cldrStForum = (function() {
 			console.log('Error: surveySessionId undefined in getLoadForumUrl');
 			return '';
 		}
-		return 'SurveyAjax?s=' + surveySessionId + '&what=forum_fetch&xpath=0&_=' + forumLocale;
+		return 'SurveyAjax?what=forum_fetch&xpath=0&_=' + forumLocale + '&s=' + surveySessionId;
 	}
 
 	/**

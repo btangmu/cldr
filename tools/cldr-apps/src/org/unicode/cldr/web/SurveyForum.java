@@ -14,8 +14,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
@@ -779,6 +781,34 @@ public class SurveyForum {
     }
 
     /**
+     * Update the forum as appropriate after a vote has been accepted
+     *
+     * @param locale
+     * @param user
+     * @param distinguishingXpath
+     * @param xpathId
+     * @param value
+     * @param didClearFlag
+     */
+    public void doForumAfterVote(CLDRLocale locale, User user, String distinguishingXpath, int xpathId,
+            String value, boolean didClearFlag) {
+        if (didClearFlag) {
+            try {
+                int newPostId = postFlagRemoved(xpathId, locale, user);
+                System.out.println("NOTE: flag was removed from "
+                    + locale + " " + distinguishingXpath + " - post ID=" + newPostId
+                    + " by " + user.toString());
+            } catch (SurveyException e) {
+                SurveyLog.logException(e, "Error trying to post that a flag was removed from "
+                    + locale + " " + distinguishingXpath);
+            }
+        }
+        if (value != null) {
+            autoPostAgree(locale, user, xpathId, value);
+        }
+    }
+
+    /**
      * Make a special post for flag removal
      *
      * @param xpathId
@@ -788,12 +818,65 @@ public class SurveyForum {
      *
      * @throws SurveyException
      */
-    public int postFlagRemoved(int xpathId, CLDRLocale locale, User user) throws SurveyException {
+    private int postFlagRemoved(int xpathId, CLDRLocale locale, User user) throws SurveyException {
         PostInfo postInfo = new PostInfo(locale, PostType.CLOSE.toName(), "(The flag was removed.)");
         postInfo.setSubj("Flag Removed");
         postInfo.setPath(xpathId);
         postInfo.setUser(user);
         return doPostInternal(postInfo);
+    }
+
+    /**
+     * Auto-post Agree for each open Request post for this locale+path+value by other users
+     *
+     * @param locale
+     * @param user
+     * @param xpathId
+     * @param value
+     */
+    private void autoPostAgree(CLDRLocale locale, User user, int xpathId, String value) {
+        Connection conn = null;
+        PreparedStatement pList = null;
+        String tableName = DBUtils.Table.FORUM_POSTS.toString();
+        Map<Integer, String> posts = new HashMap<Integer, String>();
+        try {
+            conn = sm.dbUtils.getDBConnection();
+            pList = DBUtils.prepareStatement(conn, "pList",
+                "SELECT id,subj FROM " + tableName
+                + " WHERE type=? AND loc=? AND xpath=? AND value=? AND NOT poster=?");
+            pList.setInt(1, PostType.REQUEST.toInt());
+            pList.setString(2, locale.toString());
+            pList.setInt(3, xpathId);
+            DBUtils.setStringUTF8(pList, 4, value);
+            pList.setInt(5, user.id);
+            ResultSet rs = pList.executeQuery();
+            while (rs.next()) {
+                posts.put(rs.getInt(1), DBUtils.getStringUTF8(rs, 2));
+            }
+            posts.forEach((root, subject) -> autoPostReplyAgree(root, subject, locale, user, xpathId, value));
+         } catch (SQLException se) {
+            String complaint = "SurveyForum: autoPostAgree - " + DBUtils.unchainSqlException(se);
+            SurveyLog.logException(se, complaint);
+        } finally {
+            DBUtils.close(pList, conn);
+        }
+    }
+
+    private void autoPostReplyAgree(int root, String subject, CLDRLocale locale, User user,
+            int xpathId, String value) {
+        String text = "(Auto-generated:) I voted for “" + value + "”";
+        PostInfo postInfo = new PostInfo(locale, PostType.AGREE.toName(), text);
+        postInfo.setSubj(subject);
+        postInfo.setPath(xpathId);
+        postInfo.setUser(user);
+        postInfo.setReplyTo(root /* replyTo */);
+        postInfo.setRoot(root);
+        postInfo.setValue(value);
+        try {
+            doPostInternal(postInfo);
+        } catch (SurveyException e) {
+            SurveyLog.logException(e, "SurveyForum: autoPostAgreeOne root " + root);
+        }
     }
 
     /**
@@ -808,15 +891,18 @@ public class SurveyForum {
      */
     private Integer doPostInternal(PostInfo postInfo) throws SurveyException {
         if (!postInfo.isValid()) {
+            SurveyLog.errln("Invalid postInfo in SurveyForum.doPostInternal");
             return 0;
         }
         PostType postType = postInfo.getType();
-        if (!userCanUsePostType(postInfo.getUser(), postType, postInfo.getReplyTo())) {
+        User user = postInfo.getUser();
+        if (!userCanUsePostType(user, postType, postInfo.getReplyTo())) {
+            SurveyLog.errln("Post not allowed in SurveyForum.doPostInternal");
             return 0;
         }
         int postId = savePostToDb(postInfo);
 
-        emailNotify(postInfo.getUser(), postInfo.getLocale(), postInfo.getPath(), postInfo.getSubj(), postInfo.getText(), postId);
+        emailNotify(user, postInfo.getLocale(), postInfo.getPath(), postInfo.getSubj(), postInfo.getText(), postId);
 
         return postId;
     }
