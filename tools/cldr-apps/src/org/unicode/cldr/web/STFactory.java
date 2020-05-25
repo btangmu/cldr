@@ -1267,7 +1267,9 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             }
             SurveyLog.debug(et);
 
-            sm.fora.doForumAfterVote(locale, user, distinguishingXpath, xpathId, value, didClearFlag);
+            if (sm.fora != null) {
+                sm.fora.doForumAfterVote(locale, user, distinguishingXpath, xpathId, value, didClearFlag);
+            }
         }
 
         /**

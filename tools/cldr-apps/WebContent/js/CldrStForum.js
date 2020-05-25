@@ -509,25 +509,14 @@ const cldrStForum = (function() {
 	 * @param posts the array of post objects
 	 * 
 	 * TODO: simplify this and related code, given that post objects from server now have
-     * post.root. Probably there is no longer any reason to include locale in thread id,
-     * nor to distinguish between thread id and rootPost.id, then no need for getRootIdFromThreadId?
+	 * post.root. Probably there is no longer any reason to include locale in thread id,
+	 * nor to distinguish between thread id and rootPost.id.
 	 */
 	function addThreadIds(posts) {
 		posts.forEach(function(post) {
 			const rootPost = getThreadRootPost(post);
 			post.threadId = rootPost.locale + "|" + rootPost.id;
 		});
-	}
-
-	/**
-	 * Get root post id from threadId.
-	 * e.g., threadId = 'aa|1234'; postId = 1234
-	 *
-	 * TODO: avoid dependency here that addThreadIds makes threadId
-	 * non-numeric followed by numeric root postId.
-	 */
-	function getRootIdFromThreadId(threadId) {
-		return threadId.replace(/^[^0-9]+/, '');
 	}
 
 	/**
@@ -648,8 +637,10 @@ const cldrStForum = (function() {
 	 */
 	function addReplyButtonsToEachTopic(topicDivs) {
 		Object.keys(topicDivs).forEach(function(threadId) {
-			const postId = getRootIdFromThreadId(threadId);
-			addReplyButtons(topicDivs[threadId], postHash[postId]);
+			const rootPost = getRootPostFromThreadId(threadId);
+			if (rootPost) {
+				addReplyButtons(topicDivs[threadId], rootPost);
+			}
 		});
 	}
 
@@ -675,15 +666,13 @@ const cldrStForum = (function() {
 	 * Make one or more reply buttons for the given post, and append them to the given element
 	 *
 	 * @param el the DOM element to append to
-	 * @param post the post
+	 * @param rootPost the original post in the thread
 	 */
-	function addReplyButtons(el, post) {
-		const rootPost = getThreadRootPost(post);
-		const newestPost = getNewestPostInThread(post);
+	function addReplyButtons(el, rootPost) {
 		const options = getPostTypeOptions(true /* isReply */, rootPost, rootPost.value);
 
 		Object.keys(options).forEach(function(postType) {
-			el.appendChild(makeOneReplyButton(newestPost, postType, options[postType]));
+			el.appendChild(makeOneReplyButton(rootPost, postType, options[postType]));
 		});
 	}
 
@@ -924,6 +913,20 @@ const cldrStForum = (function() {
 			chunk.appendChild(document.createTextNode(text));
 		}
 		return chunk;
+	}
+
+	/**
+	 * Get the root (original) post in the thread, i.e., the last one in the array
+	 *
+	 * @param threadId the thread id
+	 * @return the root post, or null if not found
+	 */
+	function getRootPostFromThreadId(threadId) {
+		const threadPosts = threadHash[threadId]
+		if (threadPosts.length < 1) {
+			return null;
+		}
+		return threadPosts[threadPosts.length - 1];
 	}
 
 	/**
