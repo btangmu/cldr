@@ -148,11 +148,12 @@ const cldrStForum = (function() {
 	 * @return the html
 	 */
 	function makePostHtml(postType, locale, xpath, subject, replyTo, root, open, value) {
+		const typeLabel = makePostTypeLabel(post.postType, isReply);
+
 		let html = '';
 
 		html += '<div id="postSubject" class="topicSubject">' + subject + '</div>\n';
-		html += '<div id="postType" class="postTypeLabel">' + postType + '</div>\n';
-
+		html += '<div id="postType" class="postTypeLabel">' + typeLabel + '</div>\n';
 		html += '<form role="form" id="post-form">\n';
 		html += '<div class="form-group">\n';
 		html += '<textarea name="text" class="postTextArea" placeholder="Write your post here"></textarea>\n';
@@ -450,17 +451,14 @@ const cldrStForum = (function() {
 
 			const subChunk = forumCreateChunk("", "div", '');
 			subpost.appendChild(subChunk);
-
-			if (post.parent === -1) {
+			const isReply = (post.parent !== -1);
+			const typeLabel = makePostTypeLabel(post.postType, isReply);
+			if (!isReply) {
 				const openOrClosed = post.open ? 'Open' : 'Closed';
 				const comboChunk = forumCreateChunk(openOrClosed, 'div', 'forumThreadStatus');
-				comboChunk.appendChild(forumCreateChunk(post.postType, 'span', 'postTypeComboLabel'));
+				comboChunk.appendChild(forumCreateChunk(typeLabel, 'span', 'postTypeComboLabel'));
 				subChunk.appendChild(comboChunk);
 			} else {
-				let typeLabel = post.postType;
-				if (typeLabel === 'Discuss') {
-					typeLabel = 'Comment'; // for replies, label 'Comment' instead of 'Discuss'
-				}
 				subChunk.appendChild(forumCreateChunk(typeLabel, 'div', 'postTypeLabel'));
 			}
 
@@ -775,15 +773,26 @@ const cldrStForum = (function() {
 				options['Agree'] = 'Agree';
 				options['Decline'] = 'Decline';
 			}
-			/*
-			 * For replies, label 'Comment' instead of 'Discuss'
-			 */
-			options['Discuss'] = isReply ? 'Comment' : 'Discuss';
+			options['Discuss'] = makePostTypeLabel'Discuss', isReply);
 			if (userCanClose(isReply, rootPost)) {
 				options['Close'] = 'Close';
 			}
 		}
 		return options;
+	}
+
+	/**
+	 * For replies, label 'Comment' instead of 'Discuss'
+	 *
+	 * @param postType the post type
+	 * @param isReply true if this post is a reply, else false
+	 * @return the label
+	 */
+	function makePostTypeLabel(postType, isReply) {
+		if (postType === 'Discuss' && isReply) {
+			return 'Comment';
+		}
+		return postType;
 	}
 
 	/**
