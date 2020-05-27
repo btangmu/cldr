@@ -576,6 +576,7 @@ const cldrStForum = (function() {
 		 */
 		if (rootPost.subject.indexOf('|') >= 0 || !rootPost.xpath) {
 			topicInfo.appendChild(forumCreateChunk(post2text(rootPost.subject), "span", "topicSubject"));
+			return;
 		}
 		/*
 		 * Some old posts have subjects like "Review" or "Flag Removed".
