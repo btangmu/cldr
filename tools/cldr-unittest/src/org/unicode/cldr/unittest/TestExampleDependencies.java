@@ -29,6 +29,12 @@ import com.ibm.icu.dev.test.TestFmwk;
 
 public class TestExampleDependencies extends TestFmwk {
 
+    /**
+     * Currently the test is only intended to be run manually, by executing main().
+     * Avoid running it automatically, through "ant check" for example.
+     */
+    private static boolean ENABLE_DEPENDENCY_TEST = false;
+
     private final boolean USE_STARRED_PATHS = true;
     private final boolean USE_RECORDING = true;
     private final String fileExtension = USE_RECORDING ? ".java" : ".json";
@@ -41,7 +47,9 @@ public class TestExampleDependencies extends TestFmwk {
     private PathStarrer pathStarrer;
 
     public static void main(String[] args) {
+        ENABLE_DEPENDENCY_TEST = true;
         new TestExampleDependencies().run(args);
+        ENABLE_DEPENDENCY_TEST = false;
     }
 
     /**
@@ -54,6 +62,9 @@ public class TestExampleDependencies extends TestFmwk {
      * @throws IOException
      */
     public void TestExampleGeneratorDependencies() throws IOException {
+        if (!ENABLE_DEPENDENCY_TEST) {
+            return;
+        }
         info = CLDRConfig.getInstance();
         englishFile = info.getEnglish();
         factory = info.getCldrFactory();
