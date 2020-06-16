@@ -118,8 +118,8 @@ public class CheckForCopy extends FactoryCheckCLDR {
          */
         String topStringValue = cldrFile.getUnresolved().getStringValue(path);
         final boolean isExplicitBailey = CldrUtility.INHERITANCE_MARKER.equals(topStringValue);
+        String loc = cldrFile.getSourceLocaleID(path, status);
         if (!contextIsVoteSubmission && !isExplicitBailey) {
-            String loc = cldrFile.getSourceLocaleID(path, status);
             if (!cldrFile.getLocaleID().equals(loc)
                 || !path.equals(status.pathWhereFound)) {
                 return Failure.ok;
@@ -156,7 +156,7 @@ public class CheckForCopy extends FactoryCheckCLDR {
         if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
             value = cldrFile.getConstructedBaileyValue(path, null, null);
         }
-        if ("year".equals(value) || "month".equals(value) || "day".equals(value) || "hour".equals(value)) {
+        if ("en".equals(loc) && ("year".equals(value) || "month".equals(value) || "day".equals(value) || "hour".equals(value))) {
             return Failure.ok;
         }
         String value2 = value;
