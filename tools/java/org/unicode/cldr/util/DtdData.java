@@ -1451,6 +1451,7 @@ public class DtdData extends XMLFileReader.SimpleHandler {
         for (String s : pathPlain.getElements()) {
             Element e = getElementFromName().get(s);
             if (e == null) {
+                // TODO
                 System.out.println("Got null in isMetadata");
                 continue;
             }

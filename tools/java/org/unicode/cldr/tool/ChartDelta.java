@@ -122,7 +122,9 @@ public class ChartDelta extends Chart {
         ChartDelta temp = new ChartDelta(fileFilter, coverage, DIR, verbose);
         temp.writeChart(null);
         temp.showTotals();
-        System.out.println("Finished. Files were created in this directory: " + DIR);
+        System.out.println("Finished. Files may have been created in these directories:");
+        System.out.println(DIR);
+        System.out.println(getTsvDir(DIR, DIR_NAME));
     }
 
     private ChartDelta(Matcher fileFilter, Level coverage, String dir, boolean verbose) {
