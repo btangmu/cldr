@@ -1728,6 +1728,16 @@ public class UserRegistry {
         return (u != null) && ( /* userIsExactlyManager(u) || */userIsTC(u));
     }
 
+    /**
+     * Can the user monitor forum participation?
+     *
+     * @param u the user
+     * @return true or false
+     */
+    public static final boolean userCanMonitorForum(User u) {
+        return userIsTC(u) || userIsExactlyManager(u);
+    }
+
     // TODO: move to CLDRLocale
 
     static final boolean userCanModifyLocale(CLDRLocale uLocale, CLDRLocale aliasTarget) {
