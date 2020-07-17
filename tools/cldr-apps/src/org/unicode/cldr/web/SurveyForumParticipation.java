@@ -5,6 +5,11 @@ public class SurveyForumParticipation {
 
     private final String tableId = "participationTable";
     private final String fileName = "participation.csv";
+    private final String onclick = "cldrStCsvFromTable.downloadCsv("
+        + "\"" + tableId + "\""
+        + ", "
+        + "\"" + fileName + "\""
+        + ")";
 
     private String[] headers = {
         "Locale",
@@ -24,17 +29,13 @@ public class SurveyForumParticipation {
 
     public String getHtml() {
         String html = "<p>Organization: " + org + "</p>\n";
-        html += "<p><a onclick='cldrStCsvFromTable.downloadCsv("
-            + "\"" + tableId + "\""
-            + ", "
-            + "\"" + fileName + "\""
-            + ")'>Download CSV</a></p>\n";
-        html += getHtmlTable();
+        html += "<p><a onclick='" + onclick + "'>Download CSV</a></p>\n";
+        html += makeHtmlTable();
         return html;
     }
 
-    private String getHtmlTable() {
-        String html = "<table id='" + tableId + "' border='4'>\n";
+    private String makeHtmlTable() {
+        String html = "<table id='" + tableId + "' border='1'>\n";
         html += "<tr>\n";
         for (String header : headers) {
             html += "<th>" + header + "</th>\n";

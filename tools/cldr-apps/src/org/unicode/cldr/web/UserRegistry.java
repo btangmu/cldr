@@ -1738,14 +1738,6 @@ public class UserRegistry {
         return userIsTC(u) || userIsExactlyManager(u);
     }
 
-    // TODO: move to CLDRLocale
-
-    static final boolean userCanModifyLocale(CLDRLocale uLocale, CLDRLocale aliasTarget) {
-        if (SurveyMain.isPhaseReadonly())
-            return false;
-        return (uLocale.equals(aliasTarget));
-    }
-
     static boolean localeMatchesLocaleList(String localeArray[], CLDRLocale locale) {
         return localeMatchesLocaleList(stringArrayToLocaleArray(localeArray), locale);
     }
@@ -1764,16 +1756,6 @@ public class UserRegistry {
             return true;
         }
         String localeArray[] = tokenizeLocale(localeList);
-        return localeMatchesLocaleList(localeArray, locale);
-    }
-
-    static final boolean userCanModifyLocale(CLDRLocale localeArray[], CLDRLocale locale) {
-        if (SurveyMain.isPhaseReadonly())
-            return false;
-        if (localeArray.length == 0) {
-            return true; // all
-        }
-
         return localeMatchesLocaleList(localeArray, locale);
     }
 
