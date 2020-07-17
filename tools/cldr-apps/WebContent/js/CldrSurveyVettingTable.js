@@ -1249,5 +1249,14 @@ const cldrSurveyTable = (function() {
 	/*
 	 * Make only these functions accessible from other files:
 	 */
-	return { insertRows:insertRows, updateRow:updateRow };
+	return {
+		insertRows: insertRows,
+		updateRow: updateRow,
+		/*
+		 * The following are meant to be accessible for unit testing only:
+		 */
+		test: {
+			cldrChecksum: cldrChecksum,
+		}
+	};
 })();
