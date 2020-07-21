@@ -202,7 +202,6 @@ public class SurveyForumParticipation {
                     }
                 }
             }
-
         } finally {
             DBUtils.close(ps);
         }
