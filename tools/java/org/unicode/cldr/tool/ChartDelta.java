@@ -191,6 +191,8 @@ public class ChartDelta extends Chart {
 
     private static final CLDRFile EMPTY_CLDR = new CLDRFile(new SimpleXMLSource("und").freeze());
 
+    private static final String CLDR_BASE_DIR = CLDRConfig.getInstance().getCldrBaseDirectory().toString();
+
     private enum ChangeType {
         added, deleted, changed, same;
         public static ChangeType get(String oldValue, String currentValue) {
@@ -969,7 +971,7 @@ public class ChartDelta extends Chart {
             String value = s.getSecond();
             if (dtdType == null) {
                 dtdType = DtdType.fromPath(path);
-                dtdData = DtdData.getInstance(dtdType, CLDRConfig.getInstance().getCldrBaseDirectory());
+                dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
             }
             XPathParts pathPlain = XPathParts.getFrozenInstance(path);
             if (dtdData.isMetadata(pathPlain)) {
@@ -979,7 +981,7 @@ public class ChartDelta extends Chart {
             if (pathForValues != null) {
                 for (String pathForValue : pathForValues) {
                     PathHeader pathHeader = phf.fromPath(pathForValue);
-                    Splitter splitter = getValueSplitter(pathPlain);
+                    Splitter splitter = DtdData.getValueSplitter(pathPlain);
                     for (String line : splitter.split(value)) {
                         // special case # in transforms
                         if (isComment(pathPlain, line)) {
@@ -1013,10 +1015,6 @@ public class ChartDelta extends Chart {
             return true;
         }
         return false;
-    }
-
-    private Splitter getValueSplitter(XPathParts pathPlain) {
-        return DtdData.getValueSplitter(pathPlain);
     }
 
     private static boolean isComment(XPathParts pathPlain, String line) {

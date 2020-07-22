@@ -1067,7 +1067,7 @@ public class ChartChurn extends Chart {
             if (pathForValues != null) {
                 for (String pathForValue : pathForValues) {
                     PathHeader pathHeader = phf.fromPath(pathForValue);
-                    Splitter splitter = getValueSplitter(pathPlain);
+                    Splitter splitter = DtdData.getValueSplitter(pathPlain);
                     for (String line : splitter.split(value)) {
                         // special case # in transforms
                         if (isComment(pathPlain, line)) {
@@ -1101,10 +1101,6 @@ public class ChartChurn extends Chart {
             return true;
         }
         return false;
-    }
-
-    private Splitter getValueSplitter(XPathParts pathPlain) {
-        return DtdData.getValueSplitter(pathPlain);
     }
 
     private static boolean isComment(XPathParts pathPlain, String line) {
