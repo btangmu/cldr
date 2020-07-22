@@ -199,6 +199,8 @@ public class ChartChurn extends Chart {
 
     private static final CLDRFile EMPTY_CLDR = new CLDRFile(new SimpleXMLSource("und").freeze());
 
+    private static final String CLDR_BASE_DIR = CLDRConfig.getInstance().getCldrBaseDirectory().toString();
+
     private enum ChangeType {
         added, deleted, changed, same;
         public static ChangeType get(String oldValue, String currentValue) {
@@ -1057,7 +1059,7 @@ public class ChartChurn extends Chart {
             String value = s.getSecond();
             if (dtdType == null) {
                 dtdType = DtdType.fromPath(path);
-                dtdData = DtdData.getInstance(dtdType, CLDRConfig.getInstance().getCldrBaseDirectory());
+                dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
             }
             XPathParts pathPlain = XPathParts.getFrozenInstance(path);
             if (dtdData.isMetadata(pathPlain)) {
