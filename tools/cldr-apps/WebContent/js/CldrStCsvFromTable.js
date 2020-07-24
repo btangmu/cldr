@@ -33,15 +33,9 @@ const cldrStCsvFromTable = (function() {
 		let csv = '';
 		for (let row of table.rows)  {
 			let columnsRemaining = row.cells.length;
-<<<<<<< HEAD
-		    for (let cell of row.cells) {
-		    	csv += cell.innerText + (--columnsRemaining ? ',' : '\n');
-		    }
-=======
 			for (let cell of row.cells) {
 				csv += cell.innerText + (--columnsRemaining ? ',' : '\n');
 			}
->>>>>>> t13616_c
 		}
 		return csv;
 	}
