@@ -153,7 +153,7 @@ public class SurveyForumParticipation {
         Integer count = -1;
         try {
             if (cell == Cell.FORUM_TOTAL) {
-                ps = prepareForumInitQuery(loc);
+                ps = prepareForumAllQuery(loc);
             } else if (cell == Cell.FORUM_ORG) {
                 ps = prepareForumOrgQuery(loc);
             } else if (cell == Cell.FORUM_REQUEST) {
@@ -296,7 +296,7 @@ public class SurveyForumParticipation {
         return result;
     }
 
-    private PreparedStatement prepareForumInitQuery(String loc) throws SQLException {
+    private PreparedStatement prepareForumAllQuery(String loc) throws SQLException {
         String sql = "SELECT COUNT(*)"
             + " FROM " + forumTable
             + " JOIN " + userTable
@@ -335,7 +335,6 @@ public class SurveyForumParticipation {
             + " JOIN " + userTable
             + " ON " + forumTable + ".poster=" + userTable + ".id"
             + " WHERE " + forumTable + ".parent=-1"
-            + " AND " + forumTable + ".open=true"
             + " AND " + forumTable + ".loc=?"
             + " AND " + userTable + ".org=?"
             + " AND " + forumTable + ".type=?";
