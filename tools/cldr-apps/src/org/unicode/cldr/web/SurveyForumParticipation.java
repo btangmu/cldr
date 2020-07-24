@@ -11,21 +11,25 @@ import java.util.Set;
 import org.unicode.cldr.util.StandardCodes;
 
 public class SurveyForumParticipation {
-    enum Cell {
-        LOCALE(false, "Locale"),
-        ABSTAIN(false, "Abstained votes by my organization in expected coverage level"),
-        NO_VOTE(false, "Missing/Provisional & we haven’t voted"),
-        FORUM_INIT(true, "Total request + discussions initiated in this release"),
-        ERRORS(false, "Error counts in this locale"),
-        FORUM_REQUEST(true, "Forum: Requests with status Open"),
-        FORUM_DISCUSS(true, "Forum: Discussions with status Open"),
-        FORUM_ORG(true, "Forum: Requests and Discussions initiated by my organization"),
-        FORUM_ACT(true, "Forum: Needing action (Requests and Discussions my organization has not responded to)");
+    private enum Cell {
+        LOCALE(true, false, "Locale"),
+        FORUM_TOTAL(true, true, "Posts in this release"),
+        FORUM_ORG(true, true, "Posts by my org."),
+        FORUM_REQUEST(true, true, "Open Requests"),
+        FORUM_DISCUSS(true, true, "Open Discussions"),
 
+        FORUM_ACT(false, true, "Needing action (posts my org. has not responded to)"),
+        ABSTAIN(false, false, "Abstained votes by my organization in expected coverage level"),
+        NO_VOTE(false, false, "Missing/Provisional & we haven’t voted"),
+        ERRORS(false, false, "Error counts in this locale"),
+        ;
+
+        private boolean isEnabled;
         private boolean isForum;
         private String title;
 
-        private Cell(boolean isForum, String title) {
+        private Cell(boolean isEnabled, boolean isForum, String title) {
+            this.isEnabled = isEnabled;
             this.isForum = isForum;
             this.title = title;
         }
@@ -54,7 +58,6 @@ public class SurveyForumParticipation {
     private Connection conn = null;
 
     public SurveyForumParticipation(String org) {
-        // this.org = "Google"; // TODO: only for testing
         this.org = org;
         orgLocales = StandardCodes.make().getLocaleCoverageLocales(org);
     }
@@ -74,14 +77,18 @@ public class SurveyForumParticipation {
             html = "<table border='1' id='" + tableId + "'>\n";
             html += "<tr>\n";
             for (Cell cell : Cell.values()) {
-                html += "<th>" + cell.title + "</th>\n";
+                if (cell.isEnabled) {
+                    html += "<th>" + cell.title + "</th>\n";
+                }
             }
             html += "</tr>\n";
             for (String loc : orgLocales) {
                 html += "<tr>\n";
                 for (Cell cell : Cell.values()) {
-                    String s = getCell(loc, cell);
-                    html += "<td>" + s + "</td>\n";
+                    if (cell.isEnabled) {
+                        String s = getCell(loc, cell);
+                        html += "<td>" + s + "</td>\n";
+                    }
                 }
                 html += "</tr>\n";
             }
@@ -125,7 +132,7 @@ public class SurveyForumParticipation {
         try {
             conn = DBUtils.getInstance().getDBConnection();
             for (Cell cell: Cell.values()) {
-                if (cell.isForum) {
+                if (cell.isEnabled && cell.isForum) {
                     int count = queryForumDb(cell, loc);
                     stats.map.put(cell, count);
                 }
@@ -145,14 +152,14 @@ public class SurveyForumParticipation {
         PreparedStatement ps = null;
         Integer count = -1;
         try {
-            if (cell == Cell.FORUM_INIT) {
+            if (cell == Cell.FORUM_TOTAL) {
                 ps = prepareForumInitQuery(loc);
+            } else if (cell == Cell.FORUM_ORG) {
+                ps = prepareForumOrgQuery(loc);
             } else if (cell == Cell.FORUM_REQUEST) {
                 ps = prepareForumRequestQuery(loc);
             } else if (cell == Cell.FORUM_DISCUSS) {
                 ps = prepareForumDiscussQuery(loc);
-            } else if (cell == Cell.FORUM_ORG) {
-                ps = prepareForumOrgQuery(loc);
             } else {
                 return -1;
             }
@@ -296,10 +303,26 @@ public class SurveyForumParticipation {
             + " ON " + forumTable + ".poster=" + userTable + ".id"
             + " WHERE " + forumTable + ".parent=-1"
             + " AND " + forumTable + ".loc=?"
+            + " AND " + forumTable + ".version=?";
+
+        PreparedStatement ps = DBUtils.prepareForwardReadOnly(conn, sql);
+        ps.setString(1, loc);
+        ps.setString(2, SurveyMain.getNewVersion());
+        return ps;
+    }
+
+    private PreparedStatement prepareForumOrgQuery(String loc) throws SQLException {
+        String sql = "SELECT COUNT(*)"
+            + " FROM " + forumTable
+            + " JOIN " + userTable
+            + " ON " + forumTable + ".poster=" + userTable + ".id"
+            + " WHERE " + forumTable + ".parent=-1"
+            + " AND " + forumTable + ".loc=?"
             + " AND " + userTable + ".org=?"
             + " AND " + forumTable + ".version=?";
 
         PreparedStatement ps = DBUtils.prepareForwardReadOnly(conn, sql);
+        ps = DBUtils.prepareForwardReadOnly(conn, sql);
         ps.setString(1, loc);
         ps.setString(2, org);
         ps.setString(3, SurveyMain.getNewVersion());
@@ -340,22 +363,6 @@ public class SurveyForumParticipation {
         ps.setString(1, loc);
         ps.setString(2, org);
         ps.setInt(3, SurveyForum.PostType.DISCUSS.toInt());
-        return ps;
-    }
-
-    private PreparedStatement prepareForumOrgQuery(String loc) throws SQLException {
-        String sql = "SELECT COUNT(*)"
-            + " FROM " + forumTable
-            + " JOIN " + userTable
-            + " ON " + forumTable + ".poster=" + userTable + ".id"
-            + " WHERE " + forumTable + ".parent=-1"
-            + " AND " + forumTable + ".loc=?"
-            + " AND " + userTable + ".org=?";
-
-        PreparedStatement ps = DBUtils.prepareForwardReadOnly(conn, sql);
-        ps = DBUtils.prepareForwardReadOnly(conn, sql);
-        ps.setString(1, loc);
-        ps.setString(2, org);
         return ps;
     }
 
