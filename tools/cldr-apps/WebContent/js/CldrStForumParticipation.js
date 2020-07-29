@@ -44,7 +44,9 @@ const cldrStForumParticipation = (function() {
 				}
 				return;
 			}
-			document.createElement("div").innerHTML = makeHtmlFromJson(json);
+			const html = makeHtmlFromJson(json);
+			const ourDiv = document.createElement("div");
+			ourDiv.innerHTML = html;
 
 			// No longer loading
 			hideLoader(null);
@@ -103,7 +105,7 @@ const cldrStForumParticipation = (function() {
 	}
 
 	/*
-	 * Make only these functions accessible outside this IIFE:
+	 * Make only these functions accessible from other files
 	 */
 	return {
 		load: load,

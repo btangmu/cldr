@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Based on specials/forum.js
  *
