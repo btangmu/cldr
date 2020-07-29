@@ -167,7 +167,7 @@ public class SurveyForumParticipation {
                         ++count;
                     }
                 } else { // Request
-                    if (ourOrgAgreedOrDeclined(forumId)) {
+                    if (!ourOrgAgreedOrDeclined(forumId)) {
                         ++count;
                     }
                 }
