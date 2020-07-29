@@ -47,6 +47,7 @@ public class SurveyForumParticipation {
     public SurveyForumParticipation(String org) {
         this.org = org;
         orgLocales = StandardCodes.make().getLocaleCoverageLocales(org);
+        orgLocales.remove("*");
     }
 
     public void getJson(JSONWriter r) throws JSONException {
