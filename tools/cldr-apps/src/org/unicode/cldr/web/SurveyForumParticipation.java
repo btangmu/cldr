@@ -47,7 +47,6 @@ public class SurveyForumParticipation {
     public SurveyForumParticipation(String org) {
         this.org = org;
         orgLocales = StandardCodes.make().getLocaleCoverageLocales(org);
-        orgLocales.remove("*");
     }
 
     public void getJson(JSONWriter r) throws JSONException {
@@ -61,6 +60,9 @@ public class SurveyForumParticipation {
 
         JSONArray rows = new JSONArray();
         for (String loc : orgLocales) {
+            if ("*".equals(loc)) {
+                continue;
+            }
             JSONArray cells = new JSONArray();
             for (Cell cell : Cell.values()) {
                 String s = getCell(loc, cell);
