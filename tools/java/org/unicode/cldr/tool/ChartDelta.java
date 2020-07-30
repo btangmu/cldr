@@ -78,7 +78,7 @@ public class ChartDelta extends Chart {
         Vxml(new Params().setHelp("use cldr-aux for the base directory")),
         coverageFilter(new Params().setHelp("filter files by coverage").setMatch(".*")),
         directory(new Params().setHelp("Set the output directory name").setDefault(DIR_NAME).setMatch(".*")),
-        verbose(new Params().setHelp("verbose debugging messages"))
+        verbose(new Params().setHelp("verbose debugging messages")),
         ;
 
         // BOILERPLATE TO COPY
@@ -1055,7 +1055,15 @@ public class ChartDelta extends Chart {
             String value = s.getSecond();
             if (dtdType == null) {
                 dtdType = DtdType.fromPath(path);
-                dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
+                /*
+                 * TODO: fix bug where CLDR_BASE_DIR gets appended to ARCHIVE_DIRECTORY by getInstance
+                 * Maybe a mixup between
+                 * public static DtdData getInstance(DtdType type, String version)
+                 * public static DtdData getInstance(DtdType type, File directory)
+                 */
+                // dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
+                File dir = new File(CLDR_BASE_DIR);
+                dtdData = DtdData.getInstance(dtdType, dir);
             }
             XPathParts pathPlain = XPathParts.getFrozenInstance(path);
             if (dtdData.isMetadata(pathPlain)) {
