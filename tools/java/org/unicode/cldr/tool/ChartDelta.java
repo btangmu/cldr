@@ -193,7 +193,7 @@ public class ChartDelta extends Chart {
 
     private static final CLDRFile EMPTY_CLDR = new CLDRFile(new SimpleXMLSource("und").freeze());
 
-    private static final String CLDR_BASE_DIR = CLDRConfig.getInstance().getCldrBaseDirectory().toString();
+    private static final File CLDR_BASE_DIR = CLDRConfig.getInstance().getCldrBaseDirectory();
 
     private enum ChangeType {
         added, deleted, changed, same;
@@ -1055,15 +1055,7 @@ public class ChartDelta extends Chart {
             String value = s.getSecond();
             if (dtdType == null) {
                 dtdType = DtdType.fromPath(path);
-                /*
-                 * TODO: fix bug where CLDR_BASE_DIR gets appended to ARCHIVE_DIRECTORY by getInstance
-                 * Maybe a mixup between
-                 * public static DtdData getInstance(DtdType type, String version)
-                 * public static DtdData getInstance(DtdType type, File directory)
-                 */
-                // dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
-                File dir = new File(CLDR_BASE_DIR);
-                dtdData = DtdData.getInstance(dtdType, dir);
+                dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
             }
             XPathParts pathPlain = XPathParts.getFrozenInstance(path);
             if (dtdData.isMetadata(pathPlain)) {
