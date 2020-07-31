@@ -60,6 +60,10 @@ import com.ibm.icu.util.ICUUncheckedIOException;
 import com.ibm.icu.util.Output;
 
 public class ChartDelta extends Chart {
+    /**
+     * If true, check only high-level paths, i.e., paths for which any changes
+     * have high potential to cause disruptive "churn"
+     */
     private static final boolean DO_CHURN = false;
 
     private static final boolean verbose_skipping = false;
@@ -380,7 +384,7 @@ public class ChartDelta extends Chart {
                         Output<Boolean> hasReformattedValue = new Output<>();
 
                         for (String path : paths) {
-                            if (DO_CHURN && !pathCountsForChurn(path)) {
+                            if (DO_CHURN && !pathIsHighLevel(path)) {
                                 continue;
                             }
                             if (path.startsWith("//ldml/identity")
@@ -388,7 +392,7 @@ public class ChartDelta extends Chart {
                                 || path.startsWith("//ldml/segmentations") // do later
                                 || path.startsWith("//ldml/rbnf") // do later
                                 ) {
-                                continue; // TODO: superfluous after pathCountsForChurn?
+                                continue;
                             }
                             PathHeader ph = getPathHeader(path);
                             if (ph == null) {
@@ -447,7 +451,7 @@ public class ChartDelta extends Chart {
      * @param path
      * @return true if it counts, else false to ignore
      */
-    private boolean pathCountsForChurn(String path) {
+    private boolean pathIsHighLevel(String path) {
         // TODO: more paths, use RegexLookup, read from file
         final Set<String> churnPaths = new HashSet<>(Arrays.asList(
             "//ldml/characters/exemplarCharacters",
@@ -938,7 +942,7 @@ public class ChartDelta extends Chart {
                     DtdType dtdType = null;
                     for (PathHeader key : keys) {
                         String originalPath = key.getOriginalPath();
-                        if (DO_CHURN && !pathCountsForChurn(originalPath)) {
+                        if (DO_CHURN && !pathIsHighLevel(originalPath)) {
                             continue;
                         }
                         boolean isTransform = originalPath.contains("/tRule");
@@ -1049,16 +1053,32 @@ public class ChartDelta extends Chart {
 
         for (Pair<String, String> s : contents1) {
             String path = s.getFirst();
-            if (DO_CHURN && !pathCountsForChurn(path)) {
+            if (DO_CHURN && !pathIsHighLevel(path)) {
                 continue;
             }
             String value = s.getSecond();
             if (dtdType == null) {
+                /*
+                 * TODO: fix or explain: if dtdType and dtdData depend on path, why is this done
+                 * only the first time through the loop? Do all the paths in this loop have the
+                 * same dtdType? Also, when we're looking at paths from an old archived version,
+                 * should we use the old archived DTD instead of the current one in CLDR_BASE_DIR?
+                 */
                 dtdType = DtdType.fromPath(path);
                 dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
             }
             XPathParts pathPlain = XPathParts.getFrozenInstance(path);
-            if (dtdData.isMetadata(pathPlain)) {
+            try {
+                if (dtdData.isMetadata(pathPlain)) {
+                    continue;
+                }
+            } catch (NullPointerException e) {
+                /*
+                 * TODO: this happens for "grammaticalState" in this path from version 37:
+                 * //supplementalData/grammaticalData/grammaticalFeatures[@targets="nominal"][@locales="he"]/grammaticalState[@values="definite indefinite construct"]
+                 * Referencw: https://unicode-org.atlassian.net/browse/CLDR-13306
+                 */
+                System.out.println("Caught NullPointerException in fillData calling isMetadata, path = " + path);
                 continue;
             }
             Set<String> pathForValues = dtdData.getRegularizedPaths(pathPlain, extras);
