@@ -60,15 +60,10 @@ import com.ibm.icu.util.ICUUncheckedIOException;
 import com.ibm.icu.util.Output;
 
 public class ChartDelta extends Chart {
-    /**
-     * If true, check only high-level paths, i.e., paths for which any changes
-     * have high potential to cause disruptive "churn"
-     */
-    private static final boolean DO_CHURN = false;
-
     private static final boolean verbose_skipping = false;
 
-    private static final String DIR_NAME = DO_CHURN ? "churn" : "delta";
+    private static final String DEFAULT_DELTA_DIR_NAME = "delta";
+    private static final String DEFAULT_CHURN_DIR_NAME = "churn";
 
     private static final boolean SKIP_REFORMAT_ANNOTATIONS = ToolConstants.PREV_CHART_VERSION.compareTo("30") >= 0;
 
@@ -81,8 +76,9 @@ public class ChartDelta extends Chart {
         orgFilter(new Params().setHelp("filter files by organization").setMatch(".*")),
         Vxml(new Params().setHelp("use cldr-aux for the base directory")),
         coverageFilter(new Params().setHelp("filter files by coverage").setMatch(".*")),
-        directory(new Params().setHelp("Set the output directory name").setDefault(DIR_NAME).setMatch(".*")),
+        directory(new Params().setHelp("Set the output directory name").setDefault(DEFAULT_DELTA_DIR_NAME).setMatch(".*")),
         verbose(new Params().setHelp("verbose debugging messages")),
+        highLevelOnly(new Params().setHelp("check high-level paths (churn) only").setFlag('H')),
         ;
 
         // BOILERPLATE TO COPY
@@ -105,9 +101,17 @@ public class ChartDelta extends Chart {
     }
 
     private final Matcher fileFilter;
-    private final String DIR;
+    private final String dirName; // "delta" or "churn" or set as option
+    private final String chartNameCap; // capitalized, e.g., "Delta" or "Churn"
+    private final String DIR; // full path of output folder
     private final Level minimumPathCoverage;
     private final boolean verbose;
+
+    /**
+     * If true, check only high-level paths, i.e., paths for which any changes
+     * have high potential to cause disruptive "churn"
+     */
+    private final boolean highLevelOnly;
 
     public static void main(String[] args) {
         System.out.println("use -DCHART_VERSION=36.0 -DPREV_CHART_VERSION=34.0 to generate the differences between v36 and v34.");
@@ -124,19 +128,31 @@ public class ChartDelta extends Chart {
         }
         Level coverage = !MyOptions.coverageFilter.option.doesOccur() ? null : Level.fromString(MyOptions.coverageFilter.option.getValue());
         boolean verbose = MyOptions.verbose.option.doesOccur();
-        String DIR = CLDRPaths.CHART_DIRECTORY + MyOptions.directory.option.getValue();
-        ChartDelta temp = new ChartDelta(fileFilter, coverage, DIR, verbose);
+        boolean highLevelOnly = MyOptions.highLevelOnly.option.doesOccur();
+        String dirName = MyOptions.directory.option.getValue();
+        if (highLevelOnly && DEFAULT_DELTA_DIR_NAME.equals(dirName)) {
+            System.out.println("For highLevelOnly, changing directory from " + DEFAULT_DELTA_DIR_NAME
+                    + " to " + DEFAULT_CHURN_DIR_NAME);
+            dirName = DEFAULT_CHURN_DIR_NAME;
+        }
+        ChartDelta temp = new ChartDelta(fileFilter, coverage, dirName, verbose, highLevelOnly);
         temp.writeChart(null);
         temp.showTotals();
+        if (highLevelOnly) {
+            temp.reportHighLevelPathUsage();
+        }
         System.out.println("Finished. Files may have been created in these directories:");
-        System.out.println(DIR);
-        System.out.println(getTsvDir(DIR, DIR_NAME));
+        System.out.println(temp.DIR);
+        System.out.println(getTsvDir(temp.DIR, temp.dirName));
     }
 
-    private ChartDelta(Matcher fileFilter, Level coverage, String dir, boolean verbose) {
+    private ChartDelta(Matcher fileFilter, Level coverage, String dirName, boolean verbose, boolean highLevelOnly) {
         this.fileFilter = fileFilter;
         this.verbose = verbose;
-        this.DIR = dir;
+        this.highLevelOnly = highLevelOnly;
+        this.dirName = dirName;
+        this.chartNameCap = dirName.substring(0, 1).toUpperCase() + dirName.substring(1);
+        this.DIR = CLDRPaths.CHART_DIRECTORY + dirName;
         this.minimumPathCoverage = coverage;
     }
 
@@ -155,7 +171,7 @@ public class ChartDelta extends Chart {
 
     @Override
     public String getTitle() {
-        return DO_CHURN ? "Churn Charts" : "Delta Charts";
+        return chartNameCap + " Charts";
     }
 
     @Override
@@ -223,7 +239,7 @@ public class ChartDelta extends Chart {
     }
 
     private void showTotals() {
-        try (PrintWriter pw = FileUtilities.openUTF8Writer(getTsvDir(DIR, DIR_NAME), DIR_NAME + "_summary.tsv")) {
+        try (PrintWriter pw = FileUtilities.openUTF8Writer(getTsvDir(DIR, dirName), dirName + "_summary.tsv")) {
             pw.println("# percentages are of *new* total");
             pw.print("# dir\tfile");
             for (ChangeType item : ChangeType.values()) {
@@ -269,9 +285,8 @@ public class ChartDelta extends Chart {
      * TODO: shorten the function using subroutines
      */
     private void writeLdml(Anchors anchors)  throws IOException {
-
-        try (PrintWriter tsvFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, DIR_NAME), DIR_NAME + ".tsv");
-            PrintWriter tsvCountFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, DIR_NAME), DIR_NAME + "_count.tsv");
+        try (PrintWriter tsvFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, dirName), dirName + ".tsv");
+            PrintWriter tsvCountFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, dirName), dirName + "_count.tsv");
             ) {
             tsvFile.println("# Section\tPage\tHeader\tCode\tLocale\tOld\tNew\tLevel");
 
@@ -384,7 +399,7 @@ public class ChartDelta extends Chart {
                         Output<Boolean> hasReformattedValue = new Output<>();
 
                         for (String path : paths) {
-                            if (DO_CHURN && !pathIsHighLevel(path)) {
+                            if (highLevelOnly && !pathIsHighLevel(path)) {
                                 continue;
                             }
                             if (path.startsWith("//ldml/identity")
@@ -442,71 +457,144 @@ public class ChartDelta extends Chart {
             tsvFile.println("# EOF");
             tsvCountFile.println("# EOF");
         }
-
     }
+
+    // TODO: revise per design spec; read from file; maybe use RegexLookup
+    final private static Set<String> highLevelPaths = new HashSet<>(Arrays.asList(
+        /*
+         * Core data
+         */
+        "//ldml/characters/exemplarCharacters",
+        "//ldml/numbers/defaultNumberingSystem",
+        "//ldml/numbers/otherNumberingSystems/native",
+        /*
+         * Territory and Language names
+         *     Country/Region names (English and Native names)
+         *     Language names (English and Native)
+         *
+         * TODO: English names: localeDisplayName/territories/territory (en.xml) per design doc
+         */
+        "//ldml/localeDisplayNames/territories/territory", // TODO: filter subset of these per design doc; "native"; exclude alt
+        "//ldml/localeDisplayNames/languages/language", // TODO: en.xml, and filter, similar to territories/territory
+        /*
+         * Date
+         * Note: "year", "month", etc., below, form a subset (eight) of all possible values for type,
+         * excluding, for example, "fri" and "zone". If we use starred paths, we would need further complication
+         * to filter out "fri", "zone", etc.
+         */
+        "//ldml/dates/fields/field[@type=\"year\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"month\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"week\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"day\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"hour\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"era\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"minute\"]/displayName",
+        "//ldml/dates/fields/field[@type=\"second\"]/displayName",
+        "//supplementalData/weekData/firstDay", // TODO: filter out "alt" per design doc
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"full\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"long\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"medium\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"short\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MMMEd\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MEd\"]",
+        /*
+         * Time
+         */
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"full\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"long\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"medium\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"am\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"am\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"pm\"]",
+        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"pm\"]",
+        /*
+         * Currency (English and Native)
+         * TODO: "KRW" is placeholder here. Per design doc, only want
+         *      "English (en.xml /ldml/numbers/currencies/currency)"
+         *       and "Native (Match the Currency of the Territory)"
+         */
+        "//ldml/numbers/currencies/currency",
+        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/displayName",
+        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol",
+        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol[@alt=\"narrow\"]",
+        /*
+         * Currency Formats
+         *  a. Currency thousand separator
+         *      TODO: See pt_CV.xml example <numbers><currencies><currency><symbol>
+         *  b. Currency decimal separator
+         *      TODO: See pt_CV.xml example <numbers><currencies><currency><decimal>
+         *  c. Currency Symbol//ldml/numbers/currencies/currency[@type="CNY"]/symbol
+         *  d. Currency Symbol Narrow
+         */
+        "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/numbers/currencyFormats[@numberSystem=\"arab\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        /*
+         * Currency symbols
+         */
+        "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol",
+        "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]",
+        /*
+         * Number Symbols
+         */
+        "//ldml/numbers/minimumGroupingDigits",
+        "//ldml/numbers/symbols[@numberSystem=\"latn\"]/decimal",
+        "//ldml/numbers/symbols[@numberSystem=\"latn\"]/group",
+        "//ldml/numbers/symbols[@numberSystem=\"arab\"]/decimal",
+        "//ldml/numbers/symbols[@numberSystem=\"arab\"]/group",
+        /*
+         * Number formats
+         */
+        "//ldml/numbers/decimalFormats[@numberSystem=\"latn\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/numbers/percentFormats[@numberSystem=\"latn\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"accounting\"]/pattern[@type=\"standard\"]",
+        "//ldml/numbers/decimalFormats[@numberSystem=\"arab\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        "//ldml/numbers/percentFormats[@numberSystem=\"arab\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+        /*
+         * "Complementary Observations"
+         * TODO: per design doc, "Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
+         *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
+         * TODO: per design doc, "Adding a timezone"
+         * TODO: per design doc, "Changes of symbols or codes that are cross-locale in some way such as the unknown
+         *  currency symbol change 'XXX' -> '¤'."
+         * TODO: per design doc, "Change in character properties (not a CLDR but a Unicode change), and here especially
+         *  newly adding or removing punctuation. Frequently irritates parsers."
+         */
+        "//supplementalData/metadata/alias",
+        "//supplementalData/territoryContainment"
+    ));
+
+    private Set<String> highLevelPathMatched = null;
 
     /**
      * Should the given path be taken into account for generating "churn" reports?
      *
      * @param path
      * @return true if it counts, else false to ignore
+     *
+     * TODO: possibly add a parameter for the locale
      */
     private boolean pathIsHighLevel(String path) {
-        // TODO: more paths, use RegexLookup, read from file
-        final Set<String> churnPaths = new HashSet<>(Arrays.asList(
-            "//ldml/characters/exemplarCharacters",
-            "//ldml/numbers/defaultNumberingSystem",
-            "//ldml/numbers/otherNumberingSystems/native",
-            "//ldml/localeDisplayNames/territories/territory",
-            "//ldml/localeDisplayNames/languages/language",
-            "//ldml/dates/fields/field[@type=\"year\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"month\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"week\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"day\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"hour\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"era\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"minute\"]/displayName",
-            "//ldml/dates/fields/field[@type=\"second\"]/displayName",
-            "//supplementalData/weekData/firstDay",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"full\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"long\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"medium\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"short\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MMMEd\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MEd\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"full\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"long\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"medium\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"am\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"am\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"pm\"]",
-            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"pm\"]",
-            "//ldml/numbers/currencies/currency[@type=\"KRW\"]/displayName",
-            "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol",
-            "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol[@alt=\"narrow\"]",
-            "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/currencyFormats[@numberSystem=\"arab\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol",
-            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]",
-            "//ldml/numbers/minimumGroupingDigits",
-            "//ldml/numbers/symbols[@numberSystem=\"latn\"]/decimal",
-            "//ldml/numbers/symbols[@numberSystem=\"latn\"]/group",
-            "//ldml/numbers/symbols[@numberSystem=\"arab\"]/decimal",
-            "//ldml/numbers/symbols[@numberSystem=\"arab\"]/group",
-            "//ldml/numbers/decimalFormats[@numberSystem=\"latn\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/percentFormats[@numberSystem=\"latn\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"accounting\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/decimalFormats[@numberSystem=\"arab\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//ldml/numbers/percentFormats[@numberSystem=\"arab\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            "//supplementalData/metadata/alias",
-            "//supplementalData/territoryContainment"
-        ));
-
-        if (churnPaths.contains(path)) {
+        if (highLevelPaths.contains(path)) {
+            if (highLevelPathMatched == null) {
+                highLevelPathMatched = new HashSet<>();
+            }
+            highLevelPathMatched.add(path);
             return true;
         }
         return false;
+    }
+
+    private void reportHighLevelPathUsage() {
+        if (highLevelPathMatched == null) {
+            System.out.println("Zero high-level paths were matched.");
+        } else {
+            for (String path: highLevelPaths) {
+                if (!highLevelPathMatched.contains(path)) {
+                    System.out.println("Unused in highLevelPaths: " + path);
+                }
+            }
+        }
     }
 
     private boolean allowPath(String locale, String path) {
@@ -831,7 +919,7 @@ public class ChartDelta extends Chart {
             .finishRow();
 
         }
-        String title = ENGLISH.getName(file) + (DO_CHURN ? " Churn" : " Delta");
+        String title = ENGLISH.getName(file) + " " + chartNameCap;
         writeTable(anchors, file, tablePrinter, title, tsvFile);
 
         diff.clear();
@@ -891,8 +979,8 @@ public class ChartDelta extends Chart {
     }
 
     private void writeNonLdmlPlain(Anchors anchors) throws IOException {
-        try (PrintWriter tsvFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, DIR_NAME), DIR_NAME + "_supp.tsv");
-            PrintWriter tsvCountFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, DIR_NAME), DIR_NAME + "_supp_count.tsv");
+        try (PrintWriter tsvFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, dirName), dirName + "_supp.tsv");
+            PrintWriter tsvCountFile = FileUtilities.openUTF8Writer(getTsvDir(DIR, dirName), dirName + "_supp_count.tsv");
             ) {
             tsvFile.println("# Section\tPage\tHeader\tCode\tOld\tNew");
 
@@ -942,7 +1030,7 @@ public class ChartDelta extends Chart {
                     DtdType dtdType = null;
                     for (PathHeader key : keys) {
                         String originalPath = key.getOriginalPath();
-                        if (DO_CHURN && !pathIsHighLevel(originalPath)) {
+                        if (highLevelOnly && !pathIsHighLevel(originalPath)) {
                             continue;
                         }
                         boolean isTransform = originalPath.contains("/tRule");
@@ -1006,10 +1094,9 @@ public class ChartDelta extends Chart {
                     }
                 }
             }
-            String deltaChurn = DO_CHURN ? "Churn" : "Delta";
-            writeDiffs(anchors, "bcp47", "¤¤BCP47 " + deltaChurn, bcp, tsvFile);
-            writeDiffs(anchors, "supplemental-data", "¤¤Supplemental " + deltaChurn, supplemental, tsvFile);
-            writeDiffs(anchors, "transforms", "¤¤Transforms " + deltaChurn, transforms, tsvFile);
+            writeDiffs(anchors, "bcp47", "¤¤BCP47 " + chartNameCap, bcp, tsvFile);
+            writeDiffs(anchors, "supplemental-data", "¤¤Supplemental " + chartNameCap, supplemental, tsvFile);
+            writeDiffs(anchors, "transforms", "¤¤Transforms " + chartNameCap, transforms, tsvFile);
 
             writeCounter(tsvCountFile, "CountSame", countSame);
             tsvCountFile.println();
@@ -1053,16 +1140,17 @@ public class ChartDelta extends Chart {
 
         for (Pair<String, String> s : contents1) {
             String path = s.getFirst();
-            if (DO_CHURN && !pathIsHighLevel(path)) {
+            if (highLevelOnly && !pathIsHighLevel(path)) {
                 continue;
             }
             String value = s.getSecond();
             if (dtdType == null) {
                 /*
-                 * TODO: fix or explain: if dtdType and dtdData depend on path, why is this done
-                 * only the first time through the loop? Do all the paths in this loop have the
-                 * same dtdType? Also, when we're looking at paths from an old archived version,
-                 * should we use the old archived DTD instead of the current one in CLDR_BASE_DIR?
+                 * Note: although dtdType and dtdData depend on path, they are the same for all paths
+                 * in the same file, so they only need to be set the first time through this loop.
+                 *
+                 * TODO: when we're looking at paths from an old archived version, should we use the
+                 * old archived DTD instead of the current one in CLDR_BASE_DIR?
                  */
                 dtdType = DtdType.fromPath(path);
                 dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
@@ -1076,7 +1164,7 @@ public class ChartDelta extends Chart {
                 /*
                  * TODO: this happens for "grammaticalState" in this path from version 37:
                  * //supplementalData/grammaticalData/grammaticalFeatures[@targets="nominal"][@locales="he"]/grammaticalState[@values="definite indefinite construct"]
-                 * Referencw: https://unicode-org.atlassian.net/browse/CLDR-13306
+                 * Reference: https://unicode-org.atlassian.net/browse/CLDR-13306
                  */
                 System.out.println("Caught NullPointerException in fillData calling isMetadata, path = " + path);
                 continue;
