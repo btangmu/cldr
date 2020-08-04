@@ -43,6 +43,7 @@ import org.unicode.cldr.util.PatternCache;
 import org.unicode.cldr.util.SimpleXMLSource;
 import org.unicode.cldr.util.StandardCodes;
 import org.unicode.cldr.util.SupplementalDataInfo;
+import org.unicode.cldr.util.SupplementalDataInfo.CoverageVariableInfo;
 import org.unicode.cldr.util.TransliteratorUtilities;
 import org.unicode.cldr.util.XMLFileReader;
 import org.unicode.cldr.util.XPathParts;
@@ -139,7 +140,7 @@ public class ChartDelta extends Chart {
         temp.writeChart(null);
         temp.showTotals();
         if (highLevelOnly) {
-            temp.reportHighLevelPathUsage();
+            HighLevelPaths.reportHighLevelPathUsage();
         }
         System.out.println("Finished. Files may have been created in these directories:");
         System.out.println(temp.DIR);
@@ -399,7 +400,7 @@ public class ChartDelta extends Chart {
                         Output<Boolean> hasReformattedValue = new Output<>();
 
                         for (String path : paths) {
-                            if (highLevelOnly && !pathIsHighLevel(path)) {
+                            if (highLevelOnly && !HighLevelPaths.pathIsHighLevel(path, locale)) {
                                 continue;
                             }
                             if (path.startsWith("//ldml/identity")
@@ -456,144 +457,6 @@ public class ChartDelta extends Chart {
             writeCounter(tsvCountFile, "Count", counts);
             tsvFile.println("# EOF");
             tsvCountFile.println("# EOF");
-        }
-    }
-
-    // TODO: revise per design spec; read from file; maybe use RegexLookup
-    final private static Set<String> highLevelPaths = new HashSet<>(Arrays.asList(
-        /*
-         * Core data
-         */
-        "//ldml/characters/exemplarCharacters",
-        "//ldml/numbers/defaultNumberingSystem",
-        "//ldml/numbers/otherNumberingSystems/native",
-        /*
-         * Territory and Language names
-         *     Country/Region names (English and Native names)
-         *     Language names (English and Native)
-         *
-         * TODO: English names: localeDisplayName/territories/territory (en.xml) per design doc
-         */
-        "//ldml/localeDisplayNames/territories/territory", // TODO: filter subset of these per design doc; "native"; exclude alt
-        "//ldml/localeDisplayNames/languages/language", // TODO: en.xml, and filter, similar to territories/territory
-        /*
-         * Date
-         * Note: "year", "month", etc., below, form a subset (eight) of all possible values for type,
-         * excluding, for example, "fri" and "zone". If we use starred paths, we would need further complication
-         * to filter out "fri", "zone", etc.
-         */
-        "//ldml/dates/fields/field[@type=\"year\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"month\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"week\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"day\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"hour\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"era\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"minute\"]/displayName",
-        "//ldml/dates/fields/field[@type=\"second\"]/displayName",
-        "//supplementalData/weekData/firstDay", // TODO: filter out "alt" per design doc
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"full\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"long\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"medium\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"short\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MMMEd\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MEd\"]",
-        /*
-         * Time
-         */
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"full\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"long\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"medium\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"am\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"am\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"pm\"]",
-        "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"pm\"]",
-        /*
-         * Currency (English and Native)
-         * TODO: "KRW" is placeholder here. Per design doc, only want
-         *      "English (en.xml /ldml/numbers/currencies/currency)"
-         *       and "Native (Match the Currency of the Territory)"
-         */
-        "//ldml/numbers/currencies/currency",
-        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/displayName",
-        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol",
-        "//ldml/numbers/currencies/currency[@type=\"KRW\"]/symbol[@alt=\"narrow\"]",
-        /*
-         * Currency Formats
-         *  a. Currency thousand separator
-         *      TODO: See pt_CV.xml example <numbers><currencies><currency><symbol>
-         *  b. Currency decimal separator
-         *      TODO: See pt_CV.xml example <numbers><currencies><currency><decimal>
-         *  c. Currency Symbol//ldml/numbers/currencies/currency[@type="CNY"]/symbol
-         *  d. Currency Symbol Narrow
-         */
-        "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/numbers/currencyFormats[@numberSystem=\"arab\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        /*
-         * Currency symbols
-         */
-        "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol",
-        "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]",
-        /*
-         * Number Symbols
-         */
-        "//ldml/numbers/minimumGroupingDigits",
-        "//ldml/numbers/symbols[@numberSystem=\"latn\"]/decimal",
-        "//ldml/numbers/symbols[@numberSystem=\"latn\"]/group",
-        "//ldml/numbers/symbols[@numberSystem=\"arab\"]/decimal",
-        "//ldml/numbers/symbols[@numberSystem=\"arab\"]/group",
-        /*
-         * Number formats
-         */
-        "//ldml/numbers/decimalFormats[@numberSystem=\"latn\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/numbers/percentFormats[@numberSystem=\"latn\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"accounting\"]/pattern[@type=\"standard\"]",
-        "//ldml/numbers/decimalFormats[@numberSystem=\"arab\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        "//ldml/numbers/percentFormats[@numberSystem=\"arab\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-        /*
-         * "Complementary Observations"
-         * TODO: per design doc, "Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
-         *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
-         * TODO: per design doc, "Adding a timezone"
-         * TODO: per design doc, "Changes of symbols or codes that are cross-locale in some way such as the unknown
-         *  currency symbol change 'XXX' -> '¤'."
-         * TODO: per design doc, "Change in character properties (not a CLDR but a Unicode change), and here especially
-         *  newly adding or removing punctuation. Frequently irritates parsers."
-         */
-        "//supplementalData/metadata/alias",
-        "//supplementalData/territoryContainment"
-    ));
-
-    private Set<String> highLevelPathMatched = null;
-
-    /**
-     * Should the given path be taken into account for generating "churn" reports?
-     *
-     * @param path
-     * @return true if it counts, else false to ignore
-     *
-     * TODO: possibly add a parameter for the locale
-     */
-    private boolean pathIsHighLevel(String path) {
-        if (highLevelPaths.contains(path)) {
-            if (highLevelPathMatched == null) {
-                highLevelPathMatched = new HashSet<>();
-            }
-            highLevelPathMatched.add(path);
-            return true;
-        }
-        return false;
-    }
-
-    private void reportHighLevelPathUsage() {
-        if (highLevelPathMatched == null) {
-            System.out.println("Zero high-level paths were matched.");
-        } else {
-            for (String path: highLevelPaths) {
-                if (!highLevelPathMatched.contains(path)) {
-                    System.out.println("Unused in highLevelPaths: " + path);
-                }
-            }
         }
     }
 
@@ -1022,15 +885,15 @@ public class ChartDelta extends Chart {
                     if (verbose) {
                         System.out.println(file);
                     }
-                    Relation<PathHeader, String> contentsOld = fillData(dirOld.toString() + "/", file);
-                    Relation<PathHeader, String> contents2 = fillData(dir2.toString() + "/", file);
+                    Relation<PathHeader, String> contentsOld = fillData(dirOld.toString() + "/", file, base);
+                    Relation<PathHeader, String> contents2 = fillData(dir2.toString() + "/", file, base);
 
                     Set<PathHeader> keys = new TreeSet<>(CldrUtility.ifNull(contentsOld.keySet(), Collections.<PathHeader> emptySet()));
                     keys.addAll(CldrUtility.ifNull(contents2.keySet(), Collections.<PathHeader> emptySet()));
                     DtdType dtdType = null;
                     for (PathHeader key : keys) {
                         String originalPath = key.getOriginalPath();
-                        if (highLevelOnly && !pathIsHighLevel(originalPath)) {
+                        if (highLevelOnly && !HighLevelPaths.pathIsHighLevel(originalPath, null)) {
                             continue;
                         }
                         boolean isTransform = originalPath.contains("/tRule");
@@ -1125,13 +988,24 @@ public class ChartDelta extends Chart {
         target.put(key, oldItem + SEP + newItem);
     }
 
-    private Relation<PathHeader, String> fillData(String directory, String file) {
+    /**
+     * Fill in the chart data for the specified file
+     *
+     * @param directory
+     * @param file like "xx.xml" where "xx" may be a locale name
+     * @param fileBase like "xx", same as file without ".xml"
+     * @return the Relation
+     */
+    private Relation<PathHeader, String> fillData(String directory, String file, String fileBase) {
         Relation<PathHeader, String> results = Relation.of(new TreeMap<PathHeader, Set<String>>(), TreeSet.class);
 
         List<Pair<String, String>> contents1;
         try {
             contents1 = XMLFileReader.loadPathValues(directory + file, new ArrayList<Pair<String, String>>(), true);
         } catch (Exception e) {
+            /*
+             * This happens with e = ICUException, file = grammaticalFeatures.xml in cldr-36.0
+             */
             return results;
         }
         DtdType dtdType = null;
@@ -1140,7 +1014,7 @@ public class ChartDelta extends Chart {
 
         for (Pair<String, String> s : contents1) {
             String path = s.getFirst();
-            if (highLevelOnly && !pathIsHighLevel(path)) {
+            if (highLevelOnly && !HighLevelPaths.pathIsHighLevel(path, fileBase /* locale, or not */)) {
                 continue;
             }
             String value = s.getSecond();
@@ -1150,7 +1024,7 @@ public class ChartDelta extends Chart {
                  * in the same file, so they only need to be set the first time through this loop.
                  *
                  * TODO: when we're looking at paths from an old archived version, should we use the
-                 * old archived DTD instead of the current one in CLDR_BASE_DIR?
+                 * archived DTD instead of the current one in CLDR_BASE_DIR? See "grammaticalState" below.
                  */
                 dtdType = DtdType.fromPath(path);
                 dtdData = DtdData.getInstance(dtdType, CLDR_BASE_DIR);
@@ -1216,5 +1090,336 @@ public class ChartDelta extends Chart {
             }
         }
         return false;
+    }
+
+    /**
+     * Determine which paths are considered "high-level" paths, i.e.,
+     * paths for which any changes have high potential to cause disruptive "churn".
+     * Whether a path is high-level sometimes depends on the locale or xml file in
+     * which it occurs.
+     * Some paths are high-level regardless of the locale in which they are located.
+     * Other paths are high-level for some locales but not others. For example,
+     *    //ldml/localeDisplayNames/languages/language[@type="xx"]
+     * is high level in locale "xx", and maybe "en", but not for all locales.
+     */
+    private static class HighLevelPaths {
+        /**
+         * A set of paths to be treated as "high-level"
+         *  TODO: revise per design spec; read from file; maybe use RegexLookup;
+         *  distinguish these types:
+         *  (1) complete paths to be matched exactly;
+         *  (2) paths recognized by special functions like isHighLevelTerritoryName
+         *  (3) prefixes that could match with startsWith();
+         *  (4) RegexLookup or other regex
+         *  (5) "starred" paths
+         *  Currently we only have type (1) in this array, and all others are of type (2).
+         */
+        final private static Set<String> highLevelPaths = new HashSet<>(Arrays.asList(
+            /*
+             * Core data
+             */
+            "//ldml/characters/exemplarCharacters",
+            "//ldml/numbers/defaultNumberingSystem",
+            "//ldml/numbers/otherNumberingSystems/native",
+            /*
+             * Territory and Language names
+             *  Country/Region names (English and Native names) -- see isHighLevelTerritoryName
+             *   //ldml/localeDisplayName/territories/territory/...
+             *  Language names (English and Native) -- see isHighLevelLangName
+             *   //ldml/localeDisplayNames/languages/language/...
+             */
+            /*
+             * Date
+             * Note: "year", "month", etc., below, form a subset (eight) of all possible values for type,
+             * excluding, for example, "fri" and "zone". If we use starred paths, we would need further complication
+             * to filter out "fri", "zone", etc.
+             */
+            "//ldml/dates/fields/field[@type=\"year\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"month\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"week\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"day\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"hour\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"era\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"minute\"]/displayName",
+            "//ldml/dates/fields/field[@type=\"second\"]/displayName",
+            "//supplementalData/weekData/firstDay", // TODO: filter out "alt" per design doc
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"full\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"long\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"medium\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"short\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MMMEd\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateTimeFormats/availableFormats/dateFormatItem[@id=\"MEd\"]",
+            /*
+             * Time
+             */
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"full\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"long\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"medium\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/timeFormats/timeFormatLength[@type=\"short\"]/timeFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"am\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"am\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"wide\"]/dayPeriod[@type=\"pm\"]",
+            "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dayPeriods/dayPeriodContext[@type=\"format\"]/dayPeriodWidth[@type=\"abbreviated\"]/dayPeriod[@type=\"pm\"]",
+            /*
+             * Currency (English and Native) -- see isHighLevelCurrencyName
+             * E.g., //ldml/numbers/currencies/currency[@type=\"KRW\"]/displayName"
+             *
+             * TODO: per design spec, "ISO Currency Code: SupplementalData.xml match <region iso3166>"
+             */
+            /*
+             * Currency Formats
+             *  a. Currency thousand separator
+             *      TODO: See pt_CV.xml example <numbers><currencies><currency><symbol>
+             *  b. Currency decimal separator
+             *      TODO: See pt_CV.xml example <numbers><currencies><currency><decimal>
+             *  c. Currency Symbol//ldml/numbers/currencies/currency[@type="CNY"]/symbol
+             *  d. Currency Symbol Narrow
+             */
+            "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/numbers/currencyFormats[@numberSystem=\"arab\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            /*
+             * Currency symbols
+             */
+            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol",
+            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]",
+            /*
+             * Number Symbols
+             */
+            "//ldml/numbers/minimumGroupingDigits",
+            "//ldml/numbers/symbols[@numberSystem=\"latn\"]/decimal",
+            "//ldml/numbers/symbols[@numberSystem=\"latn\"]/group",
+            "//ldml/numbers/symbols[@numberSystem=\"arab\"]/decimal",
+            "//ldml/numbers/symbols[@numberSystem=\"arab\"]/group",
+            /*
+             * Number formats
+             */
+            "//ldml/numbers/decimalFormats[@numberSystem=\"latn\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/numbers/percentFormats[@numberSystem=\"latn\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"accounting\"]/pattern[@type=\"standard\"]",
+            "//ldml/numbers/decimalFormats[@numberSystem=\"arab\"]/decimalFormatLength/decimalFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
+            "//ldml/numbers/percentFormats[@numberSystem=\"arab\"]/percentFormatLength/percentFormat[@type=\"standard\"]/pattern[@type=\"standard\"]"
+            /*
+             * "Complementary Observations"
+             */
+            /*
+             * Changes to language aliases (supplementalMetaData) -- see isHighLevelLangAlias
+             * E.g., //supplementalData/metadata/alias/languageAlias[@type="aar"]
+             */
+            /*
+             * Changes in the containment graph -- see isHighLevelTerritoryContainment
+             * Data mostly (or entirely?) from M49 standard, thus CLDR has limited control.
+             * Users use the containment graph in a variety of ways.
+             * E.g., //supplementalData/territoryContainment/group[@type="003"][@contains="013 021 029"]
+             */
+            /*
+             * TODO: per design doc, "Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
+             *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
+             * TODO: per design doc, "Adding a timezone"
+             * TODO: per design doc, "Changes of symbols or codes that are cross-locale in some way such as the unknown
+             *  currency symbol change 'XXX' -> '¤'."
+             * TODO: per design doc, "Change in character properties (not a CLDR but a Unicode change), and here especially
+             *  newly adding or removing punctuation. Frequently irritates parsers."
+             */
+        ));
+
+        /**
+         * Should the given path be taken into account for generating "churn" reports?
+         *
+         * @param path the path of interest
+         * @param locale the locale in which the path was found, or null, or possibly
+         *     the base file name without extension, like "xx" if the file name is "xx.xml",
+         *     where "xx" may or may not be a locale
+         * @return true if it counts, else false to ignore
+         */
+        private static boolean pathIsHighLevel(String path, String locale) {
+            if (highLevelPaths.contains(path)) {
+                recordHighLevelMatch(path);
+                return true;
+            } else if (isHighLevelTerritoryName(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
+            } else if (isHighLevelLangName(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
+            } else if (isHighLevelCurrencyName(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
+            } else if (isHighLevelLangAlias(path, locale)) {
+                // if (verboseHighLevelReporting) {
+                recordHighLevelMatch(path);
+                // }
+            } else if (isHighLevelTerritoryContainment(path, locale)) {
+                // if (verboseHighLevelReporting) {
+                recordHighLevelMatch(path);
+                // }
+            }
+            return false;
+        }
+
+        /**
+         * Changes to language aliases (supplementalMetaData)
+         * E.g., //supplementalData/metadata/alias/languageAlias[@type="aar"]
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelLangAlias(String path, String locale) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /**
+         * Changes in the containment graph -- see isHighLevelTerritoryContainment
+         * Data mostly (or entirely?) from M49 standard, thus CLDR has limited control.
+         * Users use the containment graph in a variety of ways.
+         * E.g., //supplementalData/territoryContainment/group[@type="003"][@contains="013 021 029"]
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelTerritoryContainment(String path, String locale) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        /**
+         * Is the given path a high-level territory name path in the given locale?
+         *
+         * E.g., //ldml/localeDisplayNames/territories/territory[@type="NNN"]
+         * if type "NNN" CORRESPONDS TO the locale or the locale is "en"
+         *
+         * English names (en.xml): match all types
+         * Native: check each territory type NNN corresponding to the given locale
+         *
+         * Exclude "alt"
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelTerritoryName(String path, String locale) {
+            if (locale != null && !path.contains("[@alt=")
+                && path.startsWith("//ldml/localeDisplayNames/territories/territory")) {
+                if ("en".equals(locale)) {
+                    return true;
+                }
+                CoverageVariableInfo cvi = SUPPLEMENTAL_DATA_INFO.getCoverageVariableInfo(locale);
+                if (cvi != null) {
+                    for (String type: cvi.targetTerritories) {
+                        if (path.contains("[@type=\"" + type + "\"]")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Is the given path a high-level language name path in the given locale?
+         *
+         * E.g., //ldml/localeDisplayNames/languages/language[@type="xx"]
+         * if type "xx" matches the locale or the locale is "en"
+         *
+         * Exclude "alt"
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelLangName(String path, String locale) {
+            if (locale != null && !path.contains("[@alt=")
+                && path.startsWith("//ldml/localeDisplayNames/languages/language")) {
+                if ("en".equals(locale)) {
+                    /*
+                     * English names (en.xml): match all types
+                     */
+                    return true;
+                } else if (path.contains("[@type=\"" + locale + "\"]")) {
+                    /*
+                     * Native names: match the type=”xx” of each xml file to identify the Native. E.g., type=ko if ko.xml
+                     */
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Is the given path a high-level currency name path in the given locale?
+         *
+         * E.g., //ldml/numbers/currencies/currency[@type=\"AAA\"]/displayName
+         * if type "AAA" CORRESPONDS TO the locale or the locale is "en"
+         *
+         * English names (en.xml): match all types
+         * Native: check each currency type AAA corresponding to the given locale
+         *
+         * Do NOT exclude "alt"; e.g.,
+         * //ldml/numbers/currencies/currency[@type="KRW"]/symbol[@alt="narrow"]
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelCurrencyName(String path, String locale) {
+            if (locale != null
+                && path.startsWith("//ldml/numbers/currencies/currency")) {
+                if ("en".equals(locale)) {
+                    return true;
+                }
+                CoverageVariableInfo cvi = SUPPLEMENTAL_DATA_INFO.getCoverageVariableInfo(locale);
+                if (cvi != null) {
+                    for (String type: cvi.targetCurrencies) {
+                        if (path.contains("[@type=\"" + type + "\"]")) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /**
+         * For debugging, testing
+         */
+        private static Set<String> highLevelPathMatched = null;
+        private static boolean verboseHighLevelReporting = false;
+
+        private static void recordHighLevelMatch(String path) {
+            if (highLevelPathMatched == null) {
+                highLevelPathMatched = new HashSet<>();
+            }
+            highLevelPathMatched.add(path);
+        }
+
+        /**
+         * For debugging, report on any paths in highLevelPaths that never matched
+         */
+        private static void reportHighLevelPathUsage() {
+            if (highLevelPathMatched == null) {
+                System.out.println("Zero high-level paths were matched!");
+                return;
+            }
+            for (String path: highLevelPaths) {
+                if (!highLevelPathMatched.contains(path)) {
+                    System.out.println("Unmatched high-level path: " + path);
+                }
+            }
+            if (verboseHighLevelReporting || true) {
+                for (String path: highLevelPathMatched) {
+                    if (!highLevelPaths.contains(path)) {
+                        System.out.println("Special matched high-level path: " + path);
+                    }
+                }
+            }
+        }
     }
 }
