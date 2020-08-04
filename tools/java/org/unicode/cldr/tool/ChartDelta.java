@@ -1216,7 +1216,7 @@ public class ChartDelta extends Chart {
              *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
              * TODO: per design doc, "Adding a timezone"
              * TODO: per design doc, "Changes of symbols or codes that are cross-locale in some way such as the unknown
-             *  currency symbol change 'XXX' -> '¤'."
+             *  currency symbol change '???' -> '¤'."
              * TODO: per design doc, "Change in character properties (not a CLDR but a Unicode change), and here especially
              *  newly adding or removing punctuation. Frequently irritates parsers."
              */
