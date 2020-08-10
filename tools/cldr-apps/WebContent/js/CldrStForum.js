@@ -59,10 +59,6 @@ const cldrStForum = (function() {
 	 */
 	let userCanPost = false;
 
-	function setUserCanPost(canPost) {
-		userCanPost = canPost ? true : false;
-	}
-
 	/**
 	 * Fetch the Forum data from the server, and "load" it
 	 *
@@ -85,6 +81,13 @@ const cldrStForum = (function() {
 				}
 				return;
 			}
+			/*
+			 * The server has already confirmed that the user is logged in and has permission to view the forum.
+			 * Note: the criteria (here) for posting in the main forum window are less strict than in the info
+			 * panel; see the other call to setUserCanPost. Here, we have no "json.canModify" set by the server.
+			 */
+			setUserCanPost(true);
+
 			// set up the 'right sidebar'
 			showInPop2(forumStr(params.name + "Guidance"), null, null, null, true); /* show the box the first time */
 
@@ -117,6 +120,13 @@ const cldrStForum = (function() {
 			error: errorHandler
 		};
 		cldrStAjax.sendXhr(xhrArgs);
+	}
+
+	/**
+	 * Set whether the user is allowed to make posts
+	 */
+	function setUserCanPost(canPost) {
+		userCanPost = canPost ? true : false;
 	}
 
 	/**
