@@ -55,6 +55,15 @@ const cldrStForum = (function() {
 	let threadHash = {};
 
 	/**
+	 * Whether the current user can make posts
+	 */
+	let userCanPost = false;
+
+	function setUserCanPost(canPost) {
+		userCanPost = canPost ? true : false;
+	}
+
+	/**
 	 * Fetch the Forum data from the server, and "load" it
 	 *
 	 * @param locale the locale string, like "fr_CA" (surveyCurrentLocale)
@@ -649,6 +658,9 @@ const cldrStForum = (function() {
 	 * @param topicDivs the map from threadId to DOM elements
 	 */
 	function addReplyButtonsToEachTopic(topicDivs) {
+		if (!userCanPost) {
+			return;
+		}
 		Object.keys(topicDivs).forEach(function(threadId) {
 			const rootPost = getRootPostFromThreadId(threadId);
 			if (rootPost) {
@@ -668,6 +680,9 @@ const cldrStForum = (function() {
 	 * @param value the value the current user voted for, or null
 	 */
 	function addNewPostButtons(el, locale, couldFlag, xpstrid, code, value) {
+		if (!userCanPost) {
+			return;
+		}
 		const options = getPostTypeOptions(false /* isReply */, null /* rootPost */, value);
 
 		Object.keys(options).forEach(function(postType) {
@@ -682,6 +697,9 @@ const cldrStForum = (function() {
 	 * @param rootPost the original post in the thread
 	 */
 	function addReplyButtons(el, rootPost) {
+		if (!userCanPost) {
+			return;
+		}
 		const options = getPostTypeOptions(true /* isReply */, rootPost, rootPost.value);
 
 		Object.keys(options).forEach(function(postType) {
@@ -1213,6 +1231,7 @@ const cldrStForum = (function() {
 		loadForum: loadForum,
 		reload: reload,
 		addNewPostButtons: addNewPostButtons,
+		setUserCanPost: setUserCanPost,
 		/*
 		 * The following are meant to be accessible for unit testing only:
 		 */
