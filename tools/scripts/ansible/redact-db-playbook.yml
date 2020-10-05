@@ -1,0 +1,51 @@
+- hosts: redactdb
+  become: yes
+  vars_files:
+    - vars/main.yml
+    - local-vars/local.yml
+  tasks:
+    - name: set up /home/cldradmin/.ssh/config to fetch db backup
+      template:
+        src: templates/cldrbackup/config.j2
+        dest: /home/cldradmin/.ssh/config.j2
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: set up /home/cldradmin/.ssh/id_rsa
+      no_log: true
+      copy:
+        src: local-vars/cldrbackup/id_rsa
+        dest: /home/cldrbackup/.ssh/id_rsa
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: set up /home/cldradmin/.ssh/id_rsa.pub
+      copy:
+        src: local-vars/cldrbackup/id_rsa.pub
+        dest: /home/cldradmin/.ssh/id_rsa.pub
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: set up /home/cldradmin/.ssh/known_hosts
+      copy:
+        src: local-vars/cldrbackup/known_hosts
+        dest: /home/cldradmin/.ssh/known_hosts
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: set up /home/cldradmin/redact-db.sh
+      template:
+        src: templates/cldrbackup/redact-db.j2
+        dest: /home/cldradmin/redact-db.sh
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: set up /home/cldradmin/redact-db.sql
+      template:
+        src: templates/cldrbackup/redact-db.sql
+        dest: /home/cldradmin/redact-db.sql
+        owner: cldradmin
+        group: cldradmin
+        mode: '0640'
+    - name: redact db
+      command: bash /home/cldradmin/redact-db.sh
