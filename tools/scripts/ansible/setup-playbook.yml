@@ -56,6 +56,21 @@
         group: tomcat8
         mode: "0644"
       notify: Restart Tomcat
+    - name: Create cldr.properties
+      blockinfile:
+        path: "/etc/logrotate.d/surveytool-logs"
+        block: |
+          /var/lib/tomcat8/cldr/cldrmail.log /var/lib/tomcat8/cldr/exception.log {
+            daily
+            rotate 7
+            compress
+            copytruncate
+            missingok
+            notifempty
+            dateext
+            create 0640 surveytool cldr
+          }
+        create: true
     - name: Checkout CLDR trunk
       git:
         repo: https://github.com/unicode-org/cldr.git
@@ -199,4 +214,3 @@
         creates: /etc/letsencrypt/renewal/{{ inventory_hostname }}.conf
 
 - import_playbook: backup-db-playbook.yml
-# - import_playbook: ccc-playbook.yml
