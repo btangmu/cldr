@@ -1,8 +1,6 @@
 package org.unicode.cldr.unittest.web;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -722,21 +720,7 @@ public class TestSTFactory extends TestFmwk {
             // String type, String mode, String value) {};
         });
         final String fileName = fileBasename + ".xml";
-        final java.net.URL url = TestSTFactory.class.getResource("data/" + fileName);
-        final String urlStr = (url != null) ? url.toString() : "/Users/tbishop/Documents/WenlinDocs/Organizations/Unicode/CLDR_job/cldr/tools/cldr-apps/src/test/resources/org/unicode/cldr/unittest/web/data/TestUserRegistry.xml";
-        if (urlStr == null) {
-            throw new IllegalArgumentException("Null TestSTFactory.class.getResource; fileName = " + fileName);
-        }
-        java.io.BufferedReader reader = null;
-        if (true) {
-            reader = new BufferedReader(new FileReader(urlStr));
-        } else {
-            reader = TestAll.getUTF8Data(fileName);
-        }
-        if (reader == null) {
-            throw new IllegalArgumentException("Null TestAll.getUTF8Data");
-        }
-        myReader.read(urlStr, reader, -1, true);
+        myReader.read(TestSTFactory.class.getResource("data/" + fileName).toString(), TestAll.getUTF8Data(fileName), -1, true);
     }
 
     public void TestVettingWithNonDistinguishing() throws SQLException, IOException, InvalidXPathException, SurveyException {
