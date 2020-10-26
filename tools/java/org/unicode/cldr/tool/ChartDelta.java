@@ -465,8 +465,6 @@ public class ChartDelta extends Chart {
             writeDiffs(diffAll);
 
             writeCounter(tsvCountFile, "Count", counts);
-            //tsvFile.println("# EOF");
-            //tsvCountFile.println("# EOF");
         }
     }
 
@@ -1160,8 +1158,8 @@ public class ChartDelta extends Chart {
             "//ldml/dates/fields/field[@type=\"minute\"]/displayName",
             "//ldml/dates/fields/field[@type=\"second\"]/displayName",
             /*
-             * TODO: First day of week: /supplemental.xml firstDay
-             * TODO: First week of year: /supplementalData/weekData/firstDay[not(\@alt)
+             * First day of week: firstDay in supplementalData.xml; see isHighLevelFirstDay
+             * First week of year: see isHighLevelWeekOfPreference
              */
             "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"full\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
             "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/dateFormats/dateFormatLength[@type=\"long\"]/dateFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
@@ -1184,24 +1182,19 @@ public class ChartDelta extends Chart {
              * Currency (English and Native) -- see isHighLevelCurrencyName
              * E.g., //ldml/numbers/currencies/currency[@type=\"KRW\"]/displayName"
              *
-             * TODO: per design spec, "ISO Currency Code: SupplementalData.xml match <region iso3166>"
+             * ISO Currency Code: SupplementalData.xml match <region iso3166> -- see isHighLevelCurrencyCode
              */
             /*
              * Currency Formats
              *  a. Currency thousand separator
-             *      TODO: See pt_CV.xml example <numbers><currencies><currency><symbol>
              *  b. Currency decimal separator
-             *      TODO: See pt_CV.xml example <numbers><currencies><currency><decimal>
-             *  c. Currency Symbol//ldml/numbers/currencies/currency[@type="CNY"]/symbol
-             *  d. Currency Symbol Narrow
+             *  c. Currency Symbol //ldml/numbers/currencies/currency[@type="CNY"]/symbol
+             *  d. Currency Symbol Narrow //ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]"
+             *
+             * See isHighLevelCurrencySeparatorOrSymbol
              */
             "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
             "//ldml/numbers/currencyFormats[@numberSystem=\"arab\"]/currencyFormatLength/currencyFormat[@type=\"standard\"]/pattern[@type=\"standard\"]",
-            /*
-             * Currency symbols
-             */
-            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol",
-            "//ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]",
             /*
              * Number Symbols
              */
@@ -1243,12 +1236,12 @@ public class ChartDelta extends Chart {
         ));
 
         /**
-         * Should the given path be taken into account for generating "churn" reports?
+         * Should the given path in the given locale be taken into account for generating "churn" reports?
          *
          * @param path the path of interest
          * @param locale the locale in which the path was found, or null, or possibly
          *     the base file name without extension, like "xx" if the file name is "xx.xml",
-         *     where "xx" may or may not be a locale
+         *     where "xx" may or may not be a locale; e.g., "supplementalData"
          * @return true if it counts, else false to ignore
          */
         private static boolean pathIsHighLevel(String path, String locale) {
@@ -1277,6 +1270,16 @@ public class ChartDelta extends Chart {
                     recordHighLevelMatch(path);
                 }
                 return true;
+            } else if (isHighLevelCurrencyCode(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
+            } else if (isHighLevelCurrencySeparatorOrSymbol(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
             } else if (isHighLevelLangAlias(path, locale)) {
                 // if (verboseHighLevelReporting) {
                 recordHighLevelMatch(path);
@@ -1287,41 +1290,64 @@ public class ChartDelta extends Chart {
                 recordHighLevelMatch(path);
                 // }
                 return true;
+            } else if (isHighLevelFirstDay(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
+            }
+            else if (isHighLevelWeekOfPreference(path, locale)) {
+                if (verboseHighLevelReporting) {
+                    recordHighLevelMatch(path);
+                }
+                return true;
             }
             return false;
         }
 
+        /**
+         * Is the given locale, or base name, to be considered for "high level" churn report?
+         *
+         * @param locale the locale string, or base name like "supplementalData" as in "supplementalData.xml"
+         * @return true or false
+         */
         private static boolean localeIsHighLevel(String locale) {
-            return SubmissionLocales.CLDR_LOCALES.contains(locale);
+            return SubmissionLocales.CLDR_LOCALES.contains(locale)
+                || "supplementalData".equals(locale);
         }
 
         /**
-         * Changes to language aliases (supplementalMetaData)
+         * Changes to language aliases (supplemental metadata)
          * E.g., //supplementalData/metadata/alias/languageAlias[@type="aar"]
          *
          * @param path
-         * @param locale
+         * @param locale must be "supplementalData" to match
          * @return true or false
          */
         private static boolean isHighLevelLangAlias(String path, String locale) {
-            // TODO Implement isHighLevelLangAlias
+            if ("supplementalData".equals(locale)) {
+                if (path.startsWith("//supplementalData/metadata/alias/languageAlias")) {
+                    return true;
+                }
+            }
             return false;
         }
 
         /**
-         * Changes in the containment graph -- see isHighLevelTerritoryContainment
+         * Changes in the containment graph
          * Data mostly (or entirely?) from M49 standard, thus CLDR has limited control.
          * Users use the containment graph in a variety of ways.
          * E.g., //supplementalData/territoryContainment/group[@type="003"][@contains="013 021 029"]
          *
          * @param path
-         * @param locale
+         * @param locale must be "supplementalData" to match
          * @return true or false
          */
         private static boolean isHighLevelTerritoryContainment(String path, String locale) {
-            // TODO Implement isHighLevelTerritoryContainment
-            if (path.startsWith("//supplementalData/territoryContainment")) {
-                System.out.println("isHighLevelTerritoryContainment got " + path);
+            if ("supplementalData".equals(locale)) {
+                if (path.startsWith("//supplementalData/territoryContainment")) {
+                    return true;
+                }
             }
             return false;
         }
@@ -1399,14 +1425,14 @@ public class ChartDelta extends Chart {
          * Native: check each currency type AAA corresponding to the given locale
          *
          * Do NOT exclude "alt"; e.g.,
-         * //ldml/numbers/currencies/currency[@type="KRW"]/symbol[@alt="narrow"]
+         * //ldml/numbers/currencies/currency[@type="ADP"]/displayName[@alt="proposed-u167-1"]
          *
          * @param path
          * @param locale
          * @return true or false
          */
         private static boolean isHighLevelCurrencyName(String path, String locale) {
-            if (path.startsWith("//ldml/numbers/currencies/currency")) {
+            if (path.startsWith("//ldml/numbers/currencies/currency") && path.contains("displayName")) {
                 if ("en".equals(locale)) {
                     return true;
                 }
@@ -1423,10 +1449,84 @@ public class ChartDelta extends Chart {
         }
 
         /**
+         * Is the given path a high-level currency code path in the given locale?
+         *
+         * E.g., //supplementalData/currencyData/region[@iso3166="AC"]/currency[@iso4217="SHP"][@from="1976-01-01"]
+         *
+         * @param path
+         * @param locale must be "supplementalData" to match
+         * @return true or false
+         */
+        private static boolean isHighLevelCurrencyCode(String path, String locale) {
+            if ("supplementalData".equals(locale)) {
+                if (path.contains("iso3166")) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Is the given path a high-level currency thousands-separator or decimal-separator path in the given locale?
+         *
+         * E.g., //ldml/numbers/currencies/currency[@type="ESP"]/group
+         *       //ldml/numbers/currencies/currency[@type="ESP"]/decimal
+         *       //ldml/numbers/currencies/currency[@type="CNY"]/symbol
+         *       //ldml/numbers/currencies/currency[@type=\"CNY\"]/symbol[@alt=\"narrow\"]"
+         *
+         * @param path
+         * @param locale
+         * @return true or false
+         */
+        private static boolean isHighLevelCurrencySeparatorOrSymbol(String path, String locale) {
+            if (path.startsWith("//ldml/numbers/currencies/currency")
+                    && (path.contains("group") ||path.contains("decimal") || path.contains("symbol"))) {
+                 return true;
+            }
+            return false;
+        }
+
+        /**
+         * Is the given path a high-level weekData/firstDay in the given locale?
+         *
+         * E.g.,//supplementalData/weekData/firstDay[@day="fri"][@territories="MV"]
+         *
+         * @param path
+         * @param locale must be "supplementalData" to match
+         * @return true or false
+         */
+        private static boolean isHighLevelFirstDay(String path, String locale) {
+            if ("supplementalData".equals(locale)) {
+                if (path.startsWith("//supplementalData/weekData/firstDay")) {
+                    return true;
+                }
+             }
+             return false;
+        }
+
+        /**
+         * Is the given path a high-level weekOfPreference in the given locale?
+         *
+         * E.g., //supplementalData/weekData/weekOfPreference[@ordering="weekOfYear"][@locales="und"]
+         *
+         * @param path
+         * @param locale must be "supplementalData" to match
+         * @return true or false
+         */
+        private static boolean isHighLevelWeekOfPreference(String path, String locale) {
+            if ("supplementalData".equals(locale)) {
+                if (path.startsWith("//supplementalData/weekData/weekOfPreference")) {
+                    return true;
+                }
+             }
+             return false;
+        }
+
+        /**
          * For debugging, testing
          */
         private static Set<String> highLevelPathMatched = null;
-        private static boolean verboseHighLevelReporting = false;
+        private static boolean verboseHighLevelReporting = true;
 
         private static void recordHighLevelMatch(String path) {
             if (highLevelPathMatched == null) {
