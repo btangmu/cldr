@@ -410,9 +410,6 @@ public class ChartDelta extends Chart {
                         Output<Boolean> hasReformattedValue = new Output<>();
 
                         for (String path : paths) {
-                            if (highLevelOnly && !HighLevelPaths.pathIsHighLevel(path, locale)) {
-                                continue;
-                            }
                             if (path.startsWith("//ldml/identity")
                                 || path.endsWith("/alias")
                                 || path.startsWith("//ldml/segmentations") // do later
@@ -451,6 +448,9 @@ public class ChartDelta extends Chart {
                                 if (CldrUtility.INHERITANCE_MARKER.equals(oldValue)) {
                                     oldValue = old.getConstructedBaileyValue(path, null, null);
                                 }
+                            }
+                            if (highLevelOnly && new SuspiciousChange(oldValue, currentValue, path, locale).isDisruptive() == false) {
+                                continue;
                             }
                             // handle non-distinguishing attributes
                             addPathDiff(sourceDir, old, current, locale, ph, diff);
@@ -1103,6 +1103,102 @@ public class ChartDelta extends Chart {
     }
 
     /**
+     * Determine when changes to the values for paths should be treated as
+     * potentially "disruptive" for the purpose of "churn" reporting
+     */
+    private class SuspiciousChange {
+        /**
+         * the old and new values, such as "HH:mm–HH:mm v" and "HH:mm – HH:mm v"
+         */
+        private String oldValue, newValue;
+
+        /**
+         * the path, such as //ldml/dates/calendars/calendar[@type="gregorian"]/dateTimeFormats/intervalFormats/intervalFormatItem[@id="Hmv"]/greatestDifference[@id="H"]
+         */
+        private String path;
+
+        /**
+         * the locale (such as "doi") in which the path was found, or null, or possibly
+         * the base file name without extension, like "xx" if the file name is "xx.xml",
+         * where "xx" may or may not be a locale; e.g., "supplementalData"
+         */
+        private String locale;
+
+        SuspiciousChange(String oldValue, String newValue, String path, String locale) {
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+            this.path = path;
+            this.locale = locale;
+        }
+
+        /**
+         * Is the change from the old value to the new value, for this path and locale, potentially disruptive?
+         *
+         * @return true or false
+         */
+        public boolean isDisruptive() {
+            /*
+             * OR, not AND: certain changes in value are disruptive even for paths not
+             * otherwise treated as high-level, and changes for high-level paths are
+             * disruptive even if the changes in values themselves are not identified
+             * as disruptive.
+             */
+            return valueChangeIsDisruptive() || HighLevelPaths.pathIsHighLevel(path, locale);
+        }
+
+        /**
+         * Is the change from the old value to the current value potentially disruptive, based (primarily) on
+         * the values themselves?
+         *
+         * @return true or false
+         */
+        private boolean valueChangeIsDisruptive() {
+            if (oldValue == null || newValue == null || oldValue.equals(newValue)) {
+                return false;
+            }
+            if (valueChangeIsDisruptiveWhitespaceOnly()) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Is the change disruptive whitespace only?
+         * Per design doc, "Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
+         * or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
+         *
+         * @return true or false
+         */
+        private boolean valueChangeIsDisruptiveWhitespaceOnly() {
+            /*
+             * annotations often have changes like "pop gorn", "popgorn", not treated as disruptive
+             */
+            if (path.startsWith("//ldml/annotations")) {
+                return false;
+            }
+            if (removeWhitespace(oldValue).equals(removeWhitespace(newValue))) {
+                return true;
+            }
+            return false;
+        }
+
+        /**
+         * Remove whitespace from the given string
+         *
+         * Remove whitespace as defined by regex \s, and also
+         * U+00A0 NO-BREAK SPACE
+         * U+2007 FIGURE SPACE
+         * U+202F NARROW NO-BREAK SPACE
+         *
+         * @param s the string
+         * @return the modified string
+         */
+        private String removeWhitespace(String s) {
+            return s.replaceAll("[\\s\\u00A0\\u2007\\u202F]", "");
+        }
+    }
+
+    /**
      * Determine which paths are considered "high-level" paths, i.e.,
      * paths for which any changes have high potential to cause disruptive "churn".
      * Whether a path is high-level sometimes depends on the locale or xml file in
@@ -1116,18 +1212,9 @@ public class ChartDelta extends Chart {
         /**
          * A set of paths to be treated as "high-level".
          * These are complete paths to be matched exactly.
-         * (Other paths are recognized by special functions like isHighLevelTerritoryName.)
+         * Other paths are recognized by special functions like isHighLevelTerritoryName.
          *
-         * The ordering and comments for are based on the design spec.
-         *
-         * Possibilities for improvement: read from file; maybe use RegexLookup;
-         *  distinguish these types:
-         *  (1) complete paths to be matched exactly;
-         *  (2) paths recognized by special functions like isHighLevelTerritoryName
-         *  (3) prefixes that could match with startsWith();
-         *  (4) RegexLookup or other regex
-         *  (5) "starred" paths
-         *  Currently we only have type (1) in this array, and all others are of type (2).
+         * The ordering and comments are based on the design spec.
          */
         final private static Set<String> highLevelPaths = new HashSet<>(Arrays.asList(
             /*
@@ -1225,8 +1312,11 @@ public class ChartDelta extends Chart {
              * E.g., //supplementalData/territoryContainment/group[@type="003"][@contains="013 021 029"]
              */
             /*
-             * TODO: per design doc, "Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
-             *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none."
+             * Format changes: second to none on the disruptiveness scale are changes involving spaces such as SPACE -> NBSP
+             *  or NBSP -> Narrow NBSP. Or adding a space somewhere in the format where previously there was none.
+             *  -- see SuspiciousChange.valueChangeIsDisruptiveWhitespaceOnly
+             */
+            /*
              * TODO: per design doc, "Adding a timezone"
              * TODO: per design doc, "Changes of symbols or codes that are cross-locale in some way such as the unknown
              *  currency symbol change '???' -> '¤'."
@@ -1252,51 +1342,7 @@ public class ChartDelta extends Chart {
                System.out.println("locale [" + locale + "] failed localeIsHighLevel in pathIsHighLevel; path = " + path);
                return false;
             }
-            if (highLevelPaths.contains(path)) {
-                recordHighLevelMatch(path);
-                return true;
-            } else if (isHighLevelTerritoryName(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            } else if (isHighLevelLangName(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            } else if (isHighLevelCurrencyName(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            } else if (isHighLevelCurrencyCode(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            } else if (isHighLevelCurrencySeparatorOrSymbol(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            } else if (isHighLevelLangAlias(path, locale)) {
-                // if (verboseHighLevelReporting) {
-                recordHighLevelMatch(path);
-                // }
-                return true;
-            } else if (isHighLevelTerritoryContainment(path, locale)) {
-                // if (verboseHighLevelReporting) {
-                recordHighLevelMatch(path);
-                // }
-                return true;
-            } else if (isHighLevelFirstDay(path, locale)) {
-                if (verboseHighLevelReporting) {
-                    recordHighLevelMatch(path);
-                }
-                return true;
-            }
-            else if (isHighLevelWeekOfPreference(path, locale)) {
+            if (pathIsReallyHighLevel(path, locale)) {
                 if (verboseHighLevelReporting) {
                     recordHighLevelMatch(path);
                 }
@@ -1304,6 +1350,31 @@ public class ChartDelta extends Chart {
             }
             return false;
         }
+
+        private static boolean pathIsReallyHighLevel(String path, String locale) {
+            if (highLevelPaths.contains(path)) {
+                return true;
+            } else if (isHighLevelTerritoryName(path, locale)) {
+                return true;
+            } else if (isHighLevelLangName(path, locale)) {
+                return true;
+            } else if (isHighLevelCurrencyName(path, locale)) {
+                return true;
+            } else if (isHighLevelCurrencyCode(path, locale)) {
+                return true;
+            } else if (isHighLevelCurrencySeparatorOrSymbol(path, locale)) {
+                return true;
+            } else if (isHighLevelLangAlias(path, locale)) {
+                return true;
+            } else if (isHighLevelTerritoryContainment(path, locale)) {
+                return true;
+            } else if (isHighLevelFirstDay(path, locale)) {
+                return true;
+            } else if (isHighLevelWeekOfPreference(path, locale)) {
+                return true;
+            }
+            return false;
+         }
 
         /**
          * Is the given locale, or base name, to be considered for "high level" churn report?
@@ -1526,7 +1597,7 @@ public class ChartDelta extends Chart {
          * For debugging, testing
          */
         private static Set<String> highLevelPathMatched = null;
-        private static boolean verboseHighLevelReporting = true;
+        private static boolean verboseHighLevelReporting = false;
 
         private static void recordHighLevelMatch(String path) {
             if (highLevelPathMatched == null) {
@@ -1539,6 +1610,9 @@ public class ChartDelta extends Chart {
          * For debugging, report on any paths in highLevelPaths that never matched
          */
         private static void reportHighLevelPathUsage() {
+            if (!verboseHighLevelReporting) {
+                return;
+            }
             if (highLevelPathMatched == null) {
                 System.out.println("Zero high-level paths were matched!");
                 return;
@@ -1548,11 +1622,9 @@ public class ChartDelta extends Chart {
                     System.out.println("Unmatched high-level path: " + path);
                 }
             }
-            if (verboseHighLevelReporting || true) {
-                for (String path: highLevelPathMatched) {
-                    if (!highLevelPaths.contains(path)) {
-                        System.out.println("Special matched high-level path: " + path);
-                    }
+            for (String path: highLevelPathMatched) {
+                if (!highLevelPaths.contains(path)) {
+                    System.out.println("Special matched high-level path: " + path);
                 }
             }
         }
