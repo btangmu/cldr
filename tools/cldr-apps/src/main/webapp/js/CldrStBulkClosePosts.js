@@ -25,7 +25,7 @@ const cldrStBulkClosePosts = (function() {
 	 */
 	function load(params) {
 		/*
-		 * Set up the 'right sidebar'; cf. forum_participationGuidance
+		 * Set up the 'right sidebar'; cf. bulk_close_postsGuidance
 		 */
 		showInPop2(stui.str(params.name + "Guidance"), null, null, null, true);
 

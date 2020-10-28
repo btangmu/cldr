@@ -36,11 +36,21 @@ public class SurveyBulkClosePosts {
 
     private ArrayList<Integer> idListToClose = new ArrayList<>();
 
-    public SurveyBulkClosePosts(SurveyMain sm) {
+    boolean execute;
+
+    /**
+     * Construct a SurveyBulkClosePosts object
+     *
+     * @param sm the SurveyMain
+     * @param execute if true, actually close the threads; else report count and provide button
+     */
+    public SurveyBulkClosePosts(SurveyMain sm, boolean execute) {
         this.sm = sm;
+        this.execute = execute;
     }
 
     public void getJson(JSONWriter r) throws JSONException, SQLException {
+        getIdListToClose();
         JSONArray headers = new JSONArray();
         for (Cell cell : Cell.values()) {
             headers.put(cell.title);
@@ -61,35 +71,43 @@ public class SurveyBulkClosePosts {
 
     private String getCell(int i, Cell cell) throws SQLException {
         if (i == 0 && cell == Cell.WINNING_OPEN_REQUEST) {
-            getIdListToClose();
             return idListToClose.toString();
+        } else if (i == 1) {
+            return execute ? "Executed -- but not really" : "Press this imaginary button to execute";
         }
         return "?";
     }
 
     private void getIdListToClose() throws SQLException {
         ResultSet rs = null;
+        PreparedStatement ps = null, pCloseThread = null;
         try {
             conn = DBUtils.getInstance().getDBConnection();
-            PreparedStatement ps = prepareOpenRequestsDetailQuery();
+            ps = prepareOpenRequestsDetailQuery();
             rs = ps.executeQuery();
             while (rs.next()) {
-                Integer id = rs.getInt(1);
-                String loc = rs.getString(2);
-                Integer xpath = rs.getInt(3);
-                String value = rs.getString(4);
-                if (matchesWinning(loc, xpath, value)) {
-                    idListToClose.add(id);
-                }
+                updateList(rs);
+            }
+            if (execute) {
+                pCloseThread = SurveyForum.prepare_pCloseThread(conn);
+                doExecute(pCloseThread);
             }
         } catch (SQLException e) {
             SurveyLog.logException(e, "getIdListToClose");
         } finally {
-            DBUtils.close(conn);
+            DBUtils.close(conn, ps, pCloseThread);
             conn = null;
             if (rs != null) {
                 rs.close();
             }
+        }
+    }
+
+    private void doExecute(PreparedStatement pCloseThread) throws SQLException {
+        for (Integer root : idListToClose) {
+            pCloseThread.setInt(1, root);
+            pCloseThread.setInt(2, root);
+            pCloseThread.executeUpdate();
         }
     }
 
@@ -101,6 +119,16 @@ public class SurveyBulkClosePosts {
         PreparedStatement ps = DBUtils.prepareForwardReadOnly(conn, sql);
         ps.setInt(1, typeRequest);
         return ps;
+    }
+
+    private void updateList(ResultSet rs) throws SQLException {
+        Integer id = rs.getInt(1);
+        String loc = rs.getString(2);
+        Integer xpath = rs.getInt(3);
+        String value = rs.getString(4);
+        if (matchesWinning(loc, xpath, value)) {
+            idListToClose.add(id);
+        }
     }
 
     private boolean matchesWinning(String loc, Integer xpath, String value) {

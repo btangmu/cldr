@@ -694,7 +694,8 @@ public class SurveyAjax extends HttpServlet {
                         JSONWriter r = newJSONStatus(sm);
                         r.put("what", what);
                         if (UserRegistry.userIsAdmin(mySession.user)) {
-                            new SurveyBulkClosePosts(sm).getJson(r);
+                            boolean execute = "true".equals(request.getParameter("execute"));
+                            new SurveyBulkClosePosts(sm, execute).getJson(r);
                         }
                         send(r, out);
                     } else if (what.equals(WHAT_FORUM_COUNT)) {

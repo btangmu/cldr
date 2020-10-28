@@ -523,9 +523,9 @@ public class SurveyForum {
      * @return the PreparedStatement
      * @throws SQLException
      *
-     * Called only by savePostToDb
+     * Called by savePostToDb and also by SurveyBulkClose
      */
-    private static PreparedStatement prepare_pCloseThread(Connection conn) throws SQLException {
+    public static PreparedStatement prepare_pCloseThread(Connection conn) throws SQLException {
         return DBUtils.prepareStatement(conn, "pAdd", "UPDATE "
             + DBUtils.Table.FORUM_POSTS.toString()
             + " SET is_open=false WHERE id=? OR root=?");
