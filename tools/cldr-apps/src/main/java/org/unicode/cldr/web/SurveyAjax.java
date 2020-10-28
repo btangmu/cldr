@@ -243,6 +243,7 @@ public class SurveyAjax extends HttpServlet {
     public static final String WHAT_PREF = "pref";
     public static final String WHAT_VSUMMARY = "vsummary";
     public static final String WHAT_FORUM_PARTICIPATION = "forum_participation";
+    public static final String WHAT_BULK_CLOSE_POSTS = "bulk_close_posts";
     public static final String WHAT_STATS_BYLOC = "stats_byloc";
     public static final String WHAT_STATS_BYDAY = "stats_byday";
     public static final String WHAT_STATS_BYDAYUSERLOC = "stats_bydayuserloc";
@@ -686,6 +687,14 @@ public class SurveyAjax extends HttpServlet {
                         if (UserRegistry.userCanMonitorForum(mySession.user)) {
                             String org = mySession.user.org;
                             new SurveyForumParticipation(org).getJson(r);
+                        }
+                        send(r, out);
+                    } else if (what.equals(WHAT_BULK_CLOSE_POSTS)) {
+                        mySession.userDidAction();
+                        JSONWriter r = newJSONStatus(sm);
+                        r.put("what", what);
+                        if (UserRegistry.userIsAdmin(mySession.user)) {
+                            new SurveyBulkClosePosts(sm).getJson(r);
                         }
                         send(r, out);
                     } else if (what.equals(WHAT_FORUM_COUNT)) {
@@ -3193,6 +3202,7 @@ public class SurveyAjax extends HttpServlet {
         out.write(prefix + "jquery.autosize.min.js" + tail);
 
         out.write(prefix + "CldrStAjax" + js);
+        out.write(prefix + "CldrStBulkClosePosts" + js);
         out.write(prefix + "CldrStForumParticipation" + js);
         out.write(prefix + "CldrStForumFilter" + js);
         out.write(prefix + "CldrStForum" + js);
