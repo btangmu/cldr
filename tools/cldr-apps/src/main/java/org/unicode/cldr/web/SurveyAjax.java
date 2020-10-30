@@ -1817,7 +1817,7 @@ public class SurveyAjax extends HttpServlet {
                     continue; // not allowed
                 }
                 String curValue = diskData.getValueAtDPath(xpathString);
-                boolean isWinning = equalsOrInheritsCurrentValue(value, curValue, diskData, xpathString);
+                boolean isWinning = diskData.equalsOrInheritsCurrentValue(value, curValue, xpathString);
                 if (oldvotes != null) {
                     String xpathStringHash = sm.xpt.getStringIDString(xp);
                     JSONObject aRow = new JSONObject()
@@ -2299,7 +2299,7 @@ public class SurveyAjax extends HttpServlet {
      * and then the "x" still got imported into an even later version.
      *
      * @param value the value in question
-     * @param curValue the current value, that is, file.getStringValue(xpathString)
+     * @param curValue the current value, that is, getValueAtDPath(xpathString)
      * @param diskData the XMLSource for getBaileyValue
      * @param xpathString the path identifier
      * @param fac the STFactory
@@ -2310,7 +2310,7 @@ public class SurveyAjax extends HttpServlet {
         if (value == null) {
             return true;
         }
-        if (!equalsOrInheritsCurrentValue(value, curValue, diskData, xpathString)) {
+        if (!diskData.equalsOrInheritsCurrentValue(value, curValue, xpathString)) {
             return false;
         }
         CLDRFile cldrFile = fac.make(loc, true, true);
@@ -2318,40 +2318,6 @@ public class SurveyAjax extends HttpServlet {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Does the value in question either match or inherent the current value?
-     *
-     * To match, the value in question and the current value must be non-null and equal.
-     *
-     * To inherit the current value, the value in question must be INHERITANCE_MARKER
-     * and the current value must equal the bailey value.
-     *
-     * @param value the value in question
-     * @param curValue the current value, that is, file.getStringValue(xpathString)
-     * @param diskData the XMLSource for getBaileyValue
-     * @param xpathString the path identifier
-     * @return true if it matches or inherits, else false
-     */
-    private boolean equalsOrInheritsCurrentValue(String value, String curValue, XMLSource diskData, String xpathString) {
-        if (value == null || curValue == null) {
-            return false;
-        }
-        if (value.equals(curValue)) {
-            return true;
-        }
-        if (value.equals(CldrUtility.INHERITANCE_MARKER)) {
-            String baileyValue = diskData.getBaileyValue(xpathString, null, null);
-            if (baileyValue == null) {
-                /* This may happen for Invalid XPath; InvalidXPathException may be thrown. */
-                return false;
-            }
-            if (curValue.equals(baileyValue)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

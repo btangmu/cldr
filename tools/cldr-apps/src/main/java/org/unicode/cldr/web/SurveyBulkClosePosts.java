@@ -6,119 +6,93 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.XMLSource;
 import org.unicode.cldr.web.SurveyAjax.JSONWriter;
 
 public class SurveyBulkClosePosts {
-    private enum Cell {
-        WINNING_OPEN_REQUEST("Winning open request posts"),
-        ;
-
-        private String title;
-
-        private Cell(String title) {
-            this.title = title;
-        }
-    }
-
-    private static final String forumTable = DBUtils.Table.FORUM_POSTS.toString();
-    // private static final String userTable = UserRegistry.CLDR_USERS;
-
-    // private static final int typeDiscuss = SurveyForum.PostType.DISCUSS.toInt();
-    private static final int typeRequest = SurveyForum.PostType.REQUEST.toInt();
-
-    private Connection conn = null;
 
     private SurveyMain sm;
 
-    private ArrayList<Integer> idListToClose = new ArrayList<>();
-
-    boolean execute;
+    private boolean execute;
 
     /**
-     * Construct a SurveyBulkClosePosts object
+     * Construct a SurveyBulkClosePosts
      *
      * @param sm the SurveyMain
-     * @param execute if true, actually close the threads; else report count and provide button
+     * @param execute if true, actually close the posts; else report count and provide button
      */
     public SurveyBulkClosePosts(SurveyMain sm, boolean execute) {
         this.sm = sm;
         this.execute = execute;
+        reportOrExecute();
     }
 
-    public void getJson(JSONWriter r) throws JSONException, SQLException {
-        getIdListToClose();
-        JSONArray headers = new JSONArray();
-        for (Cell cell : Cell.values()) {
-            headers.put(cell.title);
-        }
-        r.put("headers", headers);
+    /**
+     * The number of threads to close; after doExecute, the number of threads actually closed
+     *
+     * A "thread" is an initial post (not a reply), plus any posts that are replies to it
+     */
+    private int threadCount = 0;
 
-        JSONArray rows = new JSONArray();
-        for (int i = 0; i <= 1; i++) {
-            JSONArray cells = new JSONArray();
-            for (Cell cell : Cell.values()) {
-                String s = getCell(i, cell);
-                cells.put(s);
-            }
-            rows.put(cells);
-        }
-        r.put("rows", rows);
-    }
+    /**
+     * The number of posts (including replies) actually closed; only set after doExecute (for efficiency)
+     */
+    private int postCount = 0;
 
-    private String getCell(int i, Cell cell) throws SQLException {
-        if (i == 0 && cell == Cell.WINNING_OPEN_REQUEST) {
-            return idListToClose.toString();
-        } else if (i == 1) {
-            return execute ? "Executed -- but not really" : "Press this imaginary button to execute";
-        }
-        return "?";
-    }
+    private ArrayList<Integer> rootIdList = new ArrayList<>();
 
-    private void getIdListToClose() throws SQLException {
-        ResultSet rs = null;
-        PreparedStatement ps = null, pCloseThread = null;
+    private Connection conn = null;
+
+    private ResultSet rs = null;
+
+    private PreparedStatement ps = null;
+
+    private String errCode = null;
+
+    private void reportOrExecute() {
         try {
             conn = DBUtils.getInstance().getDBConnection();
-            ps = prepareOpenRequestsDetailQuery();
+            prepareOpenRequestsDetailQuery();
             rs = ps.executeQuery();
             while (rs.next()) {
                 updateList(rs);
             }
-            if (execute) {
-                pCloseThread = SurveyForum.prepare_pCloseThread(conn);
-                doExecute(pCloseThread);
+            if (execute && rootIdList.size() > 0) {
+                doExecute();
             }
+            threadCount = rootIdList.size();
         } catch (SQLException e) {
-            SurveyLog.logException(e, "getIdListToClose");
+            SurveyLog.logException(e, "getJson");
+            errCode = e.toString();
         } finally {
-            DBUtils.close(conn, ps, pCloseThread);
+            DBUtils.close(rs, ps, conn);
+            rs = null;
+            ps = null;
             conn = null;
-            if (rs != null) {
-                rs.close();
+        }
+    }
+
+    public void getJson(JSONWriter r) throws JSONException, SQLException {
+        if (errCode != null) {
+            r.put("status", "error");
+            r.put("err", errCode);
+        } else {
+            r.put("status", execute ? "done" : "ready");
+            r.put("threadCount", threadCount);
+            if (execute) {
+                r.put("postCount", postCount);
             }
         }
     }
 
-    private void doExecute(PreparedStatement pCloseThread) throws SQLException {
-        for (Integer root : idListToClose) {
-            pCloseThread.setInt(1, root);
-            pCloseThread.setInt(2, root);
-            pCloseThread.executeUpdate();
-        }
-    }
-
-    private PreparedStatement prepareOpenRequestsDetailQuery() throws SQLException {
+    private void prepareOpenRequestsDetailQuery() throws SQLException {
         String sql = "SELECT id,loc,xpath,value"
-            + " FROM " + forumTable
-            + " WHERE is_open=true"
+            + " FROM " + DBUtils.Table.FORUM_POSTS.toString()
+            + " WHERE is_open=TRUE"
             + " AND type=?";
-        PreparedStatement ps = DBUtils.prepareForwardReadOnly(conn, sql);
-        ps.setInt(1, typeRequest);
-        return ps;
+        ps = DBUtils.prepareForwardReadOnly(conn, sql);
+        ps.setInt(1, SurveyForum.PostType.REQUEST.toInt());
     }
 
     private void updateList(ResultSet rs) throws SQLException {
@@ -127,15 +101,24 @@ public class SurveyBulkClosePosts {
         Integer xpath = rs.getInt(3);
         String value = rs.getString(4);
         if (matchesWinning(loc, xpath, value)) {
-            idListToClose.add(id);
+            rootIdList.add(id);
         }
     }
 
     private boolean matchesWinning(String loc, Integer xpath, String value) {
-        CLDRLocale locale = CLDRLocale.getInstance(loc);
-        XMLSource diskData = sm.getDiskFactory().makeSource(locale.getBaseName()).freeze();
+        XMLSource diskData = sm.getDiskFactory().makeSource(loc).freeze();
         String xpathString = sm.xpt.getById(xpath);
         String curValue = diskData.getValueAtDPath(xpathString);
-        return curValue != null && curValue.equals(value);
+        return diskData.equalsOrInheritsCurrentValue(value, curValue, xpathString);
+    }
+
+    private void doExecute() {
+        try {
+            postCount = SurveyForum.closeThreads(conn, rootIdList);
+            conn.commit(); // without commit here, posts are not closed
+        } catch (SQLException e) {
+            SurveyLog.logException(e, "doExecute");
+            errCode = e.toString();
+        }
     }
 }

@@ -10,13 +10,10 @@
  * and running in strict mode.
  */
 const cldrStBulkClosePosts = (function() {
-	const tableId = "bulkClosePostsTable";
-	const fileName = "bulkClosePosts.csv";
-	const onclick = "cldrStCsvFromTable.downloadCsv("
-		+ "\"" + tableId + "\""
-		+ ", "
-		+ "\"" + fileName + "\""
-		+ ")";
+
+    let saveParamsForExecute = null;
+
+    let contentDiv = null;
 
 	/**
 	 * Fetch the Bulk Close Posts data from the server, and "load" it
@@ -24,16 +21,16 @@ const cldrStBulkClosePosts = (function() {
 	 * @param params an object with various properties; see SpecialPage.js
 	 */
 	function load(params) {
+		saveParamsForExecute = params;
 		/*
 		 * Set up the 'right sidebar'; cf. bulk_close_postsGuidance
 		 */
 		showInPop2(stui.str(params.name + "Guidance"), null, null, null, true);
 
-		const userId = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
 		const url = getBulkClosePostsUrl();
 		const errorHandler = function(err) {
 			const responseText = cldrStAjax.errResponseText(err);
-			params.special.showError(params, null, {err: err, what: "Loading Forum Bulk Close Posts data" + responseText});
+			params.special.showError(params, null, {err: err, what: "Loading Forum Bulk Close Posts data: " + responseText});
 		};
 		const loadHandler = function(json) {
 			if (json.err) {
@@ -43,12 +40,41 @@ const cldrStBulkClosePosts = (function() {
 				return;
 			}
 			const html = makeHtmlFromJson(json);
-			const ourDiv = document.createElement("div");
-			ourDiv.innerHTML = html;
+			contentDiv = document.createElement("div");
+			contentDiv.innerHTML = html;
 
 			// No longer loading
 			hideLoader(null);
-			params.flipper.flipTo(params.pages.other, ourDiv);
+			params.flipper.flipTo(params.pages.other, contentDiv);
+		};
+		const xhrArgs = {
+			url: url,
+			handleAs: 'json',
+			load: loadHandler,
+			error: errorHandler
+		};
+		cldrStAjax.sendXhr(xhrArgs);
+	}
+
+	/**
+	 * Respond to button press
+	 */
+	function execute() {
+		let params = saveParamsForExecute;
+
+		contentDiv.innerHTML = "<div><p>Bulk closing, in progress...</p></div>";
+
+		const url = getBulkClosePostsUrl() + "&execute=true";
+		const errorHandler = function(err) {
+			const responseText = cldrStAjax.errResponseText(err);
+			params.special.showError(params, null, {err: err, what: "Executing Forum Bulk Close Posts" + responseText});
+		};
+		const loadHandler = function(json) {
+			if (json.err) {
+				params.special.showError(params, json, {what: "Executing Forum Bulk Close Posts"});
+				return;
+			}
+			contentDiv.innerHTML = makeHtmlFromJson(json);
 		};
 		const xhrArgs = {
 			url: url,
@@ -64,7 +90,7 @@ const cldrStBulkClosePosts = (function() {
 	 */
 	function getBulkClosePostsUrl() {
 		if (typeof surveySessionId === 'undefined') {
-			console.log('Error: surveySessionId undefined in s');
+			console.log('Error: surveySessionId undefined in getBulkClosePostsUrl');
 			return '';
 		}
 		return 'SurveyAjax?what=bulk_close_posts&s=' + surveySessionId;
@@ -78,22 +104,21 @@ const cldrStBulkClosePosts = (function() {
 	 */
 	function makeHtmlFromJson(json) {
 		let html = '<div>\n';
-		if (json.headers && json.rows) {
-			html += "<h4><a onclick='" + onclick + "'>Download CSV</a></h4>\n";
-			html += "<table border='1' id='" + tableId + "'>\n";
-			html += "<tr>\n";
-			for (let header of json.headers) {
-				html += "<th>" + header + "</th>\n";
+		if (typeof(json.threadCount) === 'undefined' || typeof(json.status) === 'undefined'
+				|| (json.status !== 'ready' && json.status !== 'done')) {
+			html += "<p>An error occurred: status = " + json.status + "; err = " + json.err + "</p>\n";
+		} else if (json.status === 'ready') {
+			html += "<p>Total threads matching criteria for bulk closing: " + json.threadCount + "</p>\n";
+			if (json.threadCount > 0) {
+				html += "<h4><a onclick='cldrStBulkClosePosts.execute()'>Close Threads!</a></h4>\n";
+				html += "<p>This action cannot be undone.</p>";
+				html += "<p>It should normally be done after a new version of CLDR is published, before opening Survey Tool.</p>\n";
 			}
-			html += "</tr>\n";
-			for (let row of json.rows) {
-				html += "<tr>\n";
-				for (let cell of row) {
-					html += "<td>" + cell + "</td>\n";
-				}
-				html += "</tr>\n";
+		} else if (json.status === 'done') {
+			html += "<p>Total threads closed: " + json.threadCount + "</p>\n";
+			if (typeof(json.postCount) !== 'undefined') {
+				html += "<p>Total posts closed (including replies): " + json.postCount + "</p>\n";
 			}
-			html += "</table>\n";
 		}
 		html += '</div>';
 		return html;
@@ -104,6 +129,7 @@ const cldrStBulkClosePosts = (function() {
 	 */
 	return {
 		load: load,
+		execute: execute,
 		/*
 		 * The following are meant to be accessible for unit testing only:
 		 */
