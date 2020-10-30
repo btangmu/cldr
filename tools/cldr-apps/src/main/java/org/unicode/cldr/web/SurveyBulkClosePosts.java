@@ -99,7 +99,7 @@ public class SurveyBulkClosePosts {
         Integer id = rs.getInt(1);
         String loc = rs.getString(2);
         Integer xpath = rs.getInt(3);
-        String value = rs.getString(4);
+        String value = DBUtils.getStringUTF8(rs, 4);
         if (matchesWinning(loc, xpath, value)) {
             rootIdList.add(id);
         }
