@@ -139,8 +139,8 @@ vagrant up
 - to deploy ST to this, use the following:
 
 ```shell
-(cd ../../cldr-apps ; ant war) # to build ST if not already built
-vagrant ssh -- sudo -u surveytool /usr/local/bin/deploy-to-tomcat.sh $(git rev-parse HEAD) < ../../cldr-apps/cldr-apps.war
+(cd ../.. ; mvn package) # go to the tools folder and build ST (cldr-apps.war, etc.) if not already built
+vagrant ssh -- sudo -u surveytool /usr/local/bin/deploy-to-tomcat.sh $(git rev-parse HEAD) < ../../cldr-apps/target/cldr-apps.war
 ```
 
 - Now you should be able to login at <http://127.0.0.1:8880/cldr-apps/>
