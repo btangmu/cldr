@@ -10,6 +10,7 @@
     tomcat_instances:
       - name: "tomcat"
   roles:
+    - role: robertdebock.java
     - role: robertdebock.tomcat
   tasks:
     - name: Setup Server Context

@@ -1,4 +1,6 @@
 - hosts: surveytool
+  become: true
+  become_user: root
   vars:
     - server_hostname: unicode.org
     - key_size: 4096
@@ -11,9 +13,10 @@
       file:
         path: "{{ item }}"
         state: directory
+        mode: 0755
       loop:
         - /etc/ssl/crt
-        - /etc/ssl/csr 
+        - /etc/ssl/csr
         - /etc/ssl/private
     - name: Generate an OpenSSL private key
       openssl_privatekey:
