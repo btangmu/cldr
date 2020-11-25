@@ -1,2 +1,2 @@
 - import_playbook: setup-playbook.yml
-- import_playbook: self-sign-playbook.yml
+# Note: any additional setup specifically for vagrant could be done here, such as adding a self-signed ssl cert
