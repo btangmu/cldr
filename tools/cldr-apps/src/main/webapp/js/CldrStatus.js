@@ -36,7 +36,7 @@ const cldrStatus = (function() {
 	 *
 	 * @param stamp the given stamp, should be a truthy integer, else we return false
 	 * @return true if runningStamp is initialized and the given stamp is truthy and differs; else false
-     */
+	 */
 	function runningStampChanged(stamp) {
 		if (!stamp) {
 			return false;
@@ -49,7 +49,7 @@ const cldrStatus = (function() {
 
 	/**
 	 * A string such as '/cldr-apps'
-     * It may be set from (on the server) HttpServletRequest.getContextPath()
+	 * It may be set from (on the server) HttpServletRequest.getContextPath()
 	 * a.k.a. json.status.contextPath
 	 */
 	let contextPath = '/cldr-apps';
