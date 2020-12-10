@@ -1337,24 +1337,6 @@ function updateStatus() {
 	});
 }
 
-/**
- * Fire up the main timer loop to update status
- */
-function setTimerOn() {
-	updateStatus();
-	// an interval is not used - each status update does its own timeout.
-}
-
-/**
- * Change the update timer's speed
- *
- * @param {Int} speed
- * TODO: this is never called?!
- */
-function resetTimerSpeed(speed) {
-	timerSpeed = speed;
-}
-
 // set up window. Let Dojo call us, otherwise dojo won't load.
 require(["dojo/ready"], function(ready) {
 	ready(function() {
@@ -1365,7 +1347,7 @@ require(["dojo/ready"], function(ready) {
 			 * those pages would needlessly waste time on the server.
 			 */
 		} else {
-			setTimerOn();
+			updateStatus(); // for the first time
 		}
 	});
 });

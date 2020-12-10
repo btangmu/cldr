@@ -1937,15 +1937,26 @@ function showV() {
 					return x;
 				}
 
+				/*
+				 * Arrange for getInitialMenusEtc to be called after we've gotten the session id.
+				 * There should be a better way to do this. For now, getInitialMenusEtc is deeply
+				 * nested in legacy code, and this implementation avoids any complex linkage between
+				 * this code and the code that's responsible for getting the session id from
+				 * the server -- that is, updateStatus() in survey.js, as of 2020-12-10
+				 */
 				ready(function() {
-
-const surveyUserURL					
-					
-					const sessionId = cldrStatus.getSessionId();
-					if (!sessionId) {
-						console.log("WARNING: what=menus without sessionId");
-						/// return;
+					getM();
+					function getM() {
+						const sessionId = cldrStatus.getSessionId();
+						if (sessionId) {
+							getInitialMenusEtc(sessionId);
+						} else {
+							setTimeout(getM, 100); // try again after 1/10 second
+						}
 					}
+				});
+
+				function getInitialMenusEtc(sessionId) {
 					window.parseHash(dojoHash()); // get the initial settings
 					// load the menus - first.
 
@@ -2199,7 +2210,7 @@ const surveyUserURL
 							});
 						}
 					}); // end myLoad
-				}); // end ready
+				} // end getInitialMenusEtc
 			}); // end loadStui
 		}); // end require
 } // end showV
