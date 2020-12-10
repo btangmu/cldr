@@ -307,95 +307,101 @@ function showV() {
 				window.parseHash = function parseHash(hash) {
 					function updateWindowTitle() {
 						var t = stui.str('survey_title');
-						if (surveyCurrentLocale && surveyCurrentLocale != '') {
-							t = t + ': ' + locmap.getLocaleName(surveyCurrentLocale);
+						const curLocale = cldrStatus.getCurrentLocale();
+						if (curLocale && curLocale != '') {
+							t = t + ': ' + locmap.getLocaleName(curLocale);
 						}
-						if (surveyCurrentSpecial && surveyCurrentSpecial != '') {
-							t = t + ': ' + stui.str('special_' + surveyCurrentSpecial);
+						const curSpecial = cldrStatus.getCurrentSpecial();
+						if (curSpecial && curSpecial != '') {
+							t = t + ': ' + stui.str('special_' + curSpecial);
 						}
-						if (surveyCurrentPage && surveyCurrentPage != '') {
-							t = t + ': ' + surveyCurrentPage;
+						const curPage = cldrStatus.getCurrentPage();
+						if (curPage && curPage != '') {
+							t = t + ': ' + curPage;
 						}
 						document.title = t;
 					};
 					if (hash) {
 						var pieces = hash.substr(0).split("/");
 						if (pieces.length > 1) {
-							surveyCurrentLocale = pieces[1]; // could be null
+							cldrStatus.setCurrentLocale(pieces[1]); // could be null
 							/*
-							 * TODO: find a way if possible to fix here when surveyCurrentLocale === "USER".
+							 * TODO: find a way if possible to fix here when cldrStatus.getCurrentLocale() === "USER".
 							 * It may be necessary (and sufficient) to wait for server response, see "USER" elsewhere
 							 * in this file. cachedJson.loc and _thePages.loc are generally (always?) undefined here.
 							 * Reference: https://unicode.org/cldr/trac/ticket/11161
 							 */
 						} else {
-							surveyCurrentLocale = '';
+							cldrStatus.setCurrentLocale('');
 						}
-						if (pieces[0].length == 0 && surveyCurrentLocale != '' && surveyCurrentLocale != null) {
+						const curLocale = cldrStatus.getCurrentLocale();
+						if (pieces[0].length == 0 && curLocale != '' && curLocale != null) {
 							if (pieces.length > 2) {
-								surveyCurrentPage = pieces[2];
+								cldrStatus.setCurrentPage(pieces[2]);
 								if (pieces.length > 3) {
-									surveyCurrentId = pieces[3];
-									if (surveyCurrentId.substr(0, 2) == 'x@') {
-										surveyCurrentId = surveyCurrentId.substr(2);
+									let id = pieces[3];
+									if (id.substr(0, 2) == 'x@') {
+										id = id.substr(2);
 									}
+									cldrStatus.setCurrentId(id);
 								} else {
-									surveyCurrentId = '';
+									cldrStatus.setCurrentId('');
 								}
 							} else {
-								surveyCurrentPage = '';
-								surveyCurrentId = '';
+								cldrStatus.setCurrentPage('');
+								cldrStatus.setCurrentId('');
 							}
-							window.surveyCurrentSpecial = null;
+							cldrStatus.setCurrentSpecial(null);
 						} else {
-							window.surveyCurrentSpecial = pieces[0];
-							if (surveyCurrentSpecial == '') {
-								surveyCurrentSpecial = 'locales';
+							cldrStatus.setCurrentSpecial(pieces[0]);
+							if (cldrStatus.getCurrentSpecial() == '') {
+								cldrStatus.setCurrentSpecial('locales');
 							}
-							if (surveyCurrentSpecial == 'locales') {
+							if (cldrStatus.getCurrentSpecial() == 'locales') {
 								// allow locales list to retain ID / Page string for passthrough.
-								surveyCurrentLocale = '';
+								cldrStatus.setCurrentLocale('');
 								if (pieces.length > 2) {
-									surveyCurrentPage = pieces[2];
+									cldrStatus.setCurrentPage(pieces[2]);
 									if (pieces.length > 3) {
-										surveyCurrentId = pieces[3];
-										if (surveyCurrentId.substr(0, 2) == 'x@') {
-											surveyCurrentId = surveyCurrentId.substr(2);
+										let id = pieces[3];
+										if (id.substr(0, 2) == 'x@') {
+											id = id.substr(2);
 										}
+										cldrStatus.setCurrentId(id);
 									} else {
-										surveyCurrentId = '';
+										cldrStatus.setCurrentId('');
 									}
 								} else {
-									surveyCurrentPage = '';
-									surveyCurrentId = '';
+									cldrStatus.setCurrentPage('');
+									cldrStatus.setCurrentId('');
 								}
-							} else if (isReport(surveyCurrentSpecial)) { // allow page and ID to fall through.
+							} else if (isReport(cldrStatus.getCurrentSpecial())) { // allow page and ID to fall through.
 								if (pieces.length > 2) {
-									surveyCurrentPage = pieces[2];
+									cldrStatus.setCurrentPage(pieces[2]);
 									if (pieces.length > 3) {
-										surveyCurrentId = pieces[3];
+										cldrStatus.setCurrentId(pieces[3]);
 									} else {
-										surveyCurrentId = '';
+										cldrStatus.setCurrentId('');
 									}
 								} else {
-									surveyCurrentPage = '';
-									surveyCurrentId = '';
+									cldrStatus.setCurrentPage('');
+									cldrStatus.setCurrentId('');
 								}
 							} else {
-								otherSpecial.parseHash(surveyCurrentSpecial, hash, pieces);
+								otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
 							}
 						}
 					} else {
-						surveyCurrentLocale = '';
-						surveyCurrentSpecial = 'locales';
-						surveyCurrentId = '';
-						surveyCurrentPage = '';
+						cldrStatus.setCurrentLocale('');
+						cldrStatus.setCurrentSpecial('locales');
+						cldrStatus.setCurrentId('');
+						cldrStatus.setCurrentPage('');
 						surveyCurrentSection = '';
 					}
 					updateWindowTitle();
 
 					// if there is no locale id, refresh the search.
-					if (!surveyCurrentLocale) {
+					if (!cldrStatus.getCurrentLocale()) {
 						searchRefresh();
 					}
 				};
@@ -413,19 +419,19 @@ function showV() {
 					if (!doPush) {
 						doPush = false; // by default -replace.
 					}
-					var theId = window.surveyCurrentId;
+					var theId = cldrStatus.getCurrentId();
 					if (theId == null) {
 						theId = '';
 					}
-					var theSpecial = window.surveyCurrentSpecial;
+					var theSpecial = cldrStatus.getCurrentSpecial();
 					if (theSpecial == null) {
 						theSpecial = '';
 					}
-					var thePage = window.surveyCurrentPage;
+					var thePage = cldrStatus.getCurrentPage();
 					if (thePage == null) {
 						thePage = '';
 					}
-					var theLocale = window.surveyCurrentLocale;
+					var theLocale = cldrStatus.getCurrentLocale();
 					if (theLocale == null) {
 						theLocale = '';
 					}
@@ -439,8 +445,8 @@ function showV() {
 					if (id == null) {
 						id = '';
 					}
-					if (surveyCurrentId != id) { // don't set if already set.
-						surveyCurrentId = id;
+					if (cldrStatus.getCurrentId() != id) { // don't set if already set.
+						cldrStatus.setCurrentId(id);
 						replaceHash(false); // usually don't want to save
 					}
 				};
@@ -524,22 +530,24 @@ function showV() {
 				}
 
 				window.showCurrentId = function() {
-					if (surveyCurrentSpecial && surveyCurrentSpecial != '' && !isDashboard()) {
-						otherSpecial.handleIdChanged(surveyCurrentSpecial, showCurrentId);
+					const curSpecial = cldrStatus.getCurrentSpecial();
+					if (curSpecial && curSpecial != '' && !isDashboard()) {
+						otherSpecial.handleIdChanged(curSpecial, showCurrentId);
 					} else {
-						if (surveyCurrentId != '') {
-							var xtr = document.getElementById('r@' + surveyCurrentId);
+						const curId = cldrStatus.getCurrentId();
+						if (curId != '') {
+							var xtr = document.getElementById('r@' + curId);
 							if (!xtr) {
-								console.log("Warning could not load id " + surveyCurrentId + " does not exist");
+								console.log("Warning could not load id " + curId + " does not exist");
 								window.updateCurrentId(null);
 							} else if (xtr.proposedcell && xtr.proposedcell.showFn) {
 								// TODO: visible? coverage?
 								window.showInPop("", xtr, xtr.proposedcell, xtr.proposedcell.showFn, true);
-								console.log("Changed to " + surveyCurrentId);
+								console.log("Changed to " + cldrStatus.getCurrentId());
 								if (!isDashboard())
 									scrollToItem();
 							} else {
-								console.log("Warning could not load id " + surveyCurrentId + " - not setup - " + xtr.toString() + " pc=" + xtr.proposedcell + " sf = " + xtr.proposedcell.showFn);
+								console.log("Warning could not load id " + curId + " - not setup - " + xtr.toString() + " pc=" + xtr.proposedcell + " sf = " + xtr.proposedcell.showFn);
 							}
 						}
 					}
@@ -595,9 +603,10 @@ function showV() {
 				}
 
 				function updateLocaleMenu() {
-					if (surveyCurrentLocale != null && surveyCurrentLocale != '' && surveyCurrentLocale != '-') {
-						surveyCurrentLocaleName = locmap.getLocaleName(surveyCurrentLocale);
-						var bund = locmap.getLocaleInfo(surveyCurrentLocale);
+					const curLocale = cldrStatus.getCurrentLocale();
+					if (curLocale != null && curLocale != '' && curLocale != '-') {
+						surveyCurrentLocaleName = locmap.getLocaleName(curLocale);
+						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund) {
 							if (bund.readonly) {
 								addClass(menubuttons.getDom(menubuttons.locale), "locked");
@@ -608,7 +617,7 @@ function showV() {
 							if (bund.dcChild) {
 								menubuttons.set(menubuttons.dcontent, stui.sub("defaultContent_header_msg", {
 									info: bund,
-									locale: surveyCurrentLocale,
+									locale: cldrStatus.getCurrentLocale(),
 									dcChild: locmap.getLocaleName(bund.dcChild)
 								}));
 							} else {
@@ -710,7 +719,7 @@ function showV() {
 							display: surveyUserPerms.userCanUseVettingSummary
 						},
 						{
-							title: 'List ' + org + ' Users', // 'org' from ajax_status.jsp
+							title: 'List ' + org + ' Users',
 							level: 2,
 							url: surveyUserURL.manageUser,
 							display: (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter)
@@ -742,7 +751,7 @@ function showV() {
 						{
 							special: 'flagged',
 							level: 2,
-							img: surveyImgInfo.flag
+							hasFlag: true
 						},
 						{
 							special: 'mail',
@@ -794,10 +803,11 @@ function showV() {
 					replaceHash(doPush); // update the hash
 					updateLocaleMenu();
 
-					if (surveyCurrentLocale == null) { // deadcode?
+					if (cldrStatus.getCurrentLocale() == null) { // deadcode?
 						menubuttons.set(menubuttons.section);
-						if (surveyCurrentSpecial != null) {
-							var specialId = "special_" + surveyCurrentSpecial;
+						const curSpecial = cldrStatus.getCurrentSpecial();
+						if (curSpecial != null) {
+							var specialId = "special_" + curSpecial;
 							menubuttons.set(menubuttons.page, stui_str(specialId));
 						} else {
 							menubuttons.set(menubuttons.page);
@@ -828,12 +838,12 @@ function showV() {
 										if (item.url) {
 											var subA = document.createElement("a");
 
-											if (item.img) { // forum may need images attached to it
+											if (item.hasFlag) { // forum may need images attached to it
 												var Img = document.createElement("img");
-												Img.setAttribute('src', item.img.src);
-												Img.setAttribute('alt', item.img.alt);
-												Img.setAttribute('title', item.img.src);
-												Img.setAttribute('border', item.img.border);
+												Img.setAttribute('src', "flag.png");
+												Img.setAttribute('alt', "flag");
+												Img.setAttribute('title', "flag.png");
+												Img.setAttribute('border', 0);
 
 												subA.appendChild(Img);
 											}
@@ -903,19 +913,21 @@ function showV() {
 						}
 
 						updateLocaleMenu(menuMap);
-						if (surveyCurrentSpecial != null && surveyCurrentSpecial != '') {
-							var specialId = "special_" + surveyCurrentSpecial;
+						const curSpecial = cldrStatus.getCurrentSpecial();
+						if (curSpecial != null && curSpecial != '') {
+							var specialId = "special_" + curSpecial;
 							$('#section-current').html(stui_str(specialId));
 							setDisplayed(titlePageContainer, false);
 						} else if (!menuMap) {
 							setDisplayed(titlePageContainer, false);
 						} else {
-							if (menuMap.sectionMap[window.surveyCurrentPage]) {
-								surveyCurrentSection = surveyCurrentPage; // section = page
+							const curPage = cldrStatus.getCurrentPage();
+							if (menuMap.sectionMap[curPage]) {
+								surveyCurrentSection = curPage; // section = page
 								$('#section-current').html(menuMap.sectionMap[surveyCurrentSection].name);
 								setDisplayed(titlePageContainer, false); // will fix title later
-							} else if (menuMap.pageToSection[window.surveyCurrentPage]) {
-								var mySection = menuMap.pageToSection[window.surveyCurrentPage];
+							} else if (menuMap.pageToSection[curPage]) {
+								var mySection = menuMap.pageToSection[curPage];
 								surveyCurrentSection = mySection.id;
 								$('#section-current').html(mySection.name);
 								setDisplayed(titlePageContainer, false); // will fix title later
@@ -943,11 +955,11 @@ function showV() {
 								iconClass: "dijitMenuItemIcon ",
 								disabled: true,
 								onClick: function() {
-									if (surveyCurrentPage != '' || (surveyCurrentSpecial != '' && surveyCurrentSpecial != null)) {
-										surveyCurrentId = ''; // no id if jumping pages
-										surveyCurrentPage = '';
+									if (cldrStatus.getCurrentPage() != '' || (cldrStatus.getCurrentSpecial() != '' && cldrStatus.getCurrentSpecial() != null)) {
+										cldrStatus.setCurrentId(''); // no id if jumping pages
+										cldrStatus.setCurrentPage('');
 										surveyCurrentSection = '';
-										surveyCurrentSpecial = '';
+										cldrStatus.setCurrentSpecial('');
 										updateMenuTitles(menuMap);
 										reloadV();
 									}
@@ -960,9 +972,9 @@ function showV() {
 										label: aSection.name,
 										iconClass: "dijitMenuItemIcon",
 										onClick: function() {
-											surveyCurrentId = '!'; // no id if jumping pages
-											surveyCurrentPage = aSection.id;
-											surveyCurrentSpecial = '';
+											cldrStatus.setCurrentId('!'); // no id if jumping pages
+											cldrStatus.setCurrentPage(aSection.id);
+											cldrStatus.setCurrentSpecial('');
 											updateMenus(menuMap);
 											updateMenuTitles(menuMap);
 											reloadV();
@@ -981,9 +993,9 @@ function showV() {
 								iconClass: "dijitMenuItemIcon", // menu-chat
 								disabled: true,
 								onClick: function() {
-									surveyCurrentId = '!'; // no id if jumping pages
-									surveyCurrentPage = '';
-									surveyCurrentSpecial = 'forum';
+									cldrStatus.setCurrentId('!'); // no id if jumping pages
+									cldrStatus.setCurrentPage('');
+									cldrStatus.setCurrentSpecial('forum');
 									updateMenus(menuMap);
 									updateMenuTitles(menuMap);
 									reloadV();
@@ -996,14 +1008,16 @@ function showV() {
 
 						var myPage = null;
 						var mySection = null;
-						if (surveyCurrentSpecial == null || surveyCurrentSpecial == '') {
+						const curSpecial = cldrStatus.getCurrentSpecial();
+						if (curSpecial == null || curSpecial == '') {
 							// first, update display names
-							if (menuMap.sectionMap[window.surveyCurrentPage]) { // page is really a section
-								mySection = menuMap.sectionMap[surveyCurrentPage];
+							const curPage = cldrStatus.getCurrentPage();
+							if (menuMap.sectionMap[curPage]) { // page is really a section
+								mySection = menuMap.sectionMap[curPage];
 								myPage = null;
-							} else if (menuMap.pageToSection[window.surveyCurrentPage]) {
-								mySection = menuMap.pageToSection[surveyCurrentPage];
-								myPage = mySection.pageMap[surveyCurrentPage];
+							} else if (menuMap.pageToSection[curPage]) {
+								mySection = menuMap.pageToSection[curPage];
+								myPage = mySection.pageMap[curPage];
 							}
 							if (mySection !== null) {
 								// update menus under 'page' - peer pages
@@ -1024,17 +1038,16 @@ function showV() {
 									var menuPage = new DropDownMenu();
 									for (var k in mySection.pages) { // use given order
 										(function(aPage) {
-
 											var pageMenu = aPage.menuItem = new MenuItem({
 												label: aPage.name,
-												iconClass: (aPage.id == surveyCurrentPage) ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o",
+												iconClass: (aPage.id == cldrStatus.getCurrentPage()) ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o",
 												onClick: function() {
-													surveyCurrentId = ''; // no id if jumping pages
-													surveyCurrentPage = aPage.id;
+													cldrStatus.setCurrentId(''); // no id if jumping pages
+													cldrStatus.setCurrentPage(aPage.id);
 													updateMenuTitles(menuMap);
 													reloadV();
 												},
-												disabled: (effectiveCoverage() < parseInt(aPage.levs[surveyCurrentLocale]))
+												disabled: (effectiveCoverage() < parseInt(aPage.levs[cldrStatus.getCurrentLocale()]))
 											});
 										})(mySection.pages[k]);
 									}
@@ -1059,14 +1072,15 @@ function showV() {
 
 						stdebug('Updating menus.. ecov = ' + effectiveCoverage());
 
-						menuMap.setCheck(menuMap.section_general, (surveyCurrentPage == '' && (surveyCurrentSpecial == '' || surveyCurrentSpecial == null)), false);
+						menuMap.setCheck(menuMap.section_general, (cldrStatus.getCurrentPage() == '' && (cldrStatus.getCurrentSpecial() == '' || cldrStatus.getCurrentSpecial() == null)), false);
 
 						// Update the status of the items in the Section menu
 						for (var j in menuMap.sections) {
 							var aSection = menuMap.sections[j];
 							// need to see if any items are visible @ current coverage
-							stdebug("for " + aSection.name + " minLev[" + surveyCurrentLocale + "] = " + aSection.minLev[surveyCurrentLocale]);
-							menuMap.setCheck(aSection.menuItem, (surveyCurrentSection == aSection.id), effectiveCoverage() < aSection.minLev[surveyCurrentLocale]);
+							const curLocale = cldrStatus.getCurrentLocale();
+							stdebug("for " + aSection.name + " minLev[" + curLocale + "] = " + aSection.minLev[curLocale]);
+							menuMap.setCheck(aSection.menuItem, (surveyCurrentSection == aSection.id), effectiveCoverage() < aSection.minLev[curLocale]);
 
 							// update the items in that section's Page menu
 							if (surveyCurrentSection == aSection.id) {
@@ -1075,24 +1089,25 @@ function showV() {
 									if (!aPage.menuItem) {
 										console.log("Odd - " + aPage.id + " has no menuItem");
 									} else {
-										menuMap.setCheck(aPage.menuItem, (aPage.id == surveyCurrentPage), (effectiveCoverage() < parseInt(aPage.levs[surveyCurrentLocale])));
+										menuMap.setCheck(aPage.menuItem, (aPage.id == cldrStatus.getCurrentPage()), (effectiveCoverage() < parseInt(aPage.levs[curLocale])));
 									}
 								}
 							}
 						}
 
-						menuMap.setCheck(menuMap.forumMenu, (surveyCurrentSpecial == 'forum'), (surveyUser === null));
+						menuMap.setCheck(menuMap.forumMenu, (cldrStatus.getCurrentSpecial() == 'forum'), (surveyUser === null));
 						resizeSidebar();
 					}
 
-					if (_thePages == null || _thePages.loc != surveyCurrentLocale) {
+					const curLocale = cldrStatus.getCurrentLocale();
+					if (_thePages == null || _thePages.loc != curLocale) {
 						// show the raw IDs while loading.
 						updateMenuTitles(null);
 
-						if (surveyCurrentLocale != null && surveyCurrentLocale != '') {
+						if (curLocale != null && curLocale != '') {
 							var needLocTable = false;
 
-							var url = contextPath + "/SurveyAjax?what=menus&_=" + surveyCurrentLocale + "&locmap=" + needLocTable + "&s=" + surveySessionId + cacheKill();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + curLocale + "&locmap=" + needLocTable + "&s=" + surveySessionId + cacheKill();
 							myLoad(url, "menus", function(json) {
 								if (!verifyJson(json, "menus")) {
 									return; // busted?
@@ -1175,7 +1190,7 @@ function showV() {
 
 				window.insertLocaleSpecialNote = function insertLocaleSpecialNote(theDiv) {
 
-					var bund = locmap.getLocaleInfo(surveyCurrentLocale);
+					var bund = locmap.getLocaleInfo(cldrStatus.getCurrentLocale());
 					let msg = null;
 
 					if (bund) {
@@ -1188,7 +1203,7 @@ function showV() {
 								}
 								msg = stui.sub("readonly_msg", {
 									info: bund,
-									locale: surveyCurrentLocale,
+									locale: cldrStatus.getCurrentLocale(),
 									msg: msg
 								});
 							} else {
@@ -1206,7 +1221,7 @@ function showV() {
 						} else if (bund.dcChild) {
 							var theChunk = domConstruct.toDom(stui.sub("defaultContentChild_msg", {
 								info: bund,
-								locale: surveyCurrentLocale,
+								locale: cldrStatus.getCurrentLocale(),
 								dcChildName: locmap.getLocaleName(bund.dcChild)
 							}));
 							var subDiv = document.createElement("div");
@@ -1218,7 +1233,7 @@ function showV() {
 					if (surveyBeta) {
 						var theChunk = domConstruct.toDom(stui.sub("beta_msg", {
 							info: bund,
-							locale: surveyCurrentLocale,
+							locale: cldrStatus.getCurrentLocale(),
 							msg: msg
 						}));
 						var subDiv = document.createElement("div");
@@ -1232,10 +1247,10 @@ function showV() {
 				 * Show the "possible problems" section which has errors for the locale
 				 */
 				function showPossibleProblems(flipper, flipPage, loc, session, effectiveCov, requiredCov) {
-					surveyCurrentLocale = loc;
+					cldrStatus.setCurrentLocale(loc);
 					require(["dojo/ready"], function(ready) {
 						ready(function() {
-							var url = contextPath + "/SurveyAjax?what=possibleProblems&_=" + surveyCurrentLocale + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=possibleProblems&_=" + cldrStatus.getCurrentLocale() + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
 							myLoad(url, "possibleProblems", function(json) {
 								if (verifyJson(json, 'possibleProblems')) {
 									stdebug("json.possibleProblems OK..");
@@ -1307,12 +1322,13 @@ function showV() {
 
 					updateHashAndMenus(true);
 
-					if (surveyCurrentLocale != null && surveyCurrentLocale != '' && surveyCurrentLocale != '-') {
-						var bund = locmap.getLocaleInfo(surveyCurrentLocale);
+					const curLocale = cldrStatus.getCurrentLocale();
+					if (curLocale != null && curLocale != '' && curLocale != '-') {
+						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund !== null && bund.dcParent) {
 							var theChunk = domConstruct.toDom(stui.sub("defaultContent_msg", {
 								info: bund,
-								locale: surveyCurrentLocale,
+								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
 							}));
 							var theDiv = document.createElement("div");
@@ -1379,17 +1395,20 @@ function showV() {
 
 						showLoader(null, theDiv.stui.loading);
 
-						if ((surveyCurrentSpecial == null || surveyCurrentSpecial == '') && surveyCurrentLocale != null && surveyCurrentLocale != '') {
-							if ((surveyCurrentPage == null || surveyCurrentPage == '') && (surveyCurrentId == null || surveyCurrentId == '')) {
+						const curSpecial = cldrStatus.getCurrentSpecial();
+						const curLocale = cldrStatus.getCurrentLocale();
+						if ((curSpecial == null || curSpecial == '') && curLocale != null && curLocale != '') {
+							const curPage = cldrStatus.getCurrentPage();
+							if ((curPage == null || curPage == '') && (cldrStatus.getCurrentId() == null || cldrStatus.getCurrentId() == '')) {
 								// the 'General Info' page.
-								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(surveyCurrentLocale)));
-								showPossibleProblems(flipper, pages.other, surveyCurrentLocale, surveySessionId, covName(effectiveCoverage()), covName(effectiveCoverage()));
+								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale)));
+								showPossibleProblems(flipper, pages.other, curLocale, surveySessionId, covName(effectiveCoverage()), covName(effectiveCoverage()));
 								showInPop2(stui.str("generalPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 								isLoading = false;
-							} else if (surveyCurrentId == '!') {
+							} else if (cldrStatus.getCurrentId() == '!') {
 								var frag = document.createDocumentFragment();
 								frag.appendChild(createChunk(stui.str('section_help'), "p", "helpContent"));
-								var infoHtml = stui.str('section_info_' + surveyCurrentPage);
+								var infoHtml = stui.str('section_info_' + curPage);
 								var infoChunk = document.createElement("div");
 								infoChunk.innerHTML = infoHtml;
 								frag.appendChild(infoChunk);
@@ -1403,8 +1422,11 @@ function showV() {
 								 * if the user leaves the input box open for an extended time.
 								 */
 								// (common case) this is an actual locale data page.
-								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(surveyCurrentLocale) + '/' + surveyCurrentPage + '/' + surveyCurrentId));
-								var url = contextPath + "/SurveyAjax?what=" + WHAT_GETROW + "&_=" + surveyCurrentLocale + "&x=" + surveyCurrentPage + "&strid=" + surveyCurrentId + "&s=" + surveySessionId + cacheKill();
+								const curId = cldrStatus.getCurrentId();
+								const curPage = cldrStatus.getCurrentPage();
+								const curLocale = cldrStatus.getCurrentLocale();
+								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale) + '/' + curPage + '/' + curId));
+								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW + "&_=" + curLocale + "&x=" + curPage + "&strid=" + curId + "&s=" + surveySessionId + cacheKill();
 								$('#nav-page').show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
 								myLoad(url, "section", function(json) {
 									isLoading = false;
@@ -1414,9 +1436,9 @@ function showV() {
 									} else if (json.section.nocontent) {
 										surveyCurrentSection = '';
 										if (json.pageId) {
-											surveyCurrentPage = json.pageId;
+											cldrStatus.setCurrentPage(json.pageId);
 										} else {
-											surveyCurrentPage = '';
+											cldrStatus.setCurrentPage('');
 										}
 										showLoader(null);
 										updateHashAndMenus(); // find out why there's no content. (locmap)
@@ -1432,7 +1454,7 @@ function showV() {
 										}
 
 										surveyCurrentSection = '';
-										surveyCurrentPage = json.pageId;
+										cldrStatus.setCurrentPage(json.pageId);
 										updateHashAndMenus(); // now that we have a pageid
 										if (!surveyUser) {
 											showInPop2(stui.str("loginGuidance"), null, null, null, true); /* show the box the first time */
@@ -1453,9 +1475,10 @@ function showV() {
 									}
 								});
 							}
-						} else if (surveyCurrentSpecial == 'oldvotes') {
-							var url = contextPath + "/SurveyAjax?what=oldvotes&_=" + surveyCurrentLocale + "&s=" + surveySessionId + "&" + cacheKill();
-							myLoad(url, "(loading oldvotes " + surveyCurrentLocale + ")", function(json) {
+						} else if (cldrStatus.getCurrentSpecial() == 'oldvotes') {
+							const curLocale = cldrStatus.getCurrentLocale();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + surveySessionId + "&" + cacheKill();
+							myLoad(url, "(loading oldvotes " + curLocale + ")", function(json) {
 								isLoading = false;
 								showLoader(null, stui.loading2);
 								if (!verifyJson(json, 'oldvotes')) {
@@ -1474,7 +1497,7 @@ function showV() {
 									theDiv.appendChild(createChunk(h2txt, "h2", "v-title"));
 
 									if (!json.oldvotes.locale) {
-										surveyCurrentLocale = '';
+										cldrStatus.setCurrentLocale('');
 										updateHashAndMenus();
 
 										var ul = document.createElement("div");
@@ -1493,7 +1516,7 @@ function showV() {
 													return (function() {
 														var clicky;
 														listenFor(link, "click", clicky = function(e) {
-															surveyCurrentLocale = loc;
+															cldrStatus.setCurrentLocale(loc);
 															reloadV();
 															stStopPropagation(e);
 															return false;
@@ -1515,12 +1538,12 @@ function showV() {
 											theDiv.appendChild(createChunk(stui.str("v_oldvotes_no_old"), "i")); // TODO fix
 										}
 									} else {
-										surveyCurrentLocale = json.oldvotes.locale;
+										cldrStatus.setCurrentLocale(json.oldvotes.locale);
 										updateHashAndMenus();
 										var loclink;
 										theDiv.appendChild(loclink = createChunk(stui.str("v_oldvotes_return_to_locale_list"), "a", "notselected"));
 										listenFor(loclink, "click", function(e) {
-											surveyCurrentLocale = '';
+											cldrStatus.setCurrentLocale('');
 											reloadV();
 											stStopPropagation(e);
 											return false;
@@ -1583,15 +1606,15 @@ function showV() {
 													}
 
 													var saveList = {
-														locale: surveyCurrentLocale,
+														locale: cldrStatus.getCurrentLocale(),
 														confirmList: confirmList,
 													};
 
 													console.log(saveList.toString());
 													console.log("Submitting " + type + " " + confirmList.length + " for confirm");
-
-													var url = contextPath + "/SurveyAjax?what=oldvotes&_=" + surveyCurrentLocale + "&s=" + surveySessionId + "&doSubmit=true&" + cacheKill();
-													myLoad(url, "(submitting oldvotes " + surveyCurrentLocale + ")", function(json) {
+													const curLocale = cldrStatus.getCurrentLocale();
+													var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + surveySessionId + "&doSubmit=true&" + cacheKill();
+													myLoad(url, "(submitting oldvotes " + curLocale + ")", function(json) {
 														showLoader(theDiv.loader, stui.loading2);
 														if (!verifyJson(json, 'oldvotes')) {
 															handleDisconnect("Error submitting votes!", json, "Error");
@@ -1652,9 +1675,9 @@ function showV() {
 								}
 								hideLoader(null);
 							});
-						} else if (surveyCurrentSpecial == 'mail') {
-							var url = contextPath + "/SurveyAjax?what=mail&s=" + surveySessionId + "&fetchAll=true&" + cacheKill();
-							myLoad(url, "(loading mail " + surveyCurrentLocale + ")", function(json) {
+						} else if (cldrStatus.getCurrentSpecial() == 'mail') {
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + surveySessionId + "&fetchAll=true&" + cacheKill();
+							myLoad(url, "(loading mail " + cldrStatus.getCurrentLocale() + ")", function(json) {
 								hideLoader(null, stui.loading2);
 								isLoading = false;
 								if (!verifyJson(json, 'mail')) {
@@ -1702,7 +1725,7 @@ function showV() {
 											li.onclick = (function(li, row, header) {
 												return function() {
 													if (!row[header.READ_DATE]) {
-														myLoad(contextPath + "/SurveyAjax?what=mail&s=" + surveySessionId + "&markRead=" + row[header.ID] + "&" + cacheKill(), 'Marking mail read', function(json) {
+														myLoad(cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + surveySessionId + "&markRead=" + row[header.ID] + "&" + cacheKill(), 'Marking mail read', function(json) {
 															if (!verifyJson(json, 'mail')) {
 																return;
 															} else {
@@ -1730,7 +1753,7 @@ function showV() {
 									}
 								}
 							});
-						} else if (isReport(surveyCurrentSpecial)) {
+						} else if (isReport(cldrStatus.getCurrentSpecial())) {
 							showLoader(theDiv.loader);
 							showInPop2(stui.str("reportGuidance"), null, null, null, true, true); /* show the box the first time */
 							require([
@@ -1751,7 +1774,7 @@ function showV() {
 								) {
 									ready(function() {
 
-										var url = contextPath + "/SurveyAjax?what=report&x=" + surveyCurrentSpecial + "&_=" + surveyCurrentLocale + "&s=" + surveySessionId + cacheKill();
+										var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial() + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + surveySessionId + cacheKill();
 										var errFunction = function errFunction(err) {
 											console.log("Error: loading " + url + " -> " + err);
 											hideLoader(null, stui.loading2);
@@ -1776,8 +1799,8 @@ function showV() {
 													.otherwise(errFunction);
 											} else {
 												alert('Please login to access Dashboard');
-												surveyCurrentSpecial = '';
-												surveyCurrentLocale = '';
+												cldrStatus.setCurrentSpecial('');
+												cldrStatus.setCurrentLocale('');
 												reloadV();
 											}
 										} else {
@@ -1798,12 +1821,12 @@ function showV() {
 
 									});
 								});
-						} else if (surveyCurrentSpecial == 'none') {
+						} else if (cldrStatus.getCurrentSpecial() == 'none') {
 							// for now - redirect
 							hideLoader(null);
 							isLoading = false;
 							window.location = survURL; // redirect home
-						} else if (surveyCurrentSpecial == 'locales') {
+						} else if (cldrStatus.getCurrentSpecial() == 'locales') {
 							hideLoader(null);
 							isLoading = false;
 							var theDiv = document.createElement("div");
@@ -1858,12 +1881,12 @@ function showV() {
 							flipper.flipTo(pages.other, null);
 							filterAllLocale(); //filter for init data
 							forceSidebar();
-							surveyCurrentLocale = null;
-							surveyCurrentSpecial = 'locales';
+							cldrStatus.setCurrentLocale(null);
+							cldrStatus.setCurrentSpecial('locales');
 							showInPop2(stui.str("localesInitialGuidance"), null, null, null, true); /* show the box the first time */
 							$('#itemInfo').html('');
 						} else {
-							otherSpecial.show(surveyCurrentSpecial, {
+							otherSpecial.show(cldrStatus.getCurrentSpecial(), {
 								flipper: flipper,
 								pages: pages
 							});
@@ -1901,18 +1924,18 @@ function showV() {
 					window.parseHash(dojoHash()); // get the initial settings
 					// load the menus - first.
 
-					var theLocale = surveyCurrentLocale;
-					if (surveyCurrentLocale === null || surveyCurrentLocale == '') {
+					var theLocale = cldrStatus.getCurrentLocale();
+					if (theLocale === null || theLocale == '') {
 						theLocale = 'root'; // Default.
 					}
-					var xurl = contextPath + "/SurveyAjax?what=menus&_=" + theLocale + "&locmap=" + true + "&s=" + surveySessionId + cacheKill();
-					myLoad(xurl, "initial menus for " + surveyCurrentLocale, function(json) {
+					var xurl = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + theLocale + "&locmap=" + true + "&s=" + surveySessionId + cacheKill();
+					myLoad(xurl, "initial menus for " + cldrStatus.getCurrentLocale(), function(json) {
 						if (!verifyJson(json, 'locmap')) {
 							return;
 						} else {
 							locmap = new LocaleMap(json.locmap);
-							if (surveyCurrentLocale === "USER" && json.loc) {
-								surveyCurrentLocale = json.loc; // reference: https://unicode.org/cldr/trac/ticket/11161
+							if (cldrStatus.getCurrentLocale() === "USER" && json.loc) {
+								cldrStatus.setCurrentLocale(json.loc);
 							}
 							// make this into a hashmap.
 							if (json.canmodify) {
@@ -2049,13 +2072,13 @@ function showV() {
 									console.log('No change in user cov: ' + setUserCovTo);
 								} else {
 									window.surveyUserCov = setUserCovTo;
-									var updurl = contextPath + "/SurveyAjax?what=pref&_=" + theLocale + "&pref=p_covlev&_v=" + window.surveyUserCov + "&s=" + surveySessionId + cacheKill(); // SurveyMain.PREF_COVLEV
+									var updurl = cldrStatus.getContextPath() + "/SurveyAjax?what=pref&_=" + theLocale + "&pref=p_covlev&_v=" + window.surveyUserCov + "&s=" + surveySessionId + cacheKill(); // SurveyMain.PREF_COVLEV
 									myLoad(updurl, "updating covlev to  " + surveyUserCov, function(json) {
 										if (!verifyJson(json, 'pref')) {
 											return;
 										} else {
 											unpackMenuSideBar(json);
-											if (surveyCurrentSpecial && isReport(surveyCurrentSpecial))
+											if (cldrStatus.getCurrentSpecial() && isReport(cldrStatus.getCurrentSpecial()))
 												reloadV();
 											console.log('Server set  covlev successfully.');
 										}
@@ -2089,7 +2112,7 @@ function showV() {
 								/*
 								 * See WHAT_AUTO_IMPORT = "auto_import" in SurveyAjax.java
 								 */
-								var url = contextPath + "/SurveyAjax?what=auto_import&s=" + surveySessionId + cacheKill();
+								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=auto_import&s=" + surveySessionId + cacheKill();
 								myLoad(url, "auto-importing votes", function(json) {
 									autoImportProgressDialog.hide();
 									window.haveDialog = false;
@@ -2124,23 +2147,23 @@ function showV() {
 
 							// watch for hashchange to make other changes..
 							dojoTopic.subscribe("/dojo/hashchange", function(changedHash) {
-								var oldLocale = trimNull(surveyCurrentLocale);
-								var oldSpecial = trimNull(surveyCurrentSpecial);
-								var oldPage = trimNull(surveyCurrentPage);
-								var oldId = trimNull(surveyCurrentId);
+								var oldLocale = trimNull(cldrStatus.getCurrentLocale());
+								var oldSpecial = trimNull(cldrStatus.getCurrentSpecial());
+								var oldPage = trimNull(cldrStatus.getCurrentPage());
+								var oldId = trimNull(cldrStatus.getCurrentId());
 
 								window.parseHash(changedHash);
 
-								surveyCurrentId = trimNull(surveyCurrentId);
+								cldrStatus.setCurrentId(trimNull(cldrStatus.getCurrentId()));
 
 								// did anything change?
-								if (oldLocale != trimNull(surveyCurrentLocale) ||
-									oldSpecial != trimNull(surveyCurrentSpecial) ||
-									oldPage != trimNull(surveyCurrentPage)) {
+								if (oldLocale != trimNull(cldrStatus.getCurrentLocale()) ||
+									oldSpecial != trimNull(cldrStatus.getCurrentSpecial()) ||
+									oldPage != trimNull(cldrStatus.getCurrentPage())) {
 									console.log("# hash changed, (loc, etc) reloadingV..");
 									reloadV();
-								} else if (oldId != surveyCurrentId && surveyCurrentId != '') {
-									console.log("# just ID changed, to " + surveyCurrentId);
+								} else if (oldId != cldrStatus.getCurrentId() && cldrStatus.getCurrentId() != '') {
+									console.log("# just ID changed, to " + cldrStatus.getCurrentId());
 									// surveyCurrentID and the hash have already changed.
 									// just call showInPop if the item is present. If not present, make sure it's visible.
 									window.showCurrentId();

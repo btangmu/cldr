@@ -22,17 +22,18 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 	 * @function parseHash
 	 */
 	Page.prototype.parseHash = function parseHash(hash, pieces) {
-		surveyCurrentPage='';
+		cldrStatus.setCurrentPage('');
 		if(pieces && pieces.length>3){
 			if(!pieces[3] || pieces[3]=='') {
-				surveyCurrentId='';
+				cldrStatus.setCurrentId('');
 			} else {
 				var id = new Number(pieces[3]);
 				if(id == NaN) {
-					surveyCurrentId = '';
+					cldrStatus.setCurrentId('');
 				} else {
-					surveyCurrentId = id.toString();
-					this.handleIdChanged(surveyCurrentId);
+					const idStr = id.toString();
+					cldrStatus.setCurrentId(idStr);
+					this.handleIdChanged(idStr);
 				}
 			}
 		}
@@ -42,9 +43,9 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 		if(strid && strid != '') {
 			var id = new Number(strid);
 			if(id == NaN) {
-				surveyCurrentId = '';
+				cldrStatus.setCurrentId('');
 			} else {
-				surveyCurrentId = id.toString();
+				cldrStatus.setCurrentId(id.toString());
 			}
 			var itemid = "fp"+id;
 			var pdiv = document.getElementById(itemid);
@@ -64,18 +65,18 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 	};
 
 	Page.prototype.show = function show(params) {
-
-		if(surveyCurrentLocale=='') {
+		const curLocale = cldrStatus.getCurrentLocale();
+		if (curLocale == '') {
 			hideLoader(null);
 			params.flipper.flipTo(params.pages.other, createChunk(stui.str("generic_nolocale"),"p","helpContent"));
 		} else {
-			const forumName = locmap.getLocaleName(locmap.getLanguage(surveyCurrentLocale));
+			const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
 			const forumMessage = stui.sub("forum_msg", {
 				forum: forumName,
 				locale: surveyCurrentLocaleName
 			});
 			const userId = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
-			cldrStForum.loadForum(surveyCurrentLocale, userId, forumMessage, params);
+			cldrStForum.loadForum(curLocale, userId, forumMessage, params);
 		}
 	};
 

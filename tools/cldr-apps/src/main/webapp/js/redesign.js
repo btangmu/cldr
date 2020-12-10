@@ -28,8 +28,8 @@ $(function() {
 			}
 		},
 		function() {
-			if (surveyCurrentLocale ||
-				surveyCurrentSpecial != 'locales') { // don't stick the sidebar open if we're not in the locale chooser.
+			if (cldrStatus.getCurrentLocale() ||
+				cldrStatus.getCurrentSpecial() != 'locales') { // don't stick the sidebar open if we're not in the locale chooser.
 				$(this).removeClass('active');
 				toggleOverlay();
 			}
@@ -351,8 +351,8 @@ function unpackMenuSideBar(json) {
 
 	// menu
 	$('.sidebar-chooser').click(function() {
-		window.surveyCurrentPage = $(this).attr('id');
-		window.surveyCurrentSpecial = '';
+		cldrStatus.setCurrentPage($(this).attr('id'));
+		cldrStatus.setCurrentSpecial('');
 		reloadV();
 		$('#left-sidebar').removeClass('active');
 		toggleOverlay();
@@ -364,11 +364,11 @@ function unpackMenuSideBar(json) {
 		toggleOverlay();
 		$('#OtherSection').hide();
 		if ($(this).data('query')) {
-			window.location = survURL + '?' + $(this).data('url') + '&_=' + surveyCurrentLocale;
+			window.location = survURL + '?' + $(this).data('url') + '&_=' + cldrStatus.getCurrentLocale();
 		} else {
-			window.surveyCurrentSpecial = $(this).data('url');
-			surveyCurrentId = '';
-			surveyCurrentPage = '';
+			cldrStatus.setCurrentSpecial($(this).data('url'));
+			cldrStatus.setCurrentId('');
+			cldrStatus.setCurrentPage('');
 			reloadV();
 		}
 	});
@@ -380,14 +380,16 @@ function unpackMenuSideBar(json) {
 		}
 	});
 
-	if (surveyCurrentLocale) {
-		$('a[data-original-title="' + surveyCurrentLocale + '"]').click();
+	const curLocale = cldrStatus.getCurrentLocale();
+	if (curLocale) {
+		$('a[data-original-title="' + curLocale + '"]').click();
 		$('#title-coverage').show();
 	}
 
 	// reopen the menu to the current page
-	if (surveyCurrentPage) {
-		var menu = $('#locale-menu #' + surveyCurrentPage);
+	const curPage = cldrStatus.getCurrentPage();
+	if (curPage) {
+		var menu = $('#locale-menu #' + curPage);
 		menu.closest('.open-menu').click();
 	}
 }
@@ -525,7 +527,7 @@ function interceptPulldownLink(event) {
  * Called a lot from several js files
  */
 function isDashboard() {
-	return surveyCurrentSpecial == "r_vetting_json";
+	return cldrStatus.getCurrentSpecial() == "r_vetting_json";
 }
 
 /**

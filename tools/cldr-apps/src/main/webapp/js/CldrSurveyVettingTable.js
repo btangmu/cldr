@@ -245,7 +245,7 @@ const cldrSurveyTable = (function() {
 					path: theRow.xpath,
 					ph: {
 						section: surveyCurrentSection, // Section: Timezones
-						page: surveyCurrentPage, // Page: SEAsia ( id, not name )
+						page: cldrStatus.getCurrentPage(), // Page: SEAsia ( id, not name )
 						header: curPartition.name, // Header: Borneo
 						code: theRow.code // Code: standard-long
 					}
@@ -511,7 +511,8 @@ const cldrSurveyTable = (function() {
 		 * Show the current ID.
 		 * TODO: explain.
 		 */
-		if (surveyCurrentId !== '' && surveyCurrentId === tr.id) {
+		const curId = cldrStatus.getCurrentId();
+		if (curId !== '' && curId === tr.id) {
 			window.showCurrentId(); // refresh again - to get the updated voting status.
 		}
 	}
@@ -921,7 +922,7 @@ const cldrSurveyTable = (function() {
 			var go = document.createElement("a");
 			go.className = "anch-go";
 			go.appendChild(document.createTextNode("zoom"));
-			go.href = window.location.pathname + "?_=" + surveyCurrentLocale + "&x=r_rxt&xp=" + theRow.xpathId;
+			go.href = window.location.pathname + "?_=" + cldrStatus.getCurrentLocale() + "&x=r_rxt&xp=" + theRow.xpathId;
 			cell.appendChild(go);
 			var js = document.createElement("a");
 			js.className = "anch-go";
@@ -1194,9 +1195,10 @@ const cldrSurveyTable = (function() {
 			surlink.innerHTML = '<span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;';
 			surlink.className = 'alert alert-info fix-popover-help';
 			var link = createChunk(stui.str("file_a_ticket"), "a");
+			const curLocale = cldrStatus.getCurrentLocale();
 			var newUrl = "http://unicode.org/cldr/trac" +
-				"/newticket?component=data&summary=" + surveyCurrentLocale + ":" + theRow.xpath +
-				"&locale=" + surveyCurrentLocale + "&xpath=" + theRow.xpstrid + "&version=" + surveyVersion;
+				"/newticket?component=data&summary=" + curLocale + ":" + theRow.xpath +
+				"&locale=" + curLocale + "&xpath=" + theRow.xpstrid + "&version=" + surveyVersion;
 			link.href = newUrl;
 			link.target = "cldr-target-trac";
 			theRow.proposedResults = createChunk(stui.str("file_ticket_must"), "a",

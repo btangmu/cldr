@@ -193,25 +193,25 @@ Flipper.prototype.addUntilFlipped = function addUntilFlipped(showFn, killFn) {
  * @param aLocmap the map object from json
  */
 function LocaleMap(aLocmap) {
-	this.locmap = aLocmap;
+	this.locmap = aLocmap; // TODO: cldrStatus.setLocmap(aLocmap)?
 }
 
 /**
  * Run the locale id through the idmap.
  *
  * @param menuMap the map
- * @param locid or null for surveyCurrentLocale
+ * @param locid or null for cldrStatus.getCurrentLocale()
  * @return canonicalized id, or unchanged
  */
 LocaleMap.prototype.canonicalizeLocaleId = function canonicalizeLocaleId(locid) {
 	if (locid === null) {
-		locid = surveyCurrentLocale;
+		locid = cldrStatus.getCurrentLocale();
 	}
 	if (locid === null || locid === '') {
 		return null;
 	}
 
-	if (this.locmap) {
+	if (this.locmap) { // TODO: const locmap = cldrStatus.getLocmap()... (no "this." -- this === window)
 		if (this.locmap.idmap && this.locmap.idmap[locid]) {
 			locid = this.locmap.idmap[locid]; // canonicalize
 		}
@@ -220,7 +220,7 @@ LocaleMap.prototype.canonicalizeLocaleId = function canonicalizeLocaleId(locid) 
 };
 
 window.linkToLocale = function linkToLocale(subLoc) {
-	return "#/" + subLoc + "/" + surveyCurrentPage + "/" + surveyCurrentId;
+	return "#/" + subLoc + "/" + cldrStatus.getCurrentPage() + "/" + cldrStatus.getCurrentId();
 };
 
 /**
@@ -238,7 +238,7 @@ LocaleMap.prototype.linkify = function linkify(str) {
 		var bund = this.getLocaleInfo(match[1]);
 		if (bund) {
 			out = out + str.substring(fromLast, match.index); // pre match
-			if (match[1] == surveyCurrentLocale) {
+			if (match[1] == cldrStatus.getCurrentLocale()) {
 				out = out + this.getLocaleName(match[1]);
 			} else {
 				out = out + "<a href='" + linkToLocale(match[1]) + "' title='" + match[1] + "'>" + this.getLocaleName(match[1]) + "</a>";
@@ -1020,12 +1020,7 @@ function handleDisconnect(why, json, word, what) {
 
 var updateParts = null;
 
-/*
- * TODO: Avoid browser console showing "ReferenceError: surveyRunningStamp is not defined" here.
- * surveyRunningStamp is undefined unless ajax_status.jsp is included.
- * submit.jsp (or SurveyAjax.handleBulkSubmit) includes survey.js but not ajax_status.jsp.
- */
-var cacheKillStamp = surveyRunningStamp;
+var cacheKillStamp = null;
 
 /**
  * Return a string to be used with a URL to avoid caching. Ignored by the server.
@@ -1033,8 +1028,8 @@ var cacheKillStamp = surveyRunningStamp;
  * @returns {String} the URL fragment, append to the query
  */
 function cacheKill() {
-	if (!cacheKillStamp || cacheKillStamp < surveyRunningStamp) {
-		cacheKillStamp = surveyRunningStamp;
+	if (!cacheKillStamp || cacheKillStamp < cldrStatus.getRunningStamp()) {
+		cacheKillStamp = cldrStatus.getRunningStamp();
 	}
 	cacheKillStamp++;
 
@@ -1057,7 +1052,7 @@ function updateSpecialHeader(newSpecialHeader) {
 
 function trySurveyLoad() {
 	try {
-		var url = contextPath + "/survey?" + cacheKill();
+		var url = cldrStatus.getContextPath() + "/survey?" + cacheKill();
 		console.log("Attempting to restart ST at " + url);
 		cldrStAjax.sendXhr({
 			url: url,
@@ -1097,15 +1092,15 @@ function formatErrMsg(json, subkey) {
 		what: stui.str('err_what_' + subkey),
 		code: theCode,
 		err_data: json.err_data,
-		surveyCurrentLocale: surveyCurrentLocale,
-		surveyCurrentId: surveyCurrentId,
+		surveyCurrentLocale: cldrStatus.getCurrentLocale(),
+		surveyCurrentId: cldrStatus.getCurrentId(),
 		surveyCurrentSection: surveyCurrentSection,
-		surveyCurrentPage: surveyCurrentPage
+		surveyCurrentPage: cldrStatus.getCurrentPage()
 	});
 }
 
 /**
- * Based on the last received packet of JSON, update our status
+ * Based on the last received packet of JSON, update our status and the DOM
  *
  * @param {Object} json received
  */
@@ -1127,7 +1122,7 @@ function updateStatusBox(json) {
 		handleDisconnect("The SurveyTool server has halted due to an error: " + json.status.isBusted, json, "disconnected"); // Server down- not our fault. Hopefully.
 	} else if (!json.status) {
 		handleDisconnect("The SurveyTool erver returned a bad status", json);
-	} else if (json.status.surveyRunningStamp != surveyRunningStamp) {
+	} else if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 		handleDisconnect("The SurveyTool server restarted since this page was loaded. Please retry.", json, "disconnected"); // desync
 	} else if (json.status && json.status.isSetup == false && json.SurveyOK == 1) {
 		updateProgressWord("startup");
@@ -1137,6 +1132,9 @@ function updateStatusBox(json) {
 
 	if (json.status) {
 		lastJsonStatus = json.status;
+		if (json.status.contextPath) {
+			cldrStatus.setContextPath(json.status.contextPath);
+		}
 		if (!updateParts) {
 			var visitors = document.getElementById("visitors");
 			updateParts = {
@@ -1235,15 +1233,16 @@ function updateStatus() {
 
 	var surveyLocaleUrl = '';
 	var surveySessionUrl = '';
-	if (surveyCurrentLocale !== null && surveyCurrentLocale != '') {
-		surveyLocaleUrl = '&_=' + surveyCurrentLocale;
+	const curLocale = cldrStatus.getCurrentLocale();
+	if (curLocale !== null && curLocale != '') {
+		surveyLocaleUrl = '&_=' + curLocale;
 	}
 	if (surveySessionId && surveySessionId !== null) {
 		surveySessionUrl = '&s=' + surveySessionId;
 	}
 
 	cldrStAjax.sendXhr({
-		url: contextPath + "/SurveyAjax?what=status" + surveyLocaleUrl + surveySessionUrl + cacheKill(),
+		url: cldrStatus.getContextPath() + "/SurveyAjax?what=status" + surveyLocaleUrl + surveySessionUrl + cacheKill(),
 		handleAs: "json",
 		timeout: ajaxTimeout,
 		load: function(json) {
@@ -1262,7 +1261,7 @@ function updateStatus() {
 			}
 			if (json.err != null && json.err.length > 0) {
 				st_err.innerHTML = json.err;
-				if (json.status && json.status.surveyRunningStamp != surveyRunningStamp) {
+				if (json.status && cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 					st_err.innerHTML = st_err.innerHTML + " <b>Note: Lost connection with Survey Tool or it restarted.</b>";
 					updateStatusBox({
 						disconnected: true
@@ -1275,7 +1274,7 @@ function updateStatus() {
 				if (json.status.newVersion) {
 					surveyVersion = json.status.newVersion;
 				}
-				if (json.status.surveyRunningStamp != surveyRunningStamp) {
+				if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 					st_err.className = "ferrbox";
 					st_err.innerHTML = "The SurveyTool has been restarted. Please reload this page to continue.";
 					wasBusted = true;
@@ -1283,7 +1282,7 @@ function updateStatus() {
 					// TODO: show ARI for reconnecting
 				} else if (wasBusted == true &&
 					(!json.status.isBusted) ||
-					(json.status.surveyRunningStamp != surveyRunningStamp)) {
+					cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 					st_err.innerHTML = "Note: Lost connection with Survey Tool or it restarted.";
 					if (clickContinue != null) {
 						st_err.innerHTML = st_err.innerHTML + " Please <a href='" + clickContinue + "'>click here</a> to continue.";
@@ -1699,7 +1698,7 @@ var oneLocales = [];
  */
 function showForumStuff(frag, forumDivClone, tr) {
 	var isOneLocale = false;
-	if (oneLocales[surveyCurrentLocale]) {
+	if (oneLocales[cldrStatus.getCurrentLocale()]) {
 		isOneLocale = true;
 	}
 	if (!isOneLocale) {
@@ -1717,7 +1716,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 			clearMyTimeout();
 			updateIf(sidewaysControl, stui.str("sideways_loading1"));
 
-			var url = contextPath + "/SurveyAjax?what=getsideways&_=" + surveyCurrentLocale + "&s=" + surveySessionId + "&xpath=" + tr.theRow.xpstrid + cacheKill();
+			var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getsideways&_=" + cldrStatus.getCurrentLocale() + "&s=" + surveySessionId + "&xpath=" + tr.theRow.xpstrid + cacheKill();
 			myLoad(url, "sidewaysView", function(json) {
 				/*
 				 * Count the number of unique locales in json.others and json.novalue.
@@ -1730,7 +1729,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 				}
 				// if there is 1 sublocale (+ 1 default), we do nothing
 				if (Object.keys(relatedLocales).length <= 2) {
-					oneLocales[surveyCurrentLocale] = true;
+					oneLocales[cldrStatus.getCurrentLocale()] = true;
 					updateIf(sidewaysControl, "");
 				} else {
 					if (!json.others) {
@@ -1796,7 +1795,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 									str = str + " (= " + readLocale + ")";
 								}
 
-								if (loc === surveyCurrentLocale) {
+								if (loc === cldrStatus.getCurrentLocale()) {
 									str = escape + str;
 									item.setAttribute("selected", "selected");
 									item.setAttribute("disabled", "disabled");
@@ -1821,12 +1820,12 @@ function showForumStuff(frag, forumDivClone, tr) {
 						}
 
 						/*
-						 * Set curValue = the value for surveyCurrentLocale
+						 * Set curValue = the value for cldrStatus.getCurrentLocale()
 						 */
 						var curValue = null;
 						for (var l = 0; l < dataList.length; l++) {
 							var loc = dataList[l][0];
-							if (loc === surveyCurrentLocale) {
+							if (loc === cldrStatus.getCurrentLocale()) {
 								curValue = dataList[l][1];
 								break;
 							}
@@ -1860,8 +1859,8 @@ function showForumStuff(frag, forumDivClone, tr) {
 
 						listenFor(popupSelect, "change", function(e) {
 							var newLoc = popupSelect.value;
-							if (newLoc !== surveyCurrentLocale) {
-								surveyCurrentLocale = newLoc;
+							if (newLoc !== cldrStatus.getCurrentLocale()) {
+								cldrStatus.setCurrentLocale(newLoc);
 								reloadV();
 							}
 							return stStopPropagation(e);
@@ -1881,7 +1880,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 				theRow.voteVhash !== '' &&
 				!theRow.rowFlagged;
 		const myValue = theRow.hasVoted ? getUsersValue(theRow) : null;
-		cldrStForum.addNewPostButtons(frag, surveyCurrentLocale, couldFlag, theRow.xpstrid, theRow.code, myValue);
+		cldrStForum.addNewPostButtons(frag, cldrStatus.getCurrentLocale(), couldFlag, theRow.xpstrid, theRow.code, myValue);
 	}
 
 	var loader2 = createChunk(stui.str("loading"), "i");
@@ -1958,11 +1957,11 @@ function showForumStuff(frag, forumDivClone, tr) {
  */
 function updateInfoPanelForumPosts(tr) {
 	if (!tr) {
-		if (surveyCurrentId !== '') {
+		if (cldrStatus.getCurrentId() !== '') {
 			/*
 			 * TODO: encapsulate this usage of 'r@' somewhere
 			 */
-			tr = document.getElementById('r@' + surveyCurrentId);
+			tr = document.getElementById('r@' + cldrStatus.getCurrentId());
 		} else {
 			/*
 			 * This is normal when adding a post in the main forum interface, which has no Info Panel).
@@ -1995,15 +1994,15 @@ function updateInfoPanelForumPosts(tr) {
 				const content = cldrStForum.parseContent(posts, 'info');
 				/*
 				 * Reality check: the json should refer to the same path as tr, which in practice
-				 * always matches surveyCurrentId. If not, log a warning and substitute "Please reload"
+				 * always matches cldrStatus.getCurrentId(). If not, log a warning and substitute "Please reload"
 				 * for the content.
 				 */
 				let xpstrid = posts[0].xpath;
-				if (xpstrid !== tr.xpstrid || xpstrid !== surveyCurrentId) {
+				if (xpstrid !== tr.xpstrid || xpstrid !== cldrStatus.getCurrentId()) {
 					console.log('Warning: xpath strid mismatch in updateInfoPanelForumPosts loadHandler:');
 					console.log('posts[0].xpath = ' + posts[0].xpath);
 					console.log('tr.xpstrid = ' + tr.xpstrid);
-					console.log('surveyCurrentId = ' + surveyCurrentId);
+					console.log('surveyCurrentId = ' + cldrStatus.getCurrentId());
 
 					content = "Please reload";
 				}
@@ -2046,8 +2045,8 @@ function appendForumStuff(tr, theRow, forumDiv) {
 	cldrStForum.setUserCanPost(tr.theTable.json.canModify);
 
 	removeAllChildNodes(forumDiv); // we may be updating.
-	var theForum = locmap.getLanguage(surveyCurrentLocale);
-	forumDiv.replyStub = contextPath + "/survey?forum=" + theForum + "&_=" + surveyCurrentLocale + "&replyto=";
+	var theForum = locmap.getLanguage(cldrStatus.getCurrentLocale());
+	forumDiv.replyStub = cldrStatus.getContextPath() + "/survey?forum=" + theForum + "&_=" + cldrStatus.getCurrentLocale() + "&replyto=";
 	forumDiv.postUrl = forumDiv.replyStub + "x" + theRow;
 	/*
 	 * Note: SurveyAjax requires a "what" parameter for SurveyAjax.
@@ -2057,7 +2056,7 @@ function appendForumStuff(tr, theRow, forumDiv) {
 	 * Unfortunately that means "what" is not the first argument, as it would
 	 * be ideally for human readability of request urls.
 	 */
-	forumDiv.url = contextPath + "/SurveyAjax?xpath=" + theRow.xpathId + "&_=" + surveyCurrentLocale + "&fhash=" +
+	forumDiv.url = cldrStatus.getContextPath() + "/SurveyAjax?xpath=" + theRow.xpathId + "&_=" + cldrStatus.getCurrentLocale() + "&fhash=" +
 		theRow.rowHash + "&vhash=" + "&s=" + tr.theTable.session +
 		"&voteinfo=t";
 }
@@ -2071,8 +2070,8 @@ window.updateCurrentId = function updateCurrentId(id) {
 	if (id == null) {
 		id = '';
 	}
-	if (surveyCurrentId != id) { // don't set if already set.
-		surveyCurrentId = id;
+	if (cldrStatus.getCurrentId() != id) { // don't set if already set.
+		cldrStatus.setCurrentId(id);
 	}
 };
 
@@ -2568,7 +2567,7 @@ function showItemInfoFn(theRow, item) {
  * This is currently (2018-12-01) the only place inheritedLocale or inheritedXpid is used on the client.
  * An alternative would be for the server to send the link (clickyLink.href), instead of inheritedLocale
  * and inheritedXpid, to the client, avoiding the need for the client to know so much, including the need
- * to replace 'code-fallback' with 'root' or when to use surveyCurrentLocale in place of inheritedLocale
+ * to replace 'code-fallback' with 'root' or when to use cldrStatus.getCurrentLocale() in place of inheritedLocale
  * or use xpstrid in place of inheritedXpid.
  *
  * @param theRow the row
@@ -2579,7 +2578,7 @@ function addJumpToOriginal(theRow, el) {
 		var loc = theRow.inheritedLocale;
 		var xpstrid = theRow.inheritedXpid || theRow.xpstrid;
 		if (!loc) {
-			loc = surveyCurrentLocale;
+			loc = cldrStatus.getCurrentLocale();
 		} else if (loc === 'code-fallback') {
 			/*
 			 * Never use 'code-fallback' in the link, use 'root' instead.
@@ -2589,7 +2588,7 @@ function addJumpToOriginal(theRow, el) {
 			loc = 'root';
 		}
 		if ((xpstrid === theRow.xpstrid) && // current hash
-			(loc === window.surveyCurrentLocale)) { // current locale
+			(loc === cldrStatus.getCurrentLocale())) { // current locale
 			// i.e., following the alias would come back to the current item
 			el.appendChild(createChunk(stui.str('noFollowAlias'), "span", 'followAlias'));
 		} else {
@@ -2912,12 +2911,13 @@ function appendInputBox(parent, which) {
  * Show the surveyCurrentId row
  */
 function scrollToItem() {
-	if (surveyCurrentId != null && surveyCurrentId != '') {
+	const curId = cldrStatus.getCurrentId();
+	if (curId != null && curId != '') {
 		require(["dojo/window"], function(win) {
-			var xtr = document.getElementById("r@" + surveyCurrentId);
+			var xtr = document.getElementById("r@" + curId);
 			if (xtr != null) {
-				console.log("Scrolling to " + surveyCurrentId);
-				win.scrollIntoView("r@" + surveyCurrentId);
+				console.log("Scrolling to " + curId);
+				win.scrollIntoView("r@" + curId);
 			}
 		});
 	}
@@ -2937,7 +2937,7 @@ window.locmap = new LocaleMap(null);
  */
 function locInfo(loc) {
 	if (!loc) {
-		loc = window.surveyCurrentLocale;
+		loc = cldrStatus.getCurrentLocale();
 	}
 	return locmap.getLocaleInfo(loc);
 }
@@ -3027,7 +3027,7 @@ function showVoteTable(voteList, type, translationHintsLanguage, dir) {
 		tdp = createChunk("", "td", "v-path");
 
 		var dtpl = createChunk(rowTitle, "a");
-		dtpl.href = "v#/" + surveyCurrentLocale + "//" + row.strid;
+		dtpl.href = "v#/" + cldrStatus.getCurrentLocale() + "//" + row.strid;
 		dtpl.target = '_CLDR_ST_view';
 		tdp.appendChild(dtpl);
 
@@ -3144,8 +3144,8 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 
 	showLoader(tr.theTable.theDiv.loader, stui.loadingOneRow);
 
-	var ourUrl = contextPath + "/SurveyAjax?what=" + WHAT_GETROW +
-		"&_=" + surveyCurrentLocale +
+	var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW +
+		"&_=" + cldrStatus.getCurrentLocale() +
 		"&xpath=" + theRow.xpathId +
 		"&fhash=" + tr.rowHash +
 		"&s=" + surveySessionId +
@@ -3174,7 +3174,7 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 				tr.className = "ferrbox";
 				console.log("could not find " + tr.rowHash + " in " + json);
 				onFailure("refreshSingleRow: Could not refresh this single row: Server failed to return xpath #" + theRow.xpathId +
-						" for locale " + surveyCurrentLocale);
+						" for locale " + cldrStatus.getCurrentLocale());
 			}
 		} catch (e) {
 			console.log("Error in ajax post [refreshSingleRow] ", e.message);
@@ -3256,13 +3256,13 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 	var ourContent = {
 		what: what,
 		xpath: tr.xpathId,
-		"_": surveyCurrentLocale,
+		"_": cldrStatus.getCurrentLocale(),
 		fhash: tr.rowHash,
 		vhash: vHash,
 		s: tr.theTable.session
 	};
 
-	var ourUrl = contextPath + "/SurveyAjax";
+	var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax";
 
 	var voteLevelChanged = document.getElementById("voteLevelChanged");
 	if (voteLevelChanged) {
@@ -3379,7 +3379,7 @@ function loadAdminPanel() {
 		content.appendChild(list);
 	
 		function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
-			var ourUrl = contextPath + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
+			var ourUrl = cldrStatus.getContextPath() + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
 			var errorHandler = function(err) {
 				let responseText = cldrStAjax.errResponseText(err);
 				console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + responseText);
@@ -3829,7 +3829,7 @@ function loadAdminPanel() {
 	
 			div.className = "adminThreads";
 	
-			var baseUrl = contextPath + "/AdminPanel.jsp?vap=" + vap + "&do=";
+			var baseUrl = cldrStatus.getContextPath() + "/AdminPanel.jsp?vap=" + vap + "&do=";
 			var hashSuff = ""; //  "#" + window.location.hash;
 	
 			var actions = ["rawload"];
@@ -3886,8 +3886,8 @@ function refreshCounterVetting() {
 	document.getElementById('progress-voted').style.width = voted * 100 / total + '%';
 	document.getElementById('progress-abstain').style.width = abstain * 100 / total + '%';
 
-	if (cldrStForum && surveyCurrentLocale && surveyUser && surveyUser.id) {
-		const forumSummary = cldrStForum.getForumSummaryHtml(surveyCurrentLocale, surveyUser.id, false);
+	if (cldrStForum && cldrStatus.getCurrentLocale() && surveyUser && surveyUser.id) {
+		const forumSummary = cldrStForum.getForumSummaryHtml(cldrStatus.getCurrentLocale(), surveyUser.id, false);
 		document.getElementById('vForum').innerHTML = forumSummary;
 	}
 }
@@ -3906,7 +3906,7 @@ function chgPage(shift) {
 	var menus = getMenusFilteredByCov();
 	var parentIndex = 0;
 	var index = 0;
-	var parent = _thePages.pageToSection[surveyCurrentPage].id;
+	var parent = _thePages.pageToSection[cldrStatus.getCurrentPage()].id;
 
 	// get the parent index
 	for (var m in menus) {
@@ -3919,7 +3919,7 @@ function chgPage(shift) {
 
 	for (var m in menus[parentIndex].pagesFiltered) {
 		var menu = menus[parentIndex].pagesFiltered[m];
-		if (menu.id === surveyCurrentPage) {
+		if (menu.id === cldrStatus.getCurrentPage()) {
 			index = parseInt(m);
 			break;
 		}
@@ -3943,11 +3943,11 @@ function chgPage(shift) {
 		index = menus[parentIndex].pagesFiltered.length - 1;
 	}
 	surveyCurrentSection = menus[parentIndex].id;
-	surveyCurrentPage = menus[parentIndex].pagesFiltered[index].id;
+	cldrStatus.setCurrentPage(menus[parentIndex].pagesFiltered[index].id);
 
 	reloadV();
 
-	var sidebar = $('#locale-menu #' + surveyCurrentPage);
+	var sidebar = $('#locale-menu #' + cldrStatus.getCurrentPage());
 	sidebar.closest('.open-menu').click();
 }
 
@@ -4050,7 +4050,7 @@ function showAllItems(divName, user) {
 			var div = document.getElementById(divName);
 			div.className = "recentList";
 			div.update = function() {
-				var ourUrl = contextPath + "/SurveyAjax?what=mylocales&user=" + user;
+				var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=mylocales&user=" + user;
 				var errorHandler = function(err) {
 					let responseText = cldrStAjax.errResponseText(err);
 					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
@@ -4136,7 +4136,7 @@ function showRecent(divName, locale, user) {
 			}
 			div.className = "recentList";
 			div.update = function() {
-				var ourUrl = contextPath + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
+				var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
 				var errorHandler = function(err) {
 					let responseText = cldrStAjax.errResponseText(err);
 					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
@@ -4271,7 +4271,7 @@ function showUserActivity(list, tableRef) {
 					window._rrowById = rowById;
 
 					var loc2name = {};
-					request.get(contextPath + "/SurveyAjax?what=stats_bydayuserloc", {
+					request.get(cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc", {
 						handleAs: 'json'
 					}).then(function(json) {
 						/* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */

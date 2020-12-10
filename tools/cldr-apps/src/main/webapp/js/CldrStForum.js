@@ -10,9 +10,9 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * window.surveyCurrentLocale, window.surveySessionId, window.surveyUser, window.locmap,
- * createGravitar, stui.str, listenFor, bootstrap.js, reloadV, contextPath,
- * surveyCurrentSpecial, showInPop2, hideLoader, ...!
+ * window.surveySessionId, window.surveyUser, window.locmap,
+ * createGravitar, stui.str, listenFor, bootstrap.js, reloadV,
+ * showInPop2, hideLoader, ...!
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts,
  * updateInfoPanelForumPosts, appendForumStuff; also some/all code from forum.js
@@ -68,7 +68,7 @@ const cldrStForum = (function() {
 	/**
 	 * Fetch the Forum data from the server, and "load" it
 	 *
-	 * @param locale the locale string, like "fr_CA" (surveyCurrentLocale)
+	 * @param locale the locale string, like "fr_CA" (cldrStatus.getCurrentLocale())
 	 * @param userId the id of the current user
 	 * @param forumMessage the forum message
 	 * @param params an object with various properties such as exports, special, flipper, otherSpecial, name, ...
@@ -117,7 +117,7 @@ const cldrStForum = (function() {
 			// No longer loading
 			hideLoader(null);
 			params.flipper.flipTo(params.pages.other, ourDiv);
-			params.special.handleIdChanged(surveyCurrentId); // rescroll.
+			params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
 		};
 		const xhrArgs = {
 			url: url,
@@ -294,7 +294,7 @@ const cldrStForum = (function() {
 
 		const subj = document.getElementById('postSubject').innerHTML;
 
-		const url = contextPath + "/SurveyAjax";
+		const url = cldrStatus.getContextPath() + "/SurveyAjax";
 
 		const errorHandler = function(err) {
 			const responseText = cldrStAjax.errResponseText(err);
@@ -308,7 +308,8 @@ const cldrStForum = (function() {
 			} else if (data.ret && data.ret.length > 0) {
 				const postModal = $('#post-modal');
 				postModal.modal('hide');
-				if (surveyCurrentSpecial && surveyCurrentSpecial === 'forum') {
+				const curSpecial = cldr.getCurrentSpecial();
+				if (curSpecial && curSpecial === 'forum') {
 					reloadV();
 				} else {
 					updateInfoPanelForumPosts(null);
@@ -384,7 +385,7 @@ const cldrStForum = (function() {
 					topicDiv.appendChild(topicInfo);
 					if (post.locale) {
 						const localeLink = forumCreateChunk(locmap.getLocaleName(post.locale), "a", "localeName");
-						if (post.locale != surveyCurrentLocale) {
+						if (post.locale != cldrStatus.getCurrentLocale()) {
 							localeLink.href = linkToLocale(post.locale);
 						}
 						topicInfo.appendChild(localeLink);
@@ -460,14 +461,14 @@ const cldrStForum = (function() {
 					return;
 				}
 				listenFor(dateChunk, "click", function(e) {
-					if (post.locale && locmap.getLanguage(surveyCurrentLocale) != locmap.getLanguage(post.locale)) {
-						surveyCurrentLocale = locmap.getLanguage(post.locale);
+					if (post.locale && locmap.getLanguage(cldrStatus.getCurrentLocale()) != locmap.getLanguage(post.locale)) {
+						cldrStatus.setCurrentLocale(locmap.getLanguage(post.locale));
 					}
-					surveyCurrentPage = '';
-					surveyCurrentId = post.id;
+					cldrStatus.setCurrentPage('');
+					cldrStatus.setCurrentId(post.id);
 					replaceHash(false);
-					if (surveyCurrentSpecial != 'forum') {
-						surveyCurrentSpecial = 'forum';
+					if (cldrStatus.getCurrentSpecial() != 'forum') {
+						cldrStatus.setCurrentSpecial('forum');
 						reloadV();
 					}
 					return stStopPropagation(e);
@@ -1206,9 +1207,9 @@ const cldrStForum = (function() {
 	 * Load or reload the main Forum page
 	 */
 	function reload() {
-		window.surveyCurrentSpecial = 'forum';
-		window.surveyCurrentId = '';
-		window.surveyCurrentPage = '';
+		cldrStatus.setCurrentSpecial('forum');
+		cldrStatus.setCurrentId('');
+		cldrStatus.setCurrentPage('');
 		reloadV();
 	}
 
@@ -1227,7 +1228,7 @@ const cldrStForum = (function() {
 	 * If the given locale is not the one we've already loaded, switch to it,
 	 * initializing data to avoid using data for the wrong locale
 	 *
-	 * @param locale the locale string, like "fr_CA" (surveyCurrentLocale)
+	 * @param locale the locale string, like "fr_CA" (cldrStatus.getCurrentLocale())
 	 */
 	function setLocale(locale) {
 		if (locale !== forumLocale) {
