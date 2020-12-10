@@ -70,7 +70,7 @@ function showReviewPage(json, showFn) {
 	var menuRoot = $('#itemInfo');
 	var hidden = json.hidden;
 	var direction = json.direction;
-	var lastVersion = surveyVersion - 1;
+	var lastVersion = cldrStatus.getNewVersion() - 1;
 
 	// populate menu
 	var activeMenu = true;
@@ -125,7 +125,7 @@ function showReviewPage(json, showFn) {
 				html += '<div class="table-wrapper" data-type="' + index +
 					'"><table class="table table-responsive table-fixed-header table-review"><thead><tr><th>Code</th><th>English</th><th dir="' +
 					direction + '">Baseline</th><th dir="' + direction +
-					'">Winning ' + surveyVersion + '</th><th dir="' + direction +
+					'">Winning ' + cldrStatus.getNewVersion() + '</th><th dir="' + direction +
 					'">Action</th></tr></thead><tbody>';
 
 				$.each(element, function(index, element) {
@@ -182,7 +182,7 @@ function showReviewPage(json, showFn) {
 		html += '</tbody></table></div>';
 	});
 
-	if (surveyVersion === '37') { // TODO: get CheckCLDR.LIMITED_SUBMISSION from server
+	if (cldrStatus.getNewVersion() === '37') { // TODO: get CheckCLDR.LIMITED_SUBMISSION from server
 		html += '<p>This is a Limited-Submission release, so the list of items here is restricted. ' +
 			'For more information, see the ' +
 			'<a href="http://cldr.unicode.org/translation">Information Hub for Linguists</a></p>';
@@ -241,7 +241,7 @@ function getUrlReview(id) {
  * Called only by the Startup function at the top of this file
  */
 function toggleReview() {
-	var url = cldrStatus.getContextPath() + "/SurveyAjax?what=review_hide&s=" + surveySessionId;
+	var url = cldrStatus.getContextPath() + "/SurveyAjax?what=review_hide&s=" + cldrStatus.getSessionId();
 	var path = $(this).parents('tr').data('path');
 	var choice = $(this).parents('.table-wrapper').data('type');
 	url += "&path=" + path + "&choice=" + choice + "&locale=" + cldrStatus.getCurrentLocale();
@@ -312,7 +312,7 @@ function toggleFix(event) {
 	if (!isPopover) {
 		var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW +
 			"&_=" + cldrStatus.getCurrentLocale() +
-			"&s=" + surveySessionId +
+			"&s=" + cldrStatus.getSessionId() +
 			"&xpath=" + tr.data('path') +
 			"&strid=" + cldrStatus.getCurrentId() + cacheKill() +
 			"&dashboard=true";
@@ -321,7 +321,7 @@ function toggleFix(event) {
 			theDiv = document.createElement("div");
 			theDiv.id = "popover-vote";
 			if (json.section.nocontent) {
-				surveyCurrentSection = '';
+				cldrStatus.setCurrentSection('');
 			} else if (!json.section.rows) {
 				console.log("!json.section.rows");
 				handleDisconnect("while loading- no rows", json);
@@ -338,7 +338,7 @@ function toggleFix(event) {
 					showInPop2(stui.str("dataPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 				}
 
-				insertFixInfo(theDiv, json.pageId, surveySessionId, json);
+				insertFixInfo(theDiv, json.pageId, cldrStatus.getSessionId(), json);
 
 				// display the popover
 				if (button.parent().find('.popover:visible').length == 0) {
@@ -538,7 +538,7 @@ function refreshFixPanel(json) {
 	var theDiv = $('#popover-vote').get(0);
 	theDiv.innerHTML = '';
 
-	insertFixInfo(theDiv, json.pageId, surveySessionId,json);
+	insertFixInfo(theDiv, json.pageId, cldrStatus.getSessionId(), json);
 	designFixPanel();
 	fixPopoverVotePos();
 

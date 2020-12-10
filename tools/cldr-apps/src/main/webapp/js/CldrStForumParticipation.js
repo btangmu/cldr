@@ -9,7 +9,7 @@
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
  *
- * Dependencies: surveyUser.id; surveySessionId; stui.str; SpecialPage; hideLoader; showInPop2
+ * Dependencies: surveyUser.id; stui.str; SpecialPage; hideLoader; showInPop2
  */
 const cldrStForumParticipation = (function() {
 	const tableId = "participationTable";
@@ -65,11 +65,12 @@ const cldrStForumParticipation = (function() {
 	 * Get the URL to use for loading the Forum Participation page
 	 */
 	function getForumParticipationUrl() {
-		if (typeof surveySessionId === 'undefined') {
-			console.log('Error: surveySessionId undefined in getForumParticipationUrl');
+		const sessionId = cldrStatus.getSessionId();
+		if (!sessionId) {
+			console.log('Error: sessionId falsy in getForumParticipationUrl');
 			return '';
 		}
-		return 'SurveyAjax?what=forum_participation&s=' + surveySessionId;
+		return 'SurveyAjax?what=forum_participation&s=' + sessionId;
 	}
 
 	/**

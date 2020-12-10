@@ -37,7 +37,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 			name: "overview",
 			url: cldrStatus.getContextPath() + "/SurveyAjax?&what=stats_byloc",
 			show: function(json, theDiv, params) {
-				theDiv.appendChild(createChunk("For CLDR version " + surveyVersion, "h2", "helpContent" ));
+				theDiv.appendChild(createChunk("For CLDR version " + cldrStatus.getNewVersion(), "h2", "helpContent" ));
 				theDiv.appendChild(createChunk("Total submitters: "  + 
 						dojoNumber.format(json.total_submitters) +
 						", Total items: " + dojoNumber.format(json.total_items) 
@@ -92,7 +92,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 				.setTheme(Wetland)
 				.addAxis("x", {labels: labels, vertical: true, dropLabels: false, labelSizeChange: true, minorLabels: false, majorTickStep: 1})
 				.addAxis("y", {rotation: -90, vertical: false})
-				.addSeries("&nbsp;Just New or changed votes in CLDR "+surveyVersion, count_new)
+				.addSeries("&nbsp;Just New or changed votes in CLDR " + cldrStatus.getNewVersion(), count_new)
 				.addSeries("&nbsp;Imported winning votes from previous releases", count_old);
 				
 				var tip = new Tooltip(c, 'default', {
@@ -164,7 +164,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 				.setTheme(Wetland)
 				.addAxis("x", {labels: labels, vertical: true, dropLabels: false, labelSizeChange: false, minorLabels: false, majorTickStep: 1})
 				.addAxis("y", {vertical: false, rotation: -90})
-				.addSeries("&nbsp;Just New or changed votes in CLDR "+surveyVersion, count_new)
+				.addSeries("&nbsp;Just New or changed votes in CLDR "+ cldrStatus.getNewVersion(), count_new)
 				.addSeries("&nbsp;Imported winning votes from previous releases", count_old);
 				var tip = new Tooltip(c, 'default', {
 					text: function(o) {

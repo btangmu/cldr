@@ -10,7 +10,7 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * window.surveySessionId, window.surveyUser, window.locmap,
+ * window.surveyUser, window.locmap,
  * createGravitar, stui.str, listenFor, bootstrap.js, reloadV,
  * showInPop2, hideLoader, ...!
  *
@@ -320,7 +320,7 @@ const cldrStForum = (function() {
 			}
 		};
 		const postData = {
-			s: surveySessionId,
+			s: cldrStatus.getSessionId(),
 			"_": locale,
 			replyTo: replyTo,
 			xpath: xpath,
@@ -1217,11 +1217,12 @@ const cldrStForum = (function() {
 	 * Get the URL to use for loading the Forum
 	 */
 	function getLoadForumUrl() {
-		if (typeof surveySessionId === 'undefined') {
-			console.log('Error: surveySessionId undefined in getLoadForumUrl');
+		const sessionId = cldrStatus.getSessionId();
+		if (!sessionId) {
+			console.log('Error: sessionId falsy in getLoadForumUrl');
 			return '';
 		}
-		return 'SurveyAjax?what=forum_fetch&xpath=0&_=' + forumLocale + '&s=' + surveySessionId;
+		return 'SurveyAjax?what=forum_fetch&xpath=0&_=' + forumLocale + '&s=' + sessionId;
 	}
 
 	/**

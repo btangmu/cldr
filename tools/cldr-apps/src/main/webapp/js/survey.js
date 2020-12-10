@@ -193,7 +193,7 @@ Flipper.prototype.addUntilFlipped = function addUntilFlipped(showFn, killFn) {
  * @param aLocmap the map object from json
  */
 function LocaleMap(aLocmap) {
-	this.locmap = aLocmap; // TODO: cldrStatus.setLocmap(aLocmap)?
+	this.locmap = aLocmap; // TODO: cldrStatus.setLocaleMap(aLocmap)?
 }
 
 /**
@@ -211,7 +211,7 @@ LocaleMap.prototype.canonicalizeLocaleId = function canonicalizeLocaleId(locid) 
 		return null;
 	}
 
-	if (this.locmap) { // TODO: const locmap = cldrStatus.getLocmap()... (no "this." -- this === window)
+	if (this.locmap) { // TODO: const locmap = cldrStatus.getLocaleMap()... (avoid this === window)
 		if (this.locmap.idmap && this.locmap.idmap[locid]) {
 			locid = this.locmap.idmap[locid]; // canonicalize
 		}
@@ -1094,7 +1094,7 @@ function formatErrMsg(json, subkey) {
 		err_data: json.err_data,
 		surveyCurrentLocale: cldrStatus.getCurrentLocale(),
 		surveyCurrentId: cldrStatus.getCurrentId(),
-		surveyCurrentSection: surveyCurrentSection,
+		surveyCurrentSection: cldrStatus.getCurrentSection(),
 		surveyCurrentPage: cldrStatus.getCurrentPage()
 	});
 }
@@ -1121,7 +1121,7 @@ function updateStatusBox(json) {
 	} else if (json.status && json.status.isBusted) {
 		handleDisconnect("The SurveyTool server has halted due to an error: " + json.status.isBusted, json, "disconnected"); // Server down- not our fault. Hopefully.
 	} else if (!json.status) {
-		handleDisconnect("The SurveyTool erver returned a bad status", json);
+		handleDisconnect("The SurveyTool server returned a bad status", json);
 	} else if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 		handleDisconnect("The SurveyTool server restarted since this page was loaded. Please retry.", json, "disconnected"); // desync
 	} else if (json.status && json.status.isSetup == false && json.SurveyOK == 1) {
@@ -1132,8 +1132,20 @@ function updateStatusBox(json) {
 
 	if (json.status) {
 		lastJsonStatus = json.status;
+		if (json.status.sessionId) {
+			cldrStatus.setSessionId(json.status.sessionId);
+		}
 		if (json.status.contextPath) {
 			cldrStatus.setContextPath(json.status.contextPath);
+		}
+		if (json.status.isUnofficial) {
+			cldrStatus.setIsUnofficial(json.status.isUnofficial);
+		}
+		if (json.status.isPhaseBeta) {
+			cldrStatus.setIsPhaseBeta(json.status.isPhaseBeta);
+		}
+		if (json.status.newVersion) {
+			cldrStatus.setNewVersion(json.status.newVersion);
 		}
 		if (!updateParts) {
 			var visitors = document.getElementById("visitors");
@@ -1220,8 +1232,6 @@ var timerSpeed = 15000; // 15 seconds
  */
 var ajaxTimeout = 120000; // 2 minutes
 
-var surveyVersion = 'Current';
-
 /**
  * This is called periodically to fetch latest ST status
  */
@@ -1237,8 +1247,9 @@ function updateStatus() {
 	if (curLocale !== null && curLocale != '') {
 		surveyLocaleUrl = '&_=' + curLocale;
 	}
-	if (surveySessionId && surveySessionId !== null) {
-		surveySessionUrl = '&s=' + surveySessionId;
+	const sessionId = cldrStatus.getSessionId();
+	if (sessionId) {
+		surveySessionUrl = '&s=' + sessionId;
 	}
 
 	cldrStAjax.sendXhr({
@@ -1271,9 +1282,6 @@ function updateStatus() {
 				wasBusted = true;
 				busted();
 			} else {
-				if (json.status.newVersion) {
-					surveyVersion = json.status.newVersion;
-				}
 				if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
 					st_err.className = "ferrbox";
 					st_err.innerHTML = "The SurveyTool has been restarted. Please reload this page to continue.";
@@ -1716,7 +1724,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 			clearMyTimeout();
 			updateIf(sidewaysControl, stui.str("sideways_loading1"));
 
-			var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getsideways&_=" + cldrStatus.getCurrentLocale() + "&s=" + surveySessionId + "&xpath=" + tr.theRow.xpstrid + cacheKill();
+			var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getsideways&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + "&xpath=" + tr.theRow.xpstrid + cacheKill();
 			myLoad(url, "sidewaysView", function(json) {
 				/*
 				 * Count the number of unique locales in json.others and json.novalue.
@@ -2970,8 +2978,13 @@ function setLang(node, loc) {
  *
  * Called only by addOldvotesType
  */
-function showVoteTable(voteList, type, translationHintsLanguage, dir) {
+function showVoteTable(voteList, type, json) {
 	'use strict';
+
+	let translationHintsLanguage = json.TRANS_HINT_LANGUAGE_NAME;
+	let dir = json.oldvotes.dir;
+	let lastVoteVersion = json.oldvotes.lastVoteVersion;
+
 	var voteTableDiv = document.createElement("div");
 	var t = document.createElement("table");
 	t.id = 'oldVotesAcceptList';
@@ -2982,7 +2995,7 @@ function showVoteTable(voteList, type, translationHintsLanguage, dir) {
 	tr.appendChild(createChunk(stui.str("v_oldvotes_path"), "th", "code"));
 	tr.appendChild(createChunk(translationHintsLanguage, "th", "v-comp"));
 	tr.appendChild(createChunk(stui.sub("v_oldvotes_winning_msg", {
-		version: surveyLastVoteVersion
+		version: lastVoteVersion
 	}), "th", "v-win"));
 	tr.appendChild(createChunk(stui.str("v_oldvotes_mine"), "th", "v-mine"));
 	tr.appendChild(createChunk(stui.str("v_oldvotes_accept"), "th", "v-accept"));
@@ -3148,7 +3161,7 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		"&_=" + cldrStatus.getCurrentLocale() +
 		"&xpath=" + theRow.xpathId +
 		"&fhash=" + tr.rowHash +
-		"&s=" + surveySessionId +
+		"&s=" + cldrStatus.getSessionId() +
 		"&automatic=t";
 
 	if (isDashboard()) {
@@ -3942,7 +3955,7 @@ function chgPage(shift) {
 		}
 		index = menus[parentIndex].pagesFiltered.length - 1;
 	}
-	surveyCurrentSection = menus[parentIndex].id;
+	cldrStatus.setCurrentSection(menus[parentIndex].id);
 	cldrStatus.setCurrentPage(menus[parentIndex].pagesFiltered[index].id);
 
 	reloadV();
@@ -4084,9 +4097,10 @@ function showAllItems(divName, user) {
 									rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
 									rowDiv.appendChild(createChunk(count, "span", "value recentCount"));
 
-									if (surveySessionId != null) {
+									const sessionId = cldrStatus.getSessionId();
+									if (sessionId) {
 										var dlLink = createChunk(stui_str("downloadXmlLink"), "a", "notselected");
-										dlLink.href = "DataExport.jsp?do=myxml&_=" + loc + "&user=" + user + "&s=" + surveySessionId;
+										dlLink.href = "DataExport.jsp?do=myxml&_=" + loc + "&user=" + user + "&s=" + sessionId;
 										dlLink.target = "STDownload";
 										rowDiv.appendChild(dlLink);
 									}

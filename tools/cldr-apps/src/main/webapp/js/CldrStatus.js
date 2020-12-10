@@ -18,13 +18,15 @@ const cldrStatus = (function() {
 	let runningStamp = null;
 
 	/**
-	 * Get the running stamp, or 0 if not initialized
+	 * Get the running stamp, or 1 if not initialized
+	 *
+	 * Don't initialize in this method; harmless when called for cacheKillStamp before initialized
 	 *
 	 * @return an integer
 	 */
 	function getRunningStamp() {
 		if (runningStamp === null) {
-			return 0;
+			return 1;
 		}
 		return runningStamp;
 	}
@@ -47,8 +49,6 @@ const cldrStatus = (function() {
 		return (stamp !== runningStamp);
 	}
 
-	//---//
-
 	/**
 	 * A string such as '/cldr-apps'
 	 * It may be set from (on the server) HttpServletRequest.getContextPath()
@@ -56,55 +56,31 @@ const cldrStatus = (function() {
 	 */
 	let contextPath = '/cldr-apps';
 
-	/**
-	 * Get the context path
-	 *
-	 * @return a string such as '/cldr-apps'
-	 */
 	function getContextPath() {
 		return contextPath;
 	}
 
-	/**
-	 * Set the context path
-	 *
-	 * @param path a string such as '/cldr-apps'
-	 */
 	function setContextPath(path) {
 		if (path || path === '') {
 			contextPath = path;
 		}
 	}
 
-	//---//
-
 	/**
-	 * A string such as '' (empty), or '821c2a2fc5c206d' (identifying a path)
+	 * A string such as '' (empty), or '821c2a2fc5c206d' (identifying an xpath)
 	 * a.k.a. surveyCurrentId
 	 */
 	let currentId = '';
 
-	/**
-	 * Get the current id
-	 *
-	 * @return a string such as '821c2a2fc5c206d'
-	 */
 	function getCurrentId() {
 		return currentId;
 	}
 
-	/**
-	 * Set the current id
-	 *
-	 * @param path a string such as '821c2a2fc5c206d'
-	 */
 	function setCurrentId(id) {
 		if (id || id === '') {
 			currentId = id;
 		}
 	}
-
-	//---//
 
 	/**
 	 * A string such as '' (empty), 'Gregorian', 'Languages_K_N'
@@ -112,27 +88,15 @@ const cldrStatus = (function() {
 	 */
 	let currentPage = '';
 
-	/**
-	 * Get the current page
-	 *
-	 * @return a string such as 'Gregorian'
-	 */
 	function getCurrentPage() {
 		return currentPage;
 	}
 
-	/**
-	 * Set the current page
-	 *
-	 * @param page a string such as 'Gregorian'
-	 */
 	function setCurrentPage(page) {
 		if (page || page === '') {
 			currentPage = page;
 		}
 	}
-
-	//---//
 
 	/**
 	 * A string such as null, '' (empty), 'forum', 'search', 'r_vetting_json', etc.
@@ -142,25 +106,13 @@ const cldrStatus = (function() {
 	 */
 	let currentSpecial = null;
 
-	/**
-	 * Get the current special
-	 *
-	 * @return a string such as 'forum'
-	 */
 	function getCurrentSpecial() {
 		return currentSpecial;
 	}
 
-	/**
-	 * Set the current special
-	 *
-	 * @param special a string such as 'forum', or null
-	 */
 	function setCurrentSpecial(special) {
 		currentSpecial = special;
 	}
-
-	//---//
 
 	/**
 	 * A string such as 'en', 'fr', etc., identifying a locale
@@ -168,25 +120,94 @@ const cldrStatus = (function() {
 	 */
 	let currentLocale = null;
 
-	/**
-	 * Get the current locale
-	 *
-	 * @return a string such as 'fr'
-	 */
 	function getCurrentLocale() {
 		return currentLocale;
 	}
 
-	/**
-	 * Set the current locale
-	 *
-	 * @param loc a string such as 'fr'
-	 */
 	function setCurrentLocale(loc) {
 		currentLocale = loc;
 	}
 
-	//---//
+	/**
+	 * A string such as 'French', etc., naming a locale
+	 * a.k.a. surveyCurrentLocale
+	 */
+	let currentLocaleName = null;
+
+	function getCurrentLocaleName() {
+		return currentLocaleName;
+	}
+
+	function setCurrentLocaleName(name) {
+		currentLocaleName = name;
+	}
+
+	/**
+	 * A string such as 'Timezones', etc., naming a data section
+	 * a.k.a. surveyCurrentSection
+	 */
+	let currentSection = '';
+
+	function getCurrentSection() {
+		return currentSection;
+	}
+
+	function setCurrentSection(sec) {
+		currentSection = sec;
+	}
+
+	/**
+	 * A string such as 'Current' or '42.1', identifying the new CLDR version being created with Survey Tool)
+	 */
+	let newVersion = 'Current';
+
+	function getNewVersion() {
+		return newVersion;
+	}
+
+	function setNewVersion(version) {
+		newVersion = version;
+	}
+
+	/**
+	 * Is this an "unofficial" (test or non-production) instance of Survey Tool? (Boolean)
+	 */
+	let isUnofficial = null;
+
+	function getIsUnofficial() {
+		return isUnofficial;
+	}
+
+	function setIsUnofficial(i) {
+		isUnofficial = i;
+	}
+
+	/**
+	 * Is this a "beta" phase of Survey Tool? (Boolean)
+	 */
+	let isPhaseBeta = null;
+
+	function getIsPhaseBeta() {
+		return isPhaseBeta;
+	}
+
+	function setIsPhaseBeta(i) {
+		isPhaseBeta = i;
+	}
+
+	/**
+	 * A string such as 'B0752471848DE78128A234F992BB3116', etc., identifying an HttpSession
+	 * a.k.a. surveySessionId
+	 */
+	let sessionId = null;
+
+	function getSessionId() {
+		return sessionId;
+	}
+
+	function setSessionId(i) {
+		sessionId = i;
+	}
 
 	/*
 	 * Make only these functions accessible from other files:
@@ -194,15 +215,38 @@ const cldrStatus = (function() {
 	return {
 		getRunningStamp: getRunningStamp,
 		runningStampChanged: runningStampChanged,
+
 		getContextPath: getContextPath,
 		setContextPath: setContextPath,
+
 		getCurrentId: getCurrentId,
 		setCurrentId: setCurrentId,
+
 		getCurrentPage: getCurrentPage,
 		setCurrentPage: setCurrentPage,
+
 		getCurrentSpecial: getCurrentSpecial,
 		setCurrentSpecial: setCurrentSpecial,
+
 		getCurrentLocale: getCurrentLocale,
 		setCurrentLocale: setCurrentLocale,
+
+		getCurrentLocaleName: getCurrentLocaleName,
+		setCurrentLocaleName: setCurrentLocaleName,
+
+		getCurrentSection: getCurrentSection,
+		setCurrentSection: setCurrentSection,
+
+		getNewVersion: getNewVersion,
+		setNewVersion: setNewVersion,
+
+		getIsUnofficial: getIsUnofficial,
+		setIsUnofficial: setIsUnofficial,
+
+		getIsPhaseBeta: getIsPhaseBeta,
+		setIsPhaseBeta: setIsPhaseBeta,
+
+		getSessionId: getSessionId,
+		setSessionId: setSessionId,
 	};
 })();

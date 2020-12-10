@@ -244,7 +244,7 @@ const cldrSurveyTable = (function() {
 					hex: theRow.xpstrid,
 					path: theRow.xpath,
 					ph: {
-						section: surveyCurrentSection, // Section: Timezones
+						section: cldrStatus.getCurrentSection(), // Section: Timezones
 						page: cldrStatus.getCurrentPage(), // Page: SEAsia ( id, not name )
 						header: curPartition.name, // Header: Borneo
 						code: theRow.code // Code: standard-long
@@ -963,9 +963,10 @@ const cldrSurveyTable = (function() {
 				theRow.displayName = theRow.displayName.substr(0, hintPos);
 			}
 			cell.appendChild(createChunk(theRow.displayName, 'span', 'subSpan'));
-			setLang(cell, surveyTransHintLocale);
+			const TRANS_HINT_ID = 'en_ZZ'; // must match SurveyMain.TRANS_HINT_ID
+			setLang(cell, TRANS_HINT_ID);
 			if (theRow.displayExample) {
-				appendExample(cell, theRow.displayExample, surveyTransHintLocale);
+				appendExample(cell, theRow.displayExample, TRANS_HINT_ID);
 			}
 			if (hintPos != -1 || hasExample) {
 				var infos = document.createElement("div");
@@ -1198,13 +1199,13 @@ const cldrSurveyTable = (function() {
 			const curLocale = cldrStatus.getCurrentLocale();
 			var newUrl = "http://unicode.org/cldr/trac" +
 				"/newticket?component=data&summary=" + curLocale + ":" + theRow.xpath +
-				"&locale=" + curLocale + "&xpath=" + theRow.xpstrid + "&version=" + surveyVersion;
+				"&locale=" + curLocale + "&xpath=" + theRow.xpstrid + "&version=" + cldrStatus.getNewVersion();
 			link.href = newUrl;
 			link.target = "cldr-target-trac";
 			theRow.proposedResults = createChunk(stui.str("file_ticket_must"), "a",
 				"fnotebox");
 			theRow.proposedResults.href = newUrl;
-			if (!window.surveyOfficial) {
+			if (cldrStatus.getIsUnofficial()) {
 				link.appendChild(createChunk(
 					" (Note: this is not the production SurveyTool! Do not submit a ticket!) ", "p"));
 				link.href = link.href + "&description=NOT+PRODUCTION+SURVEYTOOL!";

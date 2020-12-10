@@ -396,7 +396,7 @@ function showV() {
 						cldrStatus.setCurrentSpecial('locales');
 						cldrStatus.setCurrentId('');
 						cldrStatus.setCurrentPage('');
-						surveyCurrentSection = '';
+						cldrStatus.setCurrentSection('');
 					}
 					updateWindowTitle();
 
@@ -605,7 +605,7 @@ function showV() {
 				function updateLocaleMenu() {
 					const curLocale = cldrStatus.getCurrentLocale();
 					if (curLocale != null && curLocale != '' && curLocale != '-') {
-						surveyCurrentLocaleName = locmap.getLocaleName(curLocale);
+						cldrStatus.setCurrentLocaleName(locmap.getLocaleName(curLocale));
 						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund) {
 							if (bund.readonly) {
@@ -628,11 +628,11 @@ function showV() {
 							menubuttons.set(menubuttons.dcontent);
 						}
 					} else {
-						surveyCurrentLocaleName = '';
+						cldrStatus.setCurrentLocaleName('');
 						removeClass(menubuttons.getDom(menubuttons.locale), "locked");
 						menubuttons.set(menubuttons.dcontent);
 					}
-					menubuttons.set(menubuttons.locale, surveyCurrentLocaleName);
+					menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
 				}
 
 				/**
@@ -641,6 +641,17 @@ function showV() {
 				 * @param doPush {Boolean} if false, do not add to history
 				 */
 				function updateHashAndMenus(doPush) {
+					const surveyUserURL = {
+						myAccountSetting: 'survey?do=listu',
+						disableMyAccount: "lock.jsp?email='+userEmail"+userEmail,
+						recentActivity: "myvotes.jsp?user="+userID+"&s="+cldrStatus.getSessionId(),
+						xmlUpload: "upload.jsp?a=/cldr-apps/survey&s="+cldrStatus.getSessionId(),
+						manageUser: "survey?do=list",
+						flag: "tc-flagged.jsp?s="+cldrStatus.getSessionId(),
+						about: "about.jsp",
+						browse: "browse.jsp",
+					};
+
 					/**
 					 * 'name' - the js/special/___.js name
 					 * 'hidden' - true to hide the item
@@ -756,7 +767,7 @@ function showV() {
 						{
 							special: 'mail',
 							level: 2,
-							display: !surveyOfficial
+							display: cldrStatus.getIsUnofficial()
 						},
 						{
 							special: 'bulk_close_posts', /* Cf. special_bulk_close_posts */
@@ -923,12 +934,13 @@ function showV() {
 						} else {
 							const curPage = cldrStatus.getCurrentPage();
 							if (menuMap.sectionMap[curPage]) {
-								surveyCurrentSection = curPage; // section = page
-								$('#section-current').html(menuMap.sectionMap[surveyCurrentSection].name);
+								const curSection = curPage; // section = page
+								cldrStatus.setCurrentSection(curSection);
+								$('#section-current').html(menuMap.sectionMap[curSection].name);
 								setDisplayed(titlePageContainer, false); // will fix title later
 							} else if (menuMap.pageToSection[curPage]) {
 								var mySection = menuMap.pageToSection[curPage];
-								surveyCurrentSection = mySection.id;
+								cldrStatus.setCurrentSection(mySection.id);
 								$('#section-current').html(mySection.name);
 								setDisplayed(titlePageContainer, false); // will fix title later
 							} else {
@@ -958,7 +970,7 @@ function showV() {
 									if (cldrStatus.getCurrentPage() != '' || (cldrStatus.getCurrentSpecial() != '' && cldrStatus.getCurrentSpecial() != null)) {
 										cldrStatus.setCurrentId(''); // no id if jumping pages
 										cldrStatus.setCurrentPage('');
-										surveyCurrentSection = '';
+										cldrStatus.setCurrentSection('');
 										cldrStatus.setCurrentSpecial('');
 										updateMenuTitles(menuMap);
 										reloadV();
@@ -1080,10 +1092,11 @@ function showV() {
 							// need to see if any items are visible @ current coverage
 							const curLocale = cldrStatus.getCurrentLocale();
 							stdebug("for " + aSection.name + " minLev[" + curLocale + "] = " + aSection.minLev[curLocale]);
-							menuMap.setCheck(aSection.menuItem, (surveyCurrentSection == aSection.id), effectiveCoverage() < aSection.minLev[curLocale]);
+							const curSection = cldrStatus.getCurrentSection();
+							menuMap.setCheck(aSection.menuItem, (curSection == aSection.id), effectiveCoverage() < aSection.minLev[curLocale]);
 
 							// update the items in that section's Page menu
-							if (surveyCurrentSection == aSection.id) {
+							if (curSection == aSection.id) {
 								for (var k in aSection.pages) {
 									var aPage = aSection.pages[k];
 									if (!aPage.menuItem) {
@@ -1107,7 +1120,11 @@ function showV() {
 						if (curLocale != null && curLocale != '') {
 							var needLocTable = false;
 
-							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + curLocale + "&locmap=" + needLocTable + "&s=" + surveySessionId + cacheKill();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + curLocale + "&locmap=" + needLocTable + cacheKill();
+							const sessionId = cldrStatus.getSessionId();
+							if (sessionId) {
+								url += '&s=' + sessionId;
+							}
 							myLoad(url, "menus", function(json) {
 								if (!verifyJson(json, "menus")) {
 									return; // busted?
@@ -1230,7 +1247,7 @@ function showV() {
 							theDiv.insertBefore(subDiv, theDiv.childNodes[0]);
 						}
 					}
-					if (surveyBeta) {
+					if (cldrStatus.getIsPhaseBeta()) {
 						var theChunk = domConstruct.toDom(stui.sub("beta_msg", {
 							info: bund,
 							locale: cldrStatus.getCurrentLocale(),
@@ -1402,7 +1419,7 @@ function showV() {
 							if ((curPage == null || curPage == '') && (cldrStatus.getCurrentId() == null || cldrStatus.getCurrentId() == '')) {
 								// the 'General Info' page.
 								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale)));
-								showPossibleProblems(flipper, pages.other, curLocale, surveySessionId, covName(effectiveCoverage()), covName(effectiveCoverage()));
+								showPossibleProblems(flipper, pages.other, curLocale, cldrStatus.getSessionId(), covName(effectiveCoverage()), covName(effectiveCoverage()));
 								showInPop2(stui.str("generalPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 								isLoading = false;
 							} else if (cldrStatus.getCurrentId() == '!') {
@@ -1426,7 +1443,7 @@ function showV() {
 								const curPage = cldrStatus.getCurrentPage();
 								const curLocale = cldrStatus.getCurrentLocale();
 								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale) + '/' + curPage + '/' + curId));
-								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW + "&_=" + curLocale + "&x=" + curPage + "&strid=" + curId + "&s=" + surveySessionId + cacheKill();
+								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW + "&_=" + curLocale + "&x=" + curPage + "&strid=" + curId + "&s=" + cldrStatus.getSessionId() + cacheKill();
 								$('#nav-page').show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
 								myLoad(url, "section", function(json) {
 									isLoading = false;
@@ -1434,7 +1451,7 @@ function showV() {
 									if (!verifyJson(json, 'section')) {
 										return;
 									} else if (json.section.nocontent) {
-										surveyCurrentSection = '';
+										cldrStatus.setCurrentSection('');
 										if (json.pageId) {
 											cldrStatus.setCurrentPage(json.pageId);
 										} else {
@@ -1453,7 +1470,7 @@ function showV() {
 											updateIf("dynload", json.dataLoadTime);
 										}
 
-										surveyCurrentSection = '';
+										cldrStatus.setCurrentSection('');
 										cldrStatus.setCurrentPage(json.pageId);
 										updateHashAndMenus(); // now that we have a pageid
 										if (!surveyUser) {
@@ -1465,7 +1482,7 @@ function showV() {
 										}
 										if (!isInputBusy()) {
 											showLoader(theDiv.loader, stui.loading3);
-											cldrSurveyTable.insertRows(theDiv, json.pageId, surveySessionId, json); // pageid is the xpath..
+											cldrSurveyTable.insertRows(theDiv, json.pageId, cldrStatus.getSessionId(), json); // pageid is the xpath..
 											updateCoverage(flipper.get(pages.data)); // make sure cov is set right before we show.
 											flipper.flipTo(pages.data); // TODO now? or later?
 											window.showCurrentId(); // already calls scroll
@@ -1477,7 +1494,7 @@ function showV() {
 							}
 						} else if (cldrStatus.getCurrentSpecial() == 'oldvotes') {
 							const curLocale = cldrStatus.getCurrentLocale();
-							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + surveySessionId + "&" + cacheKill();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + cldrStatus.getSessionId() + "&" + cacheKill();
 							myLoad(url, "(loading oldvotes " + curLocale + ")", function(json) {
 								isLoading = false;
 								showLoader(null, stui.loading2);
@@ -1587,7 +1604,7 @@ function showV() {
 													content.appendChild(createChunk(title, "h2", "v-oldvotes-sub"));
 												}
 
-												content.appendChild(showVoteTable(jsondata, type, json.TRANS_HINT_LANGUAGE_NAME, json.oldvotes.dir));
+												content.appendChild(showVoteTable(jsondata /* voteList */, type, json));
 
 												var submit = BusyButton({
 													label: stui.str("v_submit_msg"),
@@ -1613,7 +1630,7 @@ function showV() {
 													console.log(saveList.toString());
 													console.log("Submitting " + type + " " + confirmList.length + " for confirm");
 													const curLocale = cldrStatus.getCurrentLocale();
-													var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + surveySessionId + "&doSubmit=true&" + cacheKill();
+													var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + cldrStatus.getSessionId() + "&doSubmit=true&" + cacheKill();
 													myLoad(url, "(submitting oldvotes " + curLocale + ")", function(json) {
 														showLoader(theDiv.loader, stui.loading2);
 														if (!verifyJson(json, 'oldvotes')) {
@@ -1676,7 +1693,7 @@ function showV() {
 								hideLoader(null);
 							});
 						} else if (cldrStatus.getCurrentSpecial() == 'mail') {
-							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + surveySessionId + "&fetchAll=true&" + cacheKill();
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + cldrStatus.getSessionId() + "&fetchAll=true&" + cacheKill();
 							myLoad(url, "(loading mail " + cldrStatus.getCurrentLocale() + ")", function(json) {
 								hideLoader(null, stui.loading2);
 								isLoading = false;
@@ -1725,7 +1742,7 @@ function showV() {
 											li.onclick = (function(li, row, header) {
 												return function() {
 													if (!row[header.READ_DATE]) {
-														myLoad(cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + surveySessionId + "&markRead=" + row[header.ID] + "&" + cacheKill(), 'Marking mail read', function(json) {
+														myLoad(cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + cldrStatus.getSessionId() + "&markRead=" + row[header.ID] + "&" + cacheKill(), 'Marking mail read', function(json) {
 															if (!verifyJson(json, 'mail')) {
 																return;
 															} else {
@@ -1774,7 +1791,7 @@ function showV() {
 								) {
 									ready(function() {
 
-										var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial() + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + surveySessionId + cacheKill();
+										var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial() + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + cacheKill();
 										var errFunction = function errFunction(err) {
 											console.log("Error: loading " + url + " -> " + err);
 											hideLoader(null, stui.loading2);
@@ -1921,6 +1938,14 @@ function showV() {
 				}
 
 				ready(function() {
+
+const surveyUserURL					
+					
+					const sessionId = cldrStatus.getSessionId();
+					if (!sessionId) {
+						console.log("WARNING: what=menus without sessionId");
+						/// return;
+					}
 					window.parseHash(dojoHash()); // get the initial settings
 					// load the menus - first.
 
@@ -1928,11 +1953,14 @@ function showV() {
 					if (theLocale === null || theLocale == '') {
 						theLocale = 'root'; // Default.
 					}
-					var xurl = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + theLocale + "&locmap=" + true + "&s=" + surveySessionId + cacheKill();
+					var xurl = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + theLocale + "&locmap=" + true + "&s=" + sessionId + cacheKill();
 					myLoad(xurl, "initial menus for " + cldrStatus.getCurrentLocale(), function(json) {
 						if (!verifyJson(json, 'locmap')) {
 							return;
 						} else {
+							if (json.status && json.status.sessionId) {
+								cldrStatus.setSessionId(json.status.sessionId);
+							}
 							locmap = new LocaleMap(json.locmap);
 							if (cldrStatus.getCurrentLocale() === "USER" && json.loc) {
 								cldrStatus.setCurrentLocale(json.loc);
@@ -2038,7 +2066,7 @@ function showV() {
 							for (var j in levelNums) { // use given order
 								if (levelNums[j].num == 0) continue; // none - skip
 								if (levelNums[j].num < covValue('minimal')) continue; // don't bother showing these
-								if (window.surveyOfficial && levelNums[j].num == 101) continue; // hide Optional in production
+								if (cldrStatus.getIsUnofficial() === false && levelNums[j].num == 101) continue; // hide Optional in production
 								var level = levelNums[j].level;
 								store.push({
 									label: stui.str('coverage_' + level.name),
@@ -2072,7 +2100,7 @@ function showV() {
 									console.log('No change in user cov: ' + setUserCovTo);
 								} else {
 									window.surveyUserCov = setUserCovTo;
-									var updurl = cldrStatus.getContextPath() + "/SurveyAjax?what=pref&_=" + theLocale + "&pref=p_covlev&_v=" + window.surveyUserCov + "&s=" + surveySessionId + cacheKill(); // SurveyMain.PREF_COVLEV
+									var updurl = cldrStatus.getContextPath() + "/SurveyAjax?what=pref&_=" + theLocale + "&pref=p_covlev&_v=" + window.surveyUserCov + "&s=" + cldrStatus.getSessionId() + cacheKill(); // SurveyMain.PREF_COVLEV
 									myLoad(updurl, "updating covlev to  " + surveyUserCov, function(json) {
 										if (!verifyJson(json, 'pref')) {
 											return;
@@ -2112,7 +2140,7 @@ function showV() {
 								/*
 								 * See WHAT_AUTO_IMPORT = "auto_import" in SurveyAjax.java
 								 */
-								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=auto_import&s=" + surveySessionId + cacheKill();
+								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=auto_import&s=" + cldrStatus.getSessionId() + cacheKill();
 								myLoad(url, "auto-importing votes", function(json) {
 									autoImportProgressDialog.hide();
 									window.haveDialog = false;

@@ -352,6 +352,11 @@ public class SurveyAjax extends HttpServlet {
         PrintWriter out = response.getWriter();
         String what = request.getParameter(REQ_WHAT);
         String sess = request.getParameter(SurveyMain.QUERY_SESSION);
+
+        if ("null".equals(sess)) {
+            sess = null;
+        }
+
         String loc = request.getParameter(SurveyMain.QUERY_LOCALE);
         String xpath = request.getParameter(SurveyForum.F_XPATH);
         String vhash = request.getParameter("vhash");
@@ -1757,6 +1762,7 @@ public class SurveyAjax extends HttpServlet {
         });
         JSONObject j = new JSONObject().put("header", header).put("data",  data);
         oldvotes.put("locales", j);
+        oldvotes.put("lastVoteVersion", SurveyMain.getLastVoteVersion());
     }
 
     /**
@@ -3186,34 +3192,6 @@ public class SurveyAjax extends HttpServlet {
          * We should treat them all similarly to surveyCurrentId, etc.
          */
 
-        String surveyCurrentLocale = request.getParameter(SurveyMain.QUERY_LOCALE);
-
-        // locale can have either - or _
-        surveyCurrentLocale = (surveyCurrentLocale == null) ? null : surveyCurrentLocale.replace("-", "_");
-        String surveyCurrentLocaleName = "";
-        if (surveyCurrentLocale != null) {
-            CLDRLocale aloc = CLDRLocale.getInstance(surveyCurrentLocale);
-            surveyCurrentLocaleName = aloc.getDisplayName();
-        }
-        String surveyCurrentSection = request.getParameter(SurveyMain.QUERY_SECTION);
-        if (surveyCurrentSection == null) {
-            surveyCurrentSection = "";
-        }
-        if (surveyCurrentLocale != null && surveyCurrentLocale.length() > 0) {
-            out.write("var surveyCurrentLocaleName = '" + surveyCurrentLocaleName + "';\n");
-            out.write("var surveyCurrentSection = '" + surveyCurrentSection + "';\n");
-        } else {
-            out.write("var surveyCurrentLocaleName = null;\n");
-            out.write("var surveyCurrentSection  = '';\n");
-        }
-
-        out.write("var surveyTransHintLocale = '" + SurveyMain.TRANS_HINT_LOCALE.getBaseName() + "';\n");
-        out.write("var surveyVersion = '" + SurveyMain.getNewVersion() + "';\n");
-        out.write("var surveyLastVoteVersion = '" + SurveyMain.getLastVoteVersion() + "';\n");
-        out.write("var surveyOfficial = '" + !SurveyMain.isUnofficial() + "';\n");
-        out.write("var BUG_URL_BASE = '" + SurveyMain.BUG_URL_BASE + "';\n");
-        out.write("var surveyBeta = '" + SurveyMain.isPhaseBeta() + "';\n");
-
         String sessid = request.getParameter("s");
         if (sessid == null) {
             HttpSession hsession = request.getSession(false);
@@ -3233,11 +3211,7 @@ public class SurveyAjax extends HttpServlet {
             sessid = mySession.id;
             myUser = mySession.user;
         }
-        if (sessid != null) {
-            out.write("var surveySessionId = '" + sessid + "';\n");
-        } else {
-            out.write("var surveySessionId = null;\n");
-        }
+
         SurveyMain curSurveyMain = null;
         curSurveyMain = SurveyMain.getInstance(request);
 
@@ -3263,17 +3237,6 @@ public class SurveyAjax extends HttpServlet {
             out.write("  userIsVetter: " + userIsVetter + ",\n");
             out.write("  userIsLocked: " + UserRegistry.userIsLocked(myUser) + ",\n");
             out.write("  hasDataSource: " + curSurveyMain.dbUtils.hasDataSource() + ",\n");
-            out.write("};\n");
-
-            out.write("var surveyUserURL = {\n");
-            out.write("  myAccountSetting: 'survey?do=listu',\n");
-            out.write("  disableMyAccount: \"lock.jsp?email='+userEmail\"+userEmail,\n");
-            out.write("  recentActivity: \"myvotes.jsp?user=\"+userID+\"&s=\"+surveySessionId,\n");
-            out.write("  xmlUpload: \"upload.jsp?a=/cldr-apps/survey&s=\"+surveySessionId,\n");
-            out.write("  manageUser: \"survey?do=list\",\n");
-            out.write("  flag: \"tc-flagged.jsp?s=\"+surveySessionId,\n");
-            out.write("  about: \"about.jsp\",\n");
-            out.write("  browse: \"browse.jsp\",\n");
             out.write("};\n");
 
             if (UserRegistry.userIsAdmin(myUser)) {

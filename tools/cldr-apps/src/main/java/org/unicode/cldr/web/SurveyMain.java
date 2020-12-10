@@ -55,6 +55,7 @@ import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 
 import org.json.JSONArray;
@@ -338,7 +339,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     public static final String PREF_DEBUGJSP = "p_debugjsp"; // debug JSPs?
     public static final String PREF_COVLEV = "p_covlev"; // covlev
 
-    static final String TRANS_HINT_ID = "en_ZZ"; // Needs to be en_ZZ as per cldrbug #2918
+    static final String TRANS_HINT_ID = "en_ZZ"; // Needs to be en_ZZ as per cldrbug #2918; must match TRANS_HINT_ID in JavaScript
     public static final ULocale TRANS_HINT_LOCALE = new ULocale(TRANS_HINT_ID);
     public static final String TRANS_HINT_LANGUAGE_NAME = TRANS_HINT_LOCALE.getDisplayLanguage(TRANS_HINT_LOCALE); // Note:
     // Only
@@ -1318,7 +1319,33 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             .put("currev", SurveyMain.getCurrevCldrApps()) // Code only!
             .put("newVersion", newVersion).put("sysload", load).put("sysprocs", nProcs).put("dbopen", DBUtils.db_number_open)
             .put("dbused", DBUtils.db_number_used)
-            .put("contextPath", request.getContextPath());
+            .put("contextPath", request.getContextPath())
+            .put("isPhaseBeta", isPhaseBeta())
+            .put("sessionId", getSessionIdForClient(request))
+        ;
+    }
+
+    private String getSessionIdForClient(HttpServletRequest request) {
+        String sessid = request.getParameter("s");
+        if (sessid == null) {
+            HttpSession hsession = request.getSession(false);
+            if (hsession != null) {
+                sessid = hsession.getId();
+            }
+        }
+
+        CookieSession mySession = null;
+        UserRegistry.User myUser = null;
+        if (sessid != null) {
+            mySession = CookieSession.retrieveWithoutTouch(sessid);
+        }
+        if (mySession == null) {
+            sessid = null;
+        } else {
+            sessid = mySession.id;
+            myUser = mySession.user;
+        }
+        return sessid;
     }
 
     /**

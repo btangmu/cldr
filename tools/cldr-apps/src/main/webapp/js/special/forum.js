@@ -73,7 +73,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 			const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
 			const forumMessage = stui.sub("forum_msg", {
 				forum: forumName,
-				locale: surveyCurrentLocaleName
+				locale: cldrStatus.getCurrentLocaleName()
 			});
 			const userId = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
 			cldrStForum.loadForum(curLocale, userId, forumMessage, params);
