@@ -352,11 +352,6 @@ public class SurveyAjax extends HttpServlet {
         PrintWriter out = response.getWriter();
         String what = request.getParameter(REQ_WHAT);
         String sess = request.getParameter(SurveyMain.QUERY_SESSION);
-
-        if ("null".equals(sess)) {
-            sess = null;
-        }
-
         String loc = request.getParameter(SurveyMain.QUERY_LOCALE);
         String xpath = request.getParameter(SurveyForum.F_XPATH);
         String vhash = request.getParameter("vhash");
