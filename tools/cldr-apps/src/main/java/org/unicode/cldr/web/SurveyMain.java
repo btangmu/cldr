@@ -1221,7 +1221,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     /**
      * print the header of the thing
-     * @throws IOException
      */
     public void printHeader(WebContext ctx, String title) {
         ctx.includeFragment("st_header.jsp");
