@@ -130,7 +130,7 @@ const cldrStatus = (function() {
 
 	/**
 	 * A string such as 'French', etc., naming a locale
-	 * a.k.a. surveyCurrentLocale
+	 * a.k.a. surveyCurrentLocaleName
 	 */
 	let currentLocaleName = null;
 
@@ -249,6 +249,18 @@ const cldrStatus = (function() {
 		permissions = p;
 	}
 
+	function stopIcon() { // 🛑️
+		const src = cldrStatus.getContextPath() + '/stop.png';
+		return "<img alt='[stop]' style='width: 16px; height: 16px; border: 0;' src='"
+				+ src + "' title='Test Error' />";
+	}
+
+	function warnIcon() { // ⚠
+		const src = cldrStatus.getContextPath() + '/warn.png';
+		return "<img alt='[warn]' style='width: 16px; height: 16px; border: 0;' src='"
+				+ src + "' title='Test Warning' />";
+	}
+
 	/*
 	 * Make only these functions accessible from other files:
 	 */
@@ -297,5 +309,8 @@ const cldrStatus = (function() {
 
 		getPermissions: getPermissions,
 		setPermissions: setPermissions,
+
+		stopIcon: stopIcon,
+		warnIcon: warnIcon,
 	};
 })();

@@ -1076,6 +1076,10 @@ function showV() {
 								}
 
 								if (myPage !== null) {
+									/*
+									 * TODO: if 'use strict' in this file, we get:
+									 * Ignoring get or set of property that has [LenientThis] because the “this” object is incorrect.
+									 */
 									$('#title-page-container').html('<h1>' + myPage.name + '</h1>').show();
 								} else {
 									$('#title-page-container').html('').hide();

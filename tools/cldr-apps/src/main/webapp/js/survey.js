@@ -885,7 +885,7 @@ function showWord() {
 		(progressWord && progressWord == "disconnected") ||
 		(progressWord && progressWord == "error")
 	) { // top priority
-		popupAlert('danger', stopIcon + stui_str(progressWord));
+		popupAlert('danger', cldrStatus.stopIcon() + stui_str(progressWord));
 		busted(); // no further processing.
 	} else if (ajaxWord) {
 		p.className = "progress-ok";
@@ -1981,7 +1981,7 @@ function updateInfoPanelForumPosts(tr) {
 	let errorHandler = function(err) {
 		let responseText = cldrStAjax.errResponseText(err);
 		console.log('Error in showForumStuff: ' + err + ' response ' + responseText);
-		showInPop(stopIcon +
+		showInPop(cldrStatus.stopIcon() +
 			" Couldn't load forum post for this row- please refresh the page. <br>Error: " +
 			err + "</td>", tr, null);
 		handleDisconnect("Could not showForumStuff:" + err, null);
@@ -2020,7 +2020,7 @@ function updateInfoPanelForumPosts(tr) {
 		} catch (e) {
 			console.log("Error in ajax forum read ", e.message);
 			console.log(" response: " + json);
-			showInPop(stopIcon + " exception in ajax forum read: " + e.message, tr, null, true);
+			showInPop(cldrStatus.stopIcon() + " exception in ajax forum read: " + e.message, tr, null, true);
 		}
 	};
 
@@ -2324,13 +2324,9 @@ function testsToHtml(tests) {
 		}
 		newHtml += "' title='" + testItem.type + ': ' + (testItem.cause || {class:'Unknown'}).class + '.'+testItem.subType + "'>";
 		if (testItem.type == 'Warning') {
-			const src = cldrStatus.getContextPath() + '/warn.png';
-			newHtml += "<img alt='[warn]' style='width: 16px; height: 16px; border: 0;' src='"
-				+ src + "' title='Test Warning' />";
+			newHtml += cldrStatus.warnIcon();
 		} else if (testItem.type == 'Error') {
-			const src = cldrStatus.getContextPath() + '/stop.png';
-			newHtml += "<img alt='[stop]' style='width: 16px; height: 16px; border: 0;' src='"
-				+ src + "' title='Test Error' />";
+			newHtml += cldrStatus.stopIcon();
 		}
 		newHtml += testItem.message;
 		// Add a link
@@ -3293,7 +3289,7 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 			if (json.err && json.err.length > 0) {
 				tr.className = 'tr_err';
 				handleDisconnect('Error submitting a vote', json);
-				tr.innerHTML = "<td colspan='4'>" + stopIcon + " Could not check value. Try reloading the page.<br>" + json.err + "</td>";
+				tr.innerHTML = "<td colspan='4'>" + cldrStatus.stopIcon() + " Could not check value. Try reloading the page.<br>" + json.err + "</td>";
 				myUnDefer();
 				handleDisconnect('Error submitting a vote', json);
 			} else {
@@ -3334,7 +3330,7 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 			}
 		} catch (e) {
 			tr.className = 'tr_err';
-			tr.innerHTML = stopIcon + " Could not check value. Try reloading the page.<br>" + e.message;
+			tr.innerHTML = cldrStatus.stopIcon() + " Could not check value. Try reloading the page.<br>" + e.message;
 			console.log("Error in ajax post [handleWiredClick] ", e.message);
 			myUnDefer();
 			handleDisconnect("handleWiredClick:" + e.message, json);
