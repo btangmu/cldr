@@ -1147,6 +1147,15 @@ function updateStatusBox(json) {
 		if (json.status.newVersion) {
 			cldrStatus.setNewVersion(json.status.newVersion);
 		}
+		if (json.status.user) {
+			cldrStatus.setSurveyUser(json.status.user);
+		}
+		if (json.status.organizationName) {
+			cldrStatus.setOrganizationName(json.status.organizationName);
+		}
+		if (json.status.permissions) {
+			cldrStatus.setPermissions(json.status.permissions);
+		}
 		if (!updateParts) {
 			var visitors = document.getElementById("visitors");
 			updateParts = {
@@ -1195,7 +1204,7 @@ function updateStatusBox(json) {
 			json.millisTillKick = 5000;
 		}
 
-		// really don't care if guest user gets 'kicked'. Doesn't matter.
+		const surveyUser = cldrStatus.getSurveyUser();
 		if ((surveyUser !== null) && json.millisTillKick && (json.millisTillKick >= 0) && (json.millisTillKick < (60 * 1 * 1000))) { // show countdown when 1 minute to go
 			var kmsg = "Your session will end if not active in about " + (parseInt(json.millisTillKick) / 1000).toFixed(0) + " seconds.";
 			console.log(kmsg);
@@ -1921,6 +1930,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 
 	function getUsersValue(theRow) {
 		'use strict';
+		const surveyUser = cldrStatus.getSurveyUser();
 		if (surveyUser && surveyUser.id) {
 			if (theRow.voteVhash && theRow.voteVhash !== '') {
 				const item = theRow.items[theRow.voteVhash];
@@ -2314,9 +2324,13 @@ function testsToHtml(tests) {
 		}
 		newHtml += "' title='" + testItem.type + ': ' + (testItem.cause || {class:'Unknown'}).class + '.'+testItem.subType + "'>";
 		if (testItem.type == 'Warning') {
-			newHtml += warnIcon;
+			const src = cldrStatus.getContextPath() + '/warn.png';
+			newHtml += "<img alt='[warn]' style='width: 16px; height: 16px; border: 0;' src='"
+				+ src + "' title='Test Warning' />";
 		} else if (testItem.type == 'Error') {
-			newHtml += stopIcon;
+			const src = cldrStatus.getContextPath() + '/stop.png';
+			newHtml += "<img alt='[stop]' style='width: 16px; height: 16px; border: 0;' src='"
+				+ src + "' title='Test Error' />";
 		}
 		newHtml += testItem.message;
 		// Add a link
@@ -2660,6 +2674,7 @@ function addVitem(td, tr, theRow, item, newButton) {
 		listenToPop(historyText, tr, historyTag);
 	}
 
+	const surveyUser = cldrStatus.getSurveyUser();
 	if (newButton &&
 		theRow.voteVhash == item.valueHash &&
 		theRow.items[theRow.voteVhash].votes &&
@@ -2795,6 +2810,7 @@ function loadStui(loc, cb) {
 					return stui_str(x) + '{' + Object.keys(y) + '}';
 				};
 			}
+			const TRANS_HINT_LANGUAGE_NAME = 'English'; // must match SurveyMain.TRANS_HINT_LANGUAGE_NAME
 			stuibundle.htmltranshint = stui.htmltranshint = TRANS_HINT_LANGUAGE_NAME;
 			stui.ready = true;
 			if (cb) {
@@ -3139,7 +3155,7 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 
 	showLoader(tr.theTable.theDiv.loader, stui.loadingOneRow);
 
-	var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW +
+	var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=getrow" +
 		"&_=" + cldrStatus.getCurrentLocale() +
 		"&xpath=" + theRow.xpathId +
 		"&fhash=" + tr.rowHash +
@@ -3881,9 +3897,12 @@ function refreshCounterVetting() {
 	document.getElementById('progress-voted').style.width = voted * 100 / total + '%';
 	document.getElementById('progress-abstain').style.width = abstain * 100 / total + '%';
 
-	if (cldrStForum && cldrStatus.getCurrentLocale() && surveyUser && surveyUser.id) {
-		const forumSummary = cldrStForum.getForumSummaryHtml(cldrStatus.getCurrentLocale(), surveyUser.id, false);
-		document.getElementById('vForum').innerHTML = forumSummary;
+	if (cldrStForum && cldrStatus.getCurrentLocale()) {
+		const surveyUser = cldrStatus.getSurveyUser();
+		if (surveyUser && surveyUser.id) {
+			const forumSummary = cldrStForum.getForumSummaryHtml(cldrStatus.getCurrentLocale(), surveyUser.id, false);
+			document.getElementById('vForum').innerHTML = forumSummary;
+		}
 	}
 }
 

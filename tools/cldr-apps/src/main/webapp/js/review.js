@@ -90,10 +90,13 @@ function showReviewPage(json, showFn) {
 			element.description + '"></span></div></a></li>';
 	});
 
-	if (cldrStForum && cldrStatus.getCurrentLocale() && surveyUser && surveyUser.id) {
-		const forumSummary = cldrStForum.getForumSummaryHtml(cldrStatus.getCurrentLocale(), surveyUser.id, true /* table */);
-		sidebarHtml += "<li><a id='dashToForum' onclick='cldrStForum.reload();'>Forum</a></li>\n";
-		sidebarHtml += "<li>" + forumSummary + "</li>\n";
+	if (cldrStForum && cldrStatus.getCurrentLocale()) {
+		const surveyUser = cldrStatus.getSurveyUser();
+		if (surveyUser && surveyUser.id) {
+			const forumSummary = cldrStForum.getForumSummaryHtml(cldrStatus.getCurrentLocale(), surveyUser.id, true /* table */);
+			sidebarHtml += "<li><a id='dashToForum' onclick='cldrStForum.reload();'>Forum</a></li>\n";
+			sidebarHtml += "<li>" + forumSummary + "</li>\n";
+		}
 	}
 	const menuDom = document.createElement('ul');
 	menuDom.className = 'nav nav-pills nav-stacked affix menu-review';
@@ -310,7 +313,7 @@ function toggleFix(event) {
 	$('button.fix').popover('destroy');
 	toggleOverlay();
 	if (!isPopover) {
-		var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW +
+		var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getrow" +
 			"&_=" + cldrStatus.getCurrentLocale() +
 			"&s=" + cldrStatus.getSessionId() +
 			"&xpath=" + tr.data('path') +
@@ -330,7 +333,7 @@ function toggleFix(event) {
 				if (json.dataLoadTime) {
 					updateIf("dynload", json.dataLoadTime);
 				}
-				if (!surveyUser) {
+				if (!cldrStatus.getSurveyUser()) {
 					showInPop2(stui.str("loginGuidance"), null, null, null, true); /* show the box the first time */
 				} else if (!json.canModify) {
 					showInPop2(stui.str("readonlyGuidance"), null, null, null, true); /* show the box the first time */

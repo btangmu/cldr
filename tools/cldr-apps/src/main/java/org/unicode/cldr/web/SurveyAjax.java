@@ -25,7 +25,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -553,7 +552,7 @@ public class SurveyAjax extends HttpServlet {
                         if (UserRegistry.userIsAdmin(mySession.user)) {
                             response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
                         } else {
-                            sendError(out, "Admin Panel is forbidden for non-admin user", ErrorCode.E_NO_PERMISSION);
+                            sendError(out, "Only Admin can access Admin Panel", ErrorCode.E_NO_PERMISSION);
                         }
                     } else if (what.equals(WHAT_SUBMIT)) {
                         mySession.userDidAction();
@@ -1551,7 +1550,6 @@ public class SurveyAjax extends HttpServlet {
 
     private static JSONWriter newJSON() {
         JSONWriter r = new JSONWriter();
-        r.put("progress", "(obsolete-progress)");
         r.put("visitors", "");
         r.put("uptime", "");
         r.put("err", "");
@@ -1559,7 +1557,6 @@ public class SurveyAjax extends HttpServlet {
         r.put("isSetup", "0");
         r.put("isBusted", "0");
         return r;
-
     }
 
     private static void sendNoSurveyMain(PrintWriter out) throws IOException {
@@ -3178,90 +3175,9 @@ public class SurveyAjax extends HttpServlet {
      * @throws JSONException
      */
     public static void includeJavaScript(HttpServletRequest request, Writer out) throws IOException, JSONException {
-        includeEvilJavaScript(request, out);
         includeDojoJavaScript(out);
         includeJqueryJavaScript(out);
         includeCldrJavaScript(request, out);
-    }
-
-    private static void includeEvilJavaScript(HttpServletRequest request, Writer out) throws IOException, JSONException {
-        out.write("<script>\n");
-
-        /*
-         * All these JavaScript var declarations unfortunately append to the window (global) object!
-         * This is very temporary, mostly moved here from old ajax_status.jsp
-         * TODO: Modernize! deliver data to the client as json; and store
-         * it in our own JavaScript object(s) (like CldrStatus.js), not the window.
-         * We should treat them all similarly to surveyCurrentId, etc.
-         */
-
-        String sessid = request.getParameter("s");
-        if (sessid == null) {
-            HttpSession hsession = request.getSession(false);
-            if (hsession != null) {
-                sessid = hsession.getId();
-            }
-        }
-
-        CookieSession mySession = null;
-        UserRegistry.User myUser = null;
-        if (sessid != null) {
-            mySession = CookieSession.retrieveWithoutTouch(sessid);
-        }
-        if (mySession == null) {
-            sessid = null;
-        } else {
-            sessid = mySession.id;
-            myUser = mySession.user;
-        }
-
-        SurveyMain curSurveyMain = null;
-        curSurveyMain = SurveyMain.getInstance(request);
-
-        WebContext subCtx = (WebContext) request.getAttribute("WebContext"); // from v.jsp
-        if (subCtx != null && subCtx.session.user != null) {
-            myUser = subCtx.session.user;
-        }
-
-        if (myUser != null) {
-            out.write("var surveyUser = " + myUser.toJSONString() + ";\n");
-            out.write("var userEmail = '" + myUser.email + "';\n");
-            out.write("var userPWD = '" + myUser.password + "';\n");
-            out.write("var userID = '" + myUser.id + "';\n");
-            out.write("var organizationName = '" + myUser.getOrganization().getDisplayName() + "';\n");
-            out.write("var org = '" + myUser.org + "';\n");
-            out.write("var surveyUserPerms = {\n");
-            out.write("  userExist: (surveyUser != null),\n");
-            out.write("  userCanImportOldVotes: " + myUser.canImportOldVotes() + ",\n");
-            out.write("  userCanUseVettingSummary: " + UserRegistry.userCanUseVettingSummary(myUser) + ",\n");
-            out.write("  userCanMonitorForum: " + UserRegistry.userCanMonitorForum(myUser) + ",\n");
-            out.write("  userIsTC: " + UserRegistry.userIsTC(myUser) + ",\n");
-            boolean userIsVetter = !UserRegistry.userIsTC(myUser) && UserRegistry.userIsVetter(myUser);
-            out.write("  userIsVetter: " + userIsVetter + ",\n");
-            out.write("  userIsLocked: " + UserRegistry.userIsLocked(myUser) + ",\n");
-            out.write("  hasDataSource: " + curSurveyMain.dbUtils.hasDataSource() + ",\n");
-            out.write("};\n");
-
-            // if (UserRegistry.userIsAdmin(myUser)) {
-            //     out.write("surveyUserURL.adminPanel = 'survey?dump=" + SurveyMain.vap + "';\n");
-            // }
-        } else {
-            // User session not present. Set a few things so that we don't fail.
-            out.write("var surveyUser = null;\n");
-            out.write("var surveyUserURL = {};\n");
-            out.write("var organizationName = null;\n");
-            out.write("var org = null;\n");
-            out.write("var surveyUserPerms = {userExist: false,};\n");
-        }
-        out.write("var warnIcon = \"" + WebContext.iconHtml(request, "warn", "Test Warning") + "\";\n");
-        out.write("var stopIcon = \"" + WebContext.iconHtml(request, "stop", "Test Error") + "\";\n");
-        out.write("var WHAT_GETROW = '" + SurveyAjax.WHAT_GETROW + "';\n");
-        out.write("var WHAT_SUBMIT = '" + SurveyAjax.WHAT_SUBMIT + "';\n");
-        out.write("var TARGET_DOCS = '" + WebContext.TARGET_DOCS + "';\n");
-        out.write("var TRANS_HINT_LOCALE = '" + SurveyMain.TRANS_HINT_LOCALE + "';\n");
-        out.write("var TRANS_HINT_LANGUAGE_NAME = '" + SurveyMain.TRANS_HINT_LANGUAGE_NAME + "';\n");
-
-        out.write("</script>\n");
     }
 
     private static void includeDojoJavaScript(Writer out) throws IOException {

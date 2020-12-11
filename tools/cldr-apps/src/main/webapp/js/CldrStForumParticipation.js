@@ -9,7 +9,7 @@
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
  *
- * Dependencies: surveyUser.id; stui.str; SpecialPage; hideLoader; showInPop2
+ * Dependencies: stui.str; SpecialPage; hideLoader; showInPop2
  */
 const cldrStForumParticipation = (function() {
 	const tableId = "participationTable";
@@ -31,6 +31,7 @@ const cldrStForumParticipation = (function() {
 		 */
 		showInPop2(stui.str(params.name + "Guidance"), null, null, null, true);
 
+		const surveyUser = cldrStatus.getSurveyUser();
 		const userId = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
 		const url = getForumParticipationUrl();
 		const errorHandler = function(err) {

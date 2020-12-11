@@ -656,6 +656,7 @@ const cldrSurveyTable = (function() {
 		var vr = theRow.voteResolver;
 		tr.voteDiv = document.createElement("div");
 		tr.voteDiv.className = "voteDiv";
+		const surveyUser = cldrStatus.getSurveyUser();
 		if (theRow.voteVhash &&
 			theRow.voteVhash !== '' && surveyUser) {
 			var voteForItem = theRow.items[theRow.voteVhash];
@@ -901,7 +902,7 @@ const cldrSurveyTable = (function() {
 			codeStr = codeStr + " (optional)";
 		}
 		cell.appendChild(createChunk(codeStr));
-		if (surveyUserPerms.userExist) {
+		if (cldrStatus.getSurveyUser()) {
 			cell.className = "d-code codecell";
 			if (!tr.forumDiv) {
 				tr.forumDiv = document.createElement("div");

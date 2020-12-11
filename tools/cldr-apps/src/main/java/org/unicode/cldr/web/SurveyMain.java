@@ -341,6 +341,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     static final String TRANS_HINT_ID = "en_ZZ"; // Needs to be en_ZZ as per cldrbug #2918; must match TRANS_HINT_ID in JavaScript
     public static final ULocale TRANS_HINT_LOCALE = new ULocale(TRANS_HINT_ID);
+    // TRANS_HINT_LANGUAGE_NAME needs to match TRANS_HINT_LANGUAGE_NAME in JavaScript ("English")
     public static final String TRANS_HINT_LANGUAGE_NAME = TRANS_HINT_LOCALE.getDisplayLanguage(TRANS_HINT_LOCALE); // Note:
     // Only
     // shows
@@ -1308,23 +1309,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
         double load = osmxbean.getSystemLoadAverage();
         CLDRConfig config = CLDRConfig.getInstance();
-        return new JSONObject().put("isBusted", isBusted).put("lockOut", lockOut != null).put("isSetup", isSetup)
-            .put("isUnofficial", isUnofficial()).put("environment", config.getEnvironment().name())
-            .put("specialHeader", config.getProperty("CLDR_HEADER"))
-            .put("specialTimerRemaining", specialTimer != 0 ? timeDiff(System.currentTimeMillis(), specialTimer) : null)
-            .put("processing", startupThread.htmlStatus()).put("guests", CookieSession.getGuestCount())
-            .put("users", CookieSession.getUserCount()).put("uptime", uptime).put("surveyRunningStamp", surveyRunningStamp.current())
-            .put("memfree", free).put("memtotal", total).put("pages", pages).put("uptime", uptime).put("phase", phase())
-            .put("currev", SurveyMain.getCurrevCldrApps()) // Code only!
-            .put("newVersion", newVersion).put("sysload", load).put("sysprocs", nProcs).put("dbopen", DBUtils.db_number_open)
-            .put("dbused", DBUtils.db_number_used)
-            .put("contextPath", request.getContextPath())
-            .put("isPhaseBeta", isPhaseBeta())
-            .put("sessionId", getSessionIdForClient(request))
-        ;
-    }
 
-    private String getSessionIdForClient(HttpServletRequest request) {
         String sessid = request.getParameter("s");
         if (sessid == null) {
             HttpSession hsession = request.getSession(false);
@@ -1332,7 +1317,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 sessid = hsession.getId();
             }
         }
-
         CookieSession mySession = null;
         UserRegistry.User myUser = null;
         if (sessid != null) {
@@ -1344,7 +1328,23 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             sessid = mySession.id;
             myUser = mySession.user;
         }
-        return sessid;
+
+        return new JSONObject().put("isBusted", isBusted).put("lockOut", lockOut != null).put("isSetup", isSetup)
+            .put("isUnofficial", isUnofficial()).put("environment", config.getEnvironment().name())
+            .put("specialHeader", config.getProperty("CLDR_HEADER"))
+            .put("specialTimerRemaining", specialTimer != 0 ? timeDiff(System.currentTimeMillis(), specialTimer) : null)
+            .put("processing", startupThread.htmlStatus()).put("guests", CookieSession.getGuestCount())
+            .put("users", CookieSession.getUserCount()).put("uptime", uptime).put("surveyRunningStamp", surveyRunningStamp.current())
+            .put("memfree", free).put("memtotal", total).put("pages", pages).put("uptime", uptime).put("phase", phase())
+            .put("newVersion", newVersion).put("sysload", load).put("sysprocs", nProcs).put("dbopen", DBUtils.db_number_open)
+            .put("dbused", DBUtils.db_number_used)
+            .put("contextPath", request.getContextPath())
+            .put("isPhaseBeta", isPhaseBeta())
+            .put("sessionId", sessid)
+            .put("user", myUser)
+            .put("organizationName", myUser.getOrganization().getDisplayName())
+            .put("permissions", myUser.getPermissionsJson())
+        ;
     }
 
     /**

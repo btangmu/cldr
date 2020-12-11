@@ -642,9 +642,12 @@ function showV() {
 				 */
 				function updateHashAndMenus(doPush) {
 					const sessionId = cldrStatus.getSessionId();
+					const surveyUser = cldrStatus.getSurveyUser();
+					const userID = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
+					const surveyUserPerms = cldrStatus.getPermissions();
 					const surveyUserURL = {
 						myAccountSetting: 'survey?do=listu',
-						disableMyAccount: "lock.jsp?email=' + userEmail" + userEmail,
+						disableMyAccount: "lock.jsp",
 						recentActivity: "myvotes.jsp?user=" + userID + "&s=" + sessionId,
 						xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
 						manageUser: "survey?do=list",
@@ -683,13 +686,13 @@ function showV() {
 							title: 'Settings',
 							level: 2,
 							url: surveyUserURL.myAccountSetting,
-							display: surveyUserPerms.userExist
+							display: (surveyUser && true)
 						},
 						{
 							title: 'Lock (Disable) My Account',
 							level: 2,
 							url: surveyUserURL.disableMyAccount,
-							display: surveyUserPerms.userExist
+							display: (surveyUser && true)
 						},
 
 						{
@@ -705,7 +708,7 @@ function showV() {
 						{
 							special: 'oldvotes',
 							level: 2,
-							display: surveyUserPerms.userCanImportOldVotes
+							display: (surveyUserPerms && surveyUserPerms.userCanImportOldVotes)
 						},
 						{
 							title: 'See My Recent Activity',
@@ -722,34 +725,34 @@ function showV() {
 							divider: true
 						},
 						{
-							title: 'My Organization(' + organizationName + ')'
+							title: 'My Organization(' + cldrStatus.getOrganizationName() + ')'
 						}, // My Organization section
 
 						{
 							special: 'vsummary', /* Cf. special_vsummary */
 							level: 2,
-							display: surveyUserPerms.userCanUseVettingSummary
+							display: (surveyUserPerms && surveyUserPerms.userCanUseVettingSummary)
 						},
 						{
-							title: 'List ' + org + ' Users',
+							title: 'List ' + cldrStatus.getOrganizationName() + ' Users',
 							level: 2,
 							url: surveyUserURL.manageUser,
-							display: (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter)
+							display: (surveyUserPerms && (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter))
 						},
 						{
 							special: 'forum_participation', /* Cf. special_forum_participation */
 							level: 2,
-							display: surveyUserPerms.userCanMonitorForum
+							display: (surveyUserPerms && surveyUserPerms.userCanMonitorForum)
 						},
 						{
 							special: 'vetting_participation', /* Cf. special_vetting_participation */
 							level: 2,
-							display: surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter
+							display: (surveyUserPerms && (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter))
 						},
 						{
 							title: 'LOCKED: Note: your account is currently locked.',
 							level: 2,
-							display: (surveyUserPerms.userIsLocked || false),
+							display: (surveyUserPerms && surveyUserPerms.userIsLocked),
 							bold: true
 						},
 
@@ -796,13 +799,12 @@ function showV() {
 							title: 'Lookup a code or xpath',
 							level: 2,
 							url: surveyUserURL.browse,
-							display: surveyUserPerms.hasDataSource
 						},
 						{
 					         title: 'Error Subtypes',
 					         level: 2,
 					         url: './tc-all-errors.jsp',
-					         display: surveyUserPerms.userIsTC
+					         display: (surveyUserPerms && surveyUserPerms.userIsTC)
 					 	},
 						{
 							divider: true
@@ -1108,8 +1110,7 @@ function showV() {
 								}
 							}
 						}
-
-						menuMap.setCheck(menuMap.forumMenu, (cldrStatus.getCurrentSpecial() == 'forum'), (surveyUser === null));
+						menuMap.setCheck(menuMap.forumMenu, (cldrStatus.getCurrentSpecial() == 'forum'), (cldrStatus.getSurveyUser() === null));
 						resizeSidebar();
 					}
 
@@ -1444,7 +1445,7 @@ function showV() {
 								const curPage = cldrStatus.getCurrentPage();
 								const curLocale = cldrStatus.getCurrentLocale();
 								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale) + '/' + curPage + '/' + curId));
-								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=" + WHAT_GETROW + "&_=" + curLocale + "&x=" + curPage + "&strid=" + curId + "&s=" + cldrStatus.getSessionId() + cacheKill();
+								var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getrow&_=" + curLocale + "&x=" + curPage + "&strid=" + curId + "&s=" + cldrStatus.getSessionId() + cacheKill();
 								$('#nav-page').show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
 								myLoad(url, "section", function(json) {
 									isLoading = false;
@@ -1474,7 +1475,7 @@ function showV() {
 										cldrStatus.setCurrentSection('');
 										cldrStatus.setCurrentPage(json.pageId);
 										updateHashAndMenus(); // now that we have a pageid
-										if (!surveyUser) {
+										if (!cldrStatus.getSurveyUser()) {
 											showInPop2(stui.str("loginGuidance"), null, null, null, true); /* show the box the first time */
 										} else if (!json.canModify) {
 											showInPop2(stui.str("readonlyGuidance"), null, null, null, true); /* show the box the first time */
@@ -1970,9 +1971,6 @@ function showV() {
 						if (!verifyJson(json, 'locmap')) {
 							return;
 						} else {
-							if (json.status && json.status.sessionId) {
-								cldrStatus.setSessionId(json.status.sessionId);
-							}
 							locmap = new LocaleMap(json.locmap);
 							if (cldrStatus.getCurrentLocale() === "USER" && json.loc) {
 								cldrStatus.setCurrentLocale(json.loc);

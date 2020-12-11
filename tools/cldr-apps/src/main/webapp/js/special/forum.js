@@ -75,6 +75,7 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 				forum: forumName,
 				locale: cldrStatus.getCurrentLocaleName()
 			});
+			const surveyUser = cldrStatus.getSurveyUser();
 			const userId = (surveyUser && surveyUser.id) ? surveyUser.id : 0;
 			cldrStForum.loadForum(curLocale, userId, forumMessage, params);
 		}

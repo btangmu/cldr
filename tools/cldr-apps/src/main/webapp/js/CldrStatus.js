@@ -209,6 +209,46 @@ const cldrStatus = (function() {
 		sessionId = i;
 	}
 
+	/**
+	 * An object describing the current user
+	 */
+	let surveyUser = null;
+
+	function getSurveyUser() {
+		return surveyUser;
+	}
+
+	function setSurveyUser(u) {
+		surveyUser = u;
+	}
+
+	/**
+	 * The name of the user's organization
+	 */
+	let organizationName = null;
+
+	function getOrganizationName() {
+		return organizationName;
+	}
+
+	function setOrganizationName(n) {
+		organizationName = n;
+	}
+
+	/**
+	 * An object describing the current user's permissions
+	 * a.k.a. surveyUserPerms
+	 */
+	let permissions = null;
+
+	function getPermissions() {
+		return permissions;
+	}
+
+	function setPermissions(p) {
+		permissions = p;
+	}
+
 	/*
 	 * Make only these functions accessible from other files:
 	 */
@@ -248,5 +288,14 @@ const cldrStatus = (function() {
 
 		getSessionId: getSessionId,
 		setSessionId: setSessionId,
+
+		getSurveyUser: getSurveyUser,
+		setSurveyUser: setSurveyUser,
+
+		getOrganizationName: getOrganizationName,
+		setOrganizationName: setOrganizationName,
+
+		getPermissions: getPermissions,
+		setPermissions: setPermissions,
 	};
 })();

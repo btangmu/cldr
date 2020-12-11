@@ -10,7 +10,7 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * window.surveyUser, window.locmap,
+ * window.locmap,
  * createGravitar, stui.str, listenFor, bootstrap.js, reloadV,
  * showInPop2, hideLoader, ...!
  *
@@ -308,7 +308,7 @@ const cldrStForum = (function() {
 			} else if (data.ret && data.ret.length > 0) {
 				const postModal = $('#post-modal');
 				postModal.modal('hide');
-				const curSpecial = cldr.getCurrentSpecial();
+				const curSpecial = cldrStatus.getCurrentSpecial();
 				if (curSpecial && curSpecial === 'forum') {
 					reloadV();
 				} else {
@@ -430,10 +430,8 @@ const cldrStForum = (function() {
 				}
 				gravitar.className = "gravitar pull-left";
 				subpost.appendChild(gravitar);
-				/*
-				 * TODO: encapsulate "surveyUser" dependency
-				 */
-				if (typeof surveyUser !== 'undefined' && post.posterInfo.id === surveyUser.id) {
+				const surveyUser = cldrStatus.getSurveyUser();
+				if (surveyUser && post.posterInfo.id === surveyUser.id) {
 					headingLine.appendChild(forumCreateChunk(forumStr("user_me"), "span", "forum-me"));
 				} else {
 					const usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
@@ -854,8 +852,9 @@ const cldrStForum = (function() {
 	 * @returns true or false
 	 */
 	function userIsPoster(post) {
-		if (post && typeof surveyUser !== 'undefined') {
-			if (surveyUser.id === post.poster) {
+		if (post) {
+			const surveyUser = cldrStatus.getSurveyUser();
+			if (surveyUser && surveyUser.id === post.poster) {
 				return true;
 			}
 		}
@@ -868,10 +867,8 @@ const cldrStForum = (function() {
 	 * @return true or false
 	 */
 	function userIsTC() {
-		if (typeof surveyUserPerms !== 'undefined' && surveyUserPerms.userIsTC) {
-			return true;
-		}
-		return false;
+		const surveyUserPerms = cldrStatus.getPermissions();
+		return (surveyUserPerms && surveyUserPerms.userIsTC);
 	}
 
 	/**
