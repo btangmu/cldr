@@ -641,13 +641,14 @@ function showV() {
 				 * @param doPush {Boolean} if false, do not add to history
 				 */
 				function updateHashAndMenus(doPush) {
+					const sessionId = cldrStatus.getSessionId();
 					const surveyUserURL = {
 						myAccountSetting: 'survey?do=listu',
-						disableMyAccount: "lock.jsp?email='+userEmail"+userEmail,
-						recentActivity: "myvotes.jsp?user="+userID+"&s="+cldrStatus.getSessionId(),
-						xmlUpload: "upload.jsp?a=/cldr-apps/survey&s="+cldrStatus.getSessionId(),
+						disableMyAccount: "lock.jsp?email=' + userEmail" + userEmail,
+						recentActivity: "myvotes.jsp?user=" + userID + "&s=" + sessionId,
+						xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
 						manageUser: "survey?do=list",
-						flag: "tc-flagged.jsp?s="+cldrStatus.getSessionId(),
+						flag: "tc-flagged.jsp?s=" + sessionId,
 						about: "about.jsp",
 						browse: "browse.jsp",
 					};
@@ -666,7 +667,7 @@ function showV() {
 
 						{
 							title: 'Admin Panel',
-							url: surveyUserURL.adminPanel,
+							url: 'SurveyAjax?what=admin_panel&s=' + sessionId,
 							display: (surveyUser && surveyUser.userlevelName === 'ADMIN')
 						},
 						{

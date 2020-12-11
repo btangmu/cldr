@@ -285,6 +285,7 @@ public class SurveyAjax extends HttpServlet {
     public static final String WHAT_OLDVOTES = "oldvotes"; // CldrSurveyVettingLoader.js
     public static final String WHAT_FLAGGED = "flagged"; // CldrSurveyVettingLoader.js
     public static final String WHAT_AUTO_IMPORT = "auto_import"; // CldrSurveyVettingLoader.js
+    public static final String WHAT_ADMIN_PANEL = "admin_panel"; // CldrSurveyVettingLoader.js
 
     public static final int oldestVersionForImportingVotes = 25; // Oldest table is cldr_vote_value_25, as of 2018-05-23.
 
@@ -547,7 +548,14 @@ public class SurveyAjax extends HttpServlet {
                 if (mySession == null) {
                     sendError(out, "Missing/Expired Session (idle too long? too many users?): " + sess, ErrorCode.E_SESSION_DISCONNECTED);
                 } else {
-                    if (what.equals(WHAT_SUBMIT)) {
+                    if (what.equals(WHAT_ADMIN_PANEL)) {
+                        mySession.userDidAction();
+                        if (UserRegistry.userIsAdmin(mySession.user)) {
+                            response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
+                        } else {
+                            sendError(out, "Admin Panel is forbidden for non-admin user", ErrorCode.E_NO_PERMISSION);
+                        }
+                    } else if (what.equals(WHAT_SUBMIT)) {
                         mySession.userDidAction();
 
                         CLDRLocale locale = CLDRLocale.getInstance(loc);
@@ -3216,7 +3224,7 @@ public class SurveyAjax extends HttpServlet {
         }
 
         if (myUser != null) {
-            out.write("var surveyUser = '" + myUser.toJSONString() + "';\n");
+            out.write("var surveyUser = " + myUser.toJSONString() + ";\n");
             out.write("var userEmail = '" + myUser.email + "';\n");
             out.write("var userPWD = '" + myUser.password + "';\n");
             out.write("var userID = '" + myUser.id + "';\n");
@@ -3234,9 +3242,9 @@ public class SurveyAjax extends HttpServlet {
             out.write("  hasDataSource: " + curSurveyMain.dbUtils.hasDataSource() + ",\n");
             out.write("};\n");
 
-            if (UserRegistry.userIsAdmin(myUser)) {
-                out.write("surveyUserURL.adminPanel = 'survey?dump=" + SurveyMain.vap + "';\n");
-            }
+            // if (UserRegistry.userIsAdmin(myUser)) {
+            //     out.write("surveyUserURL.adminPanel = 'survey?dump=" + SurveyMain.vap + "';\n");
+            // }
         } else {
             // User session not present. Set a few things so that we don't fail.
             out.write("var surveyUser = null;\n");
