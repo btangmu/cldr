@@ -193,7 +193,7 @@ Flipper.prototype.addUntilFlipped = function addUntilFlipped(showFn, killFn) {
  * @param aLocmap the map object from json
  */
 function LocaleMap(aLocmap) {
-	this.locmap = aLocmap; // TODO: cldrStatus.setLocaleMap(aLocmap)?
+	this.locmap = aLocmap;
 }
 
 /**
@@ -211,7 +211,7 @@ LocaleMap.prototype.canonicalizeLocaleId = function canonicalizeLocaleId(locid) 
 		return null;
 	}
 
-	if (this.locmap) { // TODO: const locmap = cldrStatus.getLocaleMap()... (avoid this === window)
+	if (this.locmap) {
 		if (this.locmap.idmap && this.locmap.idmap[locid]) {
 			locid = this.locmap.idmap[locid]; // canonicalize
 		}
