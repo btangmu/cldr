@@ -157,7 +157,7 @@ const cldrStatus = (function() {
 	}
 
 	/**
-	 * A string such as 'Current' or '42.1', identifying the new CLDR version being created with Survey Tool)
+	 * A string such as 'Current' or '42.1', identifying the new CLDR version being created with Survey Tool
 	 */
 	let newVersion = 'Current';
 

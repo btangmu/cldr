@@ -1122,11 +1122,7 @@ function showV() {
 						if (curLocale != null && curLocale != '') {
 							var needLocTable = false;
 
-							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + curLocale + "&locmap=" + needLocTable + cacheKill();
-							const sessionId = cldrStatus.getSessionId();
-							if (sessionId) {
-								url += '&s=' + sessionId;
-							}
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + curLocale + "&locmap=" + needLocTable + "&s=" + cldrStatus.getSessionId() + cacheKill();
 							myLoad(url, "menus", function(json) {
 								if (!verifyJson(json, "menus")) {
 									return; // busted?
