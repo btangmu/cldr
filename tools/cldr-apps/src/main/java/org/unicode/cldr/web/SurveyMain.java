@@ -1328,6 +1328,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             sessid = mySession.id;
             myUser = mySession.user;
         }
+        String orgName = (myUser == null) ? null : myUser.getOrganization().getDisplayName();
+        JSONObject perm = (myUser == null) ? null : myUser.getPermissionsJson();
 
         return new JSONObject().put("isBusted", isBusted).put("lockOut", lockOut != null).put("isSetup", isSetup)
             .put("isUnofficial", isUnofficial()).put("environment", config.getEnvironment().name())
@@ -1342,8 +1344,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             .put("isPhaseBeta", isPhaseBeta())
             .put("sessionId", sessid)
             .put("user", myUser)
-            .put("organizationName", myUser.getOrganization().getDisplayName())
-            .put("permissions", myUser.getPermissionsJson())
+            .put("organizationName", orgName)
+            .put("permissions", perm)
         ;
     }
 

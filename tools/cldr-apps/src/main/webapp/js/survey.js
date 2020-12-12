@@ -1348,7 +1348,9 @@ function updateStatus() {
 
 // set up window. Let Dojo call us, otherwise dojo won't load.
 require(["dojo/ready"], function(ready) {
+	console.log("Hello my name is ready in survey.js");
 	ready(function() {
+		cldrGui.run();
 		let name = window.location.pathname;
 		if (name.includes('about.jsp') || name.includes('browse.jsp')) {
 			/*

@@ -3181,9 +3181,9 @@ public class SurveyAjax extends HttpServlet {
     }
 
     private static void includeDojoJavaScript(Writer out) throws IOException {
-        out.write("<script>dojoConfig = {parseOnLoad: true, async: true,};</script>");
-        out.write("<script src='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js';</script>");
-        out.write("<script>require([\"dojo/parser\", \"dijit/layout/ContentPane\", \"dijit/layout/BorderContainer\"]);</script>");
+        out.write("<script>dojoConfig = {parseOnLoad: true, async: true,};</script>\n");
+        out.write("<script src='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js';</script>\n");
+        out.write("<script>require([\"dojo/parser\", \"dijit/layout/ContentPane\", \"dijit/layout/BorderContainer\"]);</script>\n");
     }
 
     private static void includeJqueryJavaScript(Writer out) throws IOException {
@@ -3214,6 +3214,7 @@ public class SurveyAjax extends HttpServlet {
 
         out.write(prefix + "redesign" + js); // redesign.js
         out.write(prefix + "review" + js); // review.js
+        out.write(prefix + "CldrGui" + js); // CldrGui.js
     }
 
     /**

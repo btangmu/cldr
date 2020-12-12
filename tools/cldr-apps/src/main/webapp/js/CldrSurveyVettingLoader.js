@@ -17,6 +17,8 @@ window.haveDialog = false;
  * The function showV() itself is called only by v.jsp.
  */
 function showV() {
+	console.log("Hello my name is showV");
+
 	// REQUIRES
 	require([
 		"dojo/ready",
