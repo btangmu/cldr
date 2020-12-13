@@ -20,7 +20,7 @@ $(function() {
 
 	// handle sidebar
 	$('#left-sidebar').hover(function() {
-				if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
+			if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
 				$(this).addClass('active');
 				toggleOverlay();
 			} else {

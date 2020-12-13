@@ -157,7 +157,7 @@ public class SurveyTool extends HttpServlet {
         out.write("    if (dots) {\n");
         out.write("        switch(spin0) {\n");
         out.write("         case 0:\n");
-        out.write("             dots.innerHTML = '.'';\n");
+        out.write("             dots.innerHTML = '.';\n");
         out.write("             break;\n");
         out.write("         case 1:\n");
         out.write("             dots.innerHTML='&nbsp;.';\n");

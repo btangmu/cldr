@@ -1351,7 +1351,8 @@ function updateStatus() {
 // set up window. Let Dojo call us, otherwise dojo won't load.
 require(["dojo/ready"], function(ready) {
 	console.log("Hello my name is ready in survey.js");
-	ready(function() {
+	const priority = 1; // fire before all other dojo callbacks!
+	ready(priority, function() {
 		cldrGui.run();
 		updateStatus(); // for the first time
 	});

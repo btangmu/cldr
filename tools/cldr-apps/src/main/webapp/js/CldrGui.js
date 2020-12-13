@@ -9,9 +9,10 @@
  * and running in strict mode.
  */
 const cldrGui = (function() {
-	const vhtml =
+	const vhtml1 =
  			"<div data-dojo-type=\"dijit/Dialog\" data-dojo-id=\"ariDialog\" title=\"CLDR Survey Tool\"\n"
-            + "    data-dojo-props=\"onHide: function(){ariReload.style.display='';ariRetry.style.display='none';   if(disconnected) { unbust();}}\">\n"
+            + "    data-dojo-props=\"onHide: function(){ariReload.style.display='';ariRetry.style.display='none';"
+            + "if(disconnected) { unbust();}}\">\n"
             + "\n"
             + "    <div id='ariContent' class=\"dijitDialogPaneContentArea\">\n"
             + "        <div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>\n"
@@ -36,8 +37,10 @@ const cldrGui = (function() {
             + "        </button>\n"
             + "    </div>\n"
             + "</div>\n"
-            + "\n"
-            + "<div class=\"navbar navbar-fixed-top\" role=\"navigation\">\n"
+            ;
+            
+     const vhtml2 =
+            "<div class=\"navbar navbar-fixed-top\" role=\"navigation\">\n"
             + "      <div class=\"container-fluid\">\n"
             + "        <div class=\"collapse navbar-collapse\">\n"
             + "        <p class=\"nav navbar-text\">Survey Tool [TODO: VERSION; PHASE]\n"
@@ -78,7 +81,10 @@ const cldrGui = (function() {
             + "        </div>\n"
             + "      </div>\n"
             + "</div>\n"
-            + "<div id=\"left-sidebar\">\n"
+            ;
+
+      const vhtml3 =
+            "<div id=\"left-sidebar\">\n"
             + "    <div id=\"content-sidebar\">\n"
             + "        <div id=\"locale-info\">\n"
             + "            <div class=\"input-group input-group-sm\">\n"
@@ -155,7 +161,9 @@ const cldrGui = (function() {
             + "\n"
             + "<!--  end stnotices.jspf -->";
             + "                </div>\n"
-            + "                <!-- top info -->\n"
+            
+        const vhtml4 =
+            "                <!-- top info -->\n"
             + "      \n"
             + "         <div id='title-locale-container' class='menu-container' style=\"display:none\">\n"
             + "                <h1><a href='#locales///' id='title-locale'></a></h1>\n"
@@ -345,9 +353,49 @@ const cldrGui = (function() {
 	function run() {
 		console.log("Hello my name is cldrGui.run");
 		
+		for (let h of [vhtml1, vhtml2, vhtml3, vhtml4, hiddenHtml]) {
+			if (!parseAsMimeType(h, 'text/html')) {
+				console.log('BAD HTML 🐧🐧🐧:\n' + h + '\n');
+			}
+		}
+
 		// Note: in the old way, with v.jsp, hiddenHtml was included by stnotices.jspf
-		document.body.innerHTML = vhtml + hiddenHtml;
+		document.body.innerHTML = vhtml1 + vhtml2 + vhtml3 + vhtml4 + hiddenHtml;
+		
+		// Testing:
+		for (let id of ['ariContent', 'progress', 'progress-refresh', 'title-section-container',
+				 'nav-page', 'DynamicDataSection']) {
+	 		if (document.getElementById(id)) {
+				console.log(id + " is OK");
+			} else {
+				console.log(id + " is MISSING 🐞🐞🐞🐞");
+			}
+		}
+
 		showV(); // in CldrSurveyVettingLoader.js
+	}
+
+	/**
+	 * Parse the given string as the given mime type
+	 *
+	 * @return the output string, or null for failure
+	 */
+	function parseAsMimeType(inputString, mimeType) {
+		const doc = new DOMParser().parseFromString(inputString, mimeType);
+		if (!doc) {
+			console.log('no doc for ' + mimeType + ', ' + inputString);
+			return null;
+		}
+		const outputString = new XMLSerializer().serializeToString(doc);
+		if (!outputString) {
+			console.log('no output string for ' + mimeType + ', ' + inputString);
+			return null;
+		}
+		if (outputString.indexOf('error') !== -1) {
+			console.log('parser error for ' + mimeType + ', ' + inputString + ', ' + outputString);
+			return null;
+		}
+		return outputString;
 	}
 
 	/*

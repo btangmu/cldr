@@ -12,6 +12,7 @@ final String survURL = request.getContextPath() + "/survey";
 SurveyMain sm = SurveyMain.getInstance(request);
 if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
     %>
+    <html>
     <head>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/surveytool.css" />
     <link rel="stylesheet" href="<%= request.getContextPath() %>/css/CldrStForum.css" />
@@ -29,6 +30,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
 } else if(sm==null || !SurveyMain.isSetup || request.getParameter("_STARTINGUP")!=null ) {
     String url = request.getContextPath() + request.getServletPath(); // TODO add query
         %>
+    <html>
     <head>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/surveytool.css" />
     <link rel="stylesheet" href="<%= request.getContextPath() %>/css/redesign.css" />
@@ -235,11 +237,6 @@ survURL = '<%=survURL%>';
     </div>
 
     <div class="dijitDialogPaneActionBar">
-    <%--
-        <button data-dojo-type="dijit/form/Button" type="submit" onClick="return ariDialog.isValid();">
-            Report Bug…
-        </button>
-        --%>
         <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type="dijit/form/Button" type="button" onClick="window.location = survURL;">
             Back to Locales
         </button>
@@ -248,14 +245,6 @@ survURL = '<%=survURL%>';
         </button>
     </div>
 </div>
-
-<%--
-<h1>ARITester</h1>
-<p>When pressing this button the dialog will popup:</p>
-<button id="buttonThree" data-dojo-type="dijit/form/Button" type="button" onClick="ariDialog.show();">
-    Show me!
-</button>
---%>
 
 <div class="navbar navbar-fixed-top" role="navigation">
       <div class="container-fluid">
@@ -367,8 +356,6 @@ survURL = '<%=survURL%>';
 	</div>
 </div>
 
-
-
 <div class="container-fluid" id="main-container">
  <div class="row menu-position">
     <div class="col-md-12">
@@ -394,11 +381,6 @@ survURL = '<%=survURL%>';
          </div> 
 
         <div id='title-page-container' class='menu-container'>
-<!-- 	         <div id='title-page' data-dojo-type="dijit/form/DropDownButton">
-	              <span>(page)</span>
-	              <div id='menu-page' data-dojo-type="dijit/DropDownMenu"></div>
-	         </div>
- -->        
   		</div>
 
         </div> <%-- end of toptitle --%>

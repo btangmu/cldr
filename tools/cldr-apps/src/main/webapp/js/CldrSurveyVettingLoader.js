@@ -556,7 +556,11 @@ function showV() {
 				};
 
 				window.ariRetry = function() {
-					ariDialog.hide();
+					if (!ariDialog) {
+						console.log("Error: no ariDialog in window.ariRetry");
+					} else {
+						ariDialog.hide();
+					}
 					window.location.reload(true);
 				};
 
@@ -585,11 +589,20 @@ function showV() {
 					// TODO: update  ariMain and ariRetryBtn
 					hideOverlayAndSidebar();
 
-					ariDialog.show();
+					if (!ariDialog) {
+						console.log("Error: no ariDialog in window.showARIDialog 1");
+					} else {
+						ariDialog.show();
+					}
+
 					var oneword = document.getElementById("progress_oneword");
 					oneword.onclick = function() {
 						if (disconnected) {
-							ariDialog.show();
+							if (!ariDialog) {
+								console.log("Error: no ariDialog in window.showARIDialog 2 onclick");
+							} else {
+								ariDialog.show();
+							}
 						}
 					};
 				};
@@ -1339,7 +1352,11 @@ function showV() {
 					};
 
 					// assume parseHash was already called, if we are taking input from the hash
-					ariDialog.hide();
+					if (!ariDialog) {
+						console.log("Error: no ariDialog in window.reloadV");
+					} else {
+						ariDialog.hide();
+					}
 
 					updateHashAndMenus(true);
 
@@ -1969,7 +1986,7 @@ function showV() {
 						theLocale = 'root'; // Default.
 					}
 					var xurl = cldrStatus.getContextPath() + "/SurveyAjax?what=menus&_=" + theLocale + "&locmap=" + true + "&s=" + sessionId + cacheKill();
-					myLoad(xurl, "initial menus for " + cldrStatus.getCurrentLocale(), function(json) {
+					myLoad(xurl, "initial menus for " + theLocale, function(json) {
 						if (!verifyJson(json, 'locmap')) {
 							return;
 						} else {
