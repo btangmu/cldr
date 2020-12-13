@@ -8,7 +8,11 @@
 /*
  * Startup function
  */
-$(function() {
+require(["dojo/ready"], function(ready) {
+	const priority = 100; // after cldrGui.run (1), before cldrReviewStartup (101) and default Dojo (1000)
+	ready(priority, cldrRedesignStartup);
+});
+function cldrRedesignStartup() {
 	// for locale search
 	$('body').on('click', '#show-locked', {type: "lock"}, toggleLockedRead);
 	$('body').on('click', '#show-read', {type: "read"}, toggleLockedRead);
@@ -23,14 +27,6 @@ $(function() {
 			if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
 				$(this).addClass('active');
 				toggleOverlay();
-			} else {
-				// can't show sidebar - page is disconnected.
-
-				// DEBUGGING
-				console.log("Cannot open left-sidebar; disconnected = "
-						 + $('body').hasClass('disconnected')
-						 + "; haveDialog = " + window.haveDialog);
-				
 			}
 		},
 		function() {
@@ -90,7 +86,7 @@ $(function() {
 			}
 		}
 	})
-});
+}
 
 /**
  * Size the sidebar relative to the header

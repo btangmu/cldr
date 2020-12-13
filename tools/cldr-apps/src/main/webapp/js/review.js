@@ -18,7 +18,11 @@ function bindReviewEvents() {
 /*
  * Startup function
  */
-$(function() {
+require(["dojo/ready"], function(ready) {
+	const priority = 101; // after cldrGui.run (1) and cldrRedesignStartup (100), before default Dojo (1000) 
+	ready(priority, cldrReviewStartup);
+});
+function cldrReviewStartup() {
 	var dynamic = $('#main-container');
 	dynamic.on('click', '.collapse-review', togglePart);
 	dynamic.on('click', 'button.fix', toggleFix);
@@ -43,7 +47,7 @@ $(function() {
 	$('body').on('click', '.show-examples', function() { // toggle the examples
 		$('.d-example, .vote-help').slideToggle();
 	});
-});
+}
 
 /**
  * Handle the review (Dashboard) page with the json
