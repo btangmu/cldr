@@ -1803,7 +1803,7 @@ function showV() {
 											flipper.flipTo(pages.other, domConstruct.toDom("<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'><span class='icon i-stop'> &nbsp; &nbsp;</span>Error: could not load: " + err + "</div>"));
 										};
 										if (isDashboard()) {
-											if (!isVisitor) {
+											if (!cldrStatus.isVisitor()) {
 												request
 													.get(url, {
 														handleAs: 'json'
@@ -1846,7 +1846,7 @@ function showV() {
 							// for now - redirect
 							hideLoader(null);
 							isLoading = false;
-							window.location = survURL; // redirect home
+							window.location = cldrStatus.getSurvUrl(); // redirect home
 						} else if (cldrStatus.getCurrentSpecial() == 'locales') {
 							hideLoader(null);
 							isLoading = false;
@@ -2038,7 +2038,7 @@ function showV() {
 							}
 							$('#locale-list').html(theDiv.innerHTML);
 
-							if (isVisitor)
+							if (cldrStatus.isVisitor())
 								$('#show-read').prop('checked', true);
 							//tooltip locale
 							$('a.locName').tooltip();

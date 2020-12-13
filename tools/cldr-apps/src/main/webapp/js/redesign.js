@@ -20,11 +20,17 @@ $(function() {
 
 	// handle sidebar
 	$('#left-sidebar').hover(function() {
-			if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
+				if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
 				$(this).addClass('active');
 				toggleOverlay();
 			} else {
 				// can't show sidebar - page is disconnected.
+
+				// DEBUGGING
+				console.log("Cannot open left-sidebar; disconnected = "
+						 + $('body').hasClass('disconnected')
+						 + "; haveDialog = " + window.haveDialog);
+				
 			}
 		},
 		function() {
@@ -280,7 +286,7 @@ function unpackMenuSideBar(json) {
 	}
 
 	var html = '<ul>';
-	if (!isVisitor) {
+	if (!cldrStatus.isVisitor()) {
 		// put the dashboard out
 		var tmp = null;
 		var reportHtml = '';
@@ -364,7 +370,7 @@ function unpackMenuSideBar(json) {
 		toggleOverlay();
 		$('#OtherSection').hide();
 		if ($(this).data('query')) {
-			window.location = survURL + '?' + $(this).data('url') + '&_=' + cldrStatus.getCurrentLocale();
+			window.location = cldrStatus.getSurvUrl() + '?' + $(this).data('url') + '&_=' + cldrStatus.getCurrentLocale();
 		} else {
 			cldrStatus.setCurrentSpecial($(this).data('url'));
 			cldrStatus.setCurrentId('');

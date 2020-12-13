@@ -1245,6 +1245,8 @@ var ajaxTimeout = 120000; // 2 minutes
  * This is called periodically to fetch latest ST status
  */
 function updateStatus() {
+	console.log("Hello my name is updateStatus");
+
 	if (disconnected) {
 		stdebug("Not updating status - disconnected.");
 		return;
@@ -1351,15 +1353,7 @@ require(["dojo/ready"], function(ready) {
 	console.log("Hello my name is ready in survey.js");
 	ready(function() {
 		cldrGui.run();
-		let name = window.location.pathname;
-		if (name.includes('about.jsp') || name.includes('browse.jsp')) {
-			/*
-			 * Skip timer for about.jsp and browse.jsp; calling updateStatus for
-			 * those pages would needlessly waste time on the server.
-			 */
-		} else {
-			updateStatus(); // for the first time
-		}
+		updateStatus(); // for the first time
 	});
 });
 
@@ -3873,7 +3867,7 @@ function loadAdminPanel() {
  * Update the counter on top of the vetting page
  */
 function refreshCounterVetting() {
-	if (isVisitor || isDashboard()) {
+	if (cldrStatus.isVisitor() || isDashboard()) {
 		// if the user is a visitor, or this is the Dashboard, don't display the counter informations
 		$('#nav-page .counter-infos, #nav-page .nav-progress').hide();
 		return;

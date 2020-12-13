@@ -116,7 +116,6 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
               <script type="application/javascript">
 <% if(request.getParameter("_STARTINGUP")==null) { %>
               var newUrl = '<%= url %>' + document.location.search +  document.location.hash;
-              var survURL = '<%= survURL %>';
                             (document.getElementById("redir") || {}).href = newUrl;
                            var dstatus = document.getElementById('st_err');
                            if(dstatus != null) {
@@ -127,7 +126,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
                                        dstatus.appendChild(document.createTextNode('.'));
                                            window.setTimeout(function(){
                                                dstatus.appendChild(document.createTextNode('.'));
-                                               cldrStAjax.sendXhr({url: survURL, load: function(data) {
+                                               cldrStAjax.sendXhr({url: cldrStatus.getSurvUrl(), load: function(data) {
                                                    dstatus.appendChild(document.createTextNode('Loaded  ' + data.length +
                                                        ' bytes from SurveyTool. Reloading this page..'));
                                                    window.location.reload(true);
@@ -164,21 +163,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
  WebContext ctx = new WebContext(request,response);
  request.setAttribute("WebContext", ctx);
  String status = ctx.setSession();
-if(false) { // if we need to redirect for some reason..
-	 ctx.addAllParametersAsQuery();
- 	 String url = request.getContextPath() + "/survey?" + ctx.query().replaceAll("&amp;", "\\&") + "&fromv=true";
-	 // JavaScript based redirect
-	 %>
-	 <head>
-    	 <title>Survey Tool: Redirect</title>
-	       <script type="application/javascript">
-	        document.location='<%= url %>' + document.location.hash;
-	       </script>
-     </head>
-	 <body>
-	   If you are not redirected, please click: <a href='<%= url %>'>here</a>, or <a id='redir2' href='<%= survURL %>'>here</a> (may lose your place).
-	 <%
- } else if(ctx.session==null) {
+if(ctx.session==null) {
 	 %>
 				<html class='claro'>
 				<head class='claro'>

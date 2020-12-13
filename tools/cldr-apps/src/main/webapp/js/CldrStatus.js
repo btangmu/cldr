@@ -261,6 +261,14 @@ const cldrStatus = (function() {
 				+ src + "' title='Test Warning' />";
 	}
 
+	function getSurvUrl() {
+		return getContextPath() + '/survey';
+	}
+
+	function isVisitor() {
+		return getSurveyUser() === null;
+	}
+
 	/*
 	 * Make only these functions accessible from other files:
 	 */
@@ -312,5 +320,9 @@ const cldrStatus = (function() {
 
 		stopIcon: stopIcon,
 		warnIcon: warnIcon,
+	
+		getSurvUrl: getSurvUrl,
+		
+		isVisitor: isVisitor,
 	};
 })();
