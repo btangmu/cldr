@@ -10,7 +10,7 @@
  */
 const cldrGui = (function() {
 	const vhtml1 =
- 			"<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title='CLDR Survey Tool'\n"
+			  "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title='CLDR Survey Tool'\n"
             + "    data-dojo-props='onHide: function(){ariReload.style.display=\"\";ariRetry.style.display=\"none\";"
             + "      if(disconnected) { unbust();}}'>\n"
             + "\n"
@@ -305,6 +305,7 @@ const cldrGui = (function() {
 	function run() {
 		console.log("Hello my name is cldrGui.run");
 		
+		// Temporary debugging:
 		for (let h of [vhtml1, vhtml2, vhtml3, vhtml4, vhtml5, vhtml6, hiddenHtml]) {
 			if (!parseAsMimeType(h, 'text/html')) {
 				console.log('BAD HTML 🐧🐧🐧:\n' + h + '\n');
@@ -317,7 +318,7 @@ const cldrGui = (function() {
 		// Note: in the old way, with v.jsp, hiddenHtml was included by stnotices.jspf
 		document.body.innerHTML = vhtml1 + vhtml2 + vhtml3 + vhtml4 + vhtml5 + vhtml6 + hiddenHtml;
 
-		// Testing:
+		// Temporary debugging:
 		for (let id of ['ariContent', 'progress', 'progress-refresh', 'title-section-container',
 				 'nav-page', 'DynamicDataSection']) {
 	 		if (document.getElementById(id)) {
@@ -352,7 +353,7 @@ const cldrGui = (function() {
 		}
 	}
 
-	// here temporarily while debugging
+	// Temporary debugging (cf. parseAsMimeType in TestCldrTest.js):
 	function parseAsMimeType(inputString, mimeType) {
 		const doc = new DOMParser().parseFromString(inputString, mimeType);
 		if (!doc) {
@@ -376,5 +377,6 @@ const cldrGui = (function() {
 	 */
 	return {
 		run: run,
+		updateStatus: updateStatus,
 	};
 })();
