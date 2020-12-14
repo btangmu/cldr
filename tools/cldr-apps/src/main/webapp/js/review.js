@@ -19,7 +19,7 @@ function bindReviewEvents() {
  * Startup function
  */
 require(["dojo/ready"], function(ready) {
-	const priority = 101; // after cldrGui.run (1) and cldrRedesignStartup (100), before default Dojo (1000) 
+	const priority = 2001; // after cldrGui.run (1) and cldrRedesignStartup (2000); cf. default Dojo (1000)
 	ready(priority, cldrReviewStartup);
 });
 function cldrReviewStartup() {

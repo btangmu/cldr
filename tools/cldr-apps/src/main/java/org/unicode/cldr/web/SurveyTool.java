@@ -34,7 +34,7 @@ public class SurveyTool extends HttpServlet {
     }
 
     /**
-     * Serve the HTML for Survey Tool
+     * Serve the starting HTML for Survey Tool
      *
      * @param request
      * @param response
@@ -85,13 +85,7 @@ public class SurveyTool extends HttpServlet {
         out.write("<title>CLDR Survey Tool | Starting</title>\n");
         includeCss(request, out);
         if (request.getParameter("_STARTINGUP") == null) {
-            out.write("<script>\n");
-            out.write("  window.setTimeout(function() {\n");
-            out.write("    window.location.reload(true);\n");
-            out.write("    //document.location='" + url
-                        + "' + document.location.search + document.location.hash;\n");
-            out.write("  },10000 /* ten seconds */);\n");
-            out.write("</script>\n");
+            writeTimeoutReloadScript(out, url);
         }
         writeDotDotDotScript(out);
         out.write(VettingViewer.getHeaderStyles() + "\n");
@@ -101,20 +95,7 @@ public class SurveyTool extends HttpServlet {
             SurveyLog.logException(e, "Including JavaScript");
         }
         out.write("</head>\n<body>\n");
-        out.write("<div class=\"navbar navbar-fixed-top\" role=\"navigation\">\n"
-            + "  <div class=\"container\">\n"
-            + "    <div class=\"navbar-header\">\n"
-            + "      <p class=\"navbar-brand\">\n"
-            + "        <a href=\"http://cldr.unicode.org\">CLDR</a> SurveyTool\n"
-            + "      </p>\n"
-            + "    </div>\n"
-            + "    <div class=\"collapse navbar-collapse  navbar-right\">\n"
-            + "      <ul class=\"nav navbar-nav\">\n"
-            + "        <li><a href=\"http://cldr.unicode.org/index/survey-tool\">Help</a></li>\n"
-            + "      </ul>\n"
-            + "    </div>\n"
-            + "  </div>\n"
-            + "</div>\n");
+        writeWaitingNavbarHtml(out);
 
         out.write("<div class='container'>\n");
         out.write("  <div class='starter-template' style='margin-top: 120px;'>\n");
@@ -148,6 +129,16 @@ public class SurveyTool extends HttpServlet {
         out.write("</body>\n</html>\n");
     }
 
+    private void writeTimeoutReloadScript(PrintWriter out, String url) {
+        out.write("<script>\n");
+        out.write("  window.setTimeout(function() {\n");
+        out.write("    window.location.reload(true);\n");
+        out.write("    //document.location='" + url
+                    + "' + document.location.search + document.location.hash;\n");
+        out.write("  },10000 /* ten seconds */);\n");
+        out.write("</script>\n");
+    }
+
     private void writeDotDotDotScript(PrintWriter out) {
         out.write("<script>\n");
         out.write("var spin0 = 0;\n");
@@ -171,6 +162,23 @@ public class SurveyTool extends HttpServlet {
         out.write("</script>\n");
     }
 
+    private void writeWaitingNavbarHtml(PrintWriter out) {
+        out.write("<div class=\"navbar navbar-fixed-top\" role=\"navigation\">\n"
+            + "  <div class=\"container\">\n"
+            + "    <div class=\"navbar-header\">\n"
+            + "      <p class=\"navbar-brand\">\n"
+            + "        <a href=\"http://cldr.unicode.org\">CLDR</a> SurveyTool\n"
+            + "      </p>\n"
+            + "    </div>\n"
+            + "    <div class=\"collapse navbar-collapse  navbar-right\">\n"
+            + "      <ul class=\"nav navbar-nav\">\n"
+            + "        <li><a href=\"http://cldr.unicode.org/index/survey-tool\">Help</a></li>\n"
+            + "      </ul>\n"
+            + "    </div>\n"
+            + "  </div>\n"
+            + "</div>\n");
+    }
+
     private void serveProblemNoSessionPage(HttpServletRequest request, PrintWriter out, String status) {
         out.write("<html class='claro'>\n<head class='claro'>\n");
         out.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>\n");
@@ -191,8 +199,9 @@ public class SurveyTool extends HttpServlet {
     }
 
     private void serveRunnningNormallyPage(HttpServletRequest request, PrintWriter out, SurveyMain sm)
-        throws IOException {
-        out.write("<html lang='" + SurveyMain.TRANS_HINT_LOCALE.toLanguageTag() + "' class='claro'>\n");
+            throws IOException {
+        String lang = SurveyMain.TRANS_HINT_LOCALE.toLanguageTag();
+        out.write("<html lang='" + lang + "' class='claro'>\n");
         out.write("<head>\n");
         out.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>\n");
         out.write("<title>CLDR Survey Tool</title>\n");
@@ -207,9 +216,8 @@ public class SurveyTool extends HttpServlet {
         } catch (JSONException e) {
             SurveyLog.logException(e, "Including JavaScript");
         }
-        /// out.write("<script>$(document).ready(cldrGui.run());</script>\n");
         out.write("</head>\n");
-        out.write("<body lang='en-ZZ' data-spy='scroll' data-target='#itemInfo'>\n");
+        out.write("<body lang='" + lang + " data-spy='scroll' data-target='#itemInfo'>\n");
         out.write("Loading...\n");
         out.write("</body>\n</html>\n");
     }

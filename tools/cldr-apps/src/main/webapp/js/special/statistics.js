@@ -3,14 +3,12 @@
  * @module statistics
  */
 define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
-                                    //"dijit/layout/TabContainer", "dijit/layout/ContentPane",
                                     "dojox/charting/Chart", "dojox/charting/axis2d/Default", 
                                     "dojox/charting/plot2d/StackedBars", "dojox/charting/widget/SelectableLegend", 
                                     "dojox/charting/themes/Distinctive", //http://archive.dojotoolkit.org/nightly/dojotoolkit/dojox/charting/tests/test_themes.html
                                     "dojox/charting/action2d/Tooltip",
                                     "dojo/domReady!"],
                                     function(SpecialPage, dojoNumber, 
-                                    //TabContainer, ContentPane,
                                     Chart,axis2dDefault,StackedBars,SelectableLegend,Wetland,Tooltip
                                     ) {
 	var _super;

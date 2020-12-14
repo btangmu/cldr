@@ -21,53 +21,29 @@ function showV() {
 
 	// REQUIRES
 	require([
-		"dojo/ready",
-		"dojo/dom",
-		"dojo/parser",
 		"dijit/DropDownMenu",
 		"dijit/form/DropDownButton",
 		"dijit/MenuSeparator",
 		"dijit/MenuItem",
-		"dijit/form/TextBox",
 		"dijit/form/Button",
-		"dijit/CheckedMenuItem",
 		"dijit/Dialog",
 		"dijit/registry",
-		"dijit/PopupMenuItem",
-		"dijit/form/Select",
 		"dojox/form/BusyButton",
-		"dijit/layout/StackContainer",
-		"dijit/TitlePane",
 		"dojo/hash",
 		"dojo/topic",
 		"dojo/dom-construct",
-		"dojo/number",
-		"dojo/domReady!"
-		/*
-		 * Note: there are 22 strings above, and only 21 arguments below.
-		 * No argument corresponds to the string "dojo/domReady!". This is normal.
-		 * See https://dojotoolkit.org/reference-guide/1.10/dojo/domReady.html
-		 */
+		"dojo/number"
 	],
 		// HANDLES
 		function(
-			ready,
-			dom,
-			parser,
 			DropDownMenu,
 			DropDownButton,
 			MenuSeparator,
 			MenuItem,
-			TextBox,
 			Button,
-			CheckedMenuItem,
 			Dialog,
 			registry,
-			PopupMenuItem,
-			Select,
 			BusyButton,
-			StackContainer,
-			TitlePane,
 			dojoHash,
 			dojoTopic,
 			domConstruct,
@@ -1282,8 +1258,8 @@ function showV() {
 				 */
 				function showPossibleProblems(flipper, flipPage, loc, session, effectiveCov, requiredCov) {
 					cldrStatus.setCurrentLocale(loc);
-					require(["dojo/ready"], function(ready) {
-						ready(function() {
+					/// require(["dojo/ready"], function(ready) {
+					/// 	ready(function() {
 							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=possibleProblems&_=" + cldrStatus.getCurrentLocale() + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
 							myLoad(url, "possibleProblems", function(json) {
 								if (verifyJson(json, 'possibleProblems')) {
@@ -1316,9 +1292,10 @@ function showV() {
 									hideLoader(null);
 								}
 							});
-						});
-					});
-				}
+						}
+				///		);
+				/// 	});
+				/// }
 
 				var isLoading = false;
 
@@ -1795,22 +1772,13 @@ function showV() {
 							showLoader(theDiv.loader);
 							showInPop2(stui.str("reportGuidance"), null, null, null, true, true); /* show the box the first time */
 							require([
-								"dojo/ready",
-								"dojo/dom",
-								"dojo/dom-construct",
-								"dojo/request",
-								"dojo/number",
-								"dojo/domReady!"
+								"dojo/request"
 							],
 								// HANDLES
 								function(
-									ready,
-									dom,
-									dcons,
-									request,
-									dojoNumber
+									request
 								) {
-									ready(function() {
+									/// ready(function() {
 
 										var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial() + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + cacheKill();
 										var errFunction = function errFunction(err) {
@@ -1857,7 +1825,7 @@ function showV() {
 												.otherwise(errFunction);
 										}
 
-									});
+									/// });
 								});
 						} else if (cldrStatus.getCurrentSpecial() == 'none') {
 							// for now - redirect
@@ -1965,7 +1933,7 @@ function showV() {
 				 * this code and the code that's responsible for getting the session id from
 				 * the server -- that is, updateStatus() in survey.js, as of 2020-12-10
 				 */
-				ready(function() {
+				//// ready(function() {
 					getM();
 					function getM() {
 						const sessionId = cldrStatus.getSessionId();
@@ -1975,7 +1943,7 @@ function showV() {
 							setTimeout(getM, 100); // try again after 1/10 second
 						}
 					}
-				});
+				//// });
 
 				function getInitialMenusEtc(sessionId) {
 					window.parseHash(dojoHash()); // get the initial settings

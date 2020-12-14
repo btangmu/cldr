@@ -3181,9 +3181,9 @@ public class SurveyAjax extends HttpServlet {
     }
 
     private static void includeDojoJavaScript(Writer out) throws IOException {
-        out.write("<script>dojoConfig = {parseOnLoad: true, async: true,};</script>\n");
+        out.write("<script>dojoConfig = {parseOnLoad: false, async: true,};</script>\n");
         out.write("<script src='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js'></script>\n");
-        out.write("<script>require([\"dojo/parser\", \"dijit/layout/ContentPane\", \"dijit/layout/BorderContainer\"]);</script>\n");
+        // out.write("<script>require([\"dojo/parser\", \"dijit/layout/ContentPane\", \"dijit/layout/BorderContainer\"]);</script>\n");
     }
 
     private static void includeJqueryJavaScript(Writer out) throws IOException {

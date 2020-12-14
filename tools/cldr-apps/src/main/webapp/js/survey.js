@@ -1132,30 +1132,8 @@ function updateStatusBox(json) {
 
 	if (json.status) {
 		lastJsonStatus = json.status;
-		if (json.status.sessionId) {
-			cldrStatus.setSessionId(json.status.sessionId);
-		}
-		if (json.status.contextPath) {
-			cldrStatus.setContextPath(json.status.contextPath);
-		}
-		if (json.status.isUnofficial) {
-			cldrStatus.setIsUnofficial(json.status.isUnofficial);
-		}
-		if (json.status.isPhaseBeta) {
-			cldrStatus.setIsPhaseBeta(json.status.isPhaseBeta);
-		}
-		if (json.status.newVersion) {
-			cldrStatus.setNewVersion(json.status.newVersion);
-		}
-		if (json.status.user) {
-			cldrStatus.setSurveyUser(json.status.user);
-		}
-		if (json.status.organizationName) {
-			cldrStatus.setOrganizationName(json.status.organizationName);
-		}
-		if (json.status.permissions) {
-			cldrStatus.setPermissions(json.status.permissions);
-		}
+		cldrStatus.updateAll(json.status);
+		cldrGui.updateStatus();
 		if (!updateParts) {
 			var visitors = document.getElementById("visitors");
 			updateParts = {
@@ -4228,7 +4206,6 @@ function showUserActivity(list, tableRef) {
 		require([
 				"dojo/ready",
 				"dojo/dom",
-				"dojo/dom-construct",
 				"dojo/request",
 				"dojo/number",
 				"dojo/domReady!"
@@ -4237,7 +4214,6 @@ function showUserActivity(list, tableRef) {
 			function(
 				ready,
 				dom,
-				dcons,
 				request,
 				dojoNumber
 			) {

@@ -9,7 +9,7 @@
  * Startup function
  */
 require(["dojo/ready"], function(ready) {
-	const priority = 100; // after cldrGui.run (1), before cldrReviewStartup (101) and default Dojo (1000)
+	const priority = 2000; // after cldrGui.run (1), before cldrReviewStartup (2001); cf. default Dojo (1000)
 	ready(priority, cldrRedesignStartup);
 });
 function cldrRedesignStartup() {

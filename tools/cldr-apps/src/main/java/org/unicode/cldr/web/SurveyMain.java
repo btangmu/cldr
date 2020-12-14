@@ -1346,6 +1346,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             .put("user", myUser)
             .put("organizationName", orgName)
             .put("permissions", perm)
+            .put("specialHeader",  getSpecialHeaderText())
         ;
     }
 

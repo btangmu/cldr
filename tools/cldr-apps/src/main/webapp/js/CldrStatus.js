@@ -10,10 +10,43 @@
  */
 const cldrStatus = (function() {
 
+	function updateAll(status) {
+		if (status.sessionId) {
+			setSessionId(status.sessionId);
+		}
+		if (status.contextPath) {
+			setContextPath(status.contextPath);
+		}
+		if (status.isUnofficial) {
+			setIsUnofficial(status.isUnofficial);
+		}
+		if (status.phase) {
+			setPhase(status.phase);
+		}
+		if (status.isPhaseBeta) {
+			setIsPhaseBeta(status.isPhaseBeta);
+		}
+		if (status.newVersion) {
+			setNewVersion(status.newVersion);
+		}
+		if (status.user) {
+			setSurveyUser(status.user);
+		}
+		if (status.organizationName) {
+			setOrganizationName(status.organizationName);
+		}
+		if (status.permissions) {
+			setPermissions(status.permissions);
+		}
+		if (status.specialHeader) {
+			setSpecialHeader(status.specialHeader);
+		}
+	}
+	
 	/**
 	 * When this changes from one non-null value to another, the server has restarted
 	 * a.k.a. org.unicode.cldr.web.SurveyMain.surveyRunningStamp
-	 * a.k.a. json.status.surveyRunningStamp
+	 * a.k.a. status.surveyRunningStamp
 	 */
 	let runningStamp = null;
 
@@ -52,7 +85,7 @@ const cldrStatus = (function() {
 	/**
 	 * A string such as '/cldr-apps'
 	 * It may be set from (on the server) HttpServletRequest.getContextPath()
-	 * a.k.a. json.status.contextPath
+	 * a.k.a. status.contextPath
 	 */
 	let contextPath = '/cldr-apps';
 
@@ -185,6 +218,19 @@ const cldrStatus = (function() {
 	/**
 	 * Is this a "beta" phase of Survey Tool? (Boolean)
 	 */
+	let phase = '';
+
+	function getPhase() {
+		return phase;
+	}
+
+	function setPhase(p) {
+		phase = p;
+	}
+
+	/**
+	 * Is this a "beta" phase of Survey Tool? (Boolean)
+	 */
 	let isPhaseBeta = null;
 
 	function getIsPhaseBeta() {
@@ -273,6 +319,8 @@ const cldrStatus = (function() {
 	 * Make only these functions accessible from other files:
 	 */
 	return {
+		updateAll: updateAll,
+
 		getRunningStamp: getRunningStamp,
 		runningStampChanged: runningStampChanged,
 
@@ -303,6 +351,9 @@ const cldrStatus = (function() {
 		getIsUnofficial: getIsUnofficial,
 		setIsUnofficial: setIsUnofficial,
 
+		getPhase: getPhase,
+		setPhase: setPhase,
+		
 		getIsPhaseBeta: getIsPhaseBeta,
 		setIsPhaseBeta: setIsPhaseBeta,
 

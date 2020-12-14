@@ -15,6 +15,7 @@ const cldrTest = (function() {
 	/**
 	 * Parse the given string as the given mime type
 	 *
+	 * @param mimeType such as 'application/xml' or 'text/html'
 	 * @return the output string, or null for failure
 	 */
 	function parseAsMimeType(inputString, mimeType) {
