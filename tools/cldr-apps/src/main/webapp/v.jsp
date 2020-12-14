@@ -12,6 +12,7 @@ final String survURL = request.getContextPath() + "/survey";
 SurveyMain sm = SurveyMain.getInstance(request);
 if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
     %>
+    <html>
     <head>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/surveytool.css" />
     <link rel="stylesheet" href="<%= request.getContextPath() %>/css/CldrStForum.css" />
@@ -29,6 +30,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
 } else if(sm==null || !SurveyMain.isSetup || request.getParameter("_STARTINGUP")!=null ) {
     String url = request.getContextPath() + request.getServletPath(); // TODO add query
         %>
+    <html>
     <head>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/surveytool.css" />
     <link rel="stylesheet" href="<%= request.getContextPath() %>/css/redesign.css" />
@@ -116,7 +118,6 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
               <script type="application/javascript">
 <% if(request.getParameter("_STARTINGUP")==null) { %>
               var newUrl = '<%= url %>' + document.location.search +  document.location.hash;
-              var survURL = '<%= survURL %>';
                             (document.getElementById("redir") || {}).href = newUrl;
                            var dstatus = document.getElementById('st_err');
                            if(dstatus != null) {
@@ -127,7 +128,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
                                        dstatus.appendChild(document.createTextNode('.'));
                                            window.setTimeout(function(){
                                                dstatus.appendChild(document.createTextNode('.'));
-                                               cldrStAjax.sendXhr({url: survURL, load: function(data) {
+                                               cldrStAjax.sendXhr({url: cldrStatus.getSurvUrl(), load: function(data) {
                                                    dstatus.appendChild(document.createTextNode('Loaded  ' + data.length +
                                                        ' bytes from SurveyTool. Reloading this page..'));
                                                    window.location.reload(true);
@@ -164,21 +165,7 @@ if(SurveyMain.isBusted!=null || request.getParameter("_BUSTED")!=null) {
  WebContext ctx = new WebContext(request,response);
  request.setAttribute("WebContext", ctx);
  String status = ctx.setSession();
-if(false) { // if we need to redirect for some reason..
-	 ctx.addAllParametersAsQuery();
- 	 String url = request.getContextPath() + "/survey?" + ctx.query().replaceAll("&amp;", "\\&") + "&fromv=true";
-	 // JavaScript based redirect
-	 %>
-	 <head>
-    	 <title>Survey Tool: Redirect</title>
-	       <script type="application/javascript">
-	        document.location='<%= url %>' + document.location.hash;
-	       </script>
-     </head>
-	 <body>
-	   If you are not redirected, please click: <a href='<%= url %>'>here</a>, or <a id='redir2' href='<%= survURL %>'>here</a> (may lose your place).
-	 <%
- } else if(ctx.session==null) {
+if(ctx.session==null) {
 	 %>
 				<html class='claro'>
 				<head class='claro'>
@@ -250,11 +237,6 @@ survURL = '<%=survURL%>';
     </div>
 
     <div class="dijitDialogPaneActionBar">
-    <%--
-        <button data-dojo-type="dijit/form/Button" type="submit" onClick="return ariDialog.isValid();">
-            Report Bug…
-        </button>
-        --%>
         <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type="dijit/form/Button" type="button" onClick="window.location = survURL;">
             Back to Locales
         </button>
@@ -263,14 +245,6 @@ survURL = '<%=survURL%>';
         </button>
     </div>
 </div>
-
-<%--
-<h1>ARITester</h1>
-<p>When pressing this button the dialog will popup:</p>
-<button id="buttonThree" data-dojo-type="dijit/form/Button" type="button" onClick="ariDialog.show();">
-    Show me!
-</button>
---%>
 
 <div class="navbar navbar-fixed-top" role="navigation">
       <div class="container-fluid">
@@ -382,8 +356,6 @@ survURL = '<%=survURL%>';
 	</div>
 </div>
 
-
-
 <div class="container-fluid" id="main-container">
  <div class="row menu-position">
     <div class="col-md-12">
@@ -409,11 +381,6 @@ survURL = '<%=survURL%>';
          </div> 
 
         <div id='title-page-container' class='menu-container'>
-<!-- 	         <div id='title-page' data-dojo-type="dijit/form/DropDownButton">
-	              <span>(page)</span>
-	              <div id='menu-page' data-dojo-type="dijit/DropDownMenu"></div>
-	         </div>
- -->        
   		</div>
 
         </div> <%-- end of toptitle --%>
