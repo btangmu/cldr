@@ -33,7 +33,7 @@ const cldrGui = (function() {
             + "</div>\n"
             ;
             
-     const vhtml2 =
+	const vhtml2 =
               "<div class='navbar navbar-fixed-top' role='navigation'>\n"
             + "  <div class='container-fluid'>\n"
             + "    <div class='collapse navbar-collapse'>\n"
@@ -77,7 +77,7 @@ const cldrGui = (function() {
             + "</div>\n"
             ;
 
-      const vhtml3 =
+	const vhtml3 =
               "<div id='left-sidebar'>\n"
             + "  <div id='content-sidebar'>\n"
             + "    <div id='locale-info'>\n"
@@ -106,7 +106,8 @@ const cldrGui = (function() {
             + "</div>\n"
             ;
  
-       const vhtml4 =
+ 
+	const vhtml4 =
 			  "<div class='container-fluid' id='main-container'>\n"
             + "  <div class='row menu-position'>\n"
             + "    <div class='col-md-12'>\n"
@@ -196,11 +197,9 @@ const cldrGui = (function() {
             + "</div>\n"
             ;
 
-        const vhtml5 =
-              "<div id='overlay'></div>\n"
-              ;
+	const vhtml5 = "<div id='overlay'></div>\n";
 
-        const vhtml6 =
+	const vhtml6 =
               "<div class='modal fade' id='post-modal' tabindex='-1' role='dialog' aria-hidden='true'>\n"
             + "  <div class='modal-dialog modal-lg'>\n"
             + "    <div class='modal-content'>\n"
@@ -214,7 +213,7 @@ const cldrGui = (function() {
             + "</div>\n"
             ;
 
-		const hiddenHtml =
+	const hiddenHtml =
 		      "<div style='display: none' id='hidden-stuff'>\n"
 			+ "  <!--  hidden.html - prototypes for some things -->\n"
             + "  <h1>Hidden Stuff</h1>\n"
