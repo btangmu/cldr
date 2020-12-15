@@ -10,19 +10,17 @@
  * and running in strict mode.
  */
 const cldrGui = (function () {
-  const GUI_DEBUG = false;
+  const GUI_DEBUG = true;
 
   /**
    * Set up the DOM and start executing Survey Tool as a single page app
    */
   function run() {
-    console.log("Hello my name is cldrGui.run");
-
     if (GUI_DEBUG) {
+      console.log("Hello my name is cldrGui.run");
       debugParse();
     }
 
-    // Note: in the old way, with v.jsp, hiddenHtml was included by stnotices.jspf
     document.body.innerHTML = getBodyHtml();
 
     if (GUI_DEBUG) {
@@ -34,6 +32,7 @@ const cldrGui = (function () {
     });
 
     showV(); // in CldrSurveyVettingLoader.js
+    updateStatus(); // for the first time; in survey.js
   }
 
   const vhtml1 =
@@ -193,27 +192,27 @@ const cldrGui = (function () {
     "        </div>\n" +
     "      </div>\n" +
     "    </div>\n" +
-    "    <div class='row' id='main-row' style='padding-top:147px;'>\n" +
-    "      <div class='col-md-9'>\n" +
-    "        <div id='MainContentPane' data-dojo-props=\"splitter:true, region:'center'\" >\n" +
-    "          <div id='LoadingMessageSection'>Please Wait<img src='loader.gif' alt='Please Wait' /></div>\n" +
-    "          <div id='DynamicDataSection'></div>\n" +
-    "          <div id='nav-page-footer'>\n" +
-    "            <p class='nav-button'>\n" +
-    "              <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
-    "              <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
-    "              <button type='button' class='btn btn-default btn-xs toggle-right'>Toggle Sidebar <span class='glyphicon glyphicon-align-right'></span></button>\n" +
-    "            </p>\n" +
-    "          </div>\n" +
-    "          <div id='OtherSection'></div>\n" +
+    "  </div>\n" +
+    "  <div class='row' id='main-row' style='padding-top:147px;'>\n" +
+    "    <div class='col-md-9'>\n" +
+    "      <div id='MainContentPane' data-dojo-props=\"splitter:true, region:'center'\" >\n" +
+    "        <div id='LoadingMessageSection'>Please Wait<img src='loader.gif' alt='Please Wait' /></div>\n" +
+    "        <div id='DynamicDataSection'></div>\n" +
+    "        <div id='nav-page-footer'>\n" +
+    "          <p class='nav-button'>\n" +
+    "            <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
+    "            <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
+    "            <button type='button' class='btn btn-default btn-xs toggle-right'>Toggle Sidebar <span class='glyphicon glyphicon-align-right'></span></button>\n" +
+    "          </p>\n" +
     "        </div>\n" +
-    "      </div>\n" +
-    "      <div class='col-md-3'>\n" +
-    "        <div id='itemInfo' class='right-info' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
+    "        <div id='OtherSection'></div>\n" +
     "      </div>\n" +
     "    </div>\n" +
-    "    <div id='ressources' style='display:none'></div>\n" +
+    "    <div class='col-md-3'>\n" +
+    "      <div id='itemInfo' class='right-info' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
+    "    </div>\n" +
     "  </div>\n" +
+    "  <div id='ressources' style='display:none'></div>\n" +
     "</div>\n";
 
   const vhtml5 = "<div id='overlay'></div>\n";
@@ -321,7 +320,7 @@ const cldrGui = (function () {
 
   let needStatusUpdate = true;
 
-  function updateStatus() {
+  function updateWithStatus() {
     if (needStatusUpdate) {
       needStatusUpdate = false;
 
@@ -395,7 +394,7 @@ const cldrGui = (function () {
       "nav-page",
       "DynamicDataSection",
     ]) {
-      if (!document.getElementById(id)) {
+      if (document.getElementById(id)) {
         console.log(id + " is OK 😎");
       } else {
         console.log(id + " is MISSING 🐞🐞🐞🐞");
@@ -408,7 +407,7 @@ const cldrGui = (function () {
    */
   return {
     run: run,
-    updateStatus: updateStatus,
+    updateWithStatus: updateWithStatus,
     /*
      * The following are meant to be accessible for unit testing only:
      */

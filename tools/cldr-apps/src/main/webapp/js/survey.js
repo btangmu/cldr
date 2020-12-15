@@ -1056,7 +1056,6 @@ function trySurveyLoad() {
 		console.log("Attempting to restart ST at " + url);
 		cldrStAjax.sendXhr({
 			url: url,
-			timeout: ajaxTimeout
 		});
 	} catch (e) {}
 }
@@ -1133,7 +1132,7 @@ function updateStatusBox(json) {
 	if (json.status) {
 		lastJsonStatus = json.status;
 		cldrStatus.updateAll(json.status);
-		cldrGui.updateStatus();
+		cldrGui.updateWithStatus();
 		if (!updateParts) {
 			var visitors = document.getElementById("visitors");
 			updateParts = {
@@ -1214,17 +1213,9 @@ function updateStatusBox(json) {
 var timerSpeed = 15000; // 15 seconds
 
 /**
- * How long to wait for AJAX updates.
- * @property ajaxTimeout
- */
-var ajaxTimeout = 120000; // 2 minutes
-
-/**
  * This is called periodically to fetch latest ST status
  */
 function updateStatus() {
-	console.log("Hello my name is updateStatus");
-
 	if (disconnected) {
 		stdebug("Not updating status - disconnected.");
 		return;
@@ -1244,7 +1235,6 @@ function updateStatus() {
 	cldrStAjax.sendXhr({
 		url: cldrStatus.getContextPath() + "/SurveyAjax?what=status" + surveyLocaleUrl + surveySessionUrl + cacheKill(),
 		handleAs: "json",
-		timeout: ajaxTimeout,
 		load: function(json) {
 			if ((json == null) || (json.status && json.status.isBusted)) {
 				wasBusted = true;
@@ -1328,11 +1318,9 @@ function updateStatus() {
 
 // set up window. Let Dojo call us, otherwise dojo won't load.
 require(["dojo/ready"], function(ready) {
-	console.log("Hello my name is ready in survey.js");
 	const priority = 1; // fire before all other dojo callbacks!
 	ready(priority, function() {
 		cldrGui.run();
-		updateStatus(); // for the first time
 	});
 });
 
@@ -1438,6 +1426,8 @@ function cloneAnon(i) {
  * @param o
  */
 function localizeAnon(o) {
+	console.log("☎️ Calling loadStui from localizeAnon");
+
 	loadStui(null, function(stui) {
 		if (o && o.childNodes) {
 			for (var i = 0; i < o.childNodes.length; i++) {
@@ -2756,6 +2746,7 @@ function updateCoverage(theDiv) {
 }
 
 function loadStui(loc, cb) {
+	console.log("☎️ Hello my name is loadStui! loc = " + loc + "; cb = " + cb);
 	if (!stui.ready) {
 		/*
 		 * https://dojotoolkit.org/reference-guide/1.10/dojo/string.html
@@ -3176,7 +3167,6 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		handleAs: "json",
 		load: loadHandler,
 		error: errorHandler,
-		timeout: ajaxTimeout
 	};
 	cldrStAjax.queueXhr(xhrArgs);
 }
@@ -3333,7 +3323,6 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 		url: ourUrl,
 		handleAs: "json",
 		content: ourContent,
-		timeout: ajaxTimeout,
 		load: loadHandler,
 		error: errorHandler
 	};

@@ -16,8 +16,6 @@ window.haveDialog = false;
  * Call this once in the page. It expects to find a node #DynamicDataSection
  */
 function showV() {
-	console.log("Hello my name is showV");
-
 	// REQUIRES
 	require([
 		"dijit/DropDownMenu",
@@ -48,6 +46,7 @@ function showV() {
 			domConstruct,
 			dojoNumber
 		) {
+			console.log("☎️ Calling loadStui from showV");
 			loadStui(null, function( /*stui*/) {
 
 				var appendLocaleLink = function appendLocaleLink(subLocDiv, subLoc, subInfo, fullTitle) {
@@ -108,6 +107,8 @@ function showV() {
 				var pucontent = document.getElementById("itemInfo");
 				var theDiv = flipper.get(pages.data);
 				theDiv.pucontent = pucontent;
+
+				console.log("☎️ Calling loadStui without args, from somewhere inside showV");
 				theDiv.stui = loadStui();
 
 				pucontent.appendChild(createChunk(stui.str("itemInfoBlank"), "i"));
@@ -1257,8 +1258,7 @@ function showV() {
 				 */
 				function showPossibleProblems(flipper, flipPage, loc, session, effectiveCov, requiredCov) {
 					cldrStatus.setCurrentLocale(loc);
-					/// require(["dojo/ready"], function(ready) {
-					/// 	ready(function() {
+
 							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=possibleProblems&_=" + cldrStatus.getCurrentLocale() + "&s=" + session + "&eff=" + effectiveCov + "&req=" + requiredCov + cacheKill();
 							myLoad(url, "possibleProblems", function(json) {
 								if (verifyJson(json, 'possibleProblems')) {
@@ -1292,16 +1292,9 @@ function showV() {
 								}
 							});
 						}
-				///		);
-				/// 	});
-				/// }
 
 				var isLoading = false;
 
-				/**
-				 * This is the main entrypoint to the 'new' view system, based in /v.jsp
-				 * TODO: don't attach it to "window"!
-				 */
 				window.reloadV = function reloadV() {
 					if (disconnected) {
 						unbust();
@@ -1770,62 +1763,56 @@ function showV() {
 						} else if (isReport(cldrStatus.getCurrentSpecial())) {
 							showLoader(theDiv.loader);
 							showInPop2(stui.str("reportGuidance"), null, null, null, true, true); /* show the box the first time */
-							require([
-								"dojo/request"
-							],
-								// HANDLES
-								function(
-									request
-								) {
-									/// ready(function() {
-
-										var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial() + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + cacheKill();
-										var errFunction = function errFunction(err) {
-											console.log("Error: loading " + url + " -> " + err);
-											hideLoader(null, stui.loading2);
-											isLoading = false;
-											flipper.flipTo(pages.other, domConstruct.toDom("<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'><span class='icon i-stop'> &nbsp; &nbsp;</span>Error: could not load: " + err + "</div>"));
-										};
-										if (isDashboard()) {
-											if (!cldrStatus.isVisitor()) {
-												request
-													.get(url, {
-														handleAs: 'json'
-													})
-													.then(function(json) {
-														hideLoader(null, stui.loading2);
-														isLoading = false;
-														// further errors are handled in JSON
-														showReviewPage(json, function() {
-															// show function - flip to the 'other' page.
-															flipper.flipTo(pages.other, null);
-														});
-													})
-													.otherwise(errFunction);
-											} else {
-												alert('Please login to access Dashboard');
-												cldrStatus.setCurrentSpecial('');
-												cldrStatus.setCurrentLocale('');
-												reloadV();
-											}
-										} else {
-											hideLoader(null, stui.loading2);
-
-											request
-												.get(url, {
-													handleAs: 'html'
-												})
-												.then(function(html) {
-													// errors are handled as HTML.
-													hideLoader(null, stui.loading2);
-													isLoading = false;
-													flipper.flipTo(pages.other, domConstruct.toDom(html));
-												})
-												.otherwise(errFunction);
-										}
-
-									/// });
-								});
+							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial()
+								 + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + cacheKill();
+							var errFunction = function errFunction(err) {
+								console.log("Error: loading " + url + " -> " + err);
+								hideLoader(null, stui.loading2);
+								isLoading = false;
+								flipper.flipTo(pages.other,
+									domConstruct.toDom("<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>"
+									+ "<span class='icon i-stop'>"
+									+ " &nbsp; &nbsp;</span>Error: could not load: " + err + "</div>"));
+							};
+							if (isDashboard()) {
+								if (!cldrStatus.isVisitor()) {
+									const loadHandler = function(json) {
+										hideLoader(null, stui.loading2);
+										isLoading = false;
+										// further errors are handled in JSON
+										showReviewPage(json, function() {
+											// show function - flip to the 'other' page.
+											flipper.flipTo(pages.other, null);
+										});
+									};
+									const xhrArgs = {
+										url: url,
+										handleAs: "json",
+										load: loadHandler,
+										error: errFunction,
+									}
+									cldrStAjax.queueXhr(xhrArgs);
+								} else {
+									alert('Please login to access Dashboard');
+									cldrStatus.setCurrentSpecial('');
+									cldrStatus.setCurrentLocale('');
+									reloadV();
+								}
+							} else {
+								hideLoader(null, stui.loading2);
+								const loadHandler = function(html) {
+									hideLoader(null, stui.loading2);
+									isLoading = false;
+									flipper.flipTo(pages.other, domConstruct.toDom(html));
+								};
+								const xhrArgs = {
+									url: url,
+									handleAs: "html",
+									load: loadHandler,
+									error: errFunction,
+								}
+								cldrStAjax.queueXhr(xhrArgs);
+							}
 						} else if (cldrStatus.getCurrentSpecial() == 'none') {
 							// for now - redirect
 							hideLoader(null);
@@ -1932,17 +1919,15 @@ function showV() {
 				 * this code and the code that's responsible for getting the session id from
 				 * the server -- that is, updateStatus() in survey.js, as of 2020-12-10
 				 */
-				//// ready(function() {
-					getM();
-					function getM() {
-						const sessionId = cldrStatus.getSessionId();
-						if (sessionId) {
-							getInitialMenusEtc(sessionId);
-						} else {
-							setTimeout(getM, 100); // try again after 1/10 second
-						}
+				getM();
+				function getM() {
+					const sessionId = cldrStatus.getSessionId();
+					if (sessionId) {
+						getInitialMenusEtc(sessionId);
+					} else {
+						setTimeout(getM, 100); // try again after 1/10 second
 					}
-				//// });
+				}
 
 				function getInitialMenusEtc(sessionId) {
 					window.parseHash(dojoHash()); // get the initial settings

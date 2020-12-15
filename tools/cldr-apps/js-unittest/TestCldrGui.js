@@ -10,7 +10,7 @@
             assert((html != null && html !== ''), "html is neither null nor empty");
         });
 
-        const xml = '<body'>' + html + '</body>';
+        const xml = '<body>' + html + '</body>';
         const xmlStr = cldrTest.parseAsMimeType(xml, 'application/xml')
         it('should return valid xml when in body element', function() {
             assert(xmlStr || false, 'parses OK as xml when in body element');

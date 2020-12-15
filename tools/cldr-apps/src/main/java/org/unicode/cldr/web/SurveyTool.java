@@ -219,7 +219,7 @@ public class SurveyTool extends HttpServlet {
             SurveyLog.logException(e, "Including JavaScript");
         }
         out.write("</head>\n");
-        out.write("<body lang='" + lang + " data-spy='scroll' data-target='#itemInfo'>\n");
+        out.write("<body lang='" + lang + "' data-spy='scroll' data-target='#itemInfo'>\n");
         out.write("Loading...\n");
         out.write("</body>\n</html>\n");
     }

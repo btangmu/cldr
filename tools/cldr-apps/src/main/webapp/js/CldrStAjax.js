@@ -35,7 +35,6 @@ const cldrStAjax = (function () {
    *   error: errorHandler,
    *   postData: postData, (or sometimes "content" instead of "postData")
    *   content: ourContent,
-   *   timeout: ajaxTimeout,
    *   headers: headers, (rarely used, but in loadOrFail it's {"Content-Type": "text/plain"})
    * }
    */
@@ -165,6 +164,7 @@ const cldrStAjax = (function () {
       // use vanilla js instead of dojo/request
       const request = new XMLHttpRequest();
       request.responseType = options.handleAs ? options.handleAs : "text";
+      request.timeout = 120000; // 2 minutes
       request.open(options.method, xhrArgs.url);
       request.onreadystatechange = function () {
         if (request.readyState === XMLHttpRequest.DONE) {
@@ -182,6 +182,7 @@ const cldrStAjax = (function () {
     } else {
       // https://dojotoolkit.org/reference-guide/1.10/dojo/request.html#dojo-request
       require(["dojo/request"], function (request) {
+        options.timeout = 120000; // 2 minutes
         request(xhrArgs.url, options).then(
           function (data) {
             xhrArgs.load(data);
