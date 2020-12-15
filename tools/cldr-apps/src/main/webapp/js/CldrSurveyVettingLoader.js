@@ -13,8 +13,7 @@
 window.haveDialog = false;
 
 /**
- * Utilities for the 'v.jsp' (dispatcher) page. Call this once in the page. It expects to find a node #DynamicDataSection
- * The function showV() itself is called only by v.jsp.
+ * Call this once in the page. It expects to find a node #DynamicDataSection
  */
 function showV() {
 	console.log("Hello my name is showV");

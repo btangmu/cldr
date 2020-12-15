@@ -1302,6 +1302,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     public JSONObject statusJSON(HttpServletRequest request) throws JSONException {
+        // StatusForFrontEnd s = new StatusForFrontEnd(this, request);
+
         Runtime r = Runtime.getRuntime();
         double total = r.totalMemory();
         total = total / 1024000.0;
@@ -1350,7 +1352,43 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             .put("specialHeader", getSpecialHeaderText())
         ;
     }
+/**
+    private class StatusForFrontEnd {
+        private String isBusted;
+        private boolean lockOut;
+        private boolean isSetup;
+        private boolean isUnofficial;
+        private Object environment;
+        private String specialHeader;
+        private Object specialTimerRemaining;
+        private String processing;
+        private int guests;
+        private int users;
+        private ElapsedTimer uptime;
+        private long surveyRunningStamp;
 
+        public StatusForFrontEnd(SurveyMain sm, HttpServletRequest request) {
+            CLDRConfig config = CLDRConfig.getInstance();
+
+            this.isBusted = SurveyMain.isBusted;
+            this.lockOut = SurveyMain.lockOut != null;
+            this.isSetup = SurveyMain.isSetup;
+            this.isUnofficial = SurveyMain.isUnofficial();
+            this.environment = config.getEnvironment().name();
+            this.specialHeader = config.getProperty("CLDR_HEADER");
+            this.specialTimerRemaining = SurveyMain.specialTimer != 0 ? timeDiff(System.currentTimeMillis(), SurveyMain.specialTimer) : null;
+            this.processing = sm.startupThread.htmlStatus();
+            this.guests = CookieSession.getGuestCount();
+            this.users = CookieSession.getUserCount();
+            this.uptime = SurveyMain.uptime;
+            this.surveyRunningStamp = surveyRunningStamp.current();
+            this.memfree =
+
+
+        }
+
+    }
+**/
     /**
      * Return the entire top 'box' including progress bars, busted notices, etc.
      *
