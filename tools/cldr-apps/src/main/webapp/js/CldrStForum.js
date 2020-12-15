@@ -120,6 +120,7 @@ const cldrStForum = (function() {
 			params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
 		};
 		const xhrArgs = {
+			vanilla: true,
 			url: url,
 			handleAs: 'json',
 			load: loadHandler,

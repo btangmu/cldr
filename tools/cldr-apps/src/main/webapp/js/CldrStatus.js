@@ -269,6 +269,19 @@ const cldrStatus = (function() {
 	}
 
 	/**
+	 * A special message to be displayed in the header
+	 */
+	let specialHeader = '';
+
+	function getSpecialHeader() {
+		return specialHeader;
+	}
+
+	function setSpecialHeader(s) {
+		specialHeader = s;
+	}
+
+	/**
 	 * The name of the user's organization
 	 */
 	let organizationName = null;
@@ -365,6 +378,9 @@ const cldrStatus = (function() {
 
 		getOrganizationName: getOrganizationName,
 		setOrganizationName: setOrganizationName,
+
+		getSpecialHeader: getSpecialHeader,
+		setSpecialHeader: setSpecialHeader,
 
 		getPermissions: getPermissions,
 		setPermissions: setPermissions,
