@@ -76,9 +76,9 @@ const cldrStForumParticipation = (function() {
 
 	/**
 	 * Make the html, given the json for Forum Participation
-	 * 
+	 *
 	 * @param json
-	 * @return the html 
+	 * @return the html
 	 */
 	function makeHtmlFromJson(json) {
 		let html = '<div>\n';

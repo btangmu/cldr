@@ -42,7 +42,7 @@ const cldrStatus = (function() {
 			setSpecialHeader(status.specialHeader);
 		}
 	}
-	
+
 	/**
 	 * When this changes from one non-null value to another, the server has restarted
 	 * a.k.a. org.unicode.cldr.web.SurveyMain.surveyRunningStamp
@@ -353,7 +353,7 @@ const cldrStatus = (function() {
 
 		getPhase: getPhase,
 		setPhase: setPhase,
-		
+
 		getIsPhaseBeta: getIsPhaseBeta,
 		setIsPhaseBeta: setIsPhaseBeta,
 
@@ -371,9 +371,9 @@ const cldrStatus = (function() {
 
 		stopIcon: stopIcon,
 		warnIcon: warnIcon,
-	
+
 		getSurvUrl: getSurvUrl,
-		
+
 		isVisitor: isVisitor,
 	};
 })();

@@ -32,7 +32,7 @@ const cldrGui = (function() {
             + "  </div>\n"
             + "</div>\n"
             ;
-            
+
 	const vhtml2 =
               "<div class='navbar navbar-fixed-top' role='navigation'>\n"
             + "  <div class='container-fluid'>\n"
@@ -105,8 +105,8 @@ const cldrGui = (function() {
             + "  </div>\n"
             + "</div>\n"
             ;
- 
- 
+
+
 	const vhtml4 =
 			  "<div class='container-fluid' id='main-container'>\n"
             + "  <div class='row menu-position'>\n"
@@ -266,7 +266,7 @@ const cldrGui = (function() {
             + "        <th title='$flyoverothers' id='stui-htmlothers'></th>\n"
             + "      </tr>\n"
             + "    </thead>\n"
-            + "    <tbody>\n"  
+            + "    <tbody>\n"
             + "    </tbody>\n"
             + "  </table>\n"
             + "  <div id='proto-datafix' class='data'>\n"
@@ -303,7 +303,7 @@ const cldrGui = (function() {
 	 */
 	function run() {
 		console.log("Hello my name is cldrGui.run");
-		
+
 		// Temporary debugging:
 		for (let h of [vhtml1, vhtml2, vhtml3, vhtml4, vhtml5, vhtml6, hiddenHtml]) {
 			if (!parseAsMimeType(h, 'text/html')) {
@@ -339,12 +339,12 @@ const cldrGui = (function() {
 	function updateStatus() {
 		if (needStatusUpdate) {
 			needStatusUpdate = false;
-					
+
 			const versionPhaseEl = document.getElementById('st-version-phase');
 			if (versionPhaseEl) {
 				versionPhaseEl.innerHTML = 'Survey Tool ' + cldrStatus.getNewVersion() + ' ' + cldrStatus.getPhase();
 			}
-			
+
 			const specialHeaderEl = document.getElementById('st-special-header');
 			if (specialHeaderEl) {
 				specialHeaderEl.innerHTML = cldrStatus.getSpecialHeader();

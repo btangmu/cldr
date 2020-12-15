@@ -42,7 +42,7 @@ const cldrStAjax = (function() {
 	function queueXhr(xhr) {
 		queueOfXhr.push(xhr);
 		if (ST_AJAX_DEBUG) {
-			console.log("pushed: PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);			
+			console.log("pushed: PXQ=" + queueOfXhr.length + ", postData: " + xhr.postData);
 		}
 		if (!queueOfXhrTimeout) {
 			queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
@@ -63,7 +63,7 @@ const cldrStAjax = (function() {
 	 */
 	function processXhrQueue() {
 		/*
-		 * TODO: getter/setter for global variable "disconnected" in survey.js 
+		 * TODO: getter/setter for global variable "disconnected" in survey.js
 		 */
 		if (disconnected) {
 			return;

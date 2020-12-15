@@ -541,7 +541,7 @@ const cldrStForum = (function() {
 	 * code and in the db.
 	 *
 	 * @param posts the array of post objects
-	 * 
+	 *
 	 * TODO: simplify this and related code, given that post objects from server now have
 	 * post.root. Probably there is no longer any reason to include locale in thread id,
 	 * nor to distinguish between thread id and rootPost.id.
