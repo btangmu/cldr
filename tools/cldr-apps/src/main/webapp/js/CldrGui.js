@@ -195,7 +195,7 @@ const cldrGui = (function () {
     "  </div>\n" +
     "  <div class='row' id='main-row' style='padding-top:147px;'>\n" +
     "    <div class='col-md-9'>\n" +
-    "      <div id='MainContentPane' data-dojo-props=\"splitter:true, region:'center'\" >\n" +
+    "      <div data-dojo-type='dijit/layout/ContentPane' id='MainContentPane' data-dojo-props=\"splitter:true, region:'center'\" >\n" +
     "        <div id='LoadingMessageSection'>Please Wait<img src='loader.gif' alt='Please Wait' /></div>\n" +
     "        <div id='DynamicDataSection'></div>\n" +
     "        <div id='nav-page-footer'>\n" +
@@ -209,7 +209,7 @@ const cldrGui = (function () {
     "      </div>\n" +
     "    </div>\n" +
     "    <div class='col-md-3'>\n" +
-    "      <div id='itemInfo' class='right-info' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
+    "      <div id='itemInfo' class='right-info' data-dojo-type='dijit/layout/ContentPane' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "  <div id='ressources' style='display:none'></div>\n" +

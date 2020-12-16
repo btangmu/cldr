@@ -18,12 +18,12 @@ window.haveDialog = false;
 function showV() {
 	// REQUIRES
 	require([
+		"dijit/Dialog",
+		"dijit/form/Button",
 		"dijit/DropDownMenu",
 		"dijit/form/DropDownButton",
-		"dijit/MenuSeparator",
 		"dijit/MenuItem",
-		"dijit/form/Button",
-		"dijit/Dialog",
+		"dijit/MenuSeparator",
 		"dijit/registry",
 		"dojox/form/BusyButton",
 		"dojo/hash",
@@ -31,12 +31,12 @@ function showV() {
 	],
 		// HANDLES
 		function(
+			Dialog,
+			Button,
 			DropDownMenu,
 			DropDownButton,
-			MenuSeparator,
 			MenuItem,
-			Button,
-			Dialog,
+			MenuSeparator,
 			registry,
 			BusyButton,
 			dojoHash,
