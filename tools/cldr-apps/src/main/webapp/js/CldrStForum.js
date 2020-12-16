@@ -11,7 +11,7 @@
  *
  * Dependencies on external code:
  * window.locmap,
- * createGravitar, stui.str, listenFor, bootstrap.js, reloadV,
+ * createGravitar, listenFor, bootstrap.js, reloadV,
  * showInPop2, hideLoader, ...!
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts,
@@ -77,7 +77,6 @@ const cldrStForum = (function() {
 		setLocale(locale);
 		const url = getLoadForumUrl();
 		const errorHandler = function(err) {
-			// const responseText = cldrStAjax.errResponseText(err);
 			params.special.showError(params, null, {err: err, what: "Loading forum data"});
 		};
 		const loadHandler = function(json) {
@@ -95,7 +94,7 @@ const cldrStForum = (function() {
 			setUserCanPost(true);
 
 			// set up the 'right sidebar'
-			showInPop2(forumStr(params.name + "Guidance"), null, null, null, true); /* show the box the first time */
+			showInPop2(cldrText.get(params.name + "Guidance"), null, null, null, true); /* show the box the first time */
 
 			const ourDiv = document.createElement("div");
 			ourDiv.appendChild(forumCreateChunk(forumMessage, "h4", ""));
@@ -108,7 +107,7 @@ const cldrStForum = (function() {
 			ourDiv.appendChild(document.createElement('hr'));
 			const posts = json.ret;
 			if (posts.length == 0) {
-				ourDiv.appendChild(forumCreateChunk(forumStr("forum_noposts"), "p", "helpContent"));
+				ourDiv.appendChild(forumCreateChunk(cldrText.get("forum_noposts"), "p", "helpContent"));
 			} else {
 				const content = parseContent(posts, 'main');
 				ourDiv.appendChild(content);
@@ -120,7 +119,6 @@ const cldrStForum = (function() {
 			params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
 		};
 		const xhrArgs = {
-			vanilla: true,
 			url: url,
 			handleAs: 'json',
 			load: loadHandler,
@@ -298,9 +296,8 @@ const cldrStForum = (function() {
 		const url = cldrStatus.getContextPath() + "/SurveyAjax";
 
 		const errorHandler = function(err) {
-			const responseText = cldrStAjax.errResponseText(err);
 			const post = $('.post').first();
-			post.before("<p class='warn'>error! " + err + " " + responseText + "</p>");
+			post.before("<p class='warn'>error! " + err + "</p>");
 		};
 		const loadHandler = function(data) {
 			if (data.err) {
@@ -433,7 +430,7 @@ const cldrStForum = (function() {
 				subpost.appendChild(gravitar);
 				const surveyUser = cldrStatus.getSurveyUser();
 				if (surveyUser && post.posterInfo.id === surveyUser.id) {
-					headingLine.appendChild(forumCreateChunk(forumStr("user_me"), "span", "forum-me"));
+					headingLine.appendChild(forumCreateChunk(cldrText.get("user_me"), "span", "forum-me"));
 				} else {
 					const usera = forumCreateChunk(post.posterInfo.name + ' ', "a", "");
 					if (post.posterInfo.email) {
@@ -443,8 +440,10 @@ const cldrStForum = (function() {
 					headingLine.appendChild(usera);
 					headingLine.appendChild(document.createTextNode(' (' + post.posterInfo.org + ') '));
 				}
-				const userLevelChunk = forumCreateChunk(forumStr("userlevel_" + post.posterInfo.userlevelName), "span", "userLevelName label-info label");
-				userLevelChunk.title = forumStr("userlevel_" + post.posterInfo.userlevelName + "_desc");
+				const userLevelKey = "userlevel_" + post.posterInfo.userlevelName;
+				const userLevelStr = cldrText.get(userLevelKey);
+				const userLevelChunk = forumCreateChunk(userLevelStr, "span", "userLevelName label-info label");
+				userLevelChunk.title = cldrText.get(userLevelKey + "_desc");
 				headingLine.appendChild(userLevelChunk);
 			}
 			let date = fmtDateTime(post.date_long);
@@ -578,7 +577,7 @@ const cldrStForum = (function() {
 	 * @return the DOM element
 	 */
 	function makeItemLink(post) {
-		const itemLink = forumCreateChunk(forumStr("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
+		const itemLink = forumCreateChunk(cldrText.get("forum_item"), "a", "pull-right postItem glyphicon glyphicon-zoom-in");
 		itemLink.href = "#/" + post.locale + "//" + post.xpath;
 		return itemLink;
 	}
@@ -609,7 +608,7 @@ const cldrStForum = (function() {
 		 * This is awkward since xpathMap.get is asynchronous. Display the word
 		 * "Loading" as a place-holder while waiting for the result.
 		 */
-		const loadingMsg = forumCreateChunk(forumStr("loading"), "i", "loadingMsg");
+		const loadingMsg = forumCreateChunk(cldrText.get("loading"), "i", "loadingMsg");
 		topicInfo.appendChild(loadingMsg);
 		xpathMap.get({
 			hex: rootPost.xpath
@@ -1064,21 +1063,6 @@ const cldrStForum = (function() {
 	}
 
 	/**
-	 * Convert the given short string into a human-readable string.
-	 *
-	 * TODO: encapsulate "stui" dependency better
-	 *
-	 * @param s the short string, like "forum_item" or "forum_reply"
-	 * @return the human-readable string like "Item" or "Reply"
-	 */
-	function forumStr(s) {
-		if (typeof stui !== 'undefined') {
-			return stui.str(s);
-		}
-		return s;
-	}
-
-	/**
 	 * Format a date and time for display in a forum post
 	 *
 	 * @param x the number of seconds since 1970-01-01
@@ -1176,7 +1160,7 @@ const cldrStForum = (function() {
 		const errorHandler = function(err) {
 			const el = document.getElementById(id);
 			if (el) {
-				el.innerHTML = cldrStAjax.errResponseText(err);
+				el.innerHTML = err;
 			}
 		};
 		const loadHandler = function(json) {

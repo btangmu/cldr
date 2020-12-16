@@ -25,12 +25,11 @@ const cldrStBulkClosePosts = (function() {
 		/*
 		 * Set up the 'right sidebar'; cf. bulk_close_postsGuidance
 		 */
-		showInPop2(stui.str(params.name + "Guidance"), null, null, null, true);
+		showInPop2(cldrText.get(params.name + "Guidance"), null, null, null, true);
 
 		const url = getBulkClosePostsUrl();
 		const errorHandler = function(err) {
-			const responseText = cldrStAjax.errResponseText(err);
-			params.special.showError(params, null, {err: err, what: "Loading Forum Bulk Close Posts data: " + responseText});
+			params.special.showError(params, null, {err: err, what: "Loading Forum Bulk Close Posts data"});
 		};
 		const loadHandler = function(json) {
 			if (json.err) {
@@ -66,8 +65,7 @@ const cldrStBulkClosePosts = (function() {
 
 		const url = getBulkClosePostsUrl() + "&execute=true";
 		const errorHandler = function(err) {
-			const responseText = cldrStAjax.errResponseText(err);
-			params.special.showError(params, null, {err: err, what: "Executing Forum Bulk Close Posts" + responseText});
+			params.special.showError(params, null, {err: err, what: "Executing Forum Bulk Close Posts"});
 		};
 		const loadHandler = function(json) {
 			if (json.err) {

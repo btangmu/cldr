@@ -273,7 +273,7 @@ const cldrGui = (function () {
     "  <table id='proto-datatable' class='data table table-bordered'>\n" +
     "    <thead>\n" +
     "      <tr class='headingb active'>\n" +
-    "        <!--  see stui.js for the following -->\n" +
+    /*  see cldrText.js for the following */
     "        <th title='$flyovercode' id='stui-htmlcode'></th>\n" +
     "        <th title='$flyovercomparison' id='stui-htmltranshint'></th>\n" +
     "        <th title='$flyovernoopinion' id='stui-htmlnoopinion' class='d-no'></th>\n" +

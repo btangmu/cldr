@@ -17,7 +17,7 @@ define("js/special/users.js", ["js/special/SpecialPage.js"], function(SpecialPag
 		var ourDiv = createChunk("","div","");
 
 		// set up the 'right sidebar'
-		showInPop2(stui.str("users_guidance"), null, null, null, true); /* show the box the first time */					
+		showInPop2(cldrText.get("users_guidance"), null, null, null, true); /* show the box the first time */
 		
 		// No longer loading
 		hideLoader(null);
@@ -87,7 +87,7 @@ define("js/special/users.js", ["js/special/SpecialPage.js"], function(SpecialPag
 				u.infoSpan = $('<span />');
 				u.infoSpan.appendTo(u.obj);
 
-				u.infoButton = $('<button />', {text: stui.str('users_infoVotesButton')});
+				u.infoButton = $('<button />', {text: cldrText.get('users_infoVotesButton')});
 				u.infoButton.appendTo(u.obj);
 				
 				u.infoButton.on('click',  {
@@ -116,7 +116,7 @@ define("js/special/users.js", ["js/special/SpecialPage.js"], function(SpecialPag
 						});
 				});
 
-				u.loadOldVotes = $('<button />', {text: stui.str('users_loadVotesButton')});
+				u.loadOldVotes = $('<button />', {text: cldrText.get('users_loadVotesButton')});
 				u.loadOldVotes.appendTo(u.obj);
 				
 				u.loadOldVotes.on('click', {

@@ -13,6 +13,19 @@ const cldrStAjax = (function () {
   const ST_AJAX_DEBUG = false;
 
   /**
+   * xhrQueueTimeout is a constant, 3 milliseconds, used only by
+   * myLoad0, myErr0, and queueXhr, in calls to setTimeout for processXhrQueue.
+   * Why 3 milliseconds?
+   */
+  const xhrQueueTimeout = 3;
+
+  /**
+   * Used for XMLHttpRequest = the number of milliseconds a request can take before being terminated.
+   * Zero (the default unless we set it) means there is no timeout.
+   */
+  const ajaxTimeout = 120000; // 2 minutes
+
+  /**
    * Queue of XHR requests waiting to go out
    */
   var queueOfXhr = [];
@@ -95,13 +108,6 @@ const cldrStAjax = (function () {
   }
 
   /**
-   * xhrQueueTimeout is a constant, 3 milliseconds, used only by
-   * myLoad0, myErr0, and queueXhr, in calls to setTimeout for processXhrQueue.
-   * TODO: explain, why 3 milliseconds?
-   */
-  const xhrQueueTimeout = 3;
-
-  /**
    * Run the load handler (load2) and schedule the next request
    *
    * @param xhrArgs the request parameters plus such things as xhrArgs.load2
@@ -164,8 +170,8 @@ const cldrStAjax = (function () {
       // use vanilla js instead of dojo/request
       const request = new XMLHttpRequest();
       request.responseType = options.handleAs ? options.handleAs : "text";
-      request.timeout = 120000; // 2 minutes
       request.open(options.method, xhrArgs.url);
+      request.timeout = ajaxTimeout;
       request.onreadystatechange = function () {
         if (request.readyState === XMLHttpRequest.DONE) {
           if (
@@ -174,39 +180,30 @@ const cldrStAjax = (function () {
           ) {
             xhrArgs.load(request.response);
           } else {
-            xhrArgs.error(request.response);
+            let msg = "Status " + request.status + " " + request.statusText + "; URL: " + xhrArgs.url;
+            if (request.responseText) {
+              msg += " Response: " + request.responseText;
+            }
+            xhrArgs.error(msg);
           }
         }
       };
       request.send();
     } else {
+      // TODO: remove the dojo/request version after testing more that the vanilla js version works right
       // https://dojotoolkit.org/reference-guide/1.10/dojo/request.html#dojo-request
       require(["dojo/request"], function (request) {
-        options.timeout = 120000; // 2 minutes
+        options.timeout = ajaxTimeout;
         request(xhrArgs.url, options).then(
           function (data) {
             xhrArgs.load(data);
           },
           function (err) {
-            xhrArgs.error(err);
-          },
-          function (evt) {
-            // handle a progress event
+            xhrArgs.error(err.message);
           }
         );
       });
     }
-  }
-
-  /**
-   * Get the response text from an err object
-   *
-   * err.response seems to be a dojo thing, not defined by JavaScript itself. So, encapsulate it here.
-   *
-   * @param err the Error object plus things dojo may add like err.response.text
-   */
-  function errResponseText(err) {
-    return err && err.response && err.response.text ? err.response.text : "";
   }
 
   /**
@@ -229,7 +226,6 @@ const cldrStAjax = (function () {
     queueXhr: queueXhr,
     clearXhr: clearXhr,
     sendXhr: sendXhr,
-    errResponseText: errResponseText,
     queueCount: queueCount,
   };
 })();

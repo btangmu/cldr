@@ -29,34 +29,34 @@
 
 			assert(content.firstChild != null, "first child is not null");
 			assert.equal(content.firstChild.id, "fthr_fr_CA|45347");
-			const s1 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:26 UTCClosedClosetest"
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:28 UTCClosetest reply blah!";
+			const s1 = "n (Gaeilge) TC[v38] 2020-02-06 17:26 UTCClosedClosetest"
+				+ "n (Gaeilge) TC[v38] 2020-02-06 17:28 UTCClosetest reply blah!";
 			assert.equal(cldrTest.normalizeWhitespace(content.firstChild.textContent), cldrTest.normalizeWhitespace(s1));
 
 			const firstSibling = content.firstChild.nextSibling;
 			assert(firstSibling != null, "first sibling is not null");
 			assert.equal(firstSibling.id, "fthr_fr_CA|45346");
-			const s2 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:20 UTCClosedCloseFUrthermore";
+			const s2 = "n (Gaeilge) TC[v38] 2020-02-06 17:20 UTCClosedCloseFUrthermore";
 			assert.equal(cldrTest.normalizeWhitespace(firstSibling.textContent), cldrTest.normalizeWhitespace(s2));
 
 			const secondSibling = firstSibling.nextSibling;
 			assert(secondSibling != null, "second sibling is not null");
 			assert.equal(secondSibling.id, "fthr_fr_CA|45343");
-			const s3 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:17 UTCClosedClosetest"
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:18 UTCCloseOK, replying to test in Dashboard"
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:19 UTCCloseAnd replying to reply";
+			const s3 = "n (Gaeilge) TC[v38] 2020-02-06 17:17 UTCClosedClosetest"
+				+ "n (Gaeilge) TC[v38] 2020-02-06 17:18 UTCCloseOK, replying to test in Dashboard"
+				+ "n (Gaeilge) TC[v38] 2020-02-06 17:19 UTCCloseAnd replying to reply";
 			assert.equal(cldrTest.normalizeWhitespace(secondSibling.textContent), cldrTest.normalizeWhitespace(s3));
 
 			const thirdSibling = secondSibling.nextSibling;
 			assert(thirdSibling != null, "third sibling is not null");
 			assert.equal(thirdSibling.id, "fthr_fr_CA|45341");
-			const s4 = "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:12 UTCClosedCloseAnd another post from Dashboard."
-				+ "n (Gaeilge) userlevel_tc[v38] 2020-02-06 17:14 UTCCloseAnd another reply, this time from Dashboard Fix pop-up!!!";
+			const s4 = "n (Gaeilge) TC[v38] 2020-02-06 17:12 UTCClosedCloseAnd another post from Dashboard."
+				+ "n (Gaeilge) TC[v38] 2020-02-06 17:14 UTCCloseAnd another reply, this time from Dashboard Fix pop-up!!!";
 			assert.equal(cldrTest.normalizeWhitespace(thirdSibling.textContent), cldrTest.normalizeWhitespace(s4));
 
 			assert(content.lastChild != null, "last child is not null");
 			assert.equal(content.lastChild.id, "fthr_fr|363");
-			const sLast = "n (Microsoft) userlevel_vetter[v28] 2015-05-19 15:58 UTCClosedClose...";
+			const sLast = "n (Microsoft) Vetter[v28] 2015-05-19 15:58 UTCClosedClose...";
 			assert.equal(cldrTest.normalizeWhitespace(content.lastChild.textContent), cldrTest.normalizeWhitespace(sLast));
 		});
 	});

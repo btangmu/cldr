@@ -338,11 +338,11 @@ function toggleFix(event) {
 					updateIf("dynload", json.dataLoadTime);
 				}
 				if (!cldrStatus.getSurveyUser()) {
-					showInPop2(stui.str("loginGuidance"), null, null, null, true); /* show the box the first time */
+					showInPop2(cldrText.get("loginGuidance"), null, null, null, true); /* show the box the first time */
 				} else if (!json.canModify) {
-					showInPop2(stui.str("readonlyGuidance"), null, null, null, true); /* show the box the first time */
+					showInPop2(cldrText.get("readonlyGuidance"), null, null, null, true); /* show the box the first time */
 				} else {
-					showInPop2(stui.str("dataPageInitialGuidance"), null, null, null, true); /* show the box the first time */
+					showInPop2(cldrText.get("dataPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 				}
 
 				insertFixInfo(theDiv, json.pageId, cldrStatus.getSessionId(), json);
@@ -620,7 +620,7 @@ function insertFixInfo(theDiv, xpath, session, json) {
 	var theTable = cloneLocalizeAnon(document.getElementById("proto-datafix"));
 	theTable.className = 'data dashboard';
 	updateCoverage(theDiv);
-	localizeFlyover(theTable); // Replace titles starting with $ with strings from stui
+	localizeFlyover(theTable); // Replace titles starting with $ with strings from cldrText
 
 	var toAdd = cloneLocalizeAnon(document.getElementById("proto-datarowfix")); // loaded from "hidden.html", which see.
 	theTable.toAdd = toAdd;

@@ -68,10 +68,10 @@ define("js/special/forum.js", ["js/special/SpecialPage.js", "dojo/request", "doj
 		const curLocale = cldrStatus.getCurrentLocale();
 		if (curLocale == '') {
 			hideLoader(null);
-			params.flipper.flipTo(params.pages.other, createChunk(stui.str("generic_nolocale"),"p","helpContent"));
+			params.flipper.flipTo(params.pages.other, createChunk(cldrText.get("generic_nolocale"),"p","helpContent"));
 		} else {
 			const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
-			const forumMessage = stui.sub("forum_msg", {
+			const forumMessage = cldrText.sub("forum_msg", {
 				forum: forumName,
 				locale: cldrStatus.getCurrentLocaleName()
 			});

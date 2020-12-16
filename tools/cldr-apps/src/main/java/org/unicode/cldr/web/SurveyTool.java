@@ -2,6 +2,7 @@ package org.unicode.cldr.web;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -12,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
+import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
@@ -92,7 +94,7 @@ public class SurveyTool extends HttpServlet {
         writeDotDotDotScript(out);
         out.write(VettingViewer.getHeaderStyles() + "\n");
         try {
-            SurveyAjax.includeJavaScript(request, out);
+            includeJavaScript(request, out);
         } catch (JSONException e) {
             SurveyLog.logException(e, "Including JavaScript");
         }
@@ -214,7 +216,7 @@ public class SurveyTool extends HttpServlet {
         includeCss(request, out);
         out.write(VettingViewer.getHeaderStyles() + "\n");
         try {
-            SurveyAjax.includeJavaScript(request, out);
+            includeJavaScript(request, out);
         } catch (JSONException e) {
             SurveyLog.logException(e, "Including JavaScript");
         }
@@ -231,5 +233,99 @@ public class SurveyTool extends HttpServlet {
         out.write("<link rel='stylesheet' href='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dijit/themes/claro/claro.css' />\n");
         out.write("<link rel='stylesheet' href='//stackpath.bootstrapcdn.com/bootswatch/3.1.1/spacelab/bootstrap.min.css' />\n");
         out.write("<link rel='stylesheet' href='" + contextPath + "/css/redesign.css' />\n");
+    }
+
+    /**
+     * Write the script tags for Survey Tool JavaScript files
+     *
+     * @param request the HttpServletRequest
+     * @param out the Writer
+     * @throws IOException
+     * @throws JSONException
+     */
+    public static void includeJavaScript(HttpServletRequest request, Writer out) throws IOException, JSONException {
+        includeDojoJavaScript(out);
+        includeJqueryJavaScript(out);
+        includeCldrJavaScript(request, out);
+    }
+
+    private static void includeDojoJavaScript(Writer out) throws IOException {
+        out.write("<script>dojoConfig = {parseOnLoad: false, async: true,};</script>\n");
+        out.write("<script src='//ajax.googleapis.com/ajax/libs/dojo/1.14.1/dojo/dojo.js'></script>\n");
+    }
+
+    private static void includeJqueryJavaScript(Writer out) throws IOException {
+        out.write("<script src='//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js'></script>\n");
+        out.write("<script src='//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js'></script>\n");
+    }
+
+    private static void includeCldrJavaScript(HttpServletRequest request, Writer out) throws IOException {
+        final String prefix = "<script src='" + request.getContextPath() + "/js/";
+        final String tail = "'></script>\n";
+        final String js = getCacheBustingExtension(request) + ".js" + tail;
+
+        out.write(prefix + "jquery.autosize.min.js" + tail); // exceptional
+
+        out.write(prefix + "CldrText" + js); // CldrText.js
+        out.write(prefix + "CldrStatus" + js); // CldrStatus.js
+        out.write(prefix + "CldrStAjax" + js); // CldrStAjax.js
+        out.write(prefix + "CldrStBulkClosePosts" + js); // CldrStBulkClosePosts.js
+        out.write(prefix + "CldrStForumParticipation" + js); // CldrStForumParticipation.js
+        out.write(prefix + "CldrStForumFilter" + js); // CldrStForumFilter.js
+        out.write(prefix + "CldrStForum" + js); // CldrStForum.js
+        out.write(prefix + "CldrStCsvFromTable" + js); // CldrStCsvFromTable.js
+        out.write(prefix + "CldrDeferredHelp" + js); // CldrDeferredHelp.js
+        out.write(prefix + "survey" + js); // survey.js
+        out.write(prefix + "CldrSurveyVettingLoader" + js); // CldrSurveyVettingLoader.js
+        out.write(prefix + "CldrSurveyVettingTable" + js); // CldrSurveyVettingTable.js
+
+        out.write(prefix + "bootstrap.min.js" + tail); // exceptional
+
+        out.write(prefix + "redesign" + js); // redesign.js
+        out.write(prefix + "review" + js); // review.js
+        out.write(prefix + "CldrGui" + js); // CldrGui.js
+    }
+
+    /**
+     * The cache-busting filename extension, like "._b7a33e9fe_", to be used for those http requests
+     * that employ the right kind of server configuration (as with nginx on the production server)
+     */
+    private static String cacheBustingExtension = null;
+
+    /**
+     * Get a string to be added to the filename, like "._b7a33e9f_", if we're responding to the kind
+     * of request we get with nginx; else, get an empty string (no cache busting).
+     *
+     * If we're running with a reverse proxy (nginx), use "cache-busting" to make sure browser uses
+     * the most recent JavaScript files.
+     *
+     * Change filename to be like "CldrStAjax._b7a33e9f_.js", instead of adding a query string,
+     * like "CldrStAjax.js?v=b7a33e9fe", since a query string appears sometimes to be ignored by some
+     * browsers. The server (nginx) needs a rewrite rule like this to remove the hexadecimal hash:
+     *
+     *     rewrite ^/(.+)\._[\da-f]+_\.(js|css)$ /$1.$2 break;
+     *
+     * Include underscores to avoid unwanted rewrite if we had a name like "example.bad.js",
+     * where "bad" could be mistaken for a hexadecimal hash.
+     *
+     * @return a (possibly empty) string to be added to the filename
+     */
+    private static String getCacheBustingExtension(HttpServletRequest request) {
+        if (request.getHeader("X-Real-IP") == null) {
+            /*
+             * Request wasn't made through nginx? Leave cacheBustingExtension alone, to enable
+             * both kinds of request at the same time (with/without nginx) for debugging
+             */
+            return "";
+        }
+        if (cacheBustingExtension == null) {
+            final String hash = CldrUtility.getCldrBaseDirHash();
+            if (hash == null || !hash.matches("[0-9a-f]+")) {
+                cacheBustingExtension = "";
+            } else {
+                cacheBustingExtension = "._" + hash.substring(0, 8) + "_";
+            }
+        }
+        return cacheBustingExtension;
     }
 }

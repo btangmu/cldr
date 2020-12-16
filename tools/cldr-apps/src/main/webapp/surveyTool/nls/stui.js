@@ -376,7 +376,4 @@ define({
 		E_BAD_VALUE: "The vote was not accepted: ${err_data.message}",
 		E_BAD_XPATH: "This item does not exist in this locale.",
 		"": ""})
-//		"mt-MT": false
-
-		// sublocales
 });

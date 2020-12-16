@@ -46,9 +46,6 @@ function showV() {
 			domConstruct,
 			dojoNumber
 		) {
-			console.log("☎️ Calling loadStui from showV");
-			loadStui(null, function( /*stui*/) {
-
 				var appendLocaleLink = function appendLocaleLink(subLocDiv, subLoc, subInfo, fullTitle) {
 					var name = locmap.getRegionAndOrVariantName(subLoc);
 					if (fullTitle) {
@@ -72,13 +69,13 @@ function showV() {
 						if (subInfo.special_comment) {
 							clickyLink.title = subInfo.special_comment;
 						} else if (subInfo.dcChild) {
-							clickyLink.title = stui.sub("defaultContentChild_msg", {
+							clickyLink.title = cldrText.sub("defaultContentChild_msg", {
 								info: subInfo,
 								locale: subLoc,
 								dcChildName: locmap.getLocaleName(subInfo.dcChild)
 							});
 						} else {
-							clickyLink.title = stui.str("readonlyGuidance");
+							clickyLink.title = cldrText.get("readonlyGuidance");
 						}
 					} else if (subInfo.special_comment) {
 						// could be the sandbox locale, or some other comment.
@@ -108,10 +105,7 @@ function showV() {
 				var theDiv = flipper.get(pages.data);
 				theDiv.pucontent = pucontent;
 
-				console.log("☎️ Calling loadStui without args, from somewhere inside showV");
-				theDiv.stui = loadStui();
-
-				pucontent.appendChild(createChunk(stui.str("itemInfoBlank"), "i"));
+				pucontent.appendChild(createChunk(cldrText.get("itemInfoBlank"), "i"));
 
 				/**
 				 * List of buttons/titles to set.
@@ -157,9 +151,6 @@ function showV() {
 						return document.getElementById(x + "-container");
 					}
 				};
-
-				// TODO remove this debug item
-				window.__FLIPPER = flipper;
 
 				/**
 				 * Manage additional special pages
@@ -262,7 +253,7 @@ function showV() {
 
 						// extended error
 						var loadingChunk;
-						var msg_fmt = stui.sub("v_bad_special_msg", {
+						var msg_fmt = cldrText.sub("v_bad_special_msg", {
 							special: name
 						});
 						params.flipper.flipTo(params.pages.loading, loadingChunk = createChunk(msg_fmt, "p", "errCodeMsg"));
@@ -284,14 +275,14 @@ function showV() {
 				 */
 				window.parseHash = function parseHash(hash) {
 					function updateWindowTitle() {
-						var t = stui.str('survey_title');
+						var t = cldrText.get('survey_title');
 						const curLocale = cldrStatus.getCurrentLocale();
 						if (curLocale && curLocale != '') {
 							t = t + ': ' + locmap.getLocaleName(curLocale);
 						}
 						const curSpecial = cldrStatus.getCurrentSpecial();
 						if (curSpecial && curSpecial != '') {
-							t = t + ': ' + stui.str('special_' + curSpecial);
+							t = t + ': ' + cldrText.get('special_' + curSpecial);
 						}
 						const curPage = cldrStatus.getCurrentPage();
 						if (curPage && curPage != '') {
@@ -432,7 +423,7 @@ function showV() {
 				// (back to showV) some setup.
 				// click on the title to copy (permalink)
 				clickToSelect(document.getElementById("ariScroller"));
-				updateIf("title-dcontent-link", stui.str("defaultContent_titleLink"));
+				updateIf("title-dcontent-link", cldrText.get("defaultContent_titleLink"));
 
 				// TODO - rewrite using AMD
 				/**
@@ -442,9 +433,9 @@ function showV() {
 					var otime = new Date().getTime();
 					console.log("MyLoad: " + url + " for " + message);
 					var errorHandler = function(err) {
-						let responseText = cldrStAjax.errResponseText(err);
-						console.log('Error: ' + err + ' response ' + responseText);
-						handleDisconnect("Could not fetch " + message + " - error " + err.name + " / " + err.message + "\n" + responseText + "\n url: " + url + "\n", null, "disconnect");
+						console.log('Error: ' + err);
+						handleDisconnect("Could not fetch " + message + " - error " + err
+							+ "\n url: " + url + "\n", null, "disconnect");
 					};
 					var loadHandler = function(json) {
 						console.log("        " + url + " loaded in " + (new Date().getTime() - otime) + "ms");
@@ -486,7 +477,7 @@ function showV() {
 						var msg_fmt = formatErrMsg(json, subkey);
 						var loadingChunk;
 						flipper.flipTo(pages.loading, loadingChunk = createChunk(msg_fmt, "p", "errCodeMsg"));
-						var retryButton = createChunk(stui.str("loading_reload"), "button");
+						var retryButton = createChunk(cldrText.get("loading_reload"), "button");
 						loadingChunk.appendChild(retryButton);
 						retryButton.onclick = function() {
 							window.location.reload(true);
@@ -545,16 +536,16 @@ function showV() {
 					p.parentNode.removeChild(p);
 
 					if (didUnbust) {
-						why = why + "\n\n" + stui.str('ari_force_reload');
+						why = why + "\n\n" + cldrText.get('ari_force_reload');
 					}
 
 					// setup with why
 					var ari_message;
 
 					if (json && json.session_err) {
-						ari_message = stui_str("ari_sessiondisconnect_message");
+						ari_message = cldrText.get("ari_sessiondisconnect_message");
 					} else {
-						ari_message = stui.str('ari_message');
+						ari_message = cldrText.get('ari_message');
 					}
 
 					var ari_submessage = formatErrMsg(json, what);
@@ -585,10 +576,10 @@ function showV() {
 
 				function updateCoverageMenuTitle() {
 					if (surveyUserCov) {
-						$('#coverage-info').text(stui.str('coverage_' + surveyUserCov));
+						$('#coverage-info').text(cldrText.get('coverage_' + surveyUserCov));
 					} else {
-						$('#coverage-info').text(stui.sub('coverage_auto_msg', {
-							surveyOrgCov: stui.str('coverage_' + surveyOrgCov)
+						$('#coverage-info').text(cldrText.sub('coverage_auto_msg', {
+							surveyOrgCov: cldrText.get('coverage_' + surveyOrgCov)
 						}));
 					}
 				}
@@ -606,7 +597,7 @@ function showV() {
 							}
 
 							if (bund.dcChild) {
-								menubuttons.set(menubuttons.dcontent, stui.sub("defaultContent_header_msg", {
+								menubuttons.set(menubuttons.dcontent, cldrText.sub("defaultContent_header_msg", {
 									info: bund,
 									locale: cldrStatus.getCurrentLocale(),
 									dcChild: locmap.getLocaleName(bund.dcChild)
@@ -694,7 +685,7 @@ function showV() {
 						}, // My Votes section
 
 						/*
-						 * This indirectly references "special_oldvotes" in stui.js
+						 * This indirectly references "special_oldvotes" in cldrText.js
 						 */
 						{
 							special: 'oldvotes',
@@ -813,7 +804,7 @@ function showV() {
 						const curSpecial = cldrStatus.getCurrentSpecial();
 						if (curSpecial != null) {
 							var specialId = "special_" + curSpecial;
-							menubuttons.set(menubuttons.page, stui_str(specialId));
+							menubuttons.set(menubuttons.page, cldrText.get(specialId));
 						} else {
 							menubuttons.set(menubuttons.page);
 						}
@@ -835,8 +826,8 @@ function showV() {
 								(function(item) {
 									if (item.display != false) {
 										var subLi = document.createElement("li");
-										if (item.special) { // special items so look up in stui.js
-											item.title = stui.str('special_' + item.special);
+										if (item.special) { // special items so look up in cldrText.js
+											item.title = cldrText.get('special_' + item.special);
 											item.url = '#' + item.special;
 											item.blank = false;
 										}
@@ -921,7 +912,7 @@ function showV() {
 						const curSpecial = cldrStatus.getCurrentSpecial();
 						if (curSpecial != null && curSpecial != '') {
 							var specialId = "special_" + curSpecial;
-							$('#section-current').html(stui_str(specialId));
+							$('#section-current').html(cldrText.get(specialId));
 							setDisplayed(titlePageContainer, false);
 						} else if (!menuMap) {
 							setDisplayed(titlePageContainer, false);
@@ -938,7 +929,7 @@ function showV() {
 								$('#section-current').html(mySection.name);
 								setDisplayed(titlePageContainer, false); // will fix title later
 							} else {
-								$('#section-current').html(stui_str("section_general"));
+								$('#section-current').html(cldrText.get("section_general"));
 								setDisplayed(titlePageContainer, false);
 							}
 						}
@@ -957,7 +948,7 @@ function showV() {
 							};
 							var menuSection = registry.byId("menu-section");
 							menuMap.section_general = new MenuItem({
-								label: stui_str("section_general"),
+								label: cldrText.get("section_general"),
 								iconClass: "dijitMenuItemIcon ",
 								disabled: true,
 								onClick: function() {
@@ -995,7 +986,7 @@ function showV() {
 							menuSection.addChild(new MenuSeparator());
 
 							menuMap.forumMenu = new MenuItem({
-								label: stui_str("section_forum"),
+								label: cldrText.get("section_forum"),
 								iconClass: "dijitMenuItemIcon", // menu-chat
 								disabled: true,
 								onClick: function() {
@@ -1209,9 +1200,9 @@ function showV() {
 								if (bund.special_comment_raw) {
 									msg = bund.special_comment_raw;
 								} else {
-									msg = stui.str("readonly_unknown");
+									msg = cldrText.get("readonly_unknown");
 								}
-								msg = stui.sub("readonly_msg", {
+								msg = cldrText.sub("readonly_msg", {
 									info: bund,
 									locale: cldrStatus.getCurrentLocale(),
 									msg: msg
@@ -1229,7 +1220,7 @@ function showV() {
 								theDiv.insertBefore(subDiv, theDiv.childNodes[0]);
 							}
 						} else if (bund.dcChild) {
-							var theChunk = domConstruct.toDom(stui.sub("defaultContentChild_msg", {
+							var theChunk = domConstruct.toDom(cldrText.sub("defaultContentChild_msg", {
 								info: bund,
 								locale: cldrStatus.getCurrentLocale(),
 								dcChildName: locmap.getLocaleName(bund.dcChild)
@@ -1241,7 +1232,7 @@ function showV() {
 						}
 					}
 					if (cldrStatus.getIsPhaseBeta()) {
-						var theChunk = domConstruct.toDom(stui.sub("beta_msg", {
+						var theChunk = domConstruct.toDom(cldrText.sub("beta_msg", {
 							info: bund,
 							locale: cldrStatus.getCurrentLocale(),
 							msg: msg
@@ -1275,7 +1266,7 @@ function showV() {
 										var subDiv = createChunk("", "div");
 										subDiv.className = "possibleProblems";
 
-										var h3 = createChunk(stui_str("possibleProblems"), "h3");
+										var h3 = createChunk(cldrText.get("possibleProblems"), "h3");
 										subDiv.appendChild(h3);
 
 										var div3 = document.createElement("div");
@@ -1287,7 +1278,7 @@ function showV() {
 									}
 									var theInfo = createChunk("", "p", "special_general");
 									theDiv.appendChild(theInfo);
-									theInfo.innerHTML = stui_str("special_general"); // TODO replace with … ?
+									theInfo.innerHTML = cldrText.get("special_general"); // TODO replace with … ?
 									hideLoader(null);
 								}
 							});
@@ -1333,7 +1324,7 @@ function showV() {
 					if (curLocale != null && curLocale != '' && curLocale != '-') {
 						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund !== null && bund.dcParent) {
-							var theChunk = domConstruct.toDom(stui.sub("defaultContent_msg", {
+							var theChunk = domConstruct.toDom(cldrText.sub("defaultContent_msg", {
 								info: bund,
 								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
@@ -1348,7 +1339,7 @@ function showV() {
 
 					// TODO: don't even flip if it's quick.
 					var loadingChunk;
-					flipper.flipTo(pages.loading, loadingChunk = createChunk(stui_str("loading"), "i", "loadingMsg"));
+					flipper.flipTo(pages.loading, loadingChunk = createChunk(cldrText.get("loading"), "i", "loadingMsg"));
 
 					var itemLoadInfo = createChunk("", "div", "itemLoadInfo");
 
@@ -1400,7 +1391,7 @@ function showV() {
 							}
 						}
 
-						showLoader(null, theDiv.stui.loading);
+						showLoader(null, cldrText.get('loading'));
 
 						const curSpecial = cldrStatus.getCurrentSpecial();
 						const curLocale = cldrStatus.getCurrentLocale();
@@ -1410,12 +1401,12 @@ function showV() {
 								// the 'General Info' page.
 								itemLoadInfo.appendChild(document.createTextNode(locmap.getLocaleName(curLocale)));
 								showPossibleProblems(flipper, pages.other, curLocale, cldrStatus.getSessionId(), covName(effectiveCoverage()), covName(effectiveCoverage()));
-								showInPop2(stui.str("generalPageInitialGuidance"), null, null, null, true); /* show the box the first time */
+								showInPop2(cldrText.get("generalPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 								isLoading = false;
 							} else if (cldrStatus.getCurrentId() == '!') {
 								var frag = document.createDocumentFragment();
-								frag.appendChild(createChunk(stui.str('section_help'), "p", "helpContent"));
-								var infoHtml = stui.str('section_info_' + curPage);
+								frag.appendChild(createChunk(cldrText.get('section_help'), "p", "helpContent"));
+								var infoHtml = cldrText.get('section_info_' + curPage);
 								var infoChunk = document.createElement("div");
 								infoChunk.innerHTML = infoHtml;
 								frag.appendChild(infoChunk);
@@ -1437,7 +1428,7 @@ function showV() {
 								$('#nav-page').show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
 								myLoad(url, "section", function(json) {
 									isLoading = false;
-									showLoader(theDiv.loader, stui.loading2);
+									showLoader(theDiv.loader, cldrText.get('loading2'));
 									if (!verifyJson(json, 'section')) {
 										return;
 									} else if (json.section.nocontent) {
@@ -1464,14 +1455,14 @@ function showV() {
 										cldrStatus.setCurrentPage(json.pageId);
 										updateHashAndMenus(); // now that we have a pageid
 										if (!cldrStatus.getSurveyUser()) {
-											showInPop2(stui.str("loginGuidance"), null, null, null, true); /* show the box the first time */
+											showInPop2(cldrText.get("loginGuidance"), null, null, null, true); /* show the box the first time */
 										} else if (!json.canModify) {
-											showInPop2(stui.str("readonlyGuidance"), null, null, null, true); /* show the box the first time */
+											showInPop2(cldrText.get("readonlyGuidance"), null, null, null, true); /* show the box the first time */
 										} else {
-											showInPop2(stui.str("dataPageInitialGuidance"), null, null, null, true); /* show the box the first time */
+											showInPop2(cldrText.get("dataPageInitialGuidance"), null, null, null, true); /* show the box the first time */
 										}
 										if (!isInputBusy()) {
-											showLoader(theDiv.loader, stui.loading3);
+											showLoader(theDiv.loader, cldrText.get('loading3'));
 											cldrSurveyTable.insertRows(theDiv, json.pageId, cldrStatus.getSessionId(), json); // pageid is the xpath..
 											updateCoverage(flipper.get(pages.data)); // make sure cov is set right before we show.
 											flipper.flipTo(pages.data); // TODO now? or later?
@@ -1487,7 +1478,7 @@ function showV() {
 							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + cldrStatus.getSessionId() + "&" + cacheKill();
 							myLoad(url, "(loading oldvotes " + curLocale + ")", function(json) {
 								isLoading = false;
-								showLoader(null, stui.loading2);
+								showLoader(null, cldrText.get('loading2'));
 								if (!verifyJson(json, 'oldvotes')) {
 									return;
 								} else {
@@ -1500,7 +1491,7 @@ function showV() {
 
 									removeAllChildNodes(theDiv);
 
-									var h2txt = stui.str("v_oldvotes_title");
+									var h2txt = cldrText.get("v_oldvotes_title");
 									theDiv.appendChild(createChunk(h2txt, "h2", "v-title"));
 
 									if (!json.oldvotes.locale) {
@@ -1540,15 +1531,15 @@ function showV() {
 
 											theDiv.appendChild(ul);
 
-											theDiv.appendChild(createChunk(stui.str("v_oldvotes_locale_list_help_msg"), "p", "helpContent"));
+											theDiv.appendChild(createChunk(cldrText.get("v_oldvotes_locale_list_help_msg"), "p", "helpContent"));
 										} else {
-											theDiv.appendChild(createChunk(stui.str("v_oldvotes_no_old"), "i")); // TODO fix
+											theDiv.appendChild(createChunk(cldrText.get("v_oldvotes_no_old"), "i")); // TODO fix
 										}
 									} else {
 										cldrStatus.setCurrentLocale(json.oldvotes.locale);
 										updateHashAndMenus();
 										var loclink;
-										theDiv.appendChild(loclink = createChunk(stui.str("v_oldvotes_return_to_locale_list"), "a", "notselected"));
+										theDiv.appendChild(loclink = createChunk(cldrText.get("v_oldvotes_return_to_locale_list"), "a", "notselected"));
 										listenFor(loclink, "click", function(e) {
 											cldrStatus.setCurrentLocale('');
 											reloadV();
@@ -1558,7 +1549,7 @@ function showV() {
 										theDiv.appendChild(createChunk(json.oldvotes.localeDisplayName, "h3", "v-title2"));
 										var oldVotesLocaleMsg = document.createElement("p");
 										oldVotesLocaleMsg.className = "helpContent";
-										oldVotesLocaleMsg.innerHTML = stui.sub("v_oldvotes_locale_msg", {
+										oldVotesLocaleMsg.innerHTML = cldrText.sub("v_oldvotes_locale_msg", {
 											version: surveyLastVoteVersion,
 											locale: json.oldvotes.localeDisplayName
 										});
@@ -1567,7 +1558,7 @@ function showV() {
 											var frag = document.createDocumentFragment();
 											const oldVoteCount = (json.oldvotes.contested ? json.oldvotes.contested.length : 0) +
 												(json.oldvotes.uncontested ? json.oldvotes.uncontested.length : 0);
-											var summaryMsg = stui.sub("v_oldvotes_count_msg", {
+											var summaryMsg = cldrText.sub("v_oldvotes_count_msg", {
 												count: oldVoteCount
 											});
 											frag.appendChild(createChunk(summaryMsg, "div", ""));
@@ -1589,7 +1580,7 @@ function showV() {
 												 * Show headings for "Winning/Losing" only if json.oldvotes.uncontested is defined and non-empty.
 												 */
 												if ((json.oldvotes.uncontested && json.oldvotes.uncontested.length > 0)) {
-													var title = stui.str(content.strid);
+													var title = cldrText.get(content.strid);
 													content.title = title;
 													content.appendChild(createChunk(title, "h2", "v-oldvotes-sub"));
 												}
@@ -1597,8 +1588,8 @@ function showV() {
 												content.appendChild(showVoteTable(jsondata /* voteList */, type, json));
 
 												var submit = BusyButton({
-													label: stui.str("v_submit_msg"),
-													busyLabel: stui.str("v_submit_busy")
+													label: cldrText.get("v_submit_msg"),
+													busyLabel: cldrText.get("v_submit_busy")
 												});
 
 												submit.on("click", function(e) {
@@ -1622,7 +1613,7 @@ function showV() {
 													const curLocale = cldrStatus.getCurrentLocale();
 													var url = cldrStatus.getContextPath() + "/SurveyAjax?what=oldvotes&_=" + curLocale + "&s=" + cldrStatus.getSessionId() + "&doSubmit=true&" + cacheKill();
 													myLoad(url, "(submitting oldvotes " + curLocale + ")", function(json) {
-														showLoader(theDiv.loader, stui.loading2);
+														showLoader(theDiv.loader, cldrText.get('loading2'));
 														if (!verifyJson(json, 'oldvotes')) {
 															handleDisconnect("Error submitting votes!", json, "Error");
 															return;
@@ -1655,7 +1646,7 @@ function showV() {
 												setDisplayed(contestedChunk, true); // only item
 											} else {
 												// navigation
-												navChunk.appendChild(createChunk(stui.str('v_oldvotes_show')));
+												navChunk.appendChild(createChunk(cldrText.get('v_oldvotes_show')));
 												navChunk.appendChild(createLinkToFn(uncontestedChunk.strid, function() {
 													setDisplayed(contestedChunk, false);
 													setDisplayed(uncontestedChunk, true);
@@ -1676,7 +1667,7 @@ function showV() {
 
 											theDiv.appendChild(frag);
 										} else {
-											theDiv.appendChild(createChunk(stui.str("v_oldvotes_no_old_here"), "i", ""));
+											theDiv.appendChild(createChunk(cldrText.get("v_oldvotes_no_old_here"), "i", ""));
 										}
 									}
 								}
@@ -1685,7 +1676,7 @@ function showV() {
 						} else if (cldrStatus.getCurrentSpecial() == 'mail') {
 							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=mail&s=" + cldrStatus.getSessionId() + "&fetchAll=true&" + cacheKill();
 							myLoad(url, "(loading mail " + cldrStatus.getCurrentLocale() + ")", function(json) {
-								hideLoader(null, stui.loading2);
+								hideLoader(null, cldrText.get('loading2'));
 								isLoading = false;
 								if (!verifyJson(json, 'mail')) {
 									return;
@@ -1709,7 +1700,7 @@ function showV() {
 									var data = json.mail.data;
 
 									if (data.length == 0) {
-										listDiv.appendChild(createChunk(stui.str("mail_noMail"), "p", "helpContent"));
+										listDiv.appendChild(createChunk(cldrText.get("mail_noMail"), "p", "helpContent"));
 									} else {
 										for (var ii in data) {
 											var row = data[ii];
@@ -1762,12 +1753,12 @@ function showV() {
 							});
 						} else if (isReport(cldrStatus.getCurrentSpecial())) {
 							showLoader(theDiv.loader);
-							showInPop2(stui.str("reportGuidance"), null, null, null, true, true); /* show the box the first time */
+							showInPop2(cldrText.get("reportGuidance"), null, null, null, true, true); /* show the box the first time */
 							var url = cldrStatus.getContextPath() + "/SurveyAjax?what=report&x=" + cldrStatus.getCurrentSpecial()
 								 + "&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + cacheKill();
 							var errFunction = function errFunction(err) {
 								console.log("Error: loading " + url + " -> " + err);
-								hideLoader(null, stui.loading2);
+								hideLoader(null, cldrText.get('loading2'));
 								isLoading = false;
 								flipper.flipTo(pages.other,
 									domConstruct.toDom("<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>"
@@ -1777,7 +1768,7 @@ function showV() {
 							if (isDashboard()) {
 								if (!cldrStatus.isVisitor()) {
 									const loadHandler = function(json) {
-										hideLoader(null, stui.loading2);
+										hideLoader(null, cldrText.get('loading2'));
 										isLoading = false;
 										// further errors are handled in JSON
 										showReviewPage(json, function() {
@@ -1799,9 +1790,9 @@ function showV() {
 									reloadV();
 								}
 							} else {
-								hideLoader(null, stui.loading2);
+								hideLoader(null, cldrText.get('loading2'));
 								const loadHandler = function(html) {
-									hideLoader(null, stui.loading2);
+									hideLoader(null, cldrText.get('loading2'));
 									isLoading = false;
 									flipper.flipTo(pages.other, domConstruct.toDom(html));
 								};
@@ -1875,7 +1866,7 @@ function showV() {
 							forceSidebar();
 							cldrStatus.setCurrentLocale(null);
 							cldrStatus.setCurrentSpecial('locales');
-							showInPop2(stui.str("localesInitialGuidance"), null, null, null, true); /* show the box the first time */
+							showInPop2(cldrText.get("localesInitialGuidance"), null, null, null, true); /* show the box the first time */
 							$('#itemInfo').html('');
 						} else {
 							otherSpecial.show(cldrStatus.getCurrentSpecial(), {
@@ -2037,7 +2028,7 @@ function showV() {
 							store.push({
 								label: 'Auto',
 								value: 'auto',
-								title: stui.str('coverage_auto_desc')
+								title: cldrText.get('coverage_auto_desc')
 							});
 
 							store.push({
@@ -2050,9 +2041,9 @@ function showV() {
 								if (cldrStatus.getIsUnofficial() === false && levelNums[j].num == 101) continue; // hide Optional in production
 								var level = levelNums[j].level;
 								store.push({
-									label: stui.str('coverage_' + level.name),
+									label: cldrText.get('coverage_' + level.name),
 									value: level.name,
-									title: stui.str('coverage_' + level.name + '_desc')
+									title: cldrText.get('coverage_' + level.name + '_desc')
 								});
 							}
 							//coverage menu
@@ -2112,8 +2103,8 @@ function showV() {
 							function doAutoImport() {
 								'use strict';
 								var autoImportProgressDialog = new Dialog({
-									title: stui.str("v_oldvote_auto_msg"),
-									content: stui.str("v_oldvote_auto_progress_msg")
+									title: cldrText.get("v_oldvote_auto_msg"),
+									content: cldrText.get("v_oldvote_auto_progress_msg")
 								});
 								autoImportProgressDialog.show();
 								window.haveDialog = true;
@@ -2130,8 +2121,8 @@ function showV() {
 											count: dojoNumber.format(json.autoImportedOldWinningVotes)
 										};
 										var autoImportedDialog = new Dialog({
-											title: stui.str("v_oldvote_auto_msg"),
-											content: stui.sub("v_oldvote_auto_desc_msg", vals)
+											title: cldrText.get("v_oldvote_auto_msg"),
+											content: cldrText.sub("v_oldvote_auto_desc_msg", vals)
 										});
 										autoImportedDialog.addChild(new Button({
 											label: "OK",
@@ -2181,6 +2172,5 @@ function showV() {
 						}
 					}); // end myLoad
 				} // end getInitialMenusEtc
-			}); // end loadStui
 		}); // end require
 } // end showV

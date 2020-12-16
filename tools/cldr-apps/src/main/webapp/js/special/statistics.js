@@ -184,21 +184,12 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 			url: false,
 			show: function(json, theDiv, params) {
 				showRecent(theDiv);
-//				<h3>Recently submitted items</h3>
-//
-//				<div id='submitItems'>
-//				</div>
-//				...
-//
-//				<script>
-//				showRecent('submitItems')
-//				</script>
 			}
 		}
 	];
 
 	Page.prototype.show = function show(params) {
-		showInPop2(stui.str("statisticsGuidance"), null, null, null, true); /* show the box the first time */					
+		showInPop2(cldrText.get("statisticsGuidance"), null, null, null, true); /* show the box the first time */
 		hideLoader(null);
 		isLoading=false;				
 		var theDiv;
@@ -213,11 +204,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 		}
 		
 		if(isNew) {
-			// for now - just show all sections sequentially.
-//			var linkToOld = createChunk("(Switch to the OLD statistics page)", "a", "notselected");
-//			linkToOld.href = 'statistics.jsp';
-//			theDiv.appendChild(linkToOld);
-			
+			// for now - just show all sections sequentially.			
 			for(var k=0;k<this.sectionArray.length;k++) {
 				var theSection = this.sectionArray[k];
 				var subFragment = theDiv; //document.createDocumentFragment();
@@ -225,14 +212,14 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 
 				var subDiv = document.createElement('div');
 				var sectionId = subDiv.id = 'stats_' + theSection.name;
-				var sectionTitle = stui.str(sectionId);
+				var sectionTitle = cldrText.get(sectionId);
 				subFragment.appendChild(createChunk(sectionTitle, "h2"));
 				subDiv.className = 'statArea';
 				subFragment.appendChild(subDiv);
 				
 				if(theSection.url){
 					(function(theSection,subDiv,params){
-						var loading = createChunk(stui.str("loading"), "p", "helpContent");
+						var loading = createChunk(cldrText.get("loading"), "p", "helpContent");
 						
 						subDiv.appendChild(loading);
 						cldrStAjax.queueXhr({
@@ -248,7 +235,7 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 								}
 							},
 							error: function(err) {
-								updateIf(loading, "Error: " + err.name + "-"+err.message);
+								updateIf(loading, "Error: " + err);
 								console.log("Err loading " + theSection.name + " - " + err);
 							}
 						});
@@ -256,8 +243,6 @@ define("js/special/statistics.js", ["js/special/SpecialPage.js", "dojo/number",
 				} else {
 					theSection.show(null, subDiv, params);
 				}
-				
-				//theDiv.appendChild(subFragment);
 			}
 		}
 

@@ -326,7 +326,7 @@ function unpackMenuSideBar(json) {
 			});
 		});
 	    if( childCount === 0) {
-                html += '<i>' + stui.str('coverage_no_items') + '</i>';
+                html += '<i>' + cldrText.get('coverage_no_items') + '</i>';
             }
 		html += '</ul></li>';
 	});

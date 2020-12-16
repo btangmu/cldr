@@ -468,74 +468,7 @@ XpathMap.prototype.formatPathHeader = function formatPathHeader(ph) {
 	}
 };
 
-/**
- * @class GLOBAL
- */
 var xpathMap = new XpathMap();
-
-/**
- * Global items
- * @class GLOBAL
- */
-
-/**
- * SurveyToolUI (localization) object. Preloaded with a few strings while we wait for the resources to load.
- *
- * @property stui
- */
-var stui = {
-	online: "Online",
-	error_restart: "(May be due to SurveyTool restart on server)",
-	error: "Disconnected: Error",
-	"details": "Details...",
-	disconnected: "Disconnected",
-	startup: "Starting up...",
-	ari_sessiondisconnect_message: "Your session has been disconnected.",
-};
-
-/*
- * These temporary versions of stui.str and stui.sub are "while we wait for the resources to load";
- * see loadStui() later in this file.
- * TODO: modernize with modules, avoid duplication here and later of stui.str, stui.sub!
- *
- * https://dojotoolkit.org/reference-guide/1.10/dojo/string.html
- */
-require(["dojo/string"], function(string) {
-	stui.str = function(x) {
-		if (stui[x]) {
-			return stui[x];
-		}
-		else {
-			return "";
-		}
-	};
-	stui.sub = function(x, y) {
-		let template = stui.str(x);
-		if (!template) {
-			return "";
-		}
-		return string.substitute(template, y);
-	};
-});
-
-var stuidebug_enabled = (window.location.search.indexOf('&stui_debug=') > -1);
-
-if (!stuidebug_enabled) {
-	/**
-	 * SurveyToolUI string loading function
-	 */
-	stui_str = function(x) {
-		if (stui) {
-			return stui.str(x);
-		} else {
-			return x;
-		}
-	};
-} else {
-	stui_str = function(x) {
-		return "stui[" + x + "]";
-	};
-}
 
 /**
  * Is the keyboard or input widget 'busy'? i.e., it's a bad time to change the DOM
@@ -601,7 +534,7 @@ String.prototype.ucFirst = function() {
 
 /**
  * Create a 'link' that goes to a function. By default it's an 'a', but could be a button, etc.
- * @param strid  {String} string to be used with stui.str
+ * @param strid  {String} string to be used with cldrText.get
  * @param fn {function} function, given the DOM obj as param
  * @param tag {String}  tag of new obj.  'a' by default.
  * @return {Element} newobj
@@ -610,7 +543,7 @@ function createLinkToFn(strid, fn, tag) {
 	if (!tag) {
 		tag = 'a';
 	}
-	var msg = stui.str(strid);
+	var msg = cldrText.get(strid);
 	var obj = document.createElement(tag);
 	obj.appendChild(document.createTextNode(msg));
 	if (tag == 'a') {
@@ -644,7 +577,7 @@ function createGravitar(user) {
 function createUser(user) {
 	var userLevelLc = user.userlevelName.toLowerCase();
 	var userLevelClass = "userlevel_" + userLevelLc;
-	var userLevelStr = stui_str(userLevelClass);
+	var userLevelStr = cldrText.get(userLevelClass);
 	var div = createChunk(null, "div", "adminUserUser");
 	div.appendChild(createGravitar(user));
 	div.userLevel = createChunk(userLevelStr, "i", userLevelClass);
@@ -885,7 +818,7 @@ function showWord() {
 		(progressWord && progressWord == "disconnected") ||
 		(progressWord && progressWord == "error")
 	) { // top priority
-		popupAlert('danger', cldrStatus.stopIcon() + stui_str(progressWord));
+		popupAlert('danger', cldrStatus.stopIcon() + cldrText.get(progressWord));
 		busted(); // no further processing.
 	} else if (ajaxWord) {
 		p.className = "progress-ok";
@@ -897,7 +830,7 @@ function showWord() {
 		}
 	} else if (progressWord == "startup") {
 		p.className = "progress-ok";
-		popupAlert('warning', stui_str('online'));
+		popupAlert('warning', cldrText.get('online'));
 	}
 }
 
@@ -985,7 +918,7 @@ function handleDisconnect(why, json, word, what) {
 				var p = document.getElementById("progress");
 				var subDiv = document.createElement('div');
 				var chunk0 = document.createElement("i");
-				chunk0.appendChild(document.createTextNode(stui_str("error_restart")));
+				chunk0.appendChild(document.createTextNode(cldrText.get("error_restart")));
 				var chunk = document.createElement("textarea");
 				chunk.className = "errorMessage";
 				chunk.appendChild(document.createTextNode(why));
@@ -1005,7 +938,7 @@ function handleDisconnect(why, json, word, what) {
 			var detailsButton = document.createElement("button");
 			detailsButton.type = "button";
 			detailsButton.id = "progress-details";
-			detailsButton.appendChild(document.createTextNode(stui_str("details")));
+			detailsButton.appendChild(document.createTextNode(cldrText.get("details")));
 			detailsButton.onclick = oneword.onclick;
 			subDiv.appendChild(detailsButton);
 			oneword.details = detailsButton;
@@ -1076,7 +1009,7 @@ function formatErrMsg(json, subkey) {
 	var msg_str = theCode;
 	if (json && json.err_code) {
 		msg_str = theCode = json.err_code;
-		if (stui.str(json.err_code) == json.err_code) {
+		if (cldrText.get(json.err_code) == json.err_code) {
 			console.log("** Unknown error code: " + json.err_code);
 			msg_str = "E_UNKNOWN";
 		}
@@ -1084,11 +1017,11 @@ function formatErrMsg(json, subkey) {
 	if (json === null) {
 		json = {}; // handle cases with no input data
 	}
-	return stui.sub(msg_str, {
+	return cldrText.sub(msg_str, {
 		/* Possibilities include: err_what_section, err_what_locmap, err_what_menus,
 			err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
 		json: json,
-		what: stui.str('err_what_' + subkey),
+		what: cldrText.get('err_what_' + subkey),
 		code: theCode,
 		err_data: json.err_data,
 		surveyCurrentLocale: cldrStatus.getCurrentLocale(),
@@ -1187,7 +1120,7 @@ function updateStatusBox(json) {
 			console.log(kmsg);
 			updateSpecialHeader(standOutMessage(kmsg));
 		} else if ((surveyUser !== null) && ((json.millisTillKick === 0) || (json.session_err))) {
-			var kmsg = stui_str("ari_sessiondisconnect_message");
+			var kmsg = cldrText.get("ari_sessiondisconnect_message");
 			console.log(kmsg);
 			updateSpecialHeader(standOutMessage(kmsg));
 			disconnected = true;
@@ -1308,8 +1241,7 @@ function updateStatus() {
 		error: function(err) {
 			wasBusted = true;
 			updateStatusBox({
-				err: err.message,
-				err_name: err.name,
+				err: err,
 				disconnected: true
 			});
 		}
@@ -1421,33 +1353,31 @@ function cloneAnon(i) {
 }
 
 /**
- * like cloneAnon, but localizes by fetching stui-html string substitution.
+ * like cloneAnon, but doing string substitution.
  *
  * @param o
  */
 function localizeAnon(o) {
-	console.log("☎️ Calling loadStui from localizeAnon");
-
-	loadStui(null, function(stui) {
-		if (o && o.childNodes) {
-			for (var i = 0; i < o.childNodes.length; i++) {
-				var k = o.childNodes[i];
-				if (k.id && k.id.indexOf("stui-html") == 0) {
-					var key = k.id.slice(5);
-					if (stui.str(key)) {
-						k.innerHTML = stui.str(key);
-					}
-					k.removeAttribute('id');
-				} else {
-					localizeAnon(k);
+	if (o && o.childNodes) {
+		for (var i = 0; i < o.childNodes.length; i++) {
+			var k = o.childNodes[i];
+			// This is related to elements like <th title='$flyovervorg' id='stui-htmlvorg'>
+			if (k.id && k.id.indexOf("stui-html") == 0) {
+				const key = k.id.slice(5); // e.g., 'htmlvorg'
+				const str = cldrText.get(key); // e.g., "Org"
+				if (str) {
+					k.innerHTML = str;
 				}
+				k.removeAttribute('id');
+			} else {
+				localizeAnon(k);
 			}
 		}
-	});
+	}
 }
 
 /**
- * Localize the flyover text by replacing $X with stui[Z]
+ * Localize the flyover text by replacing $X with ...
  *
  * @param {Node} o
  */
@@ -1456,9 +1386,10 @@ function localizeFlyover(o) {
 		for (var i = 0; i < o.childNodes.length; i++) {
 			var k = o.childNodes[i];
 			if (k.title && k.title.indexOf("$") == 0) {
-				var key = k.title.slice(1);
-				if (stui.str(key)) {
-					k.title = stui.str(key);
+				const key = k.title.slice(1);
+				const str = cldrText.get(key);
+				if (str) {
+					k.title = str;
 				} else {
 					k.title = null;
 				}
@@ -1666,7 +1597,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 		isOneLocale = true;
 	}
 	if (!isOneLocale) {
-		var sidewaysControl = createChunk(stui.str("sideways_loading0"), "div", "sidewaysArea");
+		var sidewaysControl = createChunk(cldrText.get("sideways_loading0"), "div", "sidewaysArea");
 		frag.appendChild(sidewaysControl);
 
 		function clearMyTimeout() {
@@ -1678,7 +1609,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 		clearMyTimeout();
 		sidewaysShowTimeout = window.setTimeout(function() {
 			clearMyTimeout();
-			updateIf(sidewaysControl, stui.str("sideways_loading1"));
+			updateIf(sidewaysControl, cldrText.get("sideways_loading1"));
 
 			var url = cldrStatus.getContextPath() + "/SurveyAjax?what=getsideways&_=" + cldrStatus.getCurrentLocale() + "&s=" + cldrStatus.getSessionId() + "&xpath=" + tr.theRow.xpstrid + cacheKill();
 			myLoad(url, "sidewaysView", function(json) {
@@ -1847,7 +1778,7 @@ function showForumStuff(frag, forumDivClone, tr) {
 		cldrStForum.addNewPostButtons(frag, cldrStatus.getCurrentLocale(), couldFlag, theRow.xpstrid, theRow.code, myValue);
 	}
 
-	var loader2 = createChunk(stui.str("loading"), "i");
+	var loader2 = createChunk(cldrText.get("loading"), "i");
 	frag.appendChild(loader2);
 
 	/**
@@ -1944,8 +1875,7 @@ function updateInfoPanelForumPosts(tr) {
 	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 
 	let errorHandler = function(err) {
-		let responseText = cldrStAjax.errResponseText(err);
-		console.log('Error in showForumStuff: ' + err + ' response ' + responseText);
+		console.log('Error in showForumStuff: ' + err);
 		showInPop(cldrStatus.stopIcon() +
 			" Couldn't load forum post for this row- please refresh the page. <br>Error: " +
 			err + "</td>", tr, null);
@@ -2120,7 +2050,7 @@ require(["dojo/ready"], function(ready) {
 				}
 				// extra attributes
 				if (theRow.extraAttributes && Object.keys(theRow.extraAttributes).length > 0) {
-					var extraHeading = createChunk(stui.str("extraAttribute_heading"), "h3", "extraAttribute_heading");
+					var extraHeading = createChunk(cldrText.get("extraAttribute_heading"), "h3", "extraAttribute_heading");
 					var extraContainer = createChunk("", "div", "extraAttributes");
 					appendExtraAttributes(extraContainer, theRow);
 					theHelp.appendChild(extraHeading);
@@ -2390,7 +2320,7 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
 			 */
 			tests = [{
 				type: 'Error',
-				message: stui_str("StatusAction_" + json.statusAction)
+				message: cldrText.get("StatusAction_" + json.statusAction)
 			}];
 		}
 
@@ -2407,10 +2337,10 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
 				tr.myProposal.style.display = "none";
 		}
 		if (ourItem || (replaceErrors && value === '' /* Abstain */)) {
-			str = stui.sub("StatusAction_msg",
-				[stui_str("StatusAction_" + json.statusAction)], "p", "");
-			var str2 = stui.sub("StatusAction_popupmsg",
-				[stui_str("StatusAction_" + json.statusAction), theRow.code], "p", "");
+			str = cldrText.sub("StatusAction_msg",
+				[cldrText.get("StatusAction_" + json.statusAction)], "p", "");
+			var str2 = cldrText.sub("StatusAction_popupmsg",
+				[cldrText.get("StatusAction_" + json.statusAction), theRow.code], "p", "");
 			// show in modal popup (ouch!)
 			alert(str2);
 
@@ -2443,8 +2373,8 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
 		newDiv.innerHTML = newHtml;
 		if (json && (!parseStatusAction(json.statusAction).vote)) {
 			div3.appendChild(createChunk(
-				stui.sub("StatusAction_msg",
-					[stui_str("StatusAction_" + json.statusAction)], "p", "")));
+				cldrText.sub("StatusAction_msg",
+					[cldrText.get("StatusAction_" + json.statusAction)], "p", "")));
 		}
 
 		div3.popParent = tr;
@@ -2493,13 +2423,13 @@ function showItemInfoFn(theRow, item) {
 
 		if (item.value) {
 			/*
-			 * Strings produced here, used as keys for stui.js, may include:
+			 * Strings produced here, used as keys for cldrText.sub(), may include:
 			 *  "pClass_winner", "pClass_alias", "pClass_fallback", "pClass_fallback_code", "pClass_fallback_root", "pClass_loser".
 			 *  See getPClass in DataSection.java.
 			 *
 			 *  TODO: why not show stars, etc., here?
 			 */
-			h3.appendChild(createChunk(stui.sub("pClass_" + item.pClass, item), "p", "pClassExplain"));
+			h3.appendChild(createChunk(cldrText.sub("pClass_" + item.pClass, item), "p", "pClassExplain"));
 		}
 
 		if (item.value === INHERITANCE_MARKER) {
@@ -2522,7 +2452,7 @@ function showItemInfoFn(theRow, item) {
 }
 
 /**
- * Add a link in the Info Panel for "Jump to Original" (stui.str('followAlias')),
+ * Add a link in the Info Panel for "Jump to Original" (cldrText.get('followAlias')),
  * if theRow.inheritedLocale or theRow.inheritedXpid is defined.
  *
  * Normally at least one of theRow.inheritedLocale and theRow.inheritedXpid should be
@@ -2555,9 +2485,9 @@ function addJumpToOriginal(theRow, el) {
 		if ((xpstrid === theRow.xpstrid) && // current hash
 			(loc === cldrStatus.getCurrentLocale())) { // current locale
 			// i.e., following the alias would come back to the current item
-			el.appendChild(createChunk(stui.str('noFollowAlias'), "span", 'followAlias'));
+			el.appendChild(createChunk(cldrText.get('noFollowAlias'), "span", 'followAlias'));
 		} else {
-			var clickyLink = createChunk(stui.str('followAlias'), "a", 'followAlias');
+			var clickyLink = createChunk(cldrText.get('followAlias'), "a", 'followAlias');
 			clickyLink.href = '#/' + loc + '//' + xpstrid;
 			el.appendChild(clickyLink);
 		}
@@ -2615,7 +2545,7 @@ function addVitem(td, tr, theRow, item, newButton) {
 	checkLRmarker(choiceField, span.dir, item.value);
 
 	if (item.isBaselineValue == true) {
-		appendIcon(choiceField, "i-star", stui.str("voteInfo_baseline_desc"));
+		appendIcon(choiceField, "i-star", cldrText.get("voteInfo_baseline_desc"));
 	}
 	if (item.votes && !isWinner) {
 		if (item.valueHash == theRow.voteVhash && theRow.canFlagOnLosing && !theRow.rowFlagged) {
@@ -2745,48 +2675,6 @@ function updateCoverage(theDiv) {
 	}
 }
 
-function loadStui(loc, cb) {
-	console.log("☎️ Hello my name is loadStui! loc = " + loc + "; cb = " + cb);
-	if (!stui.ready) {
-		/*
-		 * https://dojotoolkit.org/reference-guide/1.10/dojo/string.html
-		 * https://dojotoolkit.org/reference-guide/1.10/dojo/i18n.html
-		 */
-		require(["dojo/string", "dojo/i18n!./surveyTool/nls/stui.js"],
-		function(string, stuibundle) {
-			if (!stuidebug_enabled) {
-				stui.str = function(x) {
-					if (stuibundle[x]) return stuibundle[x];
-					else return x;
-				};
-				stui.sub = function(x, y) {
-					let template = stui.str(x);
-					if (!template) {
-						return "";
-					}
-					return string.substitute(template, y);
-				};
-			} else {
-				stui.str = stui_str; // debug
-				stui.sub = function(x, y) {
-					return stui_str(x) + '{' + Object.keys(y) + '}';
-				};
-			}
-			const TRANS_HINT_LANGUAGE_NAME = 'English'; // must match SurveyMain.TRANS_HINT_LANGUAGE_NAME
-			stuibundle.htmltranshint = stui.htmltranshint = TRANS_HINT_LANGUAGE_NAME;
-			stui.ready = true;
-			if (cb) {
-				cb(stui);
-			}
-		});
-	} else {
-		if (cb) {
-			cb(stui);
-		}
-	}
-	return stui;
-}
-
 function firstword(str) {
 	return str.split(" ")[0];
 }
@@ -2815,11 +2703,11 @@ function hideAfter(whom, when) {
 }
 
 function appendInputBox(parent, which) {
-	var label = createChunk(stui.str(which), "div", which);
+	var label = createChunk(cldrText.get(which), "div", which);
 	var input = document.createElement("input");
 	input.stChange = function(onOk, onErr) {};
-	var change = createChunk(stui.str("appendInputBoxChange"), "button", "appendInputBoxChange");
-	var cancel = createChunk(stui.str("appendInputBoxCancel"), "button", "appendInputBoxCancel");
+	var change = createChunk(cldrText.get("appendInputBoxChange"), "button", "appendInputBoxChange");
+	var cancel = createChunk(cldrText.get("appendInputBoxCancel"), "button", "appendInputBoxCancel");
 	var notify = document.createElement("div");
 	notify.className = "appendInputBoxNotify";
 	input.className = "appendInputBox";
@@ -2833,7 +2721,7 @@ function appendInputBox(parent, which) {
 	var doChange = function() {
 		addClass(label, "d-item-selected");
 		removeAllChildNodes(notify);
-		notify.appendChild(createChunk(stui.str("loading"), 'i'));
+		notify.appendChild(createChunk(cldrText.get("loading"), 'i'));
 		var onOk = function(msg) {
 			removeClass(label, "d-item-selected");
 			removeAllChildNodes(notify);
@@ -2952,13 +2840,13 @@ function showVoteTable(voteList, type, json) {
 	var th = document.createElement("thead");
 	var tb = document.createElement("tbody");
 	var tr = document.createElement("tr");
-	tr.appendChild(createChunk(stui.str("v_oldvotes_path"), "th", "code"));
+	tr.appendChild(createChunk(cldrText.get("v_oldvotes_path"), "th", "code"));
 	tr.appendChild(createChunk(translationHintsLanguage, "th", "v-comp"));
-	tr.appendChild(createChunk(stui.sub("v_oldvotes_winning_msg", {
+	tr.appendChild(createChunk(cldrText.sub("v_oldvotes_winning_msg", {
 		version: lastVoteVersion
 	}), "th", "v-win"));
-	tr.appendChild(createChunk(stui.str("v_oldvotes_mine"), "th", "v-mine"));
-	tr.appendChild(createChunk(stui.str("v_oldvotes_accept"), "th", "v-accept"));
+	tr.appendChild(createChunk(cldrText.get("v_oldvotes_mine"), "th", "v-mine"));
+	tr.appendChild(createChunk(cldrText.get("v_oldvotes_accept"), "th", "v-accept"));
 	th.appendChild(tr);
 	t.appendChild(th);
 	var oldPath = '';
@@ -3086,7 +2974,7 @@ function addImportVotesFooter(voteTableDiv, voteList, mainCategories) {
 	}, "button"));
 
 	if (mainCategories.length > 1) {
-		voteTableDiv.appendChild(document.createTextNode(stui.str("v_oldvotes_all_section")));
+		voteTableDiv.appendChild(document.createTextNode(cldrText.get("v_oldvotes_all_section")));
 		for (var cat in mainCategories) {
 			let mainCat = mainCategories[cat];
 			var checkbox = document.createElement("input");
@@ -3115,7 +3003,7 @@ function addImportVotesFooter(voteTableDiv, voteList, mainCategories) {
  */
 function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 
-	showLoader(tr.theTable.theDiv.loader, stui.loadingOneRow);
+	showLoader(tr.theTable.theDiv.loader, cldrText.get('loadingOneRow'));
 
 	var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=getrow" +
 		"&_=" + cldrStatus.getCurrentLocale() +
@@ -3154,12 +3042,10 @@ function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
 		}
 	};
 	var errorHandler = function(err) {
-		let responseText = cldrStAjax.errResponseText(err);
-		console.log('Error: ' + err + ' response ' + responseText);
+		console.log('Error: ' + err);
 		tr.className = "ferrbox";
-		tr.innerHTML = "Error while  loading: " + err.name + " <br> " +
-			err.message + "<div style='border: 1px solid red;'>" +
-			responseText +  "</div>";
+		tr.innerHTML = "Error while  loading: <div style='border: 1px solid red;'>" +
+			err + "</div>";
 		onFailure("err", err);
 	};
 	var xhrArgs = {
@@ -3198,9 +3084,9 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 	}
 	if (what == 'submit') {
 		button.className = "ichoice-x-ok"; // TODO: ichoice-inprogress? spinner?
-		showLoader(tr.theTable.theDiv.loader, stui.voting);
+		showLoader(tr.theTable.theDiv.loader, cldrText.get('voting'));
 	} else {
-		showLoader(tr.theTable.theDiv.loader, stui.checking);
+		showLoader(tr.theTable.theDiv.loader, cldrText.get('checking'));
 	}
 
 	// select
@@ -3307,12 +3193,11 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
 		 * any response. It may change again below, such as to 'tr_err'.
 		 */
 		tr.className = originalTrClassName;
-		let responseText = cldrStAjax.errResponseText(err);
-		console.log('Error: ' + err + ' response ' + responseText);
-		handleDisconnect('Error: ' + err + ' response ' + responseText, null);
+		console.log('Error: ' + err);
+		handleDisconnect('Error: ' + err, null);
 		theRow.className = "ferrbox";
-		theRow.innerHTML = "Error while  loading: " + err.name + " <br> " + err.message +
-		"<div style='border: 1px solid red;'>" + responseText + "</div>";
+		theRow.innerHTML = "Error while  loading: <div style='border: 1px solid red;'>"
+			 + err + "</div>";
 		myUnDefer();
 	};
 	if (box) {
@@ -3335,14 +3220,14 @@ function handleWiredClick(tr, theRow, vHash, box, button, what) {
  * TODO move admin panel code to separate module
  */
 function loadAdminPanel() {
-	if (!vap) return;
-	loadStui();
+	if (!vap) {
+		return;
+	}
 	var adminStuff = document.getElementById("adminStuff");
-	if (!adminStuff) return;
-	
-	// make sure the stui strings are loaded first
-    loadStui(null, function(stui) { 
-	
+	if (!adminStuff) {
+		return;
+	}
+	{
 		var content = document.createDocumentFragment();
 	
 		var list = document.createElement("ul");
@@ -3352,11 +3237,9 @@ function loadAdminPanel() {
 		function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
 			var ourUrl = cldrStatus.getContextPath() + "/AdminAjax.jsp?vap=" + vap + "&" + urlAppend;
 			var errorHandler = function(err) {
-				let responseText = cldrStAjax.errResponseText(err);
-				console.log('adminload ' + urlAppend + ' Error: ' + err + ' response ' + responseText);
+				console.log('adminload ' + urlAppend + ' Error: ' + err);
 				theDiv.className = "ferrbox";
-				theDiv.innerHTML = "Error while  loading: " + err.name + " <br> " +
-					err.message + "<div style='border: 1px solid red;'>" + responseText + "</div>";
+				theDiv.innerHTML = "Error while loading: <div style='border: 1px solid red;'>" + err + "</div>";
 			};
 			var xhrArgs = {
 				url: ourUrl + cacheKill(),
@@ -3409,8 +3292,8 @@ function loadAdminPanel() {
 		function addAdminPanel(type, fn) {
 			var panel = panels[type] = {
 				type: type,
-				name: stui.str(type) || type,
-				desc: stui.str(type + "_desc") || '(no description - missing from stui)',
+				name: cldrText.get(type) || type,
+				desc: cldrText.get(type + "_desc") || '(no description - missing from cldrText)',
 				fn: fn
 			};
 			panel.div = document.createElement("div");
@@ -3455,7 +3338,7 @@ function loadAdminPanel() {
 				var frag2 = document.createDocumentFragment();
 	
 				if (!json || !json.users || Object.keys(json.users) == 0) {
-					frag2.appendChild(document.createTextNode(stui.str("No users.")));
+					frag2.appendChild(document.createTextNode(cldrText.get("No users.")));
 				} else {
 					for (sess in json.users) {
 						var cs = json.users[sess];
@@ -3478,7 +3361,7 @@ function loadAdminPanel() {
 							", ttk:" + (parseInt(cs.millisTillKick) / 1000).toFixed(1) + "s",
 							"span", "adminUserInfo"));
 	
-						var unlinkButton = createChunk(stui.str("admin_users_action_kick"), "button", "admin_users_action_kick");
+						var unlinkButton = createChunk(cldrText.get("admin_users_action_kick"), "button", "admin_users_action_kick");
 						user.appendChild(unlinkButton);
 						unlinkButton.onclick = function(e) {
 							unlinkButton.className = 'deactivated';
@@ -3510,7 +3393,7 @@ function loadAdminPanel() {
 			var stack = createChunk(null, "div", "adminThreadStack");
 			frag.appendChild(u);
 			frag.appendChild(stack);
-			var c2s = createChunk(stui.str("clickToSelect"), "button", "clickToSelect");
+			var c2s = createChunk(cldrText.get("clickToSelect"), "button", "clickToSelect");
 			clickToSelect(c2s, stack);
 	
 			removeAllChildNodes(div);
@@ -3521,14 +3404,14 @@ function loadAdminPanel() {
 			loadOrFail("do=threads", u, function(json) {
 				if (!json || !json.threads || Object.keys(json.threads.all) == 0) {
 					removeAllChildNodes(u);
-					u.appendChild(document.createTextNode(stui.str("No threads.")));
+					u.appendChild(document.createTextNode(cldrText.get("No threads.")));
 				} else {
 					var frag2 = document.createDocumentFragment();
 					removeAllChildNodes(stack);
-					stack.innerHTML = stui.str("adminClickToViewThreads");
+					stack.innerHTML = cldrText.get("adminClickToViewThreads");
 					deadThreads = {};
 					if (json.threads.dead) {
-						var header = createChunk(stui.str("adminDeadThreadsHeader"), "div", "adminDeadThreadsHeader");
+						var header = createChunk(cldrText.get("adminDeadThreadsHeader"), "div", "adminDeadThreadsHeader");
 						var deadul = createChunk("", "ul", "adminDeadThreads");
 						for (var jj = 0; jj < json.threads.dead.length; jj++) {
 							var theThread = json.threads.dead[jj];
@@ -3549,7 +3432,7 @@ function loadAdminPanel() {
 							tid.className = tid.className + " deadThread";
 						}
 						thread.appendChild(createChunk(t.name, "span", "adminThreadName"));
-						thread.appendChild(createChunk(stui.str(t.state), "span", "adminThreadState_" + t.state));
+						thread.appendChild(createChunk(cldrText.get(t.state), "span", "adminThreadState_" + t.state));
 						thread.onclick = (function(t, id) {
 							return (function() {
 								stack.innerHTML = "<b>" + id + ":" + t.name + "</b>\n";
@@ -3583,7 +3466,7 @@ function loadAdminPanel() {
 			v.appendChild(u);
 			frag.appendChild(stack);
 	
-			var c2s = createChunk(stui.str("clickToSelect"), "button", "clickToSelect");
+			var c2s = createChunk(cldrText.get("clickToSelect"), "button", "clickToSelect");
 			clickToSelect(c2s, stack);
 	
 			removeAllChildNodes(div);
@@ -3597,8 +3480,8 @@ function loadAdminPanel() {
 			var exceptionNames = {};
 	
 			div.appendChild(frag);
-			var more = createChunk(stui_str("more_exceptions"), "p", "adminExceptionMore adminExceptionFooter");
-			var loading = createChunk(stui_str("loading"), "p", "adminExceptionFooter");
+			var more = createChunk(cldrText.get("more_exceptions"), "p", "adminExceptionMore adminExceptionFooter");
+			var loading = createChunk(cldrText.get("loading"), "p", "adminExceptionFooter");
 	
 			v.appendChild(loading);
 			var loadNext = function(from) {
@@ -3610,10 +3493,10 @@ function loadAdminPanel() {
 				loadOrFail(append, u, function(json) {
 					if (!json || !json.exceptions || !json.exceptions.entry) {
 						if (!from) {
-							v.appendChild(createChunk(stui_str("no_exceptions"), "p", "adminExceptionFooter"));
+							v.appendChild(createChunk(cldrText.get("no_exceptions"), "p", "adminExceptionFooter"));
 						} else {
 							v.removeChild(loading);
-							v.appendChild(createChunk(stui_str("last_exception"), "p", "adminExceptionFooter"));
+							v.appendChild(createChunk(cldrText.get("last_exception"), "p", "adminExceptionFooter"));
 							// just the last one.
 						}
 					} else {
@@ -3625,7 +3508,7 @@ function loadAdminPanel() {
 						var frag2 = document.createDocumentFragment();
 						if (!from) {
 							removeAllChildNodes(stack);
-							stack.innerHTML = stui.str("adminClickToViewExceptions");
+							stack.innerHTML = cldrText.get("adminClickToViewExceptions");
 						}
 						// TODO: if(json.threads.dead) frag2.appendChunk(json.threads.dead.toString(),"span","adminDeadThreads");
 						last = json.exceptions.lastTime;
@@ -3687,7 +3570,7 @@ function loadAdminPanel() {
 										// prepare div
 										if (!head.otherdiv) {
 											head.otherdiv = createChunk(null, "div", "adminExceptionOtherList");
-											head.otherdiv.appendChild(createChunk(stui.str("adminExceptionDupList"), "h4"));
+											head.otherdiv.appendChild(createChunk(cldrText.get("adminExceptionDupList"), "h4"));
 											for (k in head.others) {
 												head.otherdiv.appendChild(head.others[k]);
 											}
@@ -3700,7 +3583,7 @@ function loadAdminPanel() {
 									head.appendChild(countSpan);
 								}
 								head.others.push(exception);
-								head.count.nodeValue = stui.sub("adminExceptionDup", [head.others.length]);
+								head.count.nodeValue = cldrText.sub("adminExceptionDup", [head.others.length]);
 								head.otherdiv = null; // reset
 							} else {
 								frag2.appendChild(exception);
@@ -3740,7 +3623,7 @@ function loadAdminPanel() {
 			loadOrFail("do=settings", u, function(json) {
 				if (!json || !json.settings || Object.keys(json.settings.all) == 0) {
 					removeAllChildNodes(u);
-					u.appendChild(document.createTextNode(stui.str("nosettings")));
+					u.appendChild(document.createTextNode(cldrText.get("nosettings")));
 				} else {
 					var frag2 = document.createDocumentFragment();
 					for (id in json.settings.all) {
@@ -3757,7 +3640,7 @@ function loadAdminPanel() {
 								setHeader.stChange = function(onOk, onErr) {
 									loadOrFail("do=settings_set&setting=" + theHeader, u, function(json) {
 										if (!json || !json.settings_set || !json.settings_set.ok) {
-											onErr(stui_str("failed"));
+											onErr(cldrText.get("failed"));
 											onErr(json.settings_set.err);
 										} else {
 											if (json.settings_set[theHeader]) {
@@ -3771,7 +3654,7 @@ function loadAdminPanel() {
 													updateSpecialHeader(null);
 												}
 											}
-											onOk(stui_str("changed"));
+											onOk(cldrText.get("changed"));
 										}
 									}, setHeader.value);
 									return false;
@@ -3807,7 +3690,7 @@ function loadAdminPanel() {
 			for (var k in actions) {
 				var action = actions[k];
 				var newUrl = baseUrl + action + hashSuff;
-				var b = createChunk(stui_str(action), "button");
+				var b = createChunk(cldrText.get(action), "button");
 				b.onclick = function() {
 					window.location = newUrl;
 					return false;
@@ -3828,7 +3711,7 @@ function loadAdminPanel() {
 			panelSwitch(panelFirst.type);
 		}
 		adminStuff.appendChild(content);
-	});
+	}
 }
 
 /**
@@ -3836,7 +3719,7 @@ function loadAdminPanel() {
  */
 function refreshCounterVetting() {
 	if (cldrStatus.isVisitor() || isDashboard()) {
-		// if the user is a visitor, or this is the Dashboard, don't display the counter informations
+		// if the user is a visitor, or this is the Dashboard, don't display the counter information
 		$('#nav-page .counter-infos, #nav-page .nav-progress').hide();
 		return;
 	}
@@ -4020,14 +3903,12 @@ function createLocLink(loc, locName, className) {
 function showAllItems(divName, user) {
 	require(["dojo/ready"], function(ready) {
 		ready(function() {
-			loadStui();
 			var div = document.getElementById(divName);
 			div.className = "recentList";
 			div.update = function() {
 				var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=mylocales&user=" + user;
 				var errorHandler = function(err) {
-					let responseText = cldrStAjax.errResponseText(err);
-					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
+					handleDisconnect('Error in showrecent: ' + err);
 				};
 				showLoader(null, "Loading recent items");
 				var loadHandler = function(json) {
@@ -4037,13 +3918,13 @@ function showAllItems(divName, user) {
 							var header = json.mine.header;
 							var data = json.mine.data;
 							if (data.length == 0) {
-								frag.appendChild(createChunk(stui_str("recentNone"), "i"));
+								frag.appendChild(createChunk(cldrText.get("recentNone"), "i"));
 							} else {
 								var rowDiv = document.createElement("div");
 								frag.appendChild(rowDiv);
 
-								rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
-								rowDiv.appendChild(createChunk(stui_str("recentCount"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentLoc"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentCount"), "b"));
 
 								for (var q in data) {
 									var row = data[q];
@@ -4060,7 +3941,7 @@ function showAllItems(divName, user) {
 
 									const sessionId = cldrStatus.getSessionId();
 									if (sessionId) {
-										var dlLink = createChunk(stui_str("downloadXmlLink"), "a", "notselected");
+										var dlLink = createChunk(cldrText.get("downloadXmlLink"), "a", "notselected");
 										dlLink.href = "DataExport.jsp?do=myxml&_=" + loc + "&user=" + user + "&s=" + sessionId;
 										dlLink.target = "STDownload";
 										rowDiv.appendChild(dlLink);
@@ -4102,7 +3983,6 @@ function showRecent(divName, locale, user) {
 	}
 	require(["dojo/ready"], function(ready) {
 		ready(function() {
-			loadStui();
 			var div;
 			if (divName.nodeType > 0) {
 				div = divName;
@@ -4113,8 +3993,7 @@ function showRecent(divName, locale, user) {
 			div.update = function() {
 				var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax?what=recent_items&_=" + locale + "&user=" + user + "&limit=" + 15;
 				var errorHandler = function(err) {
-					let responseText = cldrStAjax.errResponseText(err);
-					handleDisconnect('Error in showrecent: ' + err + ' response ' + responseText);
+					handleDisconnect('Error in showrecent: ' + err);
 				};
 				showLoader(null, "Loading recent items");
 				var loadHandler = function(json) {
@@ -4125,15 +4004,15 @@ function showRecent(divName, locale, user) {
 							var data = json.recent.data;
 
 							if (data.length == 0) {
-								frag.appendChild(createChunk(stui_str("recentNone"), "i"));
+								frag.appendChild(createChunk(cldrText.get("recentNone"), "i"));
 							} else {
 								var rowDiv = document.createElement("div");
 								frag.appendChild(rowDiv);
 
-								rowDiv.appendChild(createChunk(stui_str("recentLoc"), "b"));
-								rowDiv.appendChild(createChunk(stui_str("recentXpathCode"), "b"));
-								rowDiv.appendChild(createChunk(stui_str("recentValue"), "b"));
-								rowDiv.appendChild(createChunk(stui_str("recentWhen"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentLoc"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentXpathCode"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentValue"), "b"));
+								rowDiv.appendChild(createChunk(cldrText.get("recentWhen"), "b"));
 
 								for (var q in data) {
 									var row = data[q];
@@ -4191,7 +4070,6 @@ function showRecent(divName, locale, user) {
  * @returns
  */
 function showUserActivity(list, tableRef) {
-	loadStui(null, function( /* stui */ ) {
 		require([
 				"dojo/ready",
 				"dojo/dom",
@@ -4334,5 +4212,4 @@ function showUserActivity(list, tableRef) {
 					});
 				});
 			});
-	});
 }

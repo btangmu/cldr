@@ -34,8 +34,8 @@ define("js/special/flagged.js", ["js/special/SpecialPage.js", "dojo/request", "j
 	        	return;
 			}
 			// set up the 'right sidebar'
-			const pucontent = showInPop2(stui.str(params.name+"Guidance"), null, null, null, true); /* show the box the first time */					
-			
+			const pucontent = showInPop2(cldrText.get(params.name+"Guidance"), null, null, null, true); /* show the box the first time */
+
 			var ourDiv = document.createElement("div");
 			ourDiv.className = 'special_'+params.name;
 
@@ -64,7 +64,7 @@ define("js/special/flagged.js", ["js/special/SpecialPage.js", "dojo/request", "j
 			var totalCountChunk = $('<span></span>', 
 				{text: Number(0).toLocaleString()});
 			var totalCountHeader = $('<h3></h3>',
-				{text:stui.str('flaggedTotalCount')});
+				{text:cldrText.get('flaggedTotalCount')});
 			totalCountChunk.appendTo(totalCountHeader);
 			totalCountHeader.appendTo(ourDiv);
 			var lastCount = 0;
@@ -119,7 +119,7 @@ define("js/special/flagged.js", ["js/special/SpecialPage.js", "dojo/request", "j
 			if (surveyUserPerms && surveyUserPerms.userIsTC) {
 				// For TC, show button (includes emails, so TC only)
 				const csvButton = $('<form></form>', {action: "DataExport.jsp?do=flagged&s=" + cldrStatus.getSessionId()});
-				csvButton.append($('<input></input', {type: 'submit', value: stui.str('downloadCsvLink')}));
+				csvButton.append($('<input></input', {type: 'submit', value: cldrText.get('downloadCsvLink')}));
 				$(pucontent).append(csvButton);
 			}
 		})

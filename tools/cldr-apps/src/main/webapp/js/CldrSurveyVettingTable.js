@@ -87,7 +87,7 @@ const cldrSurveyTable = (function() {
 			 * a prototype for each row that gets added to the real (not hidden) table.
 			 * TODO: simplify.
 			 */
-			localizeFlyover(theTable); // Replace titles starting with $ with strings from stui
+			localizeFlyover(theTable); // Replace titles starting with $ with strings from cldrText
 			const headChildren = getTagChildren(theTable.getElementsByTagName("tr")[0]);
 			var toAdd = document.getElementById('proto-datarow'); // loaded from "hidden.html", which see.
 			var rowChildren = getTagChildren(toAdd);
@@ -435,10 +435,10 @@ const cldrSurveyTable = (function() {
 		 */
 		if (abstainCell) {
 			if (theRow.hasVoted) {
-				abstainCell.title = stui.voTrue;
+				abstainCell.title = cldrText.get('voTrue');
 				abstainCell.className = "d-no-vo-true nocell";
 			} else {
-				abstainCell.title = stui.voFalse;
+				abstainCell.title = cldrText.get('voFalse');
 				abstainCell.className = "d-no-vo-false nocell";
 			}
 		}
@@ -612,8 +612,8 @@ const cldrSurveyTable = (function() {
 			cell.isSetup = true;
 		}
 
-		const statusTitle = stui.str(statusClass);
-		cell.title = stui.sub('draftStatus', [statusTitle]);
+		const statusTitle = cldrText.get(statusClass);
+		cell.title = cldrText.sub('draftStatus', [statusTitle]);
 	}
 
 	/**
@@ -662,7 +662,7 @@ const cldrSurveyTable = (function() {
 			var voteForItem = theRow.items[theRow.voteVhash];
 			if (voteForItem && voteForItem.votes && voteForItem.votes[surveyUser.id] &&
 				voteForItem.votes[surveyUser.id].overridedVotes) {
-				tr.voteDiv.appendChild(createChunk(stui.sub("override_explain_msg", {
+				tr.voteDiv.appendChild(createChunk(cldrText.sub("override_explain_msg", {
 					overrideVotes: voteForItem.votes[surveyUser.id].overridedVotes,
 					votes: surveyUser.votecount
 				}), "p", "helpContent"));
@@ -671,16 +671,16 @@ const cldrSurveyTable = (function() {
 				theRow.canFlagOnLosing) {
 				if (!theRow.rowFlagged) {
 					addIcon(tr.voteDiv, "i-stop");
-					tr.voteDiv.appendChild(createChunk(stui.sub("mustflag_explain_msg", {}), "p", "helpContent"));
+					tr.voteDiv.appendChild(createChunk(cldrText.sub("mustflag_explain_msg", {}), "p", "helpContent"));
 				} else {
 					addIcon(tr.voteDiv, "i-flag");
-					tr.voteDiv.appendChild(createChunk(stui.str("flag_desc", "p", "helpContent")));
+					tr.voteDiv.appendChild(createChunk(cldrText.get("flag_desc", "p", "helpContent")));
 				}
 			}
 		}
 		if (!theRow.rowFlagged && theRow.canFlagOnLosing) {
 			addIcon(tr.voteDiv, "i-flag-d");
-			tr.voteDiv.appendChild(createChunk(stui.str("flag_d_desc", "p", "helpContent")));
+			tr.voteDiv.appendChild(createChunk(cldrText.get("flag_d_desc", "p", "helpContent")));
 		}
 		/*
 		 * The value_vote array has an even number of elements,
@@ -702,7 +702,7 @@ const cldrSurveyTable = (function() {
 			// heading row
 			var vrow = createChunk(null, "tr", "voteInfo_tr voteInfo_tr_heading");
 			if (item.rawValue === INHERITANCE_MARKER || (item.votes && Object.keys(item.votes).length > 0)) {
-				vrow.appendChild(createChunk(stui.str("voteInfo_orgColumn"), "td", "voteInfo_orgColumn voteInfo_td"));
+				vrow.appendChild(createChunk(cldrText.get("voteInfo_orgColumn"), "td", "voteInfo_orgColumn voteInfo_td"));
 			}
 			var isection = createChunk(null, "div", "voteInfo_iconBar");
 			var isectionIsUsed = false;
@@ -715,12 +715,12 @@ const cldrSurveyTable = (function() {
 			 */
 			if (value === theRow.winningValue) {
 				const statusClass = getRowApprovalStatusClass(theRow);
-				const statusTitle = stui.str(statusClass);
-				appendIcon(isection, "voteInfo_winningItem d-dr-" + statusClass, stui.sub('draftStatus', [statusTitle]));
+				const statusTitle = cldrText.get(statusClass);
+				appendIcon(isection, "voteInfo_winningItem d-dr-" + statusClass, cldrText.sub('draftStatus', [statusTitle]));
 				isectionIsUsed = true;
 			}
 			if (item.isBaselineValue) {
-				appendIcon(isection, "i-star", stui.str("voteInfo_baseline_desc"));
+				appendIcon(isection, "i-star", cldrText.get("voteInfo_baseline_desc"));
 				isectionIsUsed = true;
 			}
 			setLang(valdiv);
@@ -730,12 +730,12 @@ const cldrSurveyTable = (function() {
 				 */
 				if (theRow.inheritedValue) {
 					appendItem(valdiv, theRow.inheritedValue, item.pClass, tr);
-					valdiv.appendChild(createChunk(stui.str("voteInfo_votesForInheritance"), 'p'));
+					valdiv.appendChild(createChunk(cldrText.get("voteInfo_votesForInheritance"), 'p'));
 				}
 			} else {
 				appendItem(valdiv, value, (value === theRow.winningValue) ? "winner" : "value", tr);
 				if (value === theRow.inheritedValue) {
-					valdiv.appendChild(createChunk(stui.str('voteInfo_votesForSpecificValue'), 'p'));
+					valdiv.appendChild(createChunk(cldrText.get('voteInfo_votesForSpecificValue'), 'p'));
 				}
 			}
 			if (isectionIsUsed) {
@@ -750,8 +750,8 @@ const cldrSurveyTable = (function() {
 			const anon = (itemVotesLength == 1 && item.votes[Object.keys(item.votes)[0]].level === 'anonymous');
 			if (itemVotesLength == 0 || anon) {
 				var vrow = createChunk(null, "tr", "voteInfo_tr voteInfo_orgHeading");
-				vrow.appendChild(createChunk(stui.str("voteInfo_noVotes"), "td", "voteInfo_noVotes voteInfo_td"));
-				const anonVoter = anon ? stui.str("voteInfo_anon") : null
+				vrow.appendChild(createChunk(cldrText.get("voteInfo_noVotes"), "td", "voteInfo_noVotes voteInfo_td"));
+				const anonVoter = anon ? cldrText.get("voteInfo_anon") : null
 				vrow.appendChild(createChunk(anonVoter, "td", "voteInfo_noVotes voteInfo_td"));
 				vdiv.appendChild(vrow);
 			} else {
@@ -761,9 +761,9 @@ const cldrSurveyTable = (function() {
 			tr.voteDiv.appendChild(vdiv);
 		}
 		if (vr.valueIsLocked) {
-			tr.voteDiv.appendChild(createChunk(stui.str("valueIsLocked"), "p", "alert alert-warning fix-popover-help"));
+			tr.voteDiv.appendChild(createChunk(cldrText.get("valueIsLocked"), "p", "alert alert-warning fix-popover-help"));
 		} else if (vr.requiredVotes) {
-			var msg = stui.sub("explainRequiredVotes", {
+			var msg = cldrText.sub("explainRequiredVotes", {
 				requiredVotes: vr.requiredVotes
 			});
 			tr.voteDiv.appendChild(createChunk(msg, "p", "alert alert-warning fix-popover-help"));
@@ -880,8 +880,8 @@ const cldrSurveyTable = (function() {
 		if (v == null) {
 			return createChunk("(missing information)!", "i", "stopText");
 		}
-		var div = createChunk(v.name || stui.str('emailHidden'), "td", "voteInfo_voterInfo voteInfo_td");
-		div.setAttribute('data-name', v.name || stui.str('emailHidden'));
+		var div = createChunk(v.name || cldrText.get('emailHidden'), "td", "voteInfo_voterInfo voteInfo_td");
+		div.setAttribute('data-name', v.name || cldrText.get('emailHidden'));
 		div.setAttribute('data-email', v.email || '');
 		return div;
 	}
@@ -1011,10 +1011,10 @@ const cldrSurveyTable = (function() {
 		removeAllChildNodes(cell); // win
 		if (theRow.rowFlagged) {
 			var flagIcon = addIcon(cell, "s-flag");
-			flagIcon.title = stui.str("flag_desc");
+			flagIcon.title = cldrText.get("flag_desc");
 		} else if (theRow.canFlagOnLosing) {
 			var flagIcon = addIcon(cell, "s-flag-d");
-			flagIcon.title = stui.str("flag_d_desc");
+			flagIcon.title = cldrText.get("flag_d_desc");
 		}
 		setLang(cell);
 		tr.proposedcell = cell;
@@ -1196,14 +1196,14 @@ const cldrSurveyTable = (function() {
 			var surlink = document.createElement("div");
 			surlink.innerHTML = '<span class="glyphicon glyphicon-list-alt"></span>&nbsp;&nbsp;';
 			surlink.className = 'alert alert-info fix-popover-help';
-			var link = createChunk(stui.str("file_a_ticket"), "a");
+			var link = createChunk(cldrText.get("file_a_ticket"), "a");
 			const curLocale = cldrStatus.getCurrentLocale();
 			var newUrl = "http://unicode.org/cldr/trac" +
 				"/newticket?component=data&summary=" + curLocale + ":" + theRow.xpath +
 				"&locale=" + curLocale + "&xpath=" + theRow.xpstrid + "&version=" + cldrStatus.getNewVersion();
 			link.href = newUrl;
 			link.target = "cldr-target-trac";
-			theRow.proposedResults = createChunk(stui.str("file_ticket_must"), "a",
+			theRow.proposedResults = createChunk(cldrText.get("file_ticket_must"), "a",
 				"fnotebox");
 			theRow.proposedResults.href = newUrl;
 			if (cldrStatus.getIsUnofficial()) {
@@ -1211,7 +1211,7 @@ const cldrSurveyTable = (function() {
 					" (Note: this is not the production SurveyTool! Do not submit a ticket!) ", "p"));
 				link.href = link.href + "&description=NOT+PRODUCTION+SURVEYTOOL!";
 			}
-			proposedCell.appendChild(createChunk(stui.str("file_ticket_notice"), "i", "fnotebox"));
+			proposedCell.appendChild(createChunk(cldrText.get("file_ticket_notice"), "i", "fnotebox"));
 			surlink.appendChild(link);
 			tr.ticketLink = surlink;
 		} else { // no change possible

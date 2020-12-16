@@ -26,12 +26,11 @@ define("js/special/vetting_participation.js", ["js/special/SpecialPage.js"], fun
 		/*
 		 * Set up the 'right sidebar'; cf. vetting_participationGuidance
 		 */
-		showInPop2(stui.str(params.name + "Guidance"), null, null, null, true);
+		showInPop2(cldrText.get(params.name + "Guidance"), null, null, null, true);
 
 		const url = getVettingParticipationUrl();
 		const errorHandler = function(err) {
-			const responseText = cldrStAjax.errResponseText(err);
-			params.special.showError(params, null, {err: err, what: "Loading vetting participation data" + responseText});
+			params.special.showError(params, null, {err: err, what: "Loading vetting participation data"});
 		};
 		
 		/**

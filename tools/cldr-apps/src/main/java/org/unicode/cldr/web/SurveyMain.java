@@ -714,9 +714,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     private void showOfflinePage(HttpServletRequest request, HttpServletResponse response, PrintWriter out) throws ServletException, IOException {
         out.println(SHOWHIDE_SCRIPT);
         try {
-            SurveyAjax.includeJavaScript(request, out);
+            SurveyTool.includeJavaScript(request, out);
         } catch (JSONException e) {
-            SurveyLog.logException(e, "SurveyMain.showOfflinePage calling SurveyAjax.includeJavaScript");
+            SurveyLog.logException(e, "SurveyMain.showOfflinePage calling SurveyTool.includeJavaScript");
             out.println("<p>Error, including JavaScript failed!</p>");
         }
         // don't flood server if busted- check every minute.
@@ -796,10 +796,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             out.println("<link rel='stylesheet' type='text/css' href='" + base + "/../surveytool.css'>");
             boolean jsOK = false;
             try {
-                SurveyAjax.includeJavaScript(request, out);
+                SurveyTool.includeJavaScript(request, out);
                 jsOK = true;
             } catch (JSONException e) {
-                SurveyLog.logException(e, "SurveyMain.ensureStartup calling SurveyAjax.includeJavaScript");
+                SurveyLog.logException(e, "SurveyMain.ensureStartup calling SurveyTool.includeJavaScript");
             }
             if (isUnofficial()) {
                 out.println("<script>timerSpeed = 2500;</script>");
@@ -1237,9 +1237,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         ctx.println("<link rel='stylesheet' type='text/css' href='" + ctx.context("surveytool.css") + "'>");
 
         try {
-            SurveyAjax.includeJavaScript(ctx.request, ctx.out);
+            SurveyTool.includeJavaScript(ctx.request, ctx.out);
         } catch (JSONException | IOException e) {
-            SurveyLog.logException(e, "SurveyMain.printHeader calling SurveyAjax.includeJavaScript");
+            SurveyLog.logException(e, "SurveyMain.printHeader calling SurveyTool.includeJavaScript");
         }
 
         ctx.println("<title>CLDR " + getNewVersion() + " Survey Tool: ");
@@ -1352,7 +1352,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             .put("specialHeader", getSpecialHeaderText())
         ;
     }
-/**
+/****
     private class StatusForFrontEnd {
         private String isBusted;
         private boolean lockOut;
@@ -1384,11 +1384,11 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             this.surveyRunningStamp = surveyRunningStamp.current();
             this.memfree =
 
-
         }
 
     }
-**/
+    ****/
+
     /**
      * Return the entire top 'box' including progress bars, busted notices, etc.
      *

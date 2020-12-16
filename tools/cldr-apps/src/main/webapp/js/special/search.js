@@ -33,7 +33,7 @@ define("js/special/search.js", ["js/special/SpecialPage.js"], function(SpecialPa
 		var theInput = document.createElement("input");
 		theDiv.appendChild(theInput);
 		
-		var theSearch = createChunk(stui.str("search"), "button");
+		var theSearch = createChunk(cldrText.get("search"), "button");
 		theDiv.appendChild(theSearch);
 		
 		var theResult = document.createElement("div");
@@ -53,7 +53,7 @@ define("js/special/search.js", ["js/special/SpecialPage.js"], function(SpecialPa
 			theResult.appendChild(createChunk(searchTerm, "h3"));
 			
 			if(results.length == 0) {
-				theResult.appendChild(createChunk(stui.str("searchNoResults", "h3", "searchNoResults")));
+				theResult.appendChild(createChunk(cldrText.get("searchNoResults", "h3", "searchNoResults")));
 			} else {
 				for(var i=0;i<results.length;i++) {
 					var result = results[i];
@@ -143,8 +143,8 @@ define("js/special/search.js", ["js/special/SpecialPage.js"], function(SpecialPa
 				 	        	}
 					        },
 					        error: function(err){
-					 			var msg ="Error: "+err.name + " - " + err.message;
-			 	        		theResult.appendChild(createChunk(msg,"i"));
+								var msg = "Error: " + err;
+								theResult.appendChild(createChunk(msg,"i"));
 					        },
 					        postData: searchTerm
 					    });
@@ -188,7 +188,7 @@ define("js/special/search.js", ["js/special/SpecialPage.js"], function(SpecialPa
 		theInput.focus();
 		cldrStatus.setCurrentLocale(null);
 		cldrStatus.setCurrentSpecial('search');
-		showInPop2(stui.str("searchGuidance"), null, null, null, true); /* show the box the first time */					
+		showInPop2(cldrText.get("searchGuidance"), null, null, null, true); /* show the box the first time */
 	};
 	
 
