@@ -28,8 +28,6 @@ function showV() {
 		"dojox/form/BusyButton",
 		"dojo/hash",
 		"dojo/topic",
-		"dojo/dom-construct",
-		"dojo/number"
 	],
 		// HANDLES
 		function(
@@ -43,8 +41,6 @@ function showV() {
 			BusyButton,
 			dojoHash,
 			dojoTopic,
-			domConstruct,
-			dojoNumber
 		) {
 				var appendLocaleLink = function appendLocaleLink(subLocDiv, subLoc, subInfo, fullTitle) {
 					var name = locmap.getRegionAndOrVariantName(subLoc);
@@ -1213,18 +1209,19 @@ function showV() {
 							}
 							if (msg) {
 								msg = locmap.linkify(msg);
-								var theChunk = domConstruct.toDom(msg);
+								var theChunk = cldrDomConstruct(msg);
 								var subDiv = document.createElement("div");
 								subDiv.appendChild(theChunk);
 								subDiv.className = 'warnText';
 								theDiv.insertBefore(subDiv, theDiv.childNodes[0]);
 							}
 						} else if (bund.dcChild) {
-							var theChunk = domConstruct.toDom(cldrText.sub("defaultContentChild_msg", {
+							const html = cldrText.sub("defaultContentChild_msg", {
 								info: bund,
 								locale: cldrStatus.getCurrentLocale(),
 								dcChildName: locmap.getLocaleName(bund.dcChild)
-							}));
+							})
+							var theChunk = cldrDomConstruct(html);
 							var subDiv = document.createElement("div");
 							subDiv.appendChild(theChunk);
 							subDiv.className = 'warnText';
@@ -1232,11 +1229,12 @@ function showV() {
 						}
 					}
 					if (cldrStatus.getIsPhaseBeta()) {
-						var theChunk = domConstruct.toDom(cldrText.sub("beta_msg", {
+						const html = cldrText.sub("beta_msg", {
 							info: bund,
 							locale: cldrStatus.getCurrentLocale(),
 							msg: msg
-						}));
+						});
+						var theChunk = cldrDomConstruct(html);
 						var subDiv = document.createElement("div");
 						subDiv.appendChild(theChunk);
 						subDiv.className = 'warnText';
@@ -1324,11 +1322,12 @@ function showV() {
 					if (curLocale != null && curLocale != '' && curLocale != '-') {
 						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund !== null && bund.dcParent) {
-							var theChunk = domConstruct.toDom(cldrText.sub("defaultContent_msg", {
+							const html = cldrText.sub("defaultContent_msg", {
 								info: bund,
 								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
-							}));
+							});
+							var theChunk = domConstruct.toDom(html);
 							var theDiv = document.createElement("div");
 							theDiv.appendChild(theChunk);
 							theDiv.className = 'ferrbox';
@@ -1760,10 +1759,11 @@ function showV() {
 								console.log("Error: loading " + url + " -> " + err);
 								hideLoader(null, cldrText.get('loading2'));
 								isLoading = false;
-								flipper.flipTo(pages.other,
-									domConstruct.toDom("<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>"
+								const html = "<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>"
 									+ "<span class='icon i-stop'>"
-									+ " &nbsp; &nbsp;</span>Error: could not load: " + err + "</div>"));
+									+ " &nbsp; &nbsp;</span>Error: could not load: " + err + "</div>";
+								const frag = cldrDomConstruct(html);
+								flipper.flipTo(pages.other, frag);
 							};
 							if (isDashboard()) {
 								if (!cldrStatus.isVisitor()) {
@@ -1794,7 +1794,8 @@ function showV() {
 								const loadHandler = function(html) {
 									hideLoader(null, cldrText.get('loading2'));
 									isLoading = false;
-									flipper.flipTo(pages.other, domConstruct.toDom(html));
+									const frag = cldrDomConstruct(html);
+									flipper.flipTo(pages.other, frag);
 								};
 								const xhrArgs = {
 									url: url,
@@ -2118,7 +2119,7 @@ function showV() {
 									window.haveDialog = false;
 									if (json.autoImportedOldWinningVotes) {
 										var vals = {
-											count: dojoNumber.format(json.autoImportedOldWinningVotes)
+											count: json.autoImportedOldWinningVotes
 										};
 										var autoImportedDialog = new Dialog({
 											title: cldrText.get("v_oldvote_auto_msg"),
@@ -2174,3 +2175,10 @@ function showV() {
 				} // end getInitialMenusEtc
 		}); // end require
 } // end showV
+
+// replacement for dojo/dom-construct domConstruct.toDom
+function cldrDomConstruct(html) {
+	const renderer = document.createElement('template');
+   	renderer.innerHTML = html;
+   	return renderer.content;
+}
