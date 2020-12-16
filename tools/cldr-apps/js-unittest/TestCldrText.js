@@ -28,17 +28,45 @@
     });
   });
 
-  // TODO: test cldrText.sub, after implementing it without dojo/string
-  // The following won't work with dojo/string since we get 'require is not defined'
-  /***
   describe("cldrText.sub", function () {
-    it("should substitute explainRequiredVotes correctly", function () {
-      const s = cldrText.sub("explainRequiredVotes", {
+    it("should work right for array with StatusAction_popupmsg", function () {
+      const key = "StatusAction_popupmsg";
+      const map = ["too goofy", "🤪"];
+      const expect =
+        "Sorry, your vote for '🤪' could not be submitted: too goofy";
+      const result = cldrText.sub(key, map);
+      assert(
+        result === expect,
+        "[" + result + "]" + " should equal [" + expect + "]"
+      );
+    });
+
+    it("should work right for single-key object with explainRequiredVotes", function () {
+      const key = "explainRequiredVotes";
+      const map = {
         requiredVotes: 2468,
-      });
+      };
       const expect = "Changes to this item require 2468 votes.";
-      assert(s === expect, s + " should equal " + expect);
+      const result = cldrText.sub(key, map);
+      assert(
+        result === expect,
+        "[" + result + "]" + " should equal [" + expect + "]"
+      );
+    });
+
+    it("should work right for two-key object with override_explain_msg", function () {
+      const key = "override_explain_msg";
+      const map = {
+        overrideVotes: 9999,
+        votes: 3,
+      };
+      const expect =
+        "You have voted for this item with 9999 votes instead of the usual 3";
+      const result = cldrText.sub(key, map);
+      assert(
+        result === expect,
+        "[" + result + "]" + " should equal [" + expect + "]"
+      );
     });
   });
-  ***/
 }

@@ -10,7 +10,7 @@
  * and running in strict mode.
  */
 const cldrText = (function () {
-  const CLDR_TEXT_DEBUG = true;
+  const CLDR_TEXT_DEBUG = false;
 
   const strings = {
     copyright: "(C) 2012-2014 IBM Corporation and Others. All Rights Reserved",
@@ -453,7 +453,7 @@ const cldrText = (function () {
     E_BAD_VALUE: "The vote was not accepted: ${err_data.message}",
     E_BAD_XPATH: "This item does not exist in this locale.",
 
-    TRANS_HINT_LANGUAGE_NAME: 'English', // must match SurveyMain.TRANS_HINT_LANGUAGE_NAME
+    TRANS_HINT_LANGUAGE_NAME: "English", // must match SurveyMain.TRANS_HINT_LANGUAGE_NAME
   };
   /**
    * Get the string for the given key
@@ -471,24 +471,85 @@ const cldrText = (function () {
     return k;
   }
 
-/**
+  /**
    * Substitute the placeholders in the template for the given key using the given map
    *
-   * @k the key
-   * @map the map
-   * @return the string with substitutions made, or an empty string is the key is invalid
+   * @k the key for the template
+   * @map an array like ['a', 'b'] or an object like {a: 'A', b: 'B'}
+   * @return the string with substitutions made, or an empty string for failure
    */
   function sub(k, map) {
-    let ret = '';
-    require(["dojo/string"], function(string) {
-        const template = cldrText.get(k);
-        if (template) {
-          ret = string.substitute(template, map);
-        } else   if (CLDR_TEXT_DEBUG) {
-          console.log("cldrText.sub: missing template for k = " + k);
+    const template = cldrText.get(k);
+    if (!template) {
+      if (CLDR_TEXT_DEBUG) {
+        console.log("cldrText.sub: missing template for k = " + k);
+      }
+      return "";
+    }
+    if (map instanceof Array) {
+      return fillInBlanksWithArray(template, map);
+    } else if (map instanceof Object) {
+      return fillInBlanksWithObject(template, map);
+    } else {
+      return "";
+    }
+  }
+
+  /**
+   * Get the string that results from filling in blanks in the given template
+   *
+   * @param template a string like "Sorry, your vote for '${1}' could not be submitted: ${0}"
+   * @param map an array like ["too goofy", "🤪"]
+   * @return a string like "Sorry, your vote for '🤪' could not be submitted: too goofy"
+   */
+  function fillInBlanksWithArray(template, map) {
+    const result = template.replace(/\${(\d)}/g, function (blank, index) {
+      const replacement = map[index];
+      if (CLDR_TEXT_DEBUG) {
+        // index = 1; blank = ${1}; replacement = 🤪
+        console.log(
+          "Array: index= " +
+            index +
+            "; blank= " +
+            blank +
+            "; replacement = " +
+            replacement
+        );
+      }
+      return replacement;
+    });
+    return result;
+  }
+
+  /**
+   * Get the string that results from filling in blanks in the given template
+   *
+   * @param template a string like "Changes to this item require ${requiredVotes} votes."
+   * @param map an object like {requiredVotes: 2468}
+   * @return a string like "Changes to this item require 2468 votes."
+   */
+  function fillInBlanksWithObject(template, map) {
+    let result = "";
+    for (let k in map) {
+      // The order of keys in the map may differ from their order in the template,
+      // so don't use k. Instead, get the key from the regex capture group.
+      result = template.replace(/\${([^}]+)}/g, function (blank, key) {
+        const replacement = map[key];
+        if (CLDR_TEXT_DEBUG) {
+          // key = requiredVotes; blank = ${requiredVotes}; replacement = 2468
+          console.log(
+            "Object: key = " +
+              key +
+              "; blank = " +
+              blank +
+              "; replacement = " +
+              replacement
+          );
         }
-     });
-     return ret;
+        return replacement ? replacement : "";
+      });
+    }
+    return result;
   }
 
   /*
