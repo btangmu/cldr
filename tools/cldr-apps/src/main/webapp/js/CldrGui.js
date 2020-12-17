@@ -49,7 +49,8 @@ const cldrGui = (function () {
     "    </div>\n" +
     "  </div>\n" +
     "  <div class='dijitDialogPaneActionBar'>\n" +
-    "    <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type='dijit/form/Button' type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
+    "    <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type='dijit/form/Button'\n" +
+    "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +
     "    </button>\n" +
     "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='ariRetry()'>\n" +
@@ -67,7 +68,8 @@ const cldrGui = (function () {
     "          <a href='#'><span class='glyphicon glyphicon-cog'></span> <b class='caret'></b></a>\n" +
     "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'>\n" +
     "            <li>\n" +
-    "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar <span class='glyphicon glyphicon-align-right'></span></button>\n" +
+    "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
+    "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
     "            </li>\n" +
     "          </ul>\n" +
     "        </li>\n" +
@@ -351,10 +353,10 @@ const cldrGui = (function () {
       hiddenHtml,
     ]) {
       if (!parseAsMimeType(h, "text/html")) {
-        console.log("BAD HTML 🐧🐧🐧:\n" + h + "\n");
+        console.log("🐧 BAD HTML:\n" + h + "\n");
       }
       if (!parseAsMimeType(h, "application/xml")) {
-        console.log("INVALID XML 🐧🐧🐧:\n" + h + "\n");
+        console.log("🐧 INVALID XML:\n" + h + "\n");
       }
     }
   }

@@ -2594,15 +2594,15 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
         setLocale(ctx);
 
-        String sessionMessage = ctx.setSession();
+        ctx.setSession();
 
         if (ctx.session == null) {
 
             printHeader(ctx, "Survey Tool");
-            if (sessionMessage == null) {
-                sessionMessage = "Could not create your user session.";
+            if (ctx.getMessage() == null) {
+                ctx.setMessage("Could not create your user session.");
             }
-            ctx.println("<p><img src='stop.png' width='16'>" + sessionMessage + "</p>");
+            ctx.println("<p><img src='stop.png' width='16'>" + ctx.getMessage() + "</p>");
             ctx.println("<hr><a href='" + ctx.context("login.jsp") + "' class='notselected'>Login as another user...</a>");
             printFooter(ctx);
             return;
@@ -2697,7 +2697,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 }
             }
             // Option wasn't found
-            sessionMessage = ("<i id='sessionMessage'>Could not do the action '" + doWhat + "'. You may need to be logged in first.</i>");
+            ctx.setMessage("<i id='sessionMessage'>Could not do the action '" + doWhat
+                    + "'. You may need to be logged in first.</i>");
         }
 
         String title = " ";
@@ -2719,8 +2720,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
          * TODO: all of this function from here on might be dead code; if dead, delete
          */
         printHeader(ctx, title);
-        if (sessionMessage != null) {
-            ctx.println(sessionMessage);
+        String s = ctx.getMessage();
+        if (s != null) {
+            ctx.println(s);
         }
 
         WebContext baseContext = (WebContext) ctx.clone();

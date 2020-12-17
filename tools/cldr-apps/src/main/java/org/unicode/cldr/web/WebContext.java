@@ -1634,18 +1634,18 @@ public class WebContext implements Cloneable, Appendable {
     /**
      * set the session. Only call this once.
      */
-    public String setSession() {
+    public void setSession() {
         if (request == null && session != null) {
-            return "using canned session"; // already set - for testing
+            setMessage("using canned session"); // already set - for testing
+            return;
         }
 
         if (this.session != null) {
-            return "Internal error - session already set.";
+            setMessage("Internal error - session already set.");
+            return;
         }
 
         CookieSession.checkForExpiredSessions(); // If a session has expired, remove it
-
-        String message = null; // return message, explaining what happened with the session.
 
         String myNum = field(SurveyMain.QUERY_SESSION); // s
         String password = field(SurveyMain.QUERY_PASSWORD);
@@ -1732,7 +1732,8 @@ public class WebContext implements Cloneable, Appendable {
                     + " connections. Try turning on cookies, or obeying the 'META ROBOTS' tag.</h1>");
                 flush();
                 session = null;
-                return "Bad IP.";
+                setMessage("Bad IP.");
+                return;
             }
         }
 
@@ -1744,8 +1745,9 @@ public class WebContext implements Cloneable, Appendable {
         } else if ((user != null) && (session == null)) { // user trying to log in-
             if (CookieSession.tooManyUsers()) {
                 System.err.println("Refused login for " + email + " from " + userIP() + " - too many users ( " + CookieSession.getUserCount() + ")");
-                return "We are swamped with about " + CookieSession.getUserCount()
-                    + " people using the SurveyTool right now! Please try back in a little while.";
+                setMessage("We are swamped with about " + CookieSession.getUserCount()
+                    + " people using the SurveyTool right now! Please try back in a little while.");
+                return;
             }
         } else if (session == null || (session.user == null)) { // guest user
             if (CookieSession.tooManyGuests()) {
@@ -1755,7 +1757,8 @@ public class WebContext implements Cloneable, Appendable {
                     session = null;
                 }
                 logout(); // clear session cookie
-                return "We have too many people browsing the CLDR Data on the Survey Tool. Please try again later when the load has gone down.";
+                setMessage("We have too many people browsing the CLDR Data on the Survey Tool. Please try again later when the load has gone down.");
+                return;
             }
         }
 
@@ -1785,11 +1788,11 @@ public class WebContext implements Cloneable, Appendable {
                     // The server doesn't support UTF-8?  (Should never happen)
                     throw new RuntimeException(e);
                 }
-                message = iconHtml("stop", "failed login") + "login failed. <a href='"
+                setMessage(iconHtml("stop", "failed login") + "login failed. <a href='"
                     + request.getContextPath() + "/reset.jsp"
                     + "?email=" + encodedEmail
                     + "&s=" + session.id
-                    + "' id='notselected'>recover password?</a><br>";
+                    + "' id='notselected'>recover password?</a><br>");
             }
         }
         // processs the 'remember me'
@@ -1801,7 +1804,6 @@ public class WebContext implements Cloneable, Appendable {
                 loginRemember(session.user);
             }
         }
-        return message;
     }
 
     /**
@@ -1871,5 +1873,15 @@ public class WebContext implements Cloneable, Appendable {
     public void loginRemember(User user) {
         addCookie(SurveyMain.QUERY_EMAIL, user.email, SurveyMain.TWELVE_WEEKS);
         addCookie(SurveyMain.QUERY_PASSWORD, user.password, SurveyMain.TWELVE_WEEKS);
+    }
+
+    private String sessionMessage = null;
+
+    public String getMessage() {
+        return sessionMessage;
+    }
+
+    public void setMessage(String s) {
+        sessionMessage = s;
     }
 }
