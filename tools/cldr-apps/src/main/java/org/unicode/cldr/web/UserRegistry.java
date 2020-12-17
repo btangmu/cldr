@@ -516,6 +516,7 @@ public class UserRegistry {
                 .put("name", name)
                 .put("userlevel", userlevel)
                 .put("votecount", getLevel().getVotes())
+                .put("voteCountMenu", getLevel().getVoteCountMenu())
                 .put("userlevelName", UserRegistry.levelAsStr(userlevel))
                 .put("org", vrOrg().name())
                 .put("orgName", vrOrg().displayName)

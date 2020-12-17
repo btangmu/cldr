@@ -83,10 +83,9 @@ const cldrGui = (function () {
     "      </ul>\n" +
     "      <p class='navbar-text navbar-right'>\n" +
     "        <span id='flag-info'></span>\n" +
-    "        <span id='st-session-message' class='v-status'>[status]</span>\n" /* TODO: status = ctx.setSession() */ +
+    "        <span id='st-session-message' class='v-status'></span>\n" +
     "        <span class='hasTooltip' title='ctx.session.user.email'>ctx.session.user.name</span>\n" +
     "        <span class='glyphicon glyphicon-user tip-log' title='ctx.session.user.org'></span>\n" +
-    /* TODO: if (voteCountMenu != null); ... userLevel.getVoteCountMenu ... logout ... */
     "        <select id='voteLevelChanged' title='vote with a different number of votes'></select>\n" +
     "        | <a class='navbar-link' href='...logout...'>" +
     "           <span class='glyphicon glyphicon-log-out tip-log' title='Logout'></span>" +
@@ -333,12 +332,28 @@ const cldrGui = (function () {
     if (el) {
       el.innerHTML = cldrStatus.getSessionMessage();
     }
+    el = document.getElementById("voteLevelChanged");
+    if (el) {
+      el.innerHTML = makeVoteCountMenu();
+    }
   }
 
   function makeVersionPhase() {
     return (
       "Survey Tool " + cldrStatus.getNewVersion() + " " + cldrStatus.getPhase()
     );
+  }
+
+  function makeVoteCountMenu() {
+    let html = "";
+    const user = cldrStatus.getSurveyUser();
+    if (!user || !user.voteCountMenu) {
+      return html;
+    }
+    for (let n of user.voteCountMenu) {
+      html += "<option value='" + n + "'>" + n + " votes</option>";
+    }
+    return html;
   }
 
   function debugParse() {
@@ -397,11 +412,10 @@ const cldrGui = (function () {
       "st-session-message",
       "st-version-phase",
       "title-section-container",
+      "voteLevelChanged",
     ]) {
-      if (document.getElementById(id)) {
-        console.log(id + " is OK 😎");
-      } else {
-        console.log(id + " is MISSING 🐞🐞🐞🐞");
+      if (!document.getElementById(id)) {
+        console.log(id + " is MISSING 🐞🐞🐞");
       }
     }
   }
