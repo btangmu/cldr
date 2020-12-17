@@ -1636,12 +1636,12 @@ public class WebContext implements Cloneable, Appendable {
      */
     public void setSession() {
         if (request == null && session != null) {
-            setMessage("using canned session"); // already set - for testing
+            setSessionMessage("using canned session"); // already set - for testing
             return;
         }
 
         if (this.session != null) {
-            setMessage("Internal error - session already set.");
+            setSessionMessage("Internal error - session already set.");
             return;
         }
 
@@ -1732,7 +1732,7 @@ public class WebContext implements Cloneable, Appendable {
                     + " connections. Try turning on cookies, or obeying the 'META ROBOTS' tag.</h1>");
                 flush();
                 session = null;
-                setMessage("Bad IP.");
+                setSessionMessage("Bad IP.");
                 return;
             }
         }
@@ -1745,7 +1745,7 @@ public class WebContext implements Cloneable, Appendable {
         } else if ((user != null) && (session == null)) { // user trying to log in-
             if (CookieSession.tooManyUsers()) {
                 System.err.println("Refused login for " + email + " from " + userIP() + " - too many users ( " + CookieSession.getUserCount() + ")");
-                setMessage("We are swamped with about " + CookieSession.getUserCount()
+                setSessionMessage("We are swamped with about " + CookieSession.getUserCount()
                     + " people using the SurveyTool right now! Please try back in a little while.");
                 return;
             }
@@ -1757,7 +1757,7 @@ public class WebContext implements Cloneable, Appendable {
                     session = null;
                 }
                 logout(); // clear session cookie
-                setMessage("We have too many people browsing the CLDR Data on the Survey Tool. Please try again later when the load has gone down.");
+                setSessionMessage("We have too many people browsing the CLDR Data on the Survey Tool. Please try again later when the load has gone down.");
                 return;
             }
         }
@@ -1788,7 +1788,7 @@ public class WebContext implements Cloneable, Appendable {
                     // The server doesn't support UTF-8?  (Should never happen)
                     throw new RuntimeException(e);
                 }
-                setMessage(iconHtml("stop", "failed login") + "login failed. <a href='"
+                setSessionMessage(iconHtml("stop", "failed login") + "login failed. <a href='"
                     + request.getContextPath() + "/reset.jsp"
                     + "?email=" + encodedEmail
                     + "&s=" + session.id
@@ -1877,11 +1877,17 @@ public class WebContext implements Cloneable, Appendable {
 
     private String sessionMessage = null;
 
-    public String getMessage() {
+    public String getSessionMessage() {
+        if (sessionMessage == null && session != null) {
+            sessionMessage = session.getMessage();
+        }
         return sessionMessage;
     }
 
-    public void setMessage(String s) {
+    public void setSessionMessage(String s) {
         sessionMessage = s;
+        if (session != null) {
+            session.setMessage(s);
+        }
     }
 }

@@ -1,5 +1,5 @@
 "use strict";
-// this file, unlike most of our js files, has been formatted using "npx prettier" with default settings
+// this file has been formatted using "npx prettier" with default settings
 
 /**
  * cldrGui: encapsulate GUI functions.
@@ -83,7 +83,7 @@ const cldrGui = (function () {
     "      </ul>\n" +
     "      <p class='navbar-text navbar-right'>\n" +
     "        <span id='flag-info'></span>\n" +
-    "        <span class='v-status'>[status]</span>\n" /* TODO: status = ctx.setSession() */ +
+    "        <span id='st-session-message' class='v-status'>[status]</span>\n" /* TODO: status = ctx.setSession() */ +
     "        <span class='hasTooltip' title='ctx.session.user.email'>ctx.session.user.name</span>\n" +
     "        <span class='glyphicon glyphicon-user tip-log' title='ctx.session.user.org'></span>\n" +
     /* TODO: if (voteCountMenu != null); ... userLevel.getVoteCountMenu ... logout ... */
@@ -320,26 +320,25 @@ const cldrGui = (function () {
     return vhtml1 + vhtml2 + vhtml3 + vhtml4 + vhtml5 + vhtml6 + hiddenHtml;
   }
 
-  let needStatusUpdate = true;
-
   function updateWithStatus() {
-    if (needStatusUpdate) {
-      needStatusUpdate = false;
-
-      const versionPhaseEl = document.getElementById("st-version-phase");
-      if (versionPhaseEl) {
-        versionPhaseEl.innerHTML =
-          "Survey Tool " +
-          cldrStatus.getNewVersion() +
-          " " +
-          cldrStatus.getPhase();
-      }
-
-      const specialHeaderEl = document.getElementById("st-special-header");
-      if (specialHeaderEl) {
-        specialHeaderEl.innerHTML = cldrStatus.getSpecialHeader();
-      }
+    let el = document.getElementById("st-version-phase");
+    if (el) {
+      el.innerHTML = makeVersionPhase();
     }
+    el = document.getElementById("st-special-header");
+    if (el) {
+      el.innerHTML = cldrStatus.getSpecialHeader();
+    }
+    el = document.getElementById("st-session-message");
+    if (el) {
+      el.innerHTML = cldrStatus.getSessionMessage();
+    }
+  }
+
+  function makeVersionPhase() {
+    return (
+      "Survey Tool " + cldrStatus.getNewVersion() + " " + cldrStatus.getPhase()
+    );
   }
 
   function debugParse() {
@@ -390,11 +389,14 @@ const cldrGui = (function () {
   function debugElements() {
     for (let id of [
       "ariContent",
+      "DynamicDataSection",
+      "nav-page",
       "progress",
       "progress-refresh",
+      "st-special-header",
+      "st-session-message",
+      "st-version-phase",
       "title-section-container",
-      "nav-page",
-      "DynamicDataSection",
     ]) {
       if (document.getElementById(id)) {
         console.log(id + " is OK 😎");

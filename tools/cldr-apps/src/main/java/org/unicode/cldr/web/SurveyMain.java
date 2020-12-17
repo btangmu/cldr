@@ -2599,10 +2599,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         if (ctx.session == null) {
 
             printHeader(ctx, "Survey Tool");
-            if (ctx.getMessage() == null) {
-                ctx.setMessage("Could not create your user session.");
+            if (ctx.getSessionMessage() == null) {
+                ctx.setSessionMessage("Could not create your user session.");
             }
-            ctx.println("<p><img src='stop.png' width='16'>" + ctx.getMessage() + "</p>");
+            ctx.println("<p><img src='stop.png' width='16'>" + ctx.getSessionMessage() + "</p>");
             ctx.println("<hr><a href='" + ctx.context("login.jsp") + "' class='notselected'>Login as another user...</a>");
             printFooter(ctx);
             return;
@@ -2697,7 +2697,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 }
             }
             // Option wasn't found
-            ctx.setMessage("<i id='sessionMessage'>Could not do the action '" + doWhat
+            ctx.setSessionMessage("<i id='sessionMessage'>Could not do the action '" + doWhat
                     + "'. You may need to be logged in first.</i>");
         }
 
@@ -2720,7 +2720,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
          * TODO: all of this function from here on might be dead code; if dead, delete
          */
         printHeader(ctx, title);
-        String s = ctx.getMessage();
+        String s = ctx.getSessionMessage();
         if (s != null) {
             ctx.println(s);
         }
@@ -4660,7 +4660,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     private class StatusForFrontEnd implements JSONString {
-        private String contextPath;
+        private String contextPath = null;
         private int dbopen = DBUtils.db_number_open;
         private int dbused = DBUtils.db_number_used;
         private int guests = CookieSession.getGuestCount();
@@ -4680,6 +4680,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         private ElapsedTimer uptime = SurveyMain.uptime;
         private User user = null;
         private int users = CookieSession.getUserCount();
+        private String sessionMessage = null;
 
         private JSONObject jsonObj() throws JSONException {
             /*
@@ -4702,6 +4703,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 .put("permissions", permissions)
                 .put("phase", phase)
                 .put("sessionId", sessionId)
+                .put("sessionMessage", sessionMessage)
                 .put("specialHeader", specialHeader)
                 .put("surveyRunningStamp", surveyRunningStamp)
                 .put("sysload", sysload)
@@ -4742,6 +4744,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             } else {
                 sessionId = mySession.id;
                 user = mySession.user;
+                sessionMessage = mySession.getMessage();
             }
         }
     }

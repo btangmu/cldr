@@ -66,9 +66,9 @@ public class SurveyTool extends HttpServlet {
              */
             WebContext ctx = new WebContext(request, response);
             request.setAttribute("WebContext", ctx);
-            String status = ctx.setSession();
+            ctx.setSession();
             if (ctx.session == null) {
-                serveProblemNoSessionPage(request, out, status);
+                serveProblemNoSessionPage(request, out, ctx.getSessionMessage());
             } else {
                 serveRunnningNormallyPage(request, out, sm);
             }
@@ -188,7 +188,7 @@ public class SurveyTool extends HttpServlet {
             + "</div>\n");
     }
 
-    private void serveProblemNoSessionPage(HttpServletRequest request, PrintWriter out, String status) {
+    private void serveProblemNoSessionPage(HttpServletRequest request, PrintWriter out, String sessionMessage) {
         out.write("<html class='claro'>\n<head class='claro'>\n");
         out.write("<meta http-equiv='Content-Type' content='text/html; charset=UTF-8'>\n");
         out.write("<title>CLDR Survey Tool</title>\n");
@@ -200,7 +200,7 @@ public class SurveyTool extends HttpServlet {
         out.write("</div>\n");
         out.write("<h2>CLDR Survey Tool | Problem</h2>\n");
         out.write("<div>\n");
-        out.write("<p><img src='stop.png' width='16'>" + status + "</p>\n");
+        out.write("<p><img src='stop.png' width='16'>" + sessionMessage + "</p>\n");
         out.write("</div>\n");
         out.write("<hr>\n");
         out.write("<p><" + SurveyMain.getGuestsAndUsers() + "</p>\n");
