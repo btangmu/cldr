@@ -84,7 +84,7 @@ const cldrGui = (function () {
     "      <p class='navbar-text navbar-right'>\n" +
     "        <span id='flag-info'></span>\n" +
     "        <span id='st-session-message' class='v-status'></span>\n" +
-    "        <span class='hasTooltip' title='ctx.session.user.email'>ctx.session.user.name</span>\n" +
+    "        <span id='st-user-name' class='hasTooltip' title='ctx.session.user.email'></span>\n"
     "        <span class='glyphicon glyphicon-user tip-log' title='ctx.session.user.org'></span>\n" +
     "        <select id='voteLevelChanged' title='vote with a different number of votes'></select>\n" +
     "        | <a class='navbar-link' href='...logout...'>" +
@@ -332,6 +332,13 @@ const cldrGui = (function () {
     if (el) {
       el.innerHTML = cldrStatus.getSessionMessage();
     }
+    el = document.getElementById("st-user-name");
+    if (el) {
+      const user = cldrStatus.getSurveyUser();
+      if (user && user.name) {
+        el.innerHTML = user.name;
+      }
+    }
     el = document.getElementById("voteLevelChanged");
     if (el) {
       el.innerHTML = makeVoteCountMenu();
@@ -347,11 +354,10 @@ const cldrGui = (function () {
   function makeVoteCountMenu() {
     let html = "";
     const user = cldrStatus.getSurveyUser();
-    if (!user || !user.voteCountMenu) {
-      return html;
-    }
-    for (let n of user.voteCountMenu) {
-      html += "<option value='" + n + "'>" + n + " votes</option>";
+    if (user && user.voteCountMenu) {
+      for (let n of user.voteCountMenu) {
+        html += "<option value='" + n + "'>" + n + " votes</option>";
+      }
     }
     return html;
   }
@@ -410,6 +416,7 @@ const cldrGui = (function () {
       "progress-refresh",
       "st-special-header",
       "st-session-message",
+      "st-user-name",
       "st-version-phase",
       "title-section-container",
       "voteLevelChanged",
