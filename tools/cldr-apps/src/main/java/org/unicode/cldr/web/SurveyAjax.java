@@ -93,6 +93,10 @@ public class SurveyAjax extends HttpServlet {
      *
      * @author srl
      *
+     * Caution: this is org.unicode.cldr.web.SurveyAjax.JSONWriter
+     * Different from:  org.json.JSONWriter
+     * TODO: rename, and/or consolidate, to avoid confusion, since both are used in Survey Tool
+     * The two are also intertwined since JSONObject here is org.json.JSONObject
      */
     public static final class JSONWriter {
         private final JSONObject j = new JSONObject();

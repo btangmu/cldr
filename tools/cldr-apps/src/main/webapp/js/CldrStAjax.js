@@ -28,14 +28,14 @@ const cldrStAjax = (function () {
   /**
    * Queue of XHR requests waiting to go out
    */
-  var queueOfXhr = [];
+  let queueOfXhr = [];
 
   /**
    * The current timeout for processing XHRs
    * (Returned by setTimer: a number, representing the ID value of the timer that is set.
    * Use this value with the clearTimeout() method to cancel the timer.)
    */
-  var queueOfXhrTimeout = null;
+  let queueOfXhrTimeout = null;
 
   /**
    * Queue the XHR request. It will be a GET *unless* either postData or content are set.
@@ -122,7 +122,9 @@ const cldrStAjax = (function () {
       );
       console.log("myLoad0!:" + xhrArgs.url);
     }
-    xhrArgs.load2(data);
+    if (xhrArgs.load2) {
+      xhrArgs.load2(data);
+    }
     queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
   }
 
@@ -136,14 +138,9 @@ const cldrStAjax = (function () {
     if (ST_AJAX_DEBUG) {
       console.log("myErr0!:" + xhrArgs.url);
     }
-    /*
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error
-     * Standard properties
-     * 	Error.prototype.message
-     * 	Error.prototype.name
-     * Some ST errorHandler functions do access err.name (e.g., "RequestError") and/or err.message.
-     */
-    xhrArgs.err2(err);
+    if (xhrArgs.err2) {
+      xhrArgs.err2(err);
+    }
     queueOfXhrTimeout = setTimeout(processXhrQueue, xhrQueueTimeout);
   }
 
@@ -178,13 +175,23 @@ const cldrStAjax = (function () {
             request.status === 0 ||
             (request.status >= 200 && request.status < 400)
           ) {
-            xhrArgs.load(request.response);
-          } else {
-            let msg = "Status " + request.status + " " + request.statusText + "; URL: " + xhrArgs.url;
-            if (request.responseText) {
-              msg += " Response: " + request.responseText;
+            if (xhrArgs.load) {
+              xhrArgs.load(request.response);
             }
-            xhrArgs.error(msg);
+          } else {
+            if (xhrArgs.error) {
+              let msg =
+                "Status " +
+                request.status +
+                " " +
+                request.statusText +
+                "; URL: " +
+                xhrArgs.url;
+              if (request.responseText) {
+                msg += " Response: " + request.responseText;
+              }
+              xhrArgs.error(msg);
+            }
           }
         }
       };

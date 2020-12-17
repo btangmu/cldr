@@ -59,6 +59,11 @@ public class SurveyTool extends HttpServlet {
         } else if (sm == null || !SurveyMain.isSetup || request.getParameter("_STARTINGUP") != null) {
             serveWaitingPage(request, out, sm);
         } else {
+            /*
+             * TODO: clarify whether calling new WebContext and setSession is appropriate here.
+             * This is how it was with the old v.jsp. However, setSession has comment saying it should only
+             * be called once. Should we get an existing ctx and status from SurveyMain?
+             */
             WebContext ctx = new WebContext(request, response);
             request.setAttribute("WebContext", ctx);
             String status = ctx.setSession();

@@ -61,6 +61,7 @@ import javax.servlet.jsp.JspWriter;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONString;
 import org.unicode.cldr.draft.FileUtilities;
 import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.ExampleGenerator;
@@ -94,6 +95,7 @@ import org.unicode.cldr.util.TransliteratorUtilities;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.util.XMLSource;
 import org.unicode.cldr.web.UserRegistry.InfoType;
+import org.unicode.cldr.web.UserRegistry.User;
 import org.unicode.cldr.web.WebContext.HTMLDirection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -1289,105 +1291,13 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         return out.toString();
     }
 
-    /**
-     *
-     * @return
-     *
-     * Called by getSpecialHeader, and also called from v.jsp (but Eclipse won't show that in "Open call hierarchy" because it's jsp)
-     */
     public String getSpecialHeaderText() {
         String specialHeader = CLDRConfig.getInstance().getProperty("CLDR_HEADER");
-        if(specialHeader==null) return "";
+        if (specialHeader == null) {
+            return "";
+        }
         return specialHeader;
     }
-
-    public JSONObject statusJSON(HttpServletRequest request) throws JSONException {
-        // StatusForFrontEnd s = new StatusForFrontEnd(this, request);
-
-        Runtime r = Runtime.getRuntime();
-        double total = r.totalMemory();
-        total = total / 1024000.0;
-        double free = r.freeMemory();
-        free = free / 1024000.0;
-
-        double load = osmxbean.getSystemLoadAverage();
-        CLDRConfig config = CLDRConfig.getInstance();
-
-        String sessid = request.getParameter("s");
-        if (sessid == null) {
-            HttpSession hsession = request.getSession(false);
-            if (hsession != null) {
-                sessid = hsession.getId();
-            }
-        }
-        CookieSession mySession = null;
-        UserRegistry.User myUser = null;
-        if (sessid != null) {
-            mySession = CookieSession.retrieveWithoutTouch(sessid);
-        }
-        if (mySession == null) {
-            sessid = null;
-        } else {
-            sessid = mySession.id;
-            myUser = mySession.user;
-        }
-        String orgName = (myUser == null) ? null : myUser.getOrganization().getDisplayName();
-        JSONObject perm = (myUser == null) ? null : myUser.getPermissionsJson();
-
-        return new JSONObject().put("isBusted", isBusted).put("lockOut", lockOut != null).put("isSetup", isSetup)
-            .put("isUnofficial", isUnofficial()).put("environment", config.getEnvironment().name())
-            .put("specialHeader", config.getProperty("CLDR_HEADER"))
-            .put("specialTimerRemaining", specialTimer != 0 ? timeDiff(System.currentTimeMillis(), specialTimer) : null)
-            .put("processing", startupThread.htmlStatus()).put("guests", CookieSession.getGuestCount())
-            .put("users", CookieSession.getUserCount()).put("uptime", uptime).put("surveyRunningStamp", surveyRunningStamp.current())
-            .put("memfree", free).put("memtotal", total).put("pages", pages).put("uptime", uptime).put("phase", phase())
-            .put("newVersion", newVersion).put("sysload", load).put("sysprocs", nProcs).put("dbopen", DBUtils.db_number_open)
-            .put("dbused", DBUtils.db_number_used)
-            .put("contextPath", request.getContextPath())
-            .put("isPhaseBeta", isPhaseBeta())
-            .put("sessionId", sessid)
-            .put("user", myUser)
-            .put("organizationName", orgName)
-            .put("permissions", perm)
-            .put("specialHeader", getSpecialHeaderText())
-        ;
-    }
-/****
-    private class StatusForFrontEnd {
-        private String isBusted;
-        private boolean lockOut;
-        private boolean isSetup;
-        private boolean isUnofficial;
-        private Object environment;
-        private String specialHeader;
-        private Object specialTimerRemaining;
-        private String processing;
-        private int guests;
-        private int users;
-        private ElapsedTimer uptime;
-        private long surveyRunningStamp;
-
-        public StatusForFrontEnd(SurveyMain sm, HttpServletRequest request) {
-            CLDRConfig config = CLDRConfig.getInstance();
-
-            this.isBusted = SurveyMain.isBusted;
-            this.lockOut = SurveyMain.lockOut != null;
-            this.isSetup = SurveyMain.isSetup;
-            this.isUnofficial = SurveyMain.isUnofficial();
-            this.environment = config.getEnvironment().name();
-            this.specialHeader = config.getProperty("CLDR_HEADER");
-            this.specialTimerRemaining = SurveyMain.specialTimer != 0 ? timeDiff(System.currentTimeMillis(), SurveyMain.specialTimer) : null;
-            this.processing = sm.startupThread.htmlStatus();
-            this.guests = CookieSession.getGuestCount();
-            this.users = CookieSession.getUserCount();
-            this.uptime = SurveyMain.uptime;
-            this.surveyRunningStamp = surveyRunningStamp.current();
-            this.memfree =
-
-        }
-
-    }
-    ****/
 
     /**
      * Return the entire top 'box' including progress bars, busted notices, etc.
@@ -4741,5 +4651,96 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             gEnglishFile = english;
         }
         return gEnglishFile;
+    }
+
+    public JSONObject statusJSON(HttpServletRequest request) throws JSONException {
+        return new StatusForFrontEnd(this, request).jsonObj();
+    }
+
+    private class StatusForFrontEnd implements JSONString {
+        private String contextPath;
+        private int dbopen = DBUtils.db_number_open;
+        private int dbused = DBUtils.db_number_used;
+        private int guests = CookieSession.getGuestCount();
+        private String isBusted = SurveyMain.isBusted;
+        private boolean isPhaseBeta = isPhaseBeta();
+        private boolean isSetup = SurveyMain.isSetup;
+        private boolean isUnofficial = SurveyMain.isUnofficial();
+        private String newVersion = SurveyMain.newVersion;
+        private String organizationName = null;
+        private int pages = SurveyMain.pages;
+        private Object permissions = null;
+        private Phase phase = phase();
+        private String sessionId = null;
+        private String specialHeader = getSpecialHeaderText();
+        private long surveyRunningStamp = SurveyMain.surveyRunningStamp.current();
+        private double sysload = osmxbean.getSystemLoadAverage();
+        private ElapsedTimer uptime = SurveyMain.uptime;
+        private User user = null;
+        private int users = CookieSession.getUserCount();
+
+        private JSONObject jsonObj() throws JSONException {
+            /*
+             * This is tedious, should be a one-liner. I thought any object could be added with
+             * JSONObject.put(string, object), but the doc says: "It should be of one of these types:
+             * Boolean, Double, Integer, JSONArray, JSONObject, Long, String, or the JSONObject.NULL object."
+             */
+            return new JSONObject()
+                .put("contextPath", contextPath)
+                .put("dbopen", dbopen)
+                .put("dbused", dbused)
+                .put("guests", guests)
+                .put("isBusted", isBusted)
+                .put("isPhaseBeta", isPhaseBeta)
+                .put("isSetup", isSetup)
+                .put("isUnofficial", isUnofficial)
+                .put("newVersion", newVersion)
+                .put("organizationName", organizationName)
+                .put("pages", pages)
+                .put("permissions", permissions)
+                .put("phase", phase)
+                .put("sessionId", sessionId)
+                .put("specialHeader", specialHeader)
+                .put("surveyRunningStamp", surveyRunningStamp)
+                .put("sysload", sysload)
+                .put("uptime", uptime)
+                .put("user", user) // allowed since User implements JSONString?
+                .put("users", users)
+            ;
+        }
+
+        @Override
+        public String toJSONString() throws JSONException {
+            return jsonObj().toString();
+        }
+
+        public StatusForFrontEnd(SurveyMain sm, HttpServletRequest request) throws JSONException {
+            this.contextPath = request.getContextPath();
+            setSessionIdAndUser(request);
+            if (user != null) {
+                this.organizationName = user.getOrganization().getDisplayName();
+                this.permissions = user.getPermissionsJson();
+            }
+        }
+
+        private void setSessionIdAndUser(HttpServletRequest request) {
+            sessionId = request.getParameter("s");
+            if (sessionId == null) {
+                HttpSession hsession = request.getSession(false);
+                if (hsession != null) {
+                    sessionId = hsession.getId();
+                }
+            }
+            CookieSession mySession = null;
+            if (sessionId != null) {
+                mySession = CookieSession.retrieveWithoutTouch(sessionId);
+            }
+            if (mySession == null) {
+                sessionId = null;
+            } else {
+                sessionId = mySession.id;
+                user = mySession.user;
+            }
+        }
     }
 }

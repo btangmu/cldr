@@ -13,7 +13,6 @@ const cldrText = (function () {
   const CLDR_TEXT_DEBUG = false;
 
   const strings = {
-    copyright: "(C) 2012-2014 IBM Corporation and Others. All Rights Reserved",
     loading: "loading",
     loading2: "loading.",
     loading3: "loading..",
@@ -458,7 +457,7 @@ const cldrText = (function () {
   /**
    * Get the string for the given key
    *
-   * @k the key
+   * @param k the key
    * @return the string for the given key, if the key exists in the map; otherwise, return the key itself
    */
   function get(k) {
@@ -474,11 +473,27 @@ const cldrText = (function () {
   /**
    * Substitute the placeholders in the template for the given key using the given map
    *
-   * @k the key for the template
-   * @map an array like ['a', 'b'] or an object like {a: 'A', b: 'B'}
+   * @param k the key for the template
+   * @param map an array like ['a', 'b'] or an object like {a: 'A', b: 'B'}
    * @return the string with substitutions made, or an empty string for failure
    */
   function sub(k, map) {
+    const template = cldrText.get(k);
+    if (template) {
+      if (map instanceof Array) {
+        return template.replace(/\${(\d)}/g, (blank, i) => map[i]);
+      }
+      if (map instanceof Object) {
+        return template.replace(/\${([^}]+)}/g, (blank, i) => map[i]);
+      }
+    }
+    return "";
+  }
+
+  /**
+   * Same as sub(), but more verbose, with subroutines, for unit testing and debugging
+   */
+  function subVerbose(k, map) {
     const template = cldrText.get(k);
     if (!template) {
       if (CLDR_TEXT_DEBUG) {
@@ -516,7 +531,7 @@ const cldrText = (function () {
             replacement
         );
       }
-      return replacement;
+      return replacement ? replacement : "";
     });
     return result;
   }
@@ -529,26 +544,21 @@ const cldrText = (function () {
    * @return a string like "Changes to this item require 2468 votes."
    */
   function fillInBlanksWithObject(template, map) {
-    let result = "";
-    for (let k in map) {
-      // The order of keys in the map may differ from their order in the template,
-      // so don't use k. Instead, get the key from the regex capture group.
-      result = template.replace(/\${([^}]+)}/g, function (blank, key) {
-        const replacement = map[key];
-        if (CLDR_TEXT_DEBUG) {
-          // key = requiredVotes; blank = ${requiredVotes}; replacement = 2468
-          console.log(
-            "Object: key = " +
-              key +
-              "; blank = " +
-              blank +
-              "; replacement = " +
-              replacement
-          );
-        }
-        return replacement ? replacement : "";
-      });
-    }
+    const result = template.replace(/\${([^}]+)}/g, function (blank, key) {
+      const replacement = map[key];
+      if (CLDR_TEXT_DEBUG) {
+        // key = requiredVotes; blank = ${requiredVotes}; replacement = 2468
+        console.log(
+          "Object: key = " +
+            key +
+            "; blank = " +
+            blank +
+            "; replacement = " +
+            replacement
+        );
+      }
+      return replacement ? replacement : "";
+    });
     return result;
   }
 
@@ -558,5 +568,12 @@ const cldrText = (function () {
   return {
     get: get,
     sub: sub,
+
+    /*
+     * The following are meant to be accessible for unit testing only:
+     */
+    test: {
+      subVerbose: subVerbose,
+    },
   };
 })();

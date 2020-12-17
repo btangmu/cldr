@@ -69,4 +69,40 @@
       );
     });
   });
+
+  describe("cldrText.subVerbose", function () {
+    it("should return same as sub for any arguments", function () {
+      let key = "StatusAction_popupmsg";
+      let map = ["too goofy", "🤪"];
+      let result = cldrText.sub(key, map);
+      let resultV = cldrText.test.subVerbose(key, map);
+      assert(
+        result === resultV,
+        "[" + result + "]" + " should equal [" + resultV + "]"
+      );
+
+      key = "explainRequiredVotes";
+      map = {
+        requiredVotes: 2468,
+      };
+      result = cldrText.sub(key, map);
+      resultV = cldrText.test.subVerbose(key, map);
+      assert(
+        result === resultV,
+        "[" + result + "]" + " should equal [" + resultV + "]"
+      );
+
+      key = "override_explain_msg";
+      map = {
+        overrideVotes: 9999,
+        votes: 3,
+      };
+      result = cldrText.sub(key, map);
+      resultV = cldrText.test.subVerbose(key, map);
+      assert(
+        result === resultV,
+        "[" + result + "]" + " should equal [" + resultV + "]"
+      );
+    });
+  });
 }

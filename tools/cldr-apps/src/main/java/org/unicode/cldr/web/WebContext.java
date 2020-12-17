@@ -1639,7 +1639,9 @@ public class WebContext implements Cloneable, Appendable {
             return "using canned session"; // already set - for testing
         }
 
-        if (this.session != null) return "Internal error - session already set.";
+        if (this.session != null) {
+            return "Internal error - session already set.";
+        }
 
         CookieSession.checkForExpiredSessions(); // If a session has expired, remove it
 
@@ -1684,8 +1686,6 @@ public class WebContext implements Cloneable, Appendable {
         }
 
         HttpSession httpSession = request.getSession(true); // create httpsession
-
-        //boolean idFromSession = false; // did the id come from the httpsession? (and why do we care?)
 
         if (myNum.equals(SurveyMain.SURVEYTOOL_COOKIE_NONE)) { // "0"- for testing
             httpSession.removeAttribute(SurveyMain.SURVEYTOOL_COOKIE_SESSION);
@@ -1762,16 +1762,11 @@ public class WebContext implements Cloneable, Appendable {
         // New up a session, if we don't already have one.
         if (session == null) {
             session = CookieSession.newSession(user == null, userIP(), httpSession.getId());
-            if (!myNum.equals(SurveyMain.SURVEYTOOL_COOKIE_NONE)) {
-                // ctx.println("New session: " + mySession.id + "<br>");
-            }
         }
 
         // should we add "&s=.#####" to the URL?
         if (httpSession.isNew()) { // If it's a new session..
             addQuery(SurveyMain.QUERY_SESSION + "__", session.id);
-        } else {
-            // ctx.println("['s' suppressed]");
         }
 
         // store the session id in the HttpSession

@@ -16,8 +16,6 @@ const INHERITANCE_MARKER = "↑↑↑";
  *
  * @param str the string
  * @return true if starts with "r_", else false
- *
- * This function is only actually used locally in survey.js.
  */
 function isReport(str) {
 	return (str[0] == 'r' && str[1] == '_');

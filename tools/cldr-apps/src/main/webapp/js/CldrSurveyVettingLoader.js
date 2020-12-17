@@ -1796,6 +1796,7 @@ function showV() {
 									isLoading = false;
 									const frag = cldrDomConstruct(html);
 									flipper.flipTo(pages.other, frag);
+									hideRightPanel(); // CLDR-14365
 								};
 								const xhrArgs = {
 									url: url,

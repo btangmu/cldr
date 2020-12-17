@@ -22,7 +22,7 @@ function cldrRedesignStartup() {
 	// locale chooser intercept
 	$('body').on('click', '.locName', interceptLocale);
 
-	// handle sidebar
+	// handle the left sidebar
 	$('#left-sidebar').hover(function() {
 			if (!$('body').hasClass('disconnected') && !window.haveDialog) { // don't hover if another dialog is open.
 				$(this).addClass('active');
@@ -397,7 +397,7 @@ function unpackMenuSideBar(json) {
 }
 
 /**
- * Force the sidebar to open
+ * Force the left sidebar to open
  *
  * Called only from CldrSurveyVettingLoader.js
  */
@@ -443,7 +443,7 @@ function toggleOverlay() {
 }
 
 /**
- * Hide both the overlay and sidebar
+ * Hide both the overlay and left sidebar
  *
  * Called only from CldrSurveyVettingLoader.js
  */
@@ -678,7 +678,9 @@ function showRightPanel() {
 /**
  * Hide the right panel
  *
- * Called only by toggleRightPanel
+ * Called by toggleRightPanel, and also by the loadHandler() for isReport() true but isDashboard() false.
+ * Otherwise, for the Date/Time, Zones, Numbers reports (especially Zones), the panel may invisibly prevent
+ * clicking on the "view" buttons.
  */
 function hideRightPanel() {
 	$('#main-row > .col-md-9, #nav-page > .col-md-9').addClass('col-md-12').removeClass('col-md-9');
