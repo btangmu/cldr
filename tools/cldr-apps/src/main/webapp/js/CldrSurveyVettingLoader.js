@@ -37,7 +37,7 @@ function showV() {
 			DropDownButton,
 			MenuItem,
 			MenuSeparator,
-			registry,
+			dojoRegistry,
 			BusyButton,
 			dojoHash,
 			dojoTopic,
@@ -113,10 +113,11 @@ function showV() {
 					page: "title-page",
 					dcontent: "title-dcontent",
 
+					// menubuttons.set is called by updateLocaleMenu and updateHashAndMenus
 					set: function(x, y) {
 						stdebug("menuset " + x + " = " + y);
 						var cnode = document.getElementById(x + "-container");
-						var wnode = registry.byId(x);
+						var wnode = dojoRegistry.byId(x);
 						var dnode = document.getElementById(x);
 						if (!cnode) {
 							cnode = dnode; // for Elements that do their own stunts
@@ -623,6 +624,7 @@ function showV() {
 						flag: "tc-flagged.jsp?s=" + sessionId,
 						about: "about.jsp",
 						browse: "browse.jsp",
+						adminPanel: 'SurveyAjax?what=admin_panel&s=' + sessionId,
 					};
 
 					/**
@@ -639,7 +641,7 @@ function showV() {
 
 						{
 							title: 'Admin Panel',
-							url: 'SurveyAjax?what=admin_panel&s=' + sessionId,
+							url: surveyUserURL.adminPanel,
 							display: (surveyUser && surveyUser.userlevelName === 'ADMIN')
 						},
 						{
@@ -786,7 +788,7 @@ function showV() {
 					replaceHash(doPush); // update the hash
 					updateLocaleMenu();
 
-					if (cldrStatus.getCurrentLocale() == null) { // deadcode?
+					if (cldrStatus.getCurrentLocale() == null) {
 						menubuttons.set(menubuttons.section);
 						const curSpecial = cldrStatus.getCurrentSpecial();
 						if (curSpecial != null) {
@@ -1984,7 +1986,6 @@ function showV() {
 								theDiv.appendChild(topLocRow);
 							};
 
-
 							addTopLocale("root");
 							// top locales
 							for (var n in locmap.locmap.topLocales) {
@@ -2088,7 +2089,6 @@ function showV() {
 									refreshCounterVetting();
 								return false;
 							});
-							// TODO have to move this out of the DOM.. (Move WHAT out of the DOM?)
 
 							/**
 							 * Automatically import old winning votes
