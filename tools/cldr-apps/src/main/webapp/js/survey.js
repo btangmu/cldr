@@ -1020,12 +1020,8 @@ function formatErrMsg(json, subkey) {
 			err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
 		what: cldrText.get('err_what_' + subkey),
 		code: theCode,
-		// err_data: json.err_data,
 		message: json.err_data.message,
 		surveyCurrentLocale: cldrStatus.getCurrentLocale(),
-		surveyCurrentId: cldrStatus.getCurrentId(),
-		surveyCurrentSection: cldrStatus.getCurrentSection(),
-		surveyCurrentPage: cldrStatus.getCurrentPage()
 	});
 }
 

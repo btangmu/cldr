@@ -66,8 +66,8 @@ function showV() {
 							clickyLink.title = subInfo.special_comment;
 						} else if (subInfo.dcChild) {
 							clickyLink.title = cldrText.sub("defaultContentChild_msg", {
-								info: subInfo,
-								locale: subLoc,
+								name: subInfo.name,
+								dcChild: subInfo.dcChild,
 								dcChildName: locmap.getLocaleName(subInfo.dcChild)
 							});
 						} else {
@@ -1323,7 +1323,8 @@ function showV() {
 						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund !== null && bund.dcParent) {
 							const html = cldrText.sub("defaultContent_msg", {
-								info: bund,
+								name: bund.name,
+								dcParent: bund.dcParent,
 								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
 							});

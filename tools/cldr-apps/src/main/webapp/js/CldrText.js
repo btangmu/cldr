@@ -358,9 +358,9 @@ const cldrText = (function () {
 
     generic_nolocale: "No locale chosen.",
     defaultContent_msg:
-      "This locale, ${info.name} is the <i><a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/default-content'>default content locale</a></i> for <b><a class='notselected' href='#/${info.dcParent}'>${dcParentName}</a></b>, and thus editing or viewing is disabled.",
+      "This locale, ${name} is the <i><a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/default-content'>default content locale</a></i> for <b><a class='notselected' href='#/${dcParent}'>${dcParentName}</a></b>, and thus editing or viewing is disabled.",
     defaultContentChild_msg:
-      "This locale, ${info.name}, supplies the <i><a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/default-content'>default content</a></i> for <b><a class='notselected' href='#/${info.dcChild}'>${dcChildName}</a></b>. Please make sure that all the changes that you make here are appropriate for <b>${dcChildName}</b>. If there are multiple acceptable choices, please try to pick the one that would work for the most other sublocales.",
+      "This locale, ${name}, supplies the <i><a target='CLDR-ST-DOCS' href='http://cldr.unicode.org/translation/default-content'>default content</a></i> for <b><a class='notselected' href='#/${dcChild}'>${dcChildName}</a></b>. Please make sure that all the changes that you make here are appropriate for <b>${dcChildName}</b>. If there are multiple acceptable choices, please try to pick the one that would work for the most other sublocales.",
     defaultContent_header_msg: "= ${dcChild}",
     defaultContent_titleLink: "content",
     readonly_msg: "This locale may not be edited.<br/> ${msg}",
@@ -542,6 +542,8 @@ const cldrText = (function () {
    * @param template a string like "Changes to this item require ${requiredVotes} votes."
    * @param map an object like {requiredVotes: 2468}
    * @return a string like "Changes to this item require 2468 votes."
+   *
+   * Note: placeholders of the form "${a.b}" are NOT supported (unlike old stui.js using dojo/string)
    */
   function fillInBlanksWithObject(template, map) {
     const result = template.replace(/\${([^}]+)}/g, function (blank, key) {
