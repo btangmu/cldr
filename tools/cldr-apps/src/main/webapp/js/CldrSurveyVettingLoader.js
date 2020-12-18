@@ -935,7 +935,7 @@ function showV() {
 								menu.set('iconClass', checked ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o");
 								menu.set('disabled', disabled);
 							};
-							var menuSection = registry.byId("menu-section");
+							var menuSection = dojoRegistry.byId("menu-section");
 							menuMap.section_general = new MenuItem({
 								label: cldrText.get("section_general"),
 								iconClass: "dijitMenuItemIcon ",
@@ -1322,7 +1322,7 @@ function showV() {
 								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
 							});
-							var theChunk = cldrDomConstruct.toDom(html);
+							var theChunk = cldrDomConstruct(html);
 							var theDiv = document.createElement("div");
 							theDiv.appendChild(theChunk);
 							theDiv.className = 'ferrbox';
