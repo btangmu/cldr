@@ -1217,7 +1217,8 @@ function showV() {
 							}
 						} else if (bund.dcChild) {
 							const html = cldrText.sub("defaultContentChild_msg", {
-								info: bund,
+								name: bund.name,
+								dcChild: bund.dcChild,
 								locale: cldrStatus.getCurrentLocale(),
 								dcChildName: locmap.getLocaleName(bund.dcChild)
 							})
