@@ -86,12 +86,8 @@ const cldrGui = (function () {
     "        <span id='st-session-message' class='v-status'></span>\n" +
     "        <span id='st-user-name' class='hasTooltip' title='ctx.session.user.email'></span>\n" +
     "        <span class='glyphicon glyphicon-user tip-log' title='ctx.session.user.org'></span>\n" +
-    "        <select id='voteLevelChanged' title='vote with a different number of votes'></select>\n" +
-    "        | <a class='navbar-link' href='...logout...'>" +
-    "           <span class='glyphicon glyphicon-log-out tip-log' title='Logout'></span>" +
-    "        ...cookieMessage...</a>\n" +
-    /* TODO: ... else ...login  */
-    "        | (<a href='...login...' class='navbar-link'>Login…</a>)\n" +
+    "        <span id='st-vote-count-menu'></span>\n" +
+    "        | <a id='st-loginout-link' class='navbar-link'></a>\n" +
     "      </p>\n" +
     "      <p class='navbar-text navbar-right'>" +
     "        <a href='https://www.unicode.org/policies/privacy_policy.html'>This site uses cookies.</a>\n" +
@@ -127,12 +123,8 @@ const cldrGui = (function () {
     "    <div id='dragger-info'></div>\n" +
     "  </div>\n" +
     "</div>\n";
-  const vhtml4 =
-    "<div class='container-fluid' id='main-container'>\n" +
-    "  <div class='row menu-position'>\n" +
-    "    <div class='col-md-12'>\n" +
-    "      <div id='toptitle'>\n" +
-    "        <div id='additional-top'>\n" +
+
+  const st_notices =
     /* start stnotices.jspf */
     "          <div class='topnotices'>\n" +
     "            <div class='unofficial' title='Not an official SurveyTool' >\n" +
@@ -140,7 +132,7 @@ const cldrGui = (function () {
     "            </div>\n" +
     "            <div id='stchanged' style='display:none;' class='stchanged' title='st has changed'>\n" +
     "              <img alt='[warn]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/warn.png' title='Locale Changed' />\n" +
-    "              The locale, <span id='stchanged_loc'>YOUR LOCALE</span>, has changed due to your or other's actions." +
+    "              The locale, <span id='stchanged_loc'>YOUR LOCALE</span>, has changed due to your or other's actions.\n" +
     "              Please <a href='javascript:window.location.reload(true);'>refresh</a> the page to \n" +
     "              view the new changes..\n" +
     "              <button type='button' onclick='window.location.reload(true)'>Refresh</button>\n" +
@@ -156,8 +148,16 @@ const cldrGui = (function () {
     "              <span id='progress_ajax' class='ajaxword'>&#xA0;</span>\n" +
     "              <button id='progress-refresh' onclick='javascript:window.location.reload(true);'>Refresh</button>\n" +
     "            </div>\n" +
-    "          </div>\n" +
-    /* end stnotices.jspf */
+    "          </div>\n";
+  /* end stnotices.jspf */
+
+  const vhtml4 =
+    "<div class='container-fluid' id='main-container'>\n" +
+    "  <div class='row menu-position'>\n" +
+    "    <div class='col-md-12'>\n" +
+    "      <div id='toptitle'>\n" +
+    "        <div id='additional-top'>\n" +
+    st_notices +
     "        </div>\n" +
     "        <!-- top info -->\n" +
     "        <div id='title-locale-container' class='menu-container' style='display:none'>\n" +
@@ -274,7 +274,7 @@ const cldrGui = (function () {
     "  <table id='proto-datatable' class='data table table-bordered'>\n" +
     "    <thead>\n" +
     "      <tr class='headingb active'>\n" +
-    /*  see cldrText.js for the following */
+    /*  see CldrText.js for the following */
     "        <th title='$flyovercode' id='stui-htmlcode'></th>\n" +
     "        <th title='$flyovercomparison' id='stui-htmltranshint'></th>\n" +
     "        <th title='$flyovernoopinion' id='stui-htmlnoopinion' class='d-no'></th>\n" +
@@ -292,7 +292,6 @@ const cldrGui = (function () {
     "      <div class='d-disp comparisoncell'></div>\n" +
     "      <hr/>\n" +
     "      <div class='d-win proposedcell'></div>\n" +
-    "      \n" +
     "      <div class='d-dr statuscell'></div>\n" +
     "      <hr/>\n" +
     "      <div class='d-win othercell'></div>\n" +
@@ -312,7 +311,6 @@ const cldrGui = (function () {
     "    <hr/>\n" +
     "    <div class='d-no nocell'></div>\n" +
     "  </div>\n" +
-    "  <!--  end hidden.html -->\n" +
     "</div>\n";
 
   function getBodyHtml() {
@@ -320,46 +318,83 @@ const cldrGui = (function () {
   }
 
   function updateWithStatus() {
-    let el = document.getElementById("st-version-phase");
+    displayVersionPhase();
+    displaySpecialHeader();
+    displaySessionMessage();
+    displayUserName();
+    displayVoteCountMenu();
+    displayLogInOutLink();
+  }
+
+  function displayVersionPhase() {
+    const el = document.getElementById("st-version-phase");
     if (el) {
-      el.innerHTML = makeVersionPhase();
+      el.innerHTML =
+        "Survey Tool " +
+        cldrStatus.getNewVersion() +
+        " " +
+        cldrStatus.getPhase();
     }
-    el = document.getElementById("st-special-header");
+  }
+
+  function displaySpecialHeader() {
+    const el = document.getElementById("st-special-header");
     if (el) {
       el.innerHTML = cldrStatus.getSpecialHeader();
     }
-    el = document.getElementById("st-session-message");
+  }
+
+  function displaySessionMessage() {
+    const el = document.getElementById("st-session-message");
     if (el) {
       el.innerHTML = cldrStatus.getSessionMessage();
     }
-    el = document.getElementById("st-user-name");
+  }
+
+  function displayUserName() {
+    const el = document.getElementById("st-user-name");
     if (el) {
       const user = cldrStatus.getSurveyUser();
       if (user && user.name) {
         el.innerHTML = user.name;
       }
     }
-    el = document.getElementById("voteLevelChanged");
+  }
+
+  function displayVoteCountMenu() {
+    const el = document.getElementById("st-vote-count-menu");
     if (el) {
       el.innerHTML = makeVoteCountMenu();
     }
-  }
-
-  function makeVersionPhase() {
-    return (
-      "Survey Tool " + cldrStatus.getNewVersion() + " " + cldrStatus.getPhase()
-    );
   }
 
   function makeVoteCountMenu() {
     let html = "";
     const user = cldrStatus.getSurveyUser();
     if (user && user.voteCountMenu) {
+      html +=
+        "<select id='voteLevelChanged' title='vote with a different number of votes'>\n";
       for (let n of user.voteCountMenu) {
-        html += "<option value='" + n + "'>" + n + " votes</option>";
+        html += "<option value='" + n + "'>" + n + " votes</option>\n";
       }
+      html += "</select>\n";
     }
     return html;
+  }
+
+  function displayLogInOutLink() {
+    const el = document.getElementById("st-loginout-link");
+    if (el) {
+      const path = cldrStatus.getContextPath();
+      if (cldrStatus.getSurveyUser()) {
+        el.setAttribute("href", path + "/survey?do=logout");
+        el.innerHTML =
+          "<span class='glyphicon glyphicon-log-out tip-log' title='Logout'></span>";
+      } else {
+        el.setAttribute("href", path + "/login.jsp");
+        el.innerHTML = "Login...";
+      }
+    }
   }
 
   function debugParse() {
@@ -414,12 +449,13 @@ const cldrGui = (function () {
       "nav-page",
       "progress",
       "progress-refresh",
+      "st-loginout-link",
       "st-special-header",
       "st-session-message",
       "st-user-name",
       "st-version-phase",
+      "st-vote-count-menu",
       "title-section-container",
-      "voteLevelChanged",
     ]) {
       if (!document.getElementById(id)) {
         console.log(id + " is MISSING 🐞🐞🐞");

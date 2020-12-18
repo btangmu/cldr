@@ -37,7 +37,7 @@ function showV() {
 			DropDownButton,
 			MenuItem,
 			MenuSeparator,
-			dojoRegistry,
+			dijitRegistry,
 			BusyButton,
 			dojoHash,
 			dojoTopic,
@@ -117,7 +117,7 @@ function showV() {
 					set: function(x, y) {
 						stdebug("menuset " + x + " = " + y);
 						var cnode = document.getElementById(x + "-container");
-						var wnode = dojoRegistry.byId(x);
+						var wnode = dijitRegistry.byId(x);
 						var dnode = document.getElementById(x);
 						if (!cnode) {
 							cnode = dnode; // for Elements that do their own stunts
@@ -935,7 +935,7 @@ function showV() {
 								menu.set('iconClass', checked ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o");
 								menu.set('disabled', disabled);
 							};
-							var menuSection = dojoRegistry.byId("menu-section");
+							var menuSection = dijitRegistry.byId("menu-section");
 							menuMap.section_general = new MenuItem({
 								label: cldrText.get("section_general"),
 								iconClass: "dijitMenuItemIcon ",
