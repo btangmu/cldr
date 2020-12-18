@@ -66,6 +66,7 @@ public class SurveyTool extends HttpServlet {
              */
             WebContext ctx = new WebContext(request, response);
             request.setAttribute("WebContext", ctx);
+            ctx.setSessionMessage(null); // ??
             ctx.setSession();
             if (ctx.session == null) {
                 serveProblemNoSessionPage(request, out, ctx.getSessionMessage());

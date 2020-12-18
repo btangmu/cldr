@@ -75,6 +75,8 @@ public class WebContext implements Cloneable, Appendable {
     public static final String TARGET_EXAMPLE = "CLDR-ST-EXAMPLE";
     public static final String TARGET_DOCS = "CLDR-ST-DOCS";
 
+    private static final String LOGIN_FAILED = "login failed";
+
     // private fields
     protected Writer out = null;
     private PrintWriter pw = null;
@@ -1779,6 +1781,10 @@ public class WebContext implements Cloneable, Appendable {
         if (user != null) {
             session.setUser(user); // this will replace any existing session by this user.
             session.user.ip = userIP();
+            String s = getSessionMessage();
+            if (s != null && s.contains(LOGIN_FAILED)) {
+                setSessionMessage(null);
+            }
         } else {
             if ((email != null) && (email.length() > 0) && (session.user == null)) {
                 String encodedEmail;
@@ -1788,7 +1794,7 @@ public class WebContext implements Cloneable, Appendable {
                     // The server doesn't support UTF-8?  (Should never happen)
                     throw new RuntimeException(e);
                 }
-                setSessionMessage(iconHtml("stop", "failed login") + "login failed. <a href='"
+                setSessionMessage(iconHtml("stop", "failed login") + LOGIN_FAILED + ". <a href='"
                     + request.getContextPath() + "/reset.jsp"
                     + "?email=" + encodedEmail
                     + "&s=" + session.id

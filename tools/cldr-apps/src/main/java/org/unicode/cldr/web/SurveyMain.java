@@ -2594,6 +2594,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
         setLocale(ctx);
 
+        ctx.setSessionMessage(null); // ??
         ctx.setSession();
 
         if (ctx.session == null) {
