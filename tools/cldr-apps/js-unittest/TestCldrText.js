@@ -68,26 +68,6 @@
         "[" + result + "]" + " should equal [" + expect + "]"
       );
     });
-
-    it("should work right for object within object as in info.name", function () {
-      const key = "defaultContentChild_msg";
-      const map = {
-        info: {
-          name: "Afar (Ethiopia)",
-          dcParent: "aa",
-        },
-        dcParentName: "Afar",
-      };
-      const expect =
-        "This locale, Afar (Ethiopia) is the <i><a target='CLDR-ST-DOCS'" +
-        " href='http://cldr.unicode.org/translation/default-content'>default content locale</a></i>" +
-        " for <b><a class='notselected' href='#/aa'>Afar</a></b>, and thus editing or viewing is disabled.";
-      const result = cldrText.sub(key, map);
-      assert(
-        result === expect,
-        "[" + result + "]" + " should equal [" + expect + "]"
-      );
-    });
   });
 
   describe("cldrText.subVerbose", function () {

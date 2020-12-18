@@ -116,8 +116,8 @@ function showV() {
 					set: function(x, y) {
 						stdebug("menuset " + x + " = " + y);
 						var cnode = document.getElementById(x + "-container");
-						var wnode = this.getRegistry(x);
-						var dnode = this.getDom(x);
+						var wnode = registry.byId(x);
+						var dnode = document.getElementById(x);
 						if (!cnode) {
 							cnode = dnode; // for Elements that do their own stunts
 						}
@@ -137,15 +137,6 @@ function showV() {
 							}
 						}
 					},
-					getDom: function(x) {
-						return document.getElementById(x);
-					},
-					getRegistry: function(x) {
-						return registry.byId(x);
-					},
-					getContainer: function(x) {
-						return document.getElementById(x + "-container");
-					}
 				};
 
 				/**
@@ -587,9 +578,9 @@ function showV() {
 						var bund = locmap.getLocaleInfo(curLocale);
 						if (bund) {
 							if (bund.readonly) {
-								addClass(menubuttons.getDom(menubuttons.locale), "locked");
+								addClass(document.getElementById(menubuttons.locale), "locked");
 							} else {
-								removeClass(menubuttons.getDom(menubuttons.locale), "locked");
+								removeClass(document.getElementById(menubuttons.locale), "locked");
 							}
 
 							if (bund.dcChild) {
@@ -602,12 +593,12 @@ function showV() {
 								menubuttons.set(menubuttons.dcontent);
 							}
 						} else {
-							removeClass(menubuttons.getDom(menubuttons.locale), "locked");
+							removeClass(document.getElementById(menubuttons.locale), "locked");
 							menubuttons.set(menubuttons.dcontent);
 						}
 					} else {
 						cldrStatus.setCurrentLocaleName('');
-						removeClass(menubuttons.getDom(menubuttons.locale), "locked");
+						removeClass(document.getElementById(menubuttons.locale), "locked");
 						menubuttons.set(menubuttons.dcontent);
 					}
 					menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
@@ -1329,7 +1320,7 @@ function showV() {
 								locale: curLocale,
 								dcParentName: locmap.getLocaleName(bund.dcParent)
 							});
-							var theChunk = domConstruct.toDom(html);
+							var theChunk = cldrDomConstruct.toDom(html);
 							var theDiv = document.createElement("div");
 							theDiv.appendChild(theChunk);
 							theDiv.className = 'ferrbox';
@@ -2177,11 +2168,12 @@ function showV() {
 					}); // end myLoad
 				} // end getInitialMenusEtc
 		}); // end require
-} // end showV
 
-// replacement for dojo/dom-construct domConstruct.toDom
-function cldrDomConstruct(html) {
-	const renderer = document.createElement('template');
-   	renderer.innerHTML = html;
-   	return renderer.content;
-}
+	// replacement for dojo/dom-construct domConstruct.toDom
+	function cldrDomConstruct(html) {
+		const renderer = document.createElement('template');
+		renderer.innerHTML = html;
+		return renderer.content;
+	}
+
+} // end showV
