@@ -84,7 +84,7 @@ const cldrGui = (function () {
     "      <p class='navbar-text navbar-right'>\n" +
     "        <span id='flag-info'></span>\n" +
     "        <span id='st-session-message' class='v-status'></span>\n" +
-    "        <span id='st-user-name' class='hasTooltip' title='ctx.session.user.email'></span>\n"
+    "        <span id='st-user-name' class='hasTooltip' title='ctx.session.user.email'></span>\n" +
     "        <span class='glyphicon glyphicon-user tip-log' title='ctx.session.user.org'></span>\n" +
     "        <select id='voteLevelChanged' title='vote with a different number of votes'></select>\n" +
     "        | <a class='navbar-link' href='...logout...'>" +

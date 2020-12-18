@@ -1018,10 +1018,10 @@ function formatErrMsg(json, subkey) {
 	return cldrText.sub(msg_str, {
 		/* Possibilities include: err_what_section, err_what_locmap, err_what_menus,
 			err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
-		json: json,
 		what: cldrText.get('err_what_' + subkey),
 		code: theCode,
-		err_data: json.err_data,
+		// err_data: json.err_data,
+		message: json.err_data.message,
 		surveyCurrentLocale: cldrStatus.getCurrentLocale(),
 		surveyCurrentId: cldrStatus.getCurrentId(),
 		surveyCurrentSection: cldrStatus.getCurrentSection(),
