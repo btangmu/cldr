@@ -18,12 +18,12 @@ window.haveDialog = false;
 function showV() {
 	// REQUIRES
 	require([
-		"dijit/Dialog",
-		"dijit/form/Button",
 		"dijit/DropDownMenu",
 		"dijit/form/DropDownButton",
-		"dijit/MenuItem",
 		"dijit/MenuSeparator",
+		"dijit/MenuItem",
+		"dijit/form/Button",
+		"dijit/Dialog",
 		"dijit/registry",
 		"dojox/form/BusyButton",
 		"dojo/hash",
@@ -31,14 +31,14 @@ function showV() {
 	],
 		// HANDLES
 		function(
-			Dialog,
-			Button,
-			DropDownMenu,
-			DropDownButton,
-			MenuItem,
-			MenuSeparator,
+			dijitDropDownMenu,
+			dijitDropDownButton,
+			dijitMenuSeparator,
+			dijitMenuItem,
+			dijitButton,
+			dijitDialog,
 			dijitRegistry,
-			BusyButton,
+			dojoxBusyButton,
 			dojoHash,
 			dojoTopic,
 		) {
@@ -936,7 +936,7 @@ function showV() {
 								menu.set('disabled', disabled);
 							};
 							var menuSection = dijitRegistry.byId("menu-section");
-							menuMap.section_general = new MenuItem({
+							menuMap.section_general = new dijitMenuItem({
 								label: cldrText.get("section_general"),
 								iconClass: "dijitMenuItemIcon ",
 								disabled: true,
@@ -954,7 +954,7 @@ function showV() {
 							menuSection.addChild(menuMap.section_general);
 							for (var j in menuMap.sections) {
 								(function(aSection) {
-									aSection.menuItem = new MenuItem({
+									aSection.menuItem = new dijitMenuItem({
 										label: aSection.name,
 										iconClass: "dijitMenuItemIcon",
 										onClick: function() {
@@ -972,9 +972,9 @@ function showV() {
 								})(menuMap.sections[j]);
 							}
 
-							menuSection.addChild(new MenuSeparator());
+							menuSection.addChild(new dijitMenuSeparator());
 
-							menuMap.forumMenu = new MenuItem({
+							menuMap.forumMenu = new dijitMenuItem({
 								label: cldrText.get("section_forum"),
 								iconClass: "dijitMenuItemIcon", // menu-chat
 								disabled: true,
@@ -1021,10 +1021,10 @@ function showV() {
 
 								if (!showMenu) {
 									// doesn't exist - add it.
-									var menuPage = new DropDownMenu();
+									var menuPage = new dijitDropDownMenu();
 									for (var k in mySection.pages) { // use given order
 										(function(aPage) {
-											var pageMenu = aPage.menuItem = new MenuItem({
+											var pageMenu = aPage.menuItem = new dijitMenuItem({
 												label: aPage.name,
 												iconClass: (aPage.id == cldrStatus.getCurrentPage()) ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o",
 												onClick: function() {
@@ -1038,7 +1038,7 @@ function showV() {
 										})(mySection.pages[k]);
 									}
 
-									showMenu = new DropDownButton({
+									showMenu = new dijitDropDownButton({
 										label: '-',
 										dropDown: menuPage
 									});
@@ -1581,7 +1581,7 @@ function showV() {
 
 												content.appendChild(showVoteTable(jsondata /* voteList */, type, json));
 
-												var submit = BusyButton({
+												var submit = dojoxBusyButton({
 													label: cldrText.get("v_submit_msg"),
 													busyLabel: cldrText.get("v_submit_busy")
 												});
@@ -2093,11 +2093,11 @@ function showV() {
 							/**
 							 * Automatically import old winning votes
 							 *
-							 * Requires Dialog; we already have "dijit/Dialog" in require() statement at start of showV
+							 * Requires dijitDialog; we already have "dijit/Dialog" in require() statement at start of showV
 							 */
 							function doAutoImport() {
 								'use strict';
-								var autoImportProgressDialog = new Dialog({
+								var autoImportProgressDialog = new dijitDialog({
 									title: cldrText.get("v_oldvote_auto_msg"),
 									content: cldrText.get("v_oldvote_auto_progress_msg")
 								});
@@ -2115,11 +2115,11 @@ function showV() {
 										var vals = {
 											count: json.autoImportedOldWinningVotes
 										};
-										var autoImportedDialog = new Dialog({
+										var autoImportedDialog = new dijitDialog({
 											title: cldrText.get("v_oldvote_auto_msg"),
 											content: cldrText.sub("v_oldvote_auto_desc_msg", vals)
 										});
-										autoImportedDialog.addChild(new Button({
+										autoImportedDialog.addChild(new dijitButton({
 											label: "OK",
 											onClick: function() {
 												window.haveDialog = false;

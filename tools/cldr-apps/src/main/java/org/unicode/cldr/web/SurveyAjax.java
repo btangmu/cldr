@@ -713,10 +713,6 @@ public class SurveyAjax extends HttpServlet {
 
                         send(r, out);
                     } else if (what.equals(WHAT_FORUM_PARTICIPATION)) {
-                        if (true) {
-                            response.sendError(HttpServletResponse.SC_NOT_FOUND); // 404
-                            return;
-                        }
                         mySession.userDidAction();
                         JSONWriter r = newJSONStatus(request, sm);
                         r.put("what", what);
