@@ -2589,7 +2589,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
      * Called only by doGet. Called when user logs in or logs out, also when choose Settings from gear menu.
      */
     private void doSession(WebContext ctx) throws IOException, SurveyException {
-        // which
         String which = ctx.field(QUERY_SECTION); // may be empty string ""
 
         setLocale(ctx);
