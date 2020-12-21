@@ -1,5 +1,4 @@
 "use strict";
-// this file has been formatted using "npx prettier" with default settings
 
 /**
  * cldrGui: encapsulate GUI functions.
@@ -34,12 +33,10 @@ const cldrGui = (function () {
       debugElements();
     }
 
-    require(["dojo/parser"], function (parser) {
-      parser.parse(); // parseOnLoad is false; call parse() after we populate the body
-    });
+    cldrStatus.setCurrentLocale("aa"); // until we have a left sidebar locale chooser
 
-    showV(); // in CldrSurveyVettingLoader.js
-    updateStatus(); // for the first time; in survey.js
+    // showV(); // in CldrSurveyVettingLoader.js
+    cldrLoad.showV(); // for the first time
   }
 
   const vhtml1 =

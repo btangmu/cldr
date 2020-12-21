@@ -28,8 +28,8 @@ function showV() {
     "dojox/form/BusyButton",
     "dojo/hash",
     "dojo/topic",
-  ], // HANDLES
-  function (
+  ], function (
+    // HANDLES
     dijitDropDownMenu,
     dijitDropDownButton,
     dijitMenuSeparator,

@@ -1,5 +1,4 @@
 "use strict";
-// this file, unlike most of our js files, has been formatted using "npx prettier" with default settings
 
 /**
  * cldrStAjax: encapsulate client-server communication.
@@ -132,7 +131,7 @@ const cldrStAjax = (function () {
    * Run the error handler (err2) and schedule the next request
    *
    * @param xhrArgs the request parameters plus such things as xhrArgs.err2
-   * @param err the Error object plus things dojo may add like err.response.text
+   * @param err the error-message string
    */
   function myErr0(xhrArgs, err) {
     if (ST_AJAX_DEBUG) {
@@ -163,47 +162,31 @@ const cldrStAjax = (function () {
     } else {
       options.method = "GET";
     }
-    if (true) {
-      // use vanilla js instead of dojo/request
-      const request = new XMLHttpRequest();
-      request.open(options.method, xhrArgs.url);
-      request.responseType = options.handleAs ? options.handleAs : "text";
-      request.timeout = ajaxTimeout;
-      request.onreadystatechange = function () {
-        if (request.readyState === XMLHttpRequest.DONE) {
-          if (
-            request.status === 0 ||
-            (request.status >= 200 && request.status < 400)
-          ) {
-            if (xhrArgs.load) {
-              xhrArgs.load(request.response);
-            }
-          } else {
-            if (xhrArgs.error) {
-              xhrArgs.error(makeErrorMessage(request, xhrArs.url));
-            }
+
+    const request = new XMLHttpRequest();
+    request.open(options.method, xhrArgs.url);
+    request.responseType = options.handleAs ? options.handleAs : "text";
+    request.timeout = ajaxTimeout;
+    request.onreadystatechange = function () {
+      if (request.readyState === XMLHttpRequest.DONE) {
+        if (
+          request.status === 0 ||
+          (request.status >= 200 && request.status < 400)
+        ) {
+          if (xhrArgs.load) {
+            xhrArgs.load(request.response);
+          }
+        } else {
+          if (xhrArgs.error) {
+            xhrArgs.error(makeErrorMessage(request, xhrArs.url));
           }
         }
-      };
-      if (options.method === "POST") {
-        setPostDataAndHeader(request, options);
       }
-      request.send(options.data);
-    } else {
-      // TODO: remove the dojo/request version after testing more that the vanilla js version works right
-      // https://dojotoolkit.org/reference-guide/1.10/dojo/request.html#dojo-request
-      require(["dojo/request"], function (request) {
-        options.timeout = ajaxTimeout;
-        request(xhrArgs.url, options).then(
-          function (data) {
-            xhrArgs.load(data);
-          },
-          function (err) {
-            xhrArgs.error(err.message);
-          }
-        );
-      });
+    };
+    if (options.method === "POST") {
+      setPostDataAndHeader(request, options);
     }
+    request.send(options.data);
   }
 
   function setPostDataAndHeader(request, options) {

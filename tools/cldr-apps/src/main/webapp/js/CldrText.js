@@ -1,5 +1,4 @@
 "use strict";
-// this file, unlike most of our js files, has been formatted using "npx prettier" with default settings
 
 /**
  * cldrText: encapsulate text messages for the user interface.

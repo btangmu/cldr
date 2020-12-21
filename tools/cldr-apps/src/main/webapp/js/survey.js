@@ -4578,8 +4578,8 @@ function showUserActivity(list, tableRef) {
     "dojo/request",
     "dojo/number",
     "dojo/domReady!",
-  ], // HANDLES
-  function (ready, dom, request, dojoNumber) {
+  ], function (ready, dom, request, dojoNumber) {
+    // HANDLES
     ready(function () {
       window._userlist = list; // DEBUG
       var table = dom.byId(tableRef);
