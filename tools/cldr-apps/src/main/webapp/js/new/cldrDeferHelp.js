@@ -9,7 +9,7 @@
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
  *
- * This is the new non-dojo version. For dojo, see CldrDefferedHelp.js
+ * This is the new non-dojo version. For dojo, see CldrDojoDeferHelp.js
  */
 
 const cldrDeferHelp = (function () {

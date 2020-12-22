@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * @class XpathMap
  * This manages xpathId / strid / PathHeader etc mappings.

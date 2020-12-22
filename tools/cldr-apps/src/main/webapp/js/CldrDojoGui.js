@@ -486,12 +486,3 @@ const cldrGui = (function () {
     },
   };
 })();
-
-/*
-Known bugs in https://github.com/unicode-org/cldr/pull/893
-These are fixed in later commits (both Dojo and non-Dojo) unless otherwise mentioned here.
-
-- makeVoteCountMenu didn't initialize original value
-- stopIcon should be cldrStatus.stopIcon() in survey.js (one occurrence)
-
-*/
