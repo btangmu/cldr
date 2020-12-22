@@ -1,6 +1,8 @@
 // © 2020 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html
 
+// This version is for use with dojo. For the non-dojo version, see cldrDeferHelp.js
+
 deferredHelp = (function () {
   const defaultEndpoint = "https://dbpedia.org/sparql/";
   const format = "JSON";

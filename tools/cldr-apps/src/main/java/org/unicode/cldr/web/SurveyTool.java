@@ -18,7 +18,7 @@ import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final boolean USE_DOJO = false;
+    private static final boolean USE_DOJO = true;
 
     @Override
     public final void init(final ServletConfig config) throws ServletException {
@@ -157,7 +157,7 @@ public class SurveyTool extends HttpServlet {
             out.write("            url: survURL,\n");
             out.write("            load: load,\n");
             out.write("          };\n");
-            out.write("          cldrStAjax.sendXhr(xhrArgs);\n");
+            out.write("          cldrAjax.sendXhr(xhrArgs);\n");
             out.write("        }, 2000); // two seconds\n");
             out.write("      });\n");
             out.write("    }\n");
@@ -318,32 +318,38 @@ public class SurveyTool extends HttpServlet {
 
         out.write(prefix + "jquery.autosize.min.js" + tail); // exceptional
 
-        out.write(prefix + "CldrText" + js); // CldrText.js
-        out.write(prefix + "CldrStatus" + js); // CldrStatus.js
-        out.write(prefix + "CldrStAjax" + js); // CldrStAjax.js
-        out.write(prefix + "CldrStBulkClosePosts" + js); // CldrStBulkClosePosts.js
-        out.write(prefix + "CldrStForumParticipation" + js); // CldrStForumParticipation.js
-        out.write(prefix + "CldrStForumFilter" + js); // CldrStForumFilter.js
-        out.write(prefix + "CldrStCsvFromTable" + js); // CldrStCsvFromTable.js
-        out.write(prefix + "CldrDeferredHelp" + js); // CldrDeferredHelp.js
+        out.write(prefix + "new/cldrText" + js); // new/cldrText.js -- same file for dojo and non-dojo
+        out.write(prefix + "new/cldrStatus" + js); // new/cldrStatus.js -- same file for dojo and non-dojo
+        out.write(prefix + "new/cldrAjax" + js); // new/cldrAjax.js -- same file for dojo and non-dojo
+
         if (USE_DOJO) {
-            out.write(prefix + "CldrStForum" + js); // CldrStForum.js
+            out.write(prefix + "CldrDojoBulkClosePosts" + js); // CldrDojoBulkClosePosts.js
+            out.write(prefix + "CldrDojoForumParticipation" + js); // CldrDojoForumParticipation.js
+            out.write(prefix + "new/cldrForumFilter" + js); // new/cldrForumFilter.js
+            out.write(prefix + "new/cldrCsvFromTable" + js); // new/cldrCsvFromTable.js
+            out.write(prefix + "CldrDojoDeferHelp" + js); // CldrDojoDeferHelp.js
+            out.write(prefix + "CldrDojoForum" + js); // CldrDojoForum.js
             out.write(prefix + "survey" + js); // survey.js
-            out.write(prefix + "CldrSurveyVettingLoader" + js); // CldrSurveyVettingLoader.js
-            out.write(prefix + "CldrSurveyVettingTable" + js); // CldrSurveyVettingTable.js
+            out.write(prefix + "CldrDojoLoad" + js); // CldrDojoLoad.js
+            out.write(prefix + "CldrDojoTable" + js); // CldrDojoTable.js
             out.write(prefix + "bootstrap.min.js" + tail); // exceptional
             out.write(prefix + "redesign" + js); // redesign.js
             out.write(prefix + "review" + js); // review.js
-            out.write(prefix + "CldrGuiDojo" + js); // CldrGuiDojo.js
+            out.write(prefix + "CldrDojoGui" + js); // CldrGuiDojo.js
         } else {
-            out.write(prefix + "CldrForum" + js); // CldrForum.js
-            out.write(prefix + "CldrFlip" + js); // CldrFlip.js
-            out.write(prefix + "CldrLocaleMap" + js); // CldrLocaleMap.js
-            out.write(prefix + "CldrXpathMap" + js); // CldrXpathMap.js
-            out.write(prefix + "CldrLoad" + js); // CldrLoad.js
-            out.write(prefix + "CldrSurveyVettingTable" + js); // CldrSurveyVettingTable.js
+            out.write(prefix + "new/cldrBulkClosePosts" + js); // new/cldrBulkClosePosts.js
+            out.write(prefix + "new/cldrForumParticipation" + js); // new/cldrForumParticipation.js
+            out.write(prefix + "new/cldrForumFilter" + js); // new/cldrForumFilter.js
+            out.write(prefix + "new/cldrCsvFromTable" + js); // new/cldrCsvFromTable.js
+            out.write(prefix + "new/cldrDeferHelp" + js); // new/cldrDeferHelp.js
+            out.write(prefix + "new/cldrForum" + js); // new/cldrForum.js
+            out.write(prefix + "new/cldrFlip" + js); // new/cldrFlip.js
+            out.write(prefix + "new/cldrLocaleMap" + js); // new/cldrLocaleMap.js
+            out.write(prefix + "new/cldrXpathMap" + js); // new/cldrXpathMap.js
+            out.write(prefix + "new/cldrLoad" + js); // new/cldrLoad.js
+            out.write(prefix + "new/cldrTable" + js); // new/cldrTable.js
             out.write(prefix + "bootstrap.min.js" + tail); // exceptional
-            out.write(prefix + "CldrGui" + js); // CldrGui.js
+            out.write(prefix + "new/cldrGui" + js); // new/cldrGui.js
         }
     }
 

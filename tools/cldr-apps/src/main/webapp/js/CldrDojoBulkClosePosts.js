@@ -1,15 +1,18 @@
 "use strict";
 
 /**
- * cldrStBulkClosePosts: Survey Tool feature for bulk-closing forum posts
+ * cldrBulkClosePosts: Survey Tool feature for bulk-closing forum posts
+ * This is the dojo version. For non-dojo, see cldrBulkClosePosts.js.
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  * Ideally this should be a module (in the sense of using import/export),
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
+ *
+ * Dependencies: showInPop2, hideLoader
  */
-const cldrStBulkClosePosts = (function () {
+const cldrBulkClosePosts = (function () {
   let saveParamsForExecute = null;
 
   let contentDiv = null;
@@ -56,7 +59,7 @@ const cldrStBulkClosePosts = (function () {
       load: loadHandler,
       error: errorHandler,
     };
-    cldrStAjax.sendXhr(xhrArgs);
+    cldrAjax.sendXhr(xhrArgs);
   }
 
   /**
@@ -89,7 +92,7 @@ const cldrStBulkClosePosts = (function () {
       load: loadHandler,
       error: errorHandler,
     };
-    cldrStAjax.sendXhr(xhrArgs);
+    cldrAjax.sendXhr(xhrArgs);
   }
 
   /**
@@ -130,7 +133,7 @@ const cldrStBulkClosePosts = (function () {
         "</p>\n";
       if (json.threadCount > 0) {
         html +=
-          "<h4><a onclick='cldrStBulkClosePosts.execute()'>Close Threads!</a></h4>\n";
+          "<h4><a onclick='cldrBulkClosePosts.execute()'>Close Threads!</a></h4>\n";
         html += "<p>This action cannot be undone.</p>";
         html +=
           "<p>It should normally be done after a new version of CLDR is published, before opening Survey Tool.</p>\n";

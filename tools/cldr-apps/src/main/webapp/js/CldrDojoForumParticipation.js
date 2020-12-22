@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * cldrStForumParticipation: encapsulate Survey Tool Forum Participation code.
+ * cldrForumParticipation: encapsulate Survey Tool Forum Participation code.
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
@@ -11,11 +11,11 @@
  *
  * Dependencies: SpecialPage; hideLoader; showInPop2
  */
-const cldrStForumParticipation = (function () {
+const cldrForumParticipation = (function () {
   const tableId = "participationTable";
   const fileName = "participation.csv";
   const onclick =
-    "cldrStCsvFromTable.downloadCsv(" +
+    "cldrCsvFromTable.download(" +
     '"' +
     tableId +
     '"' +
@@ -66,7 +66,7 @@ const cldrStForumParticipation = (function () {
       load: loadHandler,
       error: errorHandler,
     };
-    cldrStAjax.sendXhr(xhrArgs);
+    cldrAjax.sendXhr(xhrArgs);
   }
 
   /**
