@@ -1,7 +1,9 @@
 "use strict";
 
 /**
- * cldrStAjax: encapsulate client-server communication -- old DOJO version; see CldrAjax.js for non-dojo
+ * cldrStAjax: encapsulate client-server communication.
+ * This works with or without dojo; no dependency on dojo.
+ *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  * Ideally cldrStAjax should be a module (in the sense of using import/export),

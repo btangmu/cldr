@@ -18,7 +18,7 @@ import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final boolean USE_DOJO = true;
+    private static final boolean USE_DOJO = false;
 
     @Override
     public final void init(final ServletConfig config) throws ServletException {
