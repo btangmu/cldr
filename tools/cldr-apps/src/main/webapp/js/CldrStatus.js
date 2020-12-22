@@ -351,6 +351,19 @@ const cldrStatus = (function () {
     return getSurveyUser() === null;
   }
 
+  /**
+   * Is the ST disconnected?
+   */
+  let disconnected = false;
+
+  function isDisconnected() {
+    return disconnected;
+  }
+
+  function setIsDisconnected(d) {
+    disconnected = d;
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
@@ -417,5 +430,8 @@ const cldrStatus = (function () {
     getSurvUrl: getSurvUrl,
 
     isVisitor: isVisitor,
+
+    isDisconnected: isDisconnected,
+    setIsDisconnected: setIsDisconnected,
   };
 })();

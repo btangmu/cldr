@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * cldrStAjax: encapsulate client-server communication.
+ * cldrStAjax: encapsulate client-server communication -- old DOJO version; see CldrAjax.js for non-dojo
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  * Ideally cldrStAjax should be a module (in the sense of using import/export),
@@ -75,10 +75,7 @@ const cldrStAjax = (function () {
    * Process the queue
    */
   function processXhrQueue() {
-    /*
-     * TODO: getter/setter for global variable "disconnected" in survey.js
-     */
-    if (disconnected) {
+    if (cldrStatus.isDisconnected()) {
       return;
     }
     if (!queueOfXhr || queueOfXhr.length == 0) {

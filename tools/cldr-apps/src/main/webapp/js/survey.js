@@ -2552,7 +2552,7 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
       alert(str2);
 
       // show this message in a sidebar also
-      showInPop(stopIcon + str, tr, null, null, true);
+      showInPop(cldrStatus.stopIcon() + str, tr, null, null, true);
     }
     return;
   } else if (json && json.didNotSubmit) {

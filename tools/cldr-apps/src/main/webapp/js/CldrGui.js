@@ -379,7 +379,8 @@ const cldrGui = (function () {
       html +=
         "<select id='voteLevelChanged' title='vote with a different number of votes'>\n";
       for (let n of user.voteCountMenu) {
-        html += "<option value='" + n + "'>" + n + " votes</option>\n";
+        const selectedOrNot = (user.votecount === n) ? " selected='selected'" : "";
+        html += "<option value='" + n + "'" + selectedOrNot + ">" + n + " votes</option>\n";
       }
       html += "</select>\n";
     }

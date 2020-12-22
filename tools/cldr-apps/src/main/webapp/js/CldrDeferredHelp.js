@@ -53,7 +53,6 @@ WHERE {
         );
       },
       (err) => {
-        // absDiv.addClass('err') ?
         absContent.text(`Err loading ${resource}: ${err}`);
       }
     );

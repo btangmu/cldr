@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * cldrStForum: encapsulate main Survey Tool Forum code.
+ * cldrStForum: encapsulate main Survey Tool Forum code -- DOJO version; see CldrForum.java for non-dojo
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.

@@ -18,7 +18,7 @@ import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final boolean USE_DOJO = false;
+    private static final boolean USE_DOJO = true;
 
     @Override
     public final void init(final ServletConfig config) throws ServletException {
@@ -324,10 +324,10 @@ public class SurveyTool extends HttpServlet {
         out.write(prefix + "CldrStBulkClosePosts" + js); // CldrStBulkClosePosts.js
         out.write(prefix + "CldrStForumParticipation" + js); // CldrStForumParticipation.js
         out.write(prefix + "CldrStForumFilter" + js); // CldrStForumFilter.js
-        out.write(prefix + "CldrStForum" + js); // CldrStForum.js
         out.write(prefix + "CldrStCsvFromTable" + js); // CldrStCsvFromTable.js
         out.write(prefix + "CldrDeferredHelp" + js); // CldrDeferredHelp.js
         if (USE_DOJO) {
+            out.write(prefix + "CldrStForum" + js); // CldrStForum.js
             out.write(prefix + "survey" + js); // survey.js
             out.write(prefix + "CldrSurveyVettingLoader" + js); // CldrSurveyVettingLoader.js
             out.write(prefix + "CldrSurveyVettingTable" + js); // CldrSurveyVettingTable.js
@@ -336,8 +336,10 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "review" + js); // review.js
             out.write(prefix + "CldrGuiDojo" + js); // CldrGuiDojo.js
         } else {
+            out.write(prefix + "CldrForum" + js); // CldrForum.js
             out.write(prefix + "CldrFlip" + js); // CldrFlip.js
-            out.write(prefix + "CldrSurvey" + js); // CldrSurvey.js
+            out.write(prefix + "CldrLocaleMap" + js); // CldrLocaleMap.js
+            out.write(prefix + "CldrXpathMap" + js); // CldrXpathMap.js
             out.write(prefix + "CldrLoad" + js); // CldrLoad.js
             out.write(prefix + "CldrSurveyVettingTable" + js); // CldrSurveyVettingTable.js
             out.write(prefix + "bootstrap.min.js" + tail); // exceptional
