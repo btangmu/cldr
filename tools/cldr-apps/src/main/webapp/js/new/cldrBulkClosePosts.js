@@ -2,7 +2,7 @@
 
 /**
  * cldrBulkClosePosts: Survey Tool feature for bulk-closing forum posts
- * This is the new non-dojo version. For dojo, see CldrStBulkClosePosts.js.
+ * This is the new non-dojo version. For dojo, see CldrDojoBulkClosePosts.js.
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.

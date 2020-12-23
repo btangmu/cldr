@@ -1,8 +1,9 @@
 "use strict";
 
 /**
- * cldrText: encapsulate code related to the main Survey Tool table whose rows describe xpaths.
- * This is the dojo version. For non-dojo, see CldrDojoTable.js
+ * cldrText: encapsulate code related to the main Survey Tool html table,
+ * whose rows describe xpaths.
+ * This is the non-dojo version. For dojo, see CldrDojoTable.js
  *
  * Functions for populating the main table in the vetting page:
  * 		cldrTable.insertRows
