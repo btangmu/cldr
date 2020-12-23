@@ -343,6 +343,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "new/cldrCsvFromTable" + js); // new/cldrCsvFromTable.js
             out.write(prefix + "new/cldrDeferHelp" + js); // new/cldrDeferHelp.js
             out.write(prefix + "new/cldrForum" + js); // new/cldrForum.js
+            out.write(prefix + "new/cldrOtherSpecial" + js); // new/cldrOtherSpecial.js
             out.write(prefix + "new/cldrFlip" + js); // new/cldrFlip.js
             out.write(prefix + "new/cldrLocaleMap" + js); // new/cldrLocaleMap.js
             out.write(prefix + "new/cldrXpathMap" + js); // new/cldrXpathMap.js

@@ -114,9 +114,7 @@ const cldrStatus = (function () {
   }
 
   function setCurrentId(id) {
-    if (id || id === "") {
-      currentId = id;
-    }
+   currentId = id ? id : "";
   }
 
   /**

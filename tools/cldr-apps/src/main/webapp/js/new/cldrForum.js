@@ -356,7 +356,7 @@ const cldrForum = (function () {
         if (curSpecial && curSpecial === "forum") {
           reloadV();
         } else {
-          updateInfoPanelForumPosts(null);
+          cldrSurvey.updateInfoPanelForumPosts(null);
         }
       } else {
         const post = $(".post").first();
@@ -540,7 +540,7 @@ const cldrForum = (function () {
           }
           cldrStatus.setCurrentPage("");
           cldrStatus.setCurrentId(post.id);
-          replaceHash(false);
+          cldrLoad.replaceHash(false);
           if (cldrStatus.getCurrentSpecial() != "forum") {
             cldrStatus.setCurrentSpecial("forum");
             reloadV();

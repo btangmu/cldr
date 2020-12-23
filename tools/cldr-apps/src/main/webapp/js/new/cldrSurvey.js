@@ -1227,7 +1227,7 @@ const cldrSurvey = (function () {
     return star;
   }
 
-  var gPopStatus = {
+  const gPopStatus = {
     unShow: null,
     lastShown: null,
     lastTr: null,
@@ -1270,19 +1270,10 @@ const cldrSurvey = (function () {
     return theFn;
   }
 
-  function getPopToken() {
-    return gPopStatus.popToken;
-  }
-
-  function incrPopToken(x) {
-    ++gPopStatus.popToken;
-    return gPopStatus.popToken;
-  }
-
   /**
    * Timeout for showing sideways view
    */
-  var sidewaysShowTimeout = -1;
+  let sidewaysShowTimeout = -1;
 
   /**
    *  Array storing all only-1 sublocale
@@ -1496,6 +1487,8 @@ const cldrSurvey = (function () {
       }, 2000); // wait 2 seconds before loading this.
     }
 
+    // Still deep inside the very long function showForumStuff...
+
     if (tr.theRow) {
       const theRow = tr.theRow;
       const couldFlag =
@@ -1514,7 +1507,7 @@ const cldrSurvey = (function () {
       );
     }
 
-    var loader2 = createChunk(cldrText.get("loading"), "i");
+    let loader2 = createChunk(cldrText.get("loading"), "i");
     frag.appendChild(loader2);
 
     /**
@@ -1546,9 +1539,10 @@ const cldrSurvey = (function () {
       listenFor(showButton, "mouseover", theListen);
     }
 
+    // still in the very long function showForumStuff...
     // lazy load post count!
     // load async
-    var ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill();
+    let ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill();
     window.setTimeout(function () {
       var xhrArgs = {
         url: ourUrl,
@@ -1580,7 +1574,7 @@ const cldrSurvey = (function () {
       }
       return null;
     }
-  }
+  } // end of the very long function showForumStuff
 
   /**
    * Update the forum posts in the Info Panel
@@ -1703,8 +1697,8 @@ const cldrSurvey = (function () {
     /*
      * Note: SurveyAjax requires a "what" parameter for SurveyAjax.
      * It is not supplied here, but may be added later with code such as:
-     *	var ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill() ;
-     *	var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
+     *	let ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill() ;
+     *	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
      * Unfortunately that means "what" is not the first argument, as it would
      * be ideally for human readability of request urls.
      */
@@ -1726,8 +1720,10 @@ const cldrSurvey = (function () {
    * Change the current id
    *
    * @param id the id to set
+   *
+   * Compare the similar function updateCurrentId in cldrForum.js
    */
-  window.updateCurrentId = function updateCurrentId(id) {
+  function updateCurrentId(id) {
     if (id == null) {
       id = "";
     }
@@ -1736,6 +1732,8 @@ const cldrSurvey = (function () {
       cldrStatus.setCurrentId(id);
     }
   };
+  
+  // TODO: no ready function here in the middle of nowhere!!! over 200 lines
 
   // window loader stuff
   $(function () {
@@ -1790,7 +1788,7 @@ const cldrSurvey = (function () {
         unShow();
         unShow = null;
       }
-      incrPopToken("newShow" + str);
+      ++gPopStatus.popToken;
       if (hideInterval) {
         clearTimeout(hideInterval);
         hideInterval = null;
@@ -1941,7 +1939,7 @@ const cldrSurvey = (function () {
     window.resetPop = function () {
       lastShown = null;
     };
-  });
+  }); // end of jquery ready $(function)
 
   /**
    * Check if we need LRM/RLM marker to display
@@ -2892,7 +2890,7 @@ const cldrSurvey = (function () {
   function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
     showLoader(tr.theTable.theDiv.loader, cldrText.get("loadingOneRow"));
 
-    var ourUrl =
+    let ourUrl =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=getrow" +
       "&_=" +
@@ -3027,7 +3025,7 @@ const cldrSurvey = (function () {
       s: tr.theTable.session,
     };
 
-    var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax";
+    let ourUrl = cldrStatus.getContextPath() + "/SurveyAjax";
 
     var voteLevelChanged = document.getElementById("voteLevelChanged");
     if (voteLevelChanged) {
@@ -3176,7 +3174,7 @@ const cldrSurvey = (function () {
       content.appendChild(list);
 
       function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
-        var ourUrl =
+        let ourUrl =
           cldrStatus.getContextPath() +
           "/AdminAjax.jsp?vap=" +
           vap +
@@ -3988,7 +3986,7 @@ const cldrSurvey = (function () {
     var div = document.getElementById(divName);
     div.className = "recentList";
     div.update = function () {
-      var ourUrl =
+      let ourUrl =
         cldrStatus.getContextPath() + "/SurveyAjax?what=mylocales&user=" + user;
       var errorHandler = function (err) {
         handleDisconnect("Error in showrecent: " + err);
@@ -4082,7 +4080,7 @@ const cldrSurvey = (function () {
     }
     div.className = "recentList";
     div.update = function () {
-      var ourUrl =
+      let ourUrl =
         cldrStatus.getContextPath() +
         "/SurveyAjax?what=recent_items&_=" +
         locale +
@@ -4345,6 +4343,11 @@ const cldrSurvey = (function () {
     showInPop2: showInPop2,
     showLoader: showLoader,
     hideLoader: hideLoader,
+    wireUpButton: wireUpButton,
+    addIcon: addIcon,
+    listenToPop: listenToPop,
+    updateInfoPanelForumPosts: updateInfoPanelForumPosts,
+    appendForumStuff: appendForumStuff,
 
     /*
      * The following are meant to be accessible for unit testing only:

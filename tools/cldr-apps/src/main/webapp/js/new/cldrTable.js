@@ -636,7 +636,7 @@ const cldrTable = (function () {
     cell.className = "d-dr-" + statusClass + " d-dr-status statuscell";
 
     if (!cell.isSetup) {
-      listenToPop("", tr, cell);
+      cldrSurvey.listenToPop("", tr, cell);
       cell.isSetup = true;
     }
 
@@ -706,7 +706,7 @@ const cldrTable = (function () {
       }
       if (theRow.voteVhash !== theRow.winningVhash && theRow.canFlagOnLosing) {
         if (!theRow.rowFlagged) {
-          addIcon(tr.voteDiv, "i-stop");
+          cldrSurvey.addIcon(tr.voteDiv, "i-stop");
           tr.voteDiv.appendChild(
             createChunk(
               cldrText.sub("mustflag_explain_msg", {}),
@@ -715,7 +715,7 @@ const cldrTable = (function () {
             )
           );
         } else {
-          addIcon(tr.voteDiv, "i-flag");
+          cldrSurvey.addIcon(tr.voteDiv, "i-flag");
           tr.voteDiv.appendChild(
             createChunk(cldrText.get("flag_desc", "p", "helpContent"))
           );
@@ -723,7 +723,7 @@ const cldrTable = (function () {
       }
     }
     if (!theRow.rowFlagged && theRow.canFlagOnLosing) {
-      addIcon(tr.voteDiv, "i-flag-d");
+      cldrSurvey.addIcon(tr.voteDiv, "i-flag-d");
       tr.voteDiv.appendChild(
         createChunk(cldrText.get("flag_d_desc", "p", "helpContent"))
       );
@@ -1043,7 +1043,7 @@ const cldrTable = (function () {
         tr.forumDiv = document.createElement("div");
         tr.forumDiv.className = "forumDiv";
       }
-      appendForumStuff(tr, theRow, tr.forumDiv);
+      cldrSurvey.appendForumStuff(tr, theRow, tr.forumDiv);
     }
     // extra attributes
     if (
@@ -1072,7 +1072,7 @@ const cldrTable = (function () {
       js.className = "anch-go";
       js.appendChild(document.createTextNode("{JSON}"));
       js.popParent = tr;
-      listenToPop(JSON.stringify(theRow), tr, js);
+      cldrSurvey.listenToPop(JSON.stringify(theRow), tr, js);
       cell.appendChild(js);
       cell.appendChild(createChunk(" c=" + theRow.coverageValue));
     }
@@ -1081,7 +1081,7 @@ const cldrTable = (function () {
       if (stdebug_enabled) {
         xpathStr = "XPath: " + theRow.xpath;
       }
-      listenToPop(xpathStr, tr, cell);
+      cldrSurvey.listenToPop(xpathStr, tr, cell);
       cell.isSetup = true;
     }
   }
@@ -1136,11 +1136,11 @@ const cldrTable = (function () {
     } else {
       cell.appendChild(document.createTextNode(""));
     }
-    /* The next line (listenToPop...) had been commented out, for unknown reasons.
+    /* The next line (cldrSurvey.listenToPop...) had been commented out, for unknown reasons.
      * Restored (uncommented) for http://unicode.org/cldr/trac/ticket/10573 so that
      * the right-side panel info changes when you click on the English column.
      */
-    listenToPop(null, tr, cell);
+    cldrSurvey.listenToPop(null, tr, cell);
     cell.isSetup = true;
   }
 
@@ -1157,10 +1157,10 @@ const cldrTable = (function () {
   function updateRowProposedWinningCell(tr, theRow, cell, protoButton) {
     removeAllChildNodes(cell); // win
     if (theRow.rowFlagged) {
-      var flagIcon = addIcon(cell, "s-flag");
+      var flagIcon = cldrSurvey.addIcon(cell, "s-flag");
       flagIcon.title = cldrText.get("flag_desc");
     } else if (theRow.canFlagOnLosing) {
-      var flagIcon = addIcon(cell, "s-flag-d");
+      var flagIcon = cldrSurvey.addIcon(cell, "s-flag-d");
       flagIcon.title = cldrText.get("flag_d_desc");
     }
     setLang(cell);
@@ -1182,7 +1182,7 @@ const cldrTable = (function () {
     } else {
       cell.showFn = function () {}; // nothing else to show
     }
-    listenToPop(null, tr, cell, cell.showFn);
+    cldrSurvey.listenToPop(null, tr, cell, cell.showFn);
   }
 
   /**
@@ -1319,7 +1319,7 @@ const cldrTable = (function () {
     }
 
     if (!hadOtherItems /*!onIE*/) {
-      listenToPop(null, tr, cell);
+      cldrSurvey.listenToPop(null, tr, cell);
     }
     if (
       tr.myProposal &&
@@ -1358,11 +1358,11 @@ const cldrTable = (function () {
     if (tr.canModify) {
       removeAllChildNodes(noCell); // no opinion
       var noOpinion = cloneAnon(protoButton);
-      wireUpButton(noOpinion, tr, theRow, null);
+      cldrSurvey.wireUpButton(noOpinion, tr, theRow, null);
       noOpinion.value = null;
       var wrap = wrapRadio(noOpinion);
       noCell.appendChild(wrap);
-      listenToPop(null, tr, noCell);
+      cldrSurvey.listenToPop(null, tr, noCell);
     } else if (tr.ticketOnly) {
       // ticket link
       if (!tr.theTable.json.canModify) {

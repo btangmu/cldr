@@ -140,148 +140,21 @@ const cldrLoad = (function () {
       },
     };
 
-    /**
-     * Manage additional special pages
-     * @class OtherSpecial
-     */
-    function OtherSpecial() {
-      // cached page list
-      this.pages = {};
-    }
-
-    /**
-     * @function getSpecial
-     */
-    OtherSpecial.prototype.getSpecial = function getSpecial(name) {
-      return this.pages[name];
-    };
-
-    /**
-     * @function loadSpecial
-     */
-    OtherSpecial.prototype.loadSpecial = function loadSpecial(
-      name,
-      onSuccess,
-      onFailure
-    ) {
-      var special = this.getSpecial(name);
-      var otherThis = this;
-      if (special) {
-        stdebug("OS: Using cached special: " + name);
-        onSuccess(special);
-      } else if (special === null) {
-        stdebug("OS: cached NULL: " + name);
-        onFailure("Special page failed to load: " + name);
-      } else {
-        stdebug("OS: Attempting load.." + name);
-        /***
-        try {
-          require(["js/special/" + name + ".js"], function (specialFn) {
-            stdebug("OS: Loaded, instantiatin':" + name);
-            var special = new specialFn();
-            special.name = name;
-            otherThis.pages[name] = special; // cache for next time
-
-            stdebug("OS: SUCCESS! " + name);
-            onSuccess(special);
-          });
-        } catch (e) {
-          stdebug("OS: Load FAIL!:" + name + " - " + e.message + " - " + e);
-          if (!otherThis.pages[name]) {
-            // if the load didn't complete:
-            otherThis.pages[name] = null; // mark as don't retry load.
-          }
-          onFailure(e);
-        }
-        ***/
-      }
-    };
-
-    /**
-     * @function parseHash
-     */
-    OtherSpecial.prototype.parseHash = function parseHash(name, hash, pieces) {
-      this.loadSpecial(
-        name,
-        function onSuccess(special) {
-          special.parseHash(hash, pieces);
-        },
-        function onFailure(e) {
-          /*
-           * TODO: get rid of this console warning for name = "oldvotes".
-           * There's not a known problem with old votes. It's not clear why
-           * the warning occurs. See "window.parseHash(dojoHash())"
-           */
-          console.log(
-            "OtherSpecial.parseHash: Failed to load " + name + " - " + e
-          );
-        }
-      );
-    };
-
-    /**
-     * @function handleIdChanged
-     */
-    OtherSpecial.prototype.handleIdChanged = function handleIdChanged(
-      name,
-      id
-    ) {
-      this.loadSpecial(
-        name,
-        function onSuccess(special) {
-          special.handleIdChanged(id);
-        },
-        function onFailure(e) {
-          console.log(
-            "OtherSpecial.handleIdChanged: Failed to load " + name + " - " + e
-          );
-        }
-      );
-    };
-
-    /**
-     * @function showPage
-     */
-    OtherSpecial.prototype.show = function show(name, params) {
-      this.loadSpecial(
-        name,
-        function onSuccess(special) {
-          // populate the params a little more
-          params.otherSpecial = this;
-          params.name = name;
-          params.special = special;
-
-          // add anything from scope..
-
-          params.exports = {
-            // All things that should be separate AMD modules..
-            appendLocaleLink: appendLocaleLink,
-            handleDisconnect: handleDisconnect,
-            clickToSelect: cldrSurvey.clickToSelect,
-          };
-
-          special.show(params);
-        },
-        function onFailure(err) {
-          // extended error
-          var loadingChunk;
-          var msg_fmt = cldrText.sub("v_bad_special_msg", {
-            special: name,
-          });
-          params.flipper.flipTo(
-            params.pages.loading,
-            (loadingChunk = cldrSurvey.createChunk(msg_fmt, "p", "errCodeMsg"))
-          );
-          isLoading = false;
-        }
-      );
-    };
-
+    // TODO: no top-level showV initialization here in the middle of functions
+  
     /**
      * instance of otherSpecial manager
      * @property otherSpecial
      */
     var otherSpecial = new OtherSpecial();
+
+    // (back to showV) some setup.
+    // click on the title to copy (permalink)
+    cldrSurvey.clickToSelect(document.getElementById("ariScroller"));
+    cldrSurvey.updateIf(
+      "title-dcontent-link",
+      cldrText.get("defaultContent_titleLink")
+    );
 
     /**
      * Parse the hash string into surveyCurrent___ variables.
@@ -289,7 +162,7 @@ const cldrLoad = (function () {
      *
      * @param {String} id
      */
-    window.parseHash = function parseHash(hash) {
+    function parseHashAndUpdate(hash) {
       function updateWindowTitle() {
         var t = cldrText.get("survey_title");
         const curLocale = cldrStatus.getCurrentLocale();
@@ -394,7 +267,7 @@ const cldrLoad = (function () {
       if (!cldrStatus.getCurrentLocale()) {
         searchRefresh();
       }
-    };
+    }
 
     /**
      * Update hash (and title)
@@ -402,10 +275,8 @@ const cldrLoad = (function () {
      * @param doPush {Boolean} if true, do a push (instead of replace)
      *
      * Called by cldrForum.parseContent, as well as locally.
-     *
-     * TODO: avoid attaching this, or anything, to "window"! Define our own objects instead.
      */
-    window.replaceHash = function replaceHash(doPush) {
+    function replaceHash(doPush) {
       if (!doPush) {
         doPush = false; // by default -replace.
       }
@@ -430,9 +301,10 @@ const cldrLoad = (function () {
       if (newHash != dojoHash()) {
         dojoHash(newHash, !doPush);
       }
-    };
+    }
 
-    window.updateCurrentId = function updateCurrentId(id) {
+	// Compare the similar function updateCurrentId in cldrSurvey.js -- difference: replaceHash
+    function updateCurrentId(id) {
       if (id == null) {
         id = "";
       }
@@ -441,15 +313,7 @@ const cldrLoad = (function () {
         cldrStatus.setCurrentId(id);
         replaceHash(false); // usually don't want to save
       }
-    };
-
-    // (back to showV) some setup.
-    // click on the title to copy (permalink)
-    cldrSurvey.clickToSelect(document.getElementById("ariScroller"));
-    cldrSurvey.updateIf(
-      "title-dcontent-link",
-      cldrText.get("defaultContent_titleLink")
-    );
+    }
 
     // TODO - rewrite using AMD
     /**
@@ -595,7 +459,7 @@ const cldrLoad = (function () {
             console.log(
               "Warning could not load id " + curId + " does not exist"
             );
-            window.updateCurrentId(null);
+            updateCurrentId(null);
           } else if (xtr.proposedcell && xtr.proposedcell.showFn) {
             // TODO: visible? coverage?
             cldrSurvey.showInPop(
@@ -2492,7 +2356,7 @@ const cldrLoad = (function () {
     }
 
     function getInitialMenusEtc(sessionId) {
-      window.parseHash(dojoHash()); // get the initial settings
+      parseHashAndUpdate(dojoHash()); // get the initial settings
       // load the menus - first.
 
       var theLocale = cldrStatus.getCurrentLocale();
@@ -2756,7 +2620,7 @@ const cldrLoad = (function () {
             var oldPage = trimNull(cldrStatus.getCurrentPage());
             var oldId = trimNull(cldrStatus.getCurrentId());
 
-            window.parseHash(changedHash);
+            parseHashAndUpdate(changedHash);
 
             cldrStatus.setCurrentId(trimNull(cldrStatus.getCurrentId()));
 
