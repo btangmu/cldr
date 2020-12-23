@@ -177,7 +177,7 @@ const cldrAjax = (function () {
           }
         } else {
           if (xhrArgs.error) {
-            xhrArgs.error(makeErrorMessage(request, xhrArs.url));
+            xhrArgs.error(makeErrorMessage(request, xhrArgs.url));
           }
         }
       }
