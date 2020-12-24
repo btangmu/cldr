@@ -11,8 +11,7 @@
  * and running in strict mode.
  *
  * Dependencies on external code:
- * window.locmap,
- * listenFor, bootstrap.js, reloadV,
+ * listenFor, bootstrap.js,
  *
  * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts,
  * updateInfoPanelForumPosts, appendForumStuff; also some/all code from forum.js
@@ -354,9 +353,9 @@ const cldrForum = (function () {
         postModal.modal("hide");
         const curSpecial = cldrStatus.getCurrentSpecial();
         if (curSpecial && curSpecial === "forum") {
-          reloadV();
+          cldrLoad.reloadV();
         } else {
-          updateInfoPanelForumPosts(null);
+          cldrSurvey.updateInfoPanelForumPosts(null);
         }
       } else {
         const post = $(".post").first();
@@ -432,6 +431,7 @@ const cldrForum = (function () {
           const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
           topicDiv.appendChild(topicInfo);
           if (post.locale) {
+            const locmap = cldrLoad.getTheLocaleMap();
             const localeLink = forumCreateChunk(
               locmap.getLocaleName(post.locale),
               "a",
@@ -531,6 +531,7 @@ const cldrForum = (function () {
           return;
         }
         listenFor(dateChunk, "click", function (e) {
+          const locmap = cldrLoad.getTheLocaleMap();
           if (
             post.locale &&
             locmap.getLanguage(cldrStatus.getCurrentLocale()) !=
@@ -540,10 +541,10 @@ const cldrForum = (function () {
           }
           cldrStatus.setCurrentPage("");
           cldrStatus.setCurrentId(post.id);
-          replaceHash(false);
+          cldrLoad.replaceHash(false);
           if (cldrStatus.getCurrentSpecial() != "forum") {
             cldrStatus.setCurrentSpecial("forum");
-            reloadV();
+            cldrLoad.reloadV();
           }
           return stStopPropagation(e);
         });
@@ -713,6 +714,8 @@ const cldrForum = (function () {
       "loadingMsg"
     );
     topicInfo.appendChild(loadingMsg);
+
+    const xpathMap = cldrSurvey.getXpathMap();
     xpathMap.get(
       {
         hex: rootPost.xpath,
@@ -883,6 +886,7 @@ const cldrForum = (function () {
       newButton.disabled = true;
     } else if (typeof listenFor !== "undefined") {
       listenFor(newButton, "click", function (e) {
+        const xpathMap = cldrSurvey.getXpathMap();
         xpathMap.get(
           {
             hex: xpstrid,
@@ -1382,7 +1386,7 @@ const cldrForum = (function () {
     cldrStatus.setCurrentSpecial("forum");
     cldrStatus.setCurrentId("");
     cldrStatus.setCurrentPage("");
-    reloadV();
+    cldrLoad.reloadV();
   }
 
   /**

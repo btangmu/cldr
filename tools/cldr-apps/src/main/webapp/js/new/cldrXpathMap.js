@@ -1,4 +1,5 @@
-"use strict";
+// "use strict";
+// TODO: modernize, make strict, possibly a class; though it seems to be used as a singleton?
 
 /**
  * @class XpathMap
@@ -84,6 +85,7 @@ XpathMap.prototype.get = function get(search, onResult) {
     }
     const loadHandler = function (json) {
       if (json.getxpath) {
+        const xpathMap = cldrSurvey.getXpathMap();
         xpathMap.put(json.getxpath); // store back first, then
         onResult({
           search: search,

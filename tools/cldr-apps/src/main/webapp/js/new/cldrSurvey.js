@@ -12,13 +12,124 @@
  */
 
 const cldrSurvey = (function () {
-  const SURVEY_DEBUG = true;
-
   /*
    * INHERITANCE_MARKER indicates that the value of a candidate item is inherited.
    * Compare INHERITANCE_MARKER in CldrUtility.java.
    */
   const INHERITANCE_MARKER = "↑↑↑";
+
+  const xpathMap = new XpathMap(); // TODO: is it really a singleton?
+
+  /**
+   * Is debugging enabled?
+   */
+  const stdebug_enabled = window.location.search.indexOf("&stdebug=") > -1;
+
+  stdebug("stdebug is enabled.");
+
+  let wasBusted = false;
+  let didUnbust = false;
+
+  let loadOnOk = null; // TODO: SurveyMain.java writes scripts that try to reference loadOnOk
+
+  let clickContinue = null; // TODO: SurveyMain.java writes scripts that try to reference clickContinue
+
+  let surveyNextLocaleStamp = 0;
+  let surveyNextLocaleStampId = "";
+
+  // hashtable of items already verified
+  let alreadyVerifyValue = {};
+
+  let showers = {};
+
+  let progressWord = null;
+  let ajaxWord = null;
+  let specialHeader = null; // TODO: supposed to be same as specialHeader in cldrStatus.js, or not?
+
+  let saidDisconnect = false;
+
+  let updateParts = null;
+
+  let cacheKillStamp = null;
+
+  const gPopStatus = {
+    unShow: null,
+    lastShown: null,
+    lastTr: null,
+    popToken: 0,
+  };
+
+  /**
+   * Table mapping CheckCLDR.StatusAction into capabilities
+   * @property statusActionTable
+   */
+  var statusActionTable = {
+    ALLOW: {
+      vote: true,
+      ticket: false,
+      change: true,
+    },
+    ALLOW_VOTING_AND_TICKET: {
+      vote: true,
+      ticket: true,
+      change: false,
+    },
+    ALLOW_VOTING_BUT_NO_ADD: {
+      vote: true,
+      ticket: false,
+      change: false,
+    },
+    ALLOW_TICKET_ONLY: {
+      vote: false,
+      ticket: true,
+      change: true,
+    },
+    DEFAULT: {
+      vote: false,
+      ticket: false,
+      change: false,
+    },
+  };
+
+  /**
+   * Timeout for showing sideways view
+   */
+  let sidewaysShowTimeout = -1;
+
+  /**
+   *  Array storing all only-1 sublocale
+   */
+  var oneLocales = [];
+
+  /**
+   * How often to fetch updates. Default 15s.
+   * Used only for delay in calling updateStatus.
+   * May (theoretically, if it were visible) be changed by js written by SurveyMain.showOfflinePage, etc.
+   * @property timerSpeed
+   */
+  let timerSpeed = 15000; // 15 seconds
+
+  let unShow = null;
+
+  let hideInterval = null;
+
+  let surveyLevels = null;
+
+  let surveyOrgCov = null;
+
+  let surveyUserCov = null;
+
+  let overridedir = null;
+
+  /************************/
+
+  function getDidUnbust() {
+    return didUnbust;
+  }
+
+  function getXpathMap() {
+    return xpathMap;
+  }
 
   /**
    * Is the given string for a report, that is, does it start with "r_"?
@@ -103,8 +214,6 @@ const cldrSurvey = (function () {
     }
   }
 
-  var xpathMap = new XpathMap();
-
   /**
    * Is the keyboard or input widget 'busy'? i.e., it's a bad time to change the DOM
    *
@@ -156,14 +265,6 @@ const cldrSurvey = (function () {
     }
     return chunk;
   }
-
-  /**
-   * Uppercase the first letter of a sentence
-   * @return {String} string with first letter uppercase
-   */
-  String.prototype.ucFirst = function () {
-    return this.charAt(0).toUpperCase() + this.slice(1);
-  };
 
   /**
    * Create a 'link' that goes to a function. By default it's an 'a', but could be a button, etc.
@@ -258,20 +359,11 @@ const cldrSurvey = (function () {
     }
   }
 
-  /**
-   * Is debugging enabled?
-   *
-   * @property stdebug_enabled
-   */
-  var stdebug_enabled = window.location.search.indexOf("&stdebug=") > -1;
-
   function stdebug(x) {
     if (stdebug_enabled) {
       console.log(x);
     }
   }
-
-  stdebug("stdebug is enabled.");
 
   /**
    * Update the item, if it exists
@@ -359,13 +451,6 @@ const cldrSurvey = (function () {
     return obj;
   }
 
-  var wasBusted = false;
-  var wasOk = false;
-  var loadOnOk = null;
-  var clickContinue = null;
-  var surveyNextLocaleStamp = 0;
-  var surveyNextLocaleStampId = "";
-
   /**
    * Mark the page as busted. Don't do any more requests.
    */
@@ -374,8 +459,6 @@ const cldrSurvey = (function () {
     stdebug("disconnected.");
     addClass(document.getElementsByTagName("body")[0], "disconnected");
   }
-
-  var didUnbust = false;
 
   function unbust() {
     didUnbust = true;
@@ -390,11 +473,6 @@ const cldrSurvey = (function () {
     saidDisconnect = false;
     updateStatus(); // will restart regular status updates
   }
-
-  // hashtable of items already verified
-  var alreadyVerifyValue = {};
-
-  var showers = {};
 
   /**
    * Process that the locale has changed under us.
@@ -437,9 +515,6 @@ const cldrSurvey = (function () {
     stdebug("Reloaded due to change: " + stamp);
     surveyNextLocaleStamp = stamp;
   }
-  var progressWord = null;
-  var ajaxWord = null;
-  var specialHeader = null;
 
   /**
    * Update the 'status' if need be.
@@ -491,31 +566,6 @@ const cldrSurvey = (function () {
   function updateAjaxWord(ajax) {
     ajaxWord = ajax;
     showWord();
-  }
-
-  var saidDisconnect = false;
-
-  /**
-   * @param why
-   * @param json
-   * @param word
-   * @param oneword
-   * @param p
-   */
-  function showARIDialog(why, json, word, oneword, p) {
-    console.log("Can't recover, not in /v or not loaded yet.");
-    // has not been loaded yet.
-  }
-
-  /**
-   * @param why
-   * @param json
-   * @param word
-   * @param oneword
-   * @param p
-   */
-  function ariRetry() {
-    window.location.reload(true);
   }
 
   /**
@@ -594,9 +644,50 @@ const cldrSurvey = (function () {
     }
   }
 
-  var updateParts = null;
+  function showARIDialog(why, json, word, oneword, p, what) {
+    console.log("showARIDialog");
+    p.parentNode.removeChild(p);
 
-  var cacheKillStamp = null;
+    if (cldrSurvey.didUnbust()) {
+      why = why + "\n\n" + cldrText.get("ari_force_reload");
+    }
+
+    // setup with why
+    var ari_message;
+
+    if (json && json.session_err) {
+      ari_message = cldrText.get("ari_sessiondisconnect_message");
+    } else {
+      ari_message = cldrText.get("ari_message");
+    }
+
+    var ari_submessage = formatErrMsg(json, what);
+
+    cldrSurvey.updateIf("ariMessage", ari_message.replace(/\n/g, "<br>"));
+    cldrSurvey.updateIf("ariSubMessage", ari_submessage.replace(/\n/g, "<br>"));
+    cldrSurvey.updateIf(
+      "ariScroller",
+      window.location + "<br>" + why.replace(/\n/g, "<br>")
+    );
+    hideOverlayAndSidebar(); // in redesign.js!
+
+    if (!ariDialog) {
+      console.log("Error: no ariDialog in showARIDialog 1");
+    } else {
+      ariDialog.show();
+    }
+
+    var oneword = document.getElementById("progress_oneword");
+    oneword.onclick = function () {
+      if (cldrStatus.isDisconnected()) {
+        if (!ariDialog) {
+          console.log("Error: no ariDialog in showARIDialog 2 onclick");
+        } else {
+          ariDialog.show();
+        }
+      }
+    };
+  }
 
   /**
    * Return a string to be used with a URL to avoid caching. Ignored by the server.
@@ -635,8 +726,6 @@ const cldrSurvey = (function () {
       });
     } catch (e) {}
   }
-
-  var lastJsonStatus = null;
 
   /*
    * TODO: formatErrMsg is called only in CldrSurveyVettingLoader.js, so move it there
@@ -720,7 +809,6 @@ const cldrSurvey = (function () {
     }
 
     if (json.status) {
-      lastJsonStatus = json.status;
       cldrStatus.updateAll(json.status);
       cldrGui.updateWithStatus();
       if (!updateParts) {
@@ -771,12 +859,6 @@ const cldrSurvey = (function () {
         return "<b style='font-size: x-large; color: red;'>" + txt + "</b>";
       }
 
-      if (window.kickMe) {
-        json.millisTillKick = 0;
-      } else if (window.kickMeSoon) {
-        json.millisTillKick = 5000;
-      }
-
       const surveyUser = cldrStatus.getSurveyUser();
       if (
         surveyUser !== null &&
@@ -816,14 +898,6 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * How often to fetch updates. Default 15s.
-   * Used only for delay in calling updateStatus.
-   * May be changed by resetTimerSpeed -- but resetTimerSpeed is NEVER called
-   * @property timerSpeed
-   */
-  var timerSpeed = 15000; // 15 seconds
-
-  /**
    * This is called periodically to fetch latest ST status
    */
   function updateStatus() {
@@ -831,7 +905,6 @@ const cldrSurvey = (function () {
       stdebug("Not updating status - disconnected.");
       return;
     }
-
     var surveyLocaleUrl = "";
     var surveySessionUrl = "";
     const curLocale = cldrStatus.getCurrentLocale();
@@ -959,38 +1032,6 @@ const cldrSurvey = (function () {
       },
     });
   }
-
-  /**
-   * Table mapping CheckCLDR.StatusAction into capabilities
-   * @property statusActionTable
-   */
-  var statusActionTable = {
-    ALLOW: {
-      vote: true,
-      ticket: false,
-      change: true,
-    },
-    ALLOW_VOTING_AND_TICKET: {
-      vote: true,
-      ticket: true,
-      change: false,
-    },
-    ALLOW_VOTING_BUT_NO_ADD: {
-      vote: true,
-      ticket: false,
-      change: false,
-    },
-    ALLOW_TICKET_ONLY: {
-      vote: false,
-      ticket: true,
-      change: true,
-    },
-    DEFAULT: {
-      vote: false,
-      ticket: false,
-      change: false,
-    },
-  };
 
   /**
    * Parse a CheckCLDR.StatusAction and return the capabilities table
@@ -1227,13 +1268,6 @@ const cldrSurvey = (function () {
     return star;
   }
 
-  var gPopStatus = {
-    unShow: null,
-    lastShown: null,
-    lastTr: null,
-    popToken: 0,
-  };
-
   /**
    * This is the actual function is called to display the right-hand "info" panel.
    *
@@ -1270,25 +1304,6 @@ const cldrSurvey = (function () {
     return theFn;
   }
 
-  function getPopToken() {
-    return gPopStatus.popToken;
-  }
-
-  function incrPopToken(x) {
-    ++gPopStatus.popToken;
-    return gPopStatus.popToken;
-  }
-
-  /**
-   * Timeout for showing sideways view
-   */
-  var sidewaysShowTimeout = -1;
-
-  /**
-   *  Array storing all only-1 sublocale
-   */
-  var oneLocales = [];
-
   /**
    * Called when showing the popup each time
    *
@@ -1313,6 +1328,7 @@ const cldrSurvey = (function () {
 
       function clearMyTimeout() {
         if (sidewaysShowTimeout != -1) {
+          // https://www.w3schools.com/jsref/met_win_clearinterval.asp
           window.clearInterval(sidewaysShowTimeout);
           sidewaysShowTimeout = -1;
         }
@@ -1331,7 +1347,7 @@ const cldrSurvey = (function () {
           "&xpath=" +
           tr.theRow.xpstrid +
           cacheKill();
-        myLoad(url, "sidewaysView", function (json) {
+        cldrLoad.myLoad(url, "sidewaysView", function (json) {
           /*
            * Count the number of unique locales in json.others and json.novalue.
            */
@@ -1352,6 +1368,7 @@ const cldrSurvey = (function () {
               updateIf(sidewaysControl, ""); // remove string
 
               var topLocale = json.topLocale;
+              const locmap = cldrLoad.getTheLocaleMap();
               var curLocale = locmap.getRegionAndOrVariantName(topLocale);
               var readLocale = null;
 
@@ -1496,6 +1513,8 @@ const cldrSurvey = (function () {
       }, 2000); // wait 2 seconds before loading this.
     }
 
+    // Still deep inside the very long function showForumStuff...
+
     if (tr.theRow) {
       const theRow = tr.theRow;
       const couldFlag =
@@ -1514,7 +1533,7 @@ const cldrSurvey = (function () {
       );
     }
 
-    var loader2 = createChunk(cldrText.get("loading"), "i");
+    let loader2 = createChunk(cldrText.get("loading"), "i");
     frag.appendChild(loader2);
 
     /**
@@ -1546,9 +1565,10 @@ const cldrSurvey = (function () {
       listenFor(showButton, "mouseover", theListen);
     }
 
+    // still in the very long function showForumStuff...
     // lazy load post count!
     // load async
-    var ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill();
+    let ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill();
     window.setTimeout(function () {
       var xhrArgs = {
         url: ourUrl,
@@ -1580,7 +1600,7 @@ const cldrSurvey = (function () {
       }
       return null;
     }
-  }
+  } // end of the very long function showForumStuff
 
   /**
    * Update the forum posts in the Info Panel
@@ -1691,6 +1711,7 @@ const cldrSurvey = (function () {
     cldrForum.setUserCanPost(tr.theTable.json.canModify);
 
     removeAllChildNodes(forumDiv); // we may be updating.
+    const locmap = cldrLoad.getTheLocaleMap();
     var theForum = locmap.getLanguage(cldrStatus.getCurrentLocale());
     forumDiv.replyStub =
       cldrStatus.getContextPath() +
@@ -1703,8 +1724,8 @@ const cldrSurvey = (function () {
     /*
      * Note: SurveyAjax requires a "what" parameter for SurveyAjax.
      * It is not supplied here, but may be added later with code such as:
-     *	var ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill() ;
-     *	var ourUrl = tr.forumDiv.url + "&what=forum_fetch";
+     *	let ourUrl = tr.forumDiv.url + "&what=forum_count" + cacheKill() ;
+     *	let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
      * Unfortunately that means "what" is not the first argument, as it would
      * be ideally for human readability of request urls.
      */
@@ -1726,8 +1747,10 @@ const cldrSurvey = (function () {
    * Change the current id
    *
    * @param id the id to set
+   *
+   * Compare the similar function updateCurrentId in cldrForum.js
    */
-  window.updateCurrentId = function updateCurrentId(id) {
+  function updateCurrentId(id) {
     if (id == null) {
       id = "";
     }
@@ -1735,197 +1758,196 @@ const cldrSurvey = (function () {
       // don't set if already set.
       cldrStatus.setCurrentId(id);
     }
-  };
+  }
 
-  // window loader stuff
-  $(function () {
-    var unShow = null;
+  function parentOfType(tag, obj) {
+    if (!obj) {
+      return null;
+    }
+    if (obj.nodeName === tag) {
+      return obj;
+    }
+    return parentOfType(tag, obj.parentElement);
+  }
+
+  function setLastShown(obj) {
+    if (gPopStatus.lastShown && obj != gPopStatus.lastShown) {
+      removeClass(gPopStatus.lastShown, "pu-select");
+      var partr = parentOfType("TR", gPopStatus.lastShown);
+      if (partr) {
+        removeClass(partr, "selectShow");
+      }
+    }
+    if (obj) {
+      addClass(obj, "pu-select");
+      var partr = parentOfType("TR", obj);
+      if (partr) {
+        addClass(partr, "selectShow");
+      }
+    }
+    gPopStatus.lastShown = obj;
+  }
+
+  function clearLastShown() {
+    setLastShown(null);
+  }
+
+  /**
+   * This is the actual function called to display the right-hand "info" panel.
+   *
+   * @param {String} str the string to show at the top
+   * @param {Node} tr the <TR> of the row
+   * @param {Boolean} hideIfLast
+   * @param {Function} fn
+   * @param {Boolean} immediate
+   * @returns {Node} a reference to the right hand panel, if not in Dashboard mode
+   */
+  function showInPop2(str, tr, hideIfLast, fn, immediate, hide) {
+    if (unShow) {
+      unShow();
+      unShow = null;
+    }
+    ++gPopStatus.popToken;
+    if (hideInterval) {
+      clearTimeout(hideInterval);
+      hideInterval = null;
+    }
+
+    if (tr && tr.sethash) {
+      updateCurrentId(tr.sethash);
+    }
+    setLastShown(hideIfLast);
+
+    /*
+     * This is the temporary fragment used for the
+     * "info panel" contents.
+     */
+    var fragment = document.createDocumentFragment();
+
+    if (tr && tr.theRow) {
+      const { theRow } = tr;
+      const { helpHtml, rdf } = theRow;
+      if (helpHtml || rdf) {
+        cldrDeferHelp.addDeferredHelpTo(fragment, helpHtml, rdf);
+      }
+      // extra attributes
+      if (
+        theRow.extraAttributes &&
+        Object.keys(theRow.extraAttributes).length > 0
+      ) {
+        var extraHeading = createChunk(
+          cldrText.get("extraAttribute_heading"),
+          "h3",
+          "extraAttribute_heading"
+        );
+        var extraContainer = createChunk("", "div", "extraAttributes");
+        appendExtraAttributes(extraContainer, theRow);
+        theHelp.appendChild(extraHeading);
+        theHelp.appendChild(extraContainer);
+      }
+    }
+
+    if (isDashboard()) {
+      fixPopoverVotePos();
+    }
+
+    if (str) {
+      // If a simple string, clone the string
+      var div2 = document.createElement("div");
+      div2.innerHTML = str;
+      fragment.appendChild(div2);
+    }
+    // If a generator fn (common case), call it.
+    if (fn != null) {
+      unShow = fn(fragment);
+    }
+
+    var theVoteinfo = null;
+    if (tr && tr.voteDiv) {
+      theVoteinfo = tr.voteDiv;
+    }
+    if (theVoteinfo) {
+      fragment.appendChild(theVoteinfo.cloneNode(true));
+    }
+    if (tr && tr.ticketLink) {
+      fragment.appendChild(tr.ticketLink.cloneNode(true));
+    }
+
+    // forum stuff
+    if (tr && tr.forumDiv) {
+      /*
+       * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
+       * TODO: explain the reason for using cloneNode here, rather than using
+       * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
+       * after cloning?
+       */
+      var forumDivClone = tr.forumDiv.cloneNode(true);
+      showForumStuff(fragment, forumDivClone, tr); // give a chance to update anything else
+      fragment.appendChild(forumDivClone);
+    }
+
+    if (tr && tr.theRow && tr.theRow.xpath) {
+      fragment.appendChild(
+        clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath"))
+      );
+    }
     var pucontent = document.getElementById("itemInfo");
     if (!pucontent) {
+      console.log("itemInfo not found in showInPop2!");
       return;
     }
 
-    var hideInterval = null;
-
-    function parentOfType(tag, obj) {
-      if (!obj) return null;
-      if (obj.nodeName === tag) return obj;
-      return parentOfType(tag, obj.parentElement);
-    }
-
-    function setLastShown(obj) {
-      if (gPopStatus.lastShown && obj != gPopStatus.lastShown) {
-        removeClass(gPopStatus.lastShown, "pu-select");
-        var partr = parentOfType("TR", gPopStatus.lastShown);
-        if (partr) {
-          removeClass(partr, "selectShow");
-        }
-      }
-      if (obj) {
-        addClass(obj, "pu-select");
-        var partr = parentOfType("TR", obj);
-        if (partr) {
-          addClass(partr, "selectShow");
-        }
-      }
-      gPopStatus.lastShown = obj;
-    }
-
-    function clearLastShown() {
-      setLastShown(null);
-    }
-
-    /**
-     * This is the actual function called to display the right-hand "info" panel.
-     *
-     * @param {String} str the string to show at the top
-     * @param {Node} tr the <TR> of the row
-     * @param {Boolean} hideIfLast
-     * @param {Function} fn
-     * @param {Boolean} immediate
-     * @returns {Node} a reference to the right hand panel, if not in Dashboard mode
-     */
-    function showInPop2(str, tr, hideIfLast, fn, immediate, hide) {
-      if (unShow) {
-        unShow();
-        unShow = null;
-      }
-      incrPopToken("newShow" + str);
-      if (hideInterval) {
-        clearTimeout(hideInterval);
-        hideInterval = null;
-      }
-
-      if (tr && tr.sethash) {
-        window.updateCurrentId(tr.sethash);
-      }
-      setLastShown(hideIfLast);
-
-      /*
-       * This is the temporary fragment used for the
-       * "info panel" contents.
-       */
-      var fragment = document.createDocumentFragment();
-
-      if (tr && tr.theRow) {
-        const { theRow } = tr;
-        const { helpHtml, rdf } = theRow;
-        if (helpHtml || rdf) {
-          cldrDeferHelp.addDeferredHelpTo(fragment, helpHtml, rdf);
-        }
-        // extra attributes
-        if (
-          theRow.extraAttributes &&
-          Object.keys(theRow.extraAttributes).length > 0
-        ) {
-          var extraHeading = createChunk(
-            cldrText.get("extraAttribute_heading"),
-            "h3",
-            "extraAttribute_heading"
-          );
-          var extraContainer = createChunk("", "div", "extraAttributes");
-          appendExtraAttributes(extraContainer, theRow);
-          theHelp.appendChild(extraHeading);
-          theHelp.appendChild(extraContainer);
-        }
-      }
-
+    // Now, copy or append the 'fragment' to the
+    // appropriate spot. This depends on how we were called.
+    if (tr) {
       if (isDashboard()) {
-        fixPopoverVotePos();
-      }
-
-      if (str) {
-        // If a simple string, clone the string
-        var div2 = document.createElement("div");
-        div2.innerHTML = str;
-        fragment.appendChild(div2);
-      }
-      // If a generator fn (common case), call it.
-      if (fn != null) {
-        unShow = fn(fragment);
-      }
-
-      var theVoteinfo = null;
-      if (tr && tr.voteDiv) {
-        theVoteinfo = tr.voteDiv;
-      }
-      if (theVoteinfo) {
-        fragment.appendChild(theVoteinfo.cloneNode(true));
-      }
-      if (tr && tr.ticketLink) {
-        fragment.appendChild(tr.ticketLink.cloneNode(true));
-      }
-
-      // forum stuff
-      if (tr && tr.forumDiv) {
-        /*
-         * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
-         * TODO: explain the reason for using cloneNode here, rather than using
-         * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
-         * after cloning?
-         */
-        var forumDivClone = tr.forumDiv.cloneNode(true);
-        showForumStuff(fragment, forumDivClone, tr); // give a chance to update anything else
-        fragment.appendChild(forumDivClone);
-      }
-
-      if (tr && tr.theRow && tr.theRow.xpath) {
-        fragment.appendChild(
-          clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath"))
-        );
-      }
-
-      // Now, copy or append the 'fragment' to the
-      // appropriate spot. This depends on how we were called.
-      if (tr) {
-        if (isDashboard()) {
-          showHelpFixPanel(fragment);
-        } else {
-          removeAllChildNodes(pucontent);
-          pucontent.appendChild(fragment);
-        }
+        showHelpFixPanel(fragment);
       } else {
-        if (!isDashboard()) {
-          // show, for example, dataPageInitialGuidance in Info Panel
-          var clone = fragment.cloneNode(true);
-          removeAllChildNodes(pucontent);
-          pucontent.appendChild(clone);
-        }
+        removeAllChildNodes(pucontent);
+        pucontent.appendChild(fragment);
       }
-      fragment = null;
+    } else {
+      if (!isDashboard()) {
+        // show, for example, dataPageInitialGuidance in Info Panel
+        var clone = fragment.cloneNode(true);
+        removeAllChildNodes(pucontent);
+        pucontent.appendChild(clone);
+      }
+    }
+    fragment = null;
 
-      // for the voter
-      $(".voteInfo_voterInfo").hover(
-        function () {
-          var email = $(this).data("email").replace(" (at) ", "@");
-          if (email !== "") {
-            $(this).html(
-              '<a href="mailto:' +
-                email +
-                '" title="' +
-                email +
-                '" style="color:black"><span class="glyphicon glyphicon-envelope"></span></a>'
-            );
-            $(this).closest("td").css("text-align", "center");
-            $(this).children("a").tooltip().tooltip("show");
-          } else {
-            $(this).html($(this).data("name"));
-            $(this).closest("td").css("text-align", "left");
-          }
-        },
-        function () {
+    // for the voter
+    $(".voteInfo_voterInfo").hover(
+      function () {
+        var email = $(this).data("email").replace(" (at) ", "@");
+        if (email !== "") {
+          $(this).html(
+            '<a href="mailto:' +
+              email +
+              '" title="' +
+              email +
+              '" style="color:black"><span class="glyphicon glyphicon-envelope"></span></a>'
+          );
+          $(this).closest("td").css("text-align", "center");
+          $(this).children("a").tooltip().tooltip("show");
+        } else {
           $(this).html($(this).data("name"));
           $(this).closest("td").css("text-align", "left");
         }
-      );
-      if (!isDashboard()) {
-        return pucontent;
-      } else {
-        return null;
+      },
+      function () {
+        $(this).html($(this).data("name"));
+        $(this).closest("td").css("text-align", "left");
       }
+    );
+    if (!isDashboard()) {
+      return pucontent;
+    } else {
+      return null;
     }
+  }
 
-    /***
+  /***
     // delay before show
     window.showInPop = function (str, tr, hideIfLast, fn, immediate) {
       if (hideInterval) {
@@ -1938,10 +1960,9 @@ const cldrSurvey = (function () {
     };
     ***/
 
-    window.resetPop = function () {
-      lastShown = null;
-    };
-  });
+  function resetPop() {
+    lastShown = null;
+  }
 
   /**
    * Check if we need LRM/RLM marker to display
@@ -2447,6 +2468,14 @@ const cldrSurvey = (function () {
     }
   }
 
+  function getSurveyLevels() {
+    return surveyLevels;
+  }
+
+  function setSurveyLevels(levs) {
+    return (surveyLevels = levs);
+  }
+
   /**
    * Get numeric, given string
    *
@@ -2455,19 +2484,21 @@ const cldrSurvey = (function () {
    */
   function covValue(lev) {
     lev = lev.toUpperCase();
-    if (window.surveyLevels && window.surveyLevels[lev]) {
-      return parseInt(window.surveyLevels[lev].level);
+    const levs = getSurveyLevels();
+    if (levs && levs[lev]) {
+      return parseInt(levs[lev].level);
     } else {
       return 0;
     }
   }
 
   function covName(lev) {
-    if (!window.surveyLevels) {
+    const levs = getSurveyLevels();
+    if (!levs) {
       return null;
     }
-    for (var k in window.surveyLevels) {
-      if (parseInt(window.surveyLevels[k].level) == lev) {
+    for (var k in levs) {
+      if (parseInt(levs[k].level) == lev) {
         return k.toLowerCase();
       }
     }
@@ -2475,28 +2506,45 @@ const cldrSurvey = (function () {
   }
 
   function effectiveCoverage() {
-    if (!window.surveyOrgCov) {
+    const orgCov = getSurveyOrgCov();
+    if (!orgCov) {
       throw new Error("surveyOrgCov not yet initialized");
     }
-
-    if (surveyUserCov) {
-      return covValue(surveyUserCov);
+    const userCov = getSurveyUserCov();
+    if (userCov) {
+      return covValue(userCov);
     } else {
-      return covValue(surveyOrgCov);
+      return covValue(orgCov);
     }
+  }
+
+  function getSurveyOrgCov() {
+    return surveyOrgCov;
+  }
+
+  function setSurveyOrgCov(cov) {
+    surveyOrgCov = cov;
+  }
+
+  function getSurveyUserCov() {
+    return surveyUserCov;
+  }
+
+  function setSurveyUserCov(cov) {
+    surveyUserCov = cov;
   }
 
   function updateCovFromJson(json) {
     if (json.covlev_user && json.covlev_user != "default") {
-      window.surveyUserCov = json.covlev_user;
+      setSurveyUserCov(json.covlev_user);
     } else {
-      window.surveyUserCov = null;
+      setSurveyUserCov(null);
     }
 
     if (json.covlev_org) {
-      window.surveyOrgCov = json.covlev_org;
+      setSurveyOrgCov(json.covlev_org);
     } else {
-      window.surveyOrgCov = null;
+      setSurveyOrgCov(null);
     }
   }
 
@@ -2510,11 +2558,12 @@ const cldrSurvey = (function () {
     if (!theTable.origClass) {
       theTable.origClass = theTable.className;
     }
-    if (window.surveyLevels != null) {
+    const levs = getSurveyLevels();
+    if (levs != null) {
       var effective = effectiveCoverage();
       var newStyle = theTable.origClass;
-      for (var k in window.surveyLevels) {
-        var level = window.surveyLevels[k];
+      for (var k in levs) {
+        var level = levs[k];
 
         if (effective < parseInt(level.level)) {
           newStyle = newStyle + " hideCov" + level.level;
@@ -2524,10 +2573,6 @@ const cldrSurvey = (function () {
         theTable.className = newStyle;
       }
     }
-  }
-
-  function firstword(str) {
-    return str.split(" ")[0];
   }
 
   function appendIcon(toElement, className, title) {
@@ -2623,45 +2668,20 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * Show the surveyCurrentId row
-   */
-  function scrollToItem() {
-    const curId = cldrStatus.getCurrentId();
-    if (curId != null && curId != "") {
-      // TODO
-      console.log("scrollToItem not implemented yet; curId = " + curId);
-      /****
-      require(["dojo/window"], function (win) {
-        var xtr = document.getElementById("r@" + curId);
-        if (xtr != null) {
-          console.log("Scrolling to " + curId);
-          win.scrollIntoView("r@" + curId);
-        }
-      });
-      ***/
-    }
-  }
-
-  /**
-   * copy of menu data
-   * @property _thePages
-   */
-  var _thePages = null;
-
-  window.locmap = new LocaleMap(null);
-
-  /**
-   * @param loc  optional
+   * @param loc optional
    * @returns locale bundle
    */
   function locInfo(loc) {
     if (!loc) {
       loc = cldrStatus.getCurrentLocale();
     }
+    const locmap = cldrLoad.getTheLocaleMap();
     return locmap.getLocaleInfo(loc);
   }
 
-  var overridedir = null;
+  function setOverrideDir(dir) {
+    overridedir = dir;
+  }
 
   function setLang(node, loc) {
     var info = locInfo(loc);
@@ -2690,8 +2710,6 @@ const cldrSurvey = (function () {
    * Called only by addOldvotesType
    */
   function showVoteTable(voteList, type, json) {
-    "use strict";
-
     let translationHintsLanguage = json.TRANS_HINT_LANGUAGE_NAME;
     let dir = json.oldvotes.dir;
     let lastVoteVersion = json.oldvotes.lastVoteVersion;
@@ -2722,7 +2740,6 @@ const cldrSurvey = (function () {
     );
     th.appendChild(tr);
     t.appendChild(th);
-    var oldPath = "";
     var oldSplit = [];
     var mainCategories = [];
     for (var k in voteList) {
@@ -2892,7 +2909,7 @@ const cldrSurvey = (function () {
   function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
     showLoader(tr.theTable.theDiv.loader, cldrText.get("loadingOneRow"));
 
-    var ourUrl =
+    let ourUrl =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=getrow" +
       "&_=" +
@@ -2998,7 +3015,7 @@ const cldrSurvey = (function () {
     updateCurrentId(theRow.xpstrid);
 
     // and scroll
-    showCurrentId();
+    cldrLoad.showCurrentId();
 
     if (tr.myProposal) {
       const otherCell = tr.querySelector(".othercell");
@@ -3027,7 +3044,7 @@ const cldrSurvey = (function () {
       s: tr.theTable.session,
     };
 
-    var ourUrl = cldrStatus.getContextPath() + "/SurveyAjax";
+    let ourUrl = cldrStatus.getContextPath() + "/SurveyAjax";
 
     var voteLevelChanged = document.getElementById("voteLevelChanged");
     if (voteLevelChanged) {
@@ -3176,7 +3193,7 @@ const cldrSurvey = (function () {
       content.appendChild(list);
 
       function loadOrFail(urlAppend, theDiv, loadHandler, postData) {
-        var ourUrl =
+        let ourUrl =
           cldrStatus.getContextPath() +
           "/AdminAjax.jsp?vap=" +
           vap +
@@ -3841,6 +3858,7 @@ const cldrSurvey = (function () {
    */
   function chgPage(shift) {
     // no page, or wrong shift
+    const _thePages = cldrLoad.getThePages();
     if (!_thePages || (shift !== -1 && shift !== 1)) {
       return;
     }
@@ -3899,13 +3917,14 @@ const cldrSurvey = (function () {
    * @return {Array} list of all the menus under this coverage
    */
   function getMenusFilteredByCov() {
+    const _thePages = cldrLoad.getThePages();
     if (!_thePages) {
       return;
     }
     // get name of current coverage
-    var cov = surveyUserCov;
+    var cov = getSurveyUserCov();
     if (!cov) {
-      cov = surveyOrgCov;
+      cov = getSurveyOrgCov();
     }
 
     // get the value
@@ -3964,19 +3983,6 @@ const cldrSurvey = (function () {
     }
   }
 
-  function setStyles() {
-    var hideRegexString = "X1234X";
-    for (var i = 0; i < document.checkboxes.elements.length; i++) {
-      var item = document.checkboxes.elements[i];
-      if (!item.checked) {
-        hideRegexString += "|";
-        hideRegexString += item.name;
-      }
-    }
-    var hideRegex = new RegExp(hideRegexString);
-    changeStyle(hideRegex);
-  }
-
   function createLocLink(loc, locName, className) {
     var cl = createChunk(locName, "a", "localeChunk " + className);
     cl.title = loc;
@@ -3984,11 +3990,12 @@ const cldrSurvey = (function () {
     return cl;
   }
 
+  // called only from myvotes.jsp
   function showAllItems(divName, user) {
     var div = document.getElementById(divName);
     div.className = "recentList";
     div.update = function () {
-      var ourUrl =
+      let ourUrl =
         cldrStatus.getContextPath() + "/SurveyAjax?what=mylocales&user=" + user;
       var errorHandler = function (err) {
         handleDisconnect("Error in showrecent: " + err);
@@ -4067,6 +4074,7 @@ const cldrSurvey = (function () {
     div.update();
   }
 
+  // called from myvotes.jsp and (theoretically) special/statistics.js
   function showRecent(divName, locale, user) {
     if (!locale) {
       locale = "";
@@ -4082,7 +4090,7 @@ const cldrSurvey = (function () {
     }
     div.className = "recentList";
     div.update = function () {
-      var ourUrl =
+      let ourUrl =
         cldrStatus.getContextPath() +
         "/SurveyAjax?what=recent_items&_=" +
         locale +
@@ -4178,12 +4186,12 @@ const cldrSurvey = (function () {
    * @returns
    */
 
-  const dom = null;
+  const dojoDom = null;
   const dojoNumber = null;
 
+  // referenced by js written by SurveyMain.doList()
   function showUserActivity(list, tableRef) {
-    window._userlist = list; // DEBUG
-    var table = dom.byId(tableRef);
+    var table = dojoDom.byId(tableRef);
 
     var rows = [];
     var theadChildren = getTagChildren(
@@ -4195,7 +4203,7 @@ const cldrSurvey = (function () {
 
     for (var k in list) {
       var user = list[k];
-      var tr = dom.byId("u@" + user.id);
+      var tr = dojoDom.byId("u@" + user.id);
 
       rowById[user.id] = parseInt(k); // ?!
 
@@ -4217,8 +4225,6 @@ const cldrSurvey = (function () {
         total: 0,
       });
     }
-
-    window._rrowById = rowById;
 
     var loc2name = {};
     request
@@ -4345,12 +4351,43 @@ const cldrSurvey = (function () {
     showInPop2: showInPop2,
     showLoader: showLoader,
     hideLoader: hideLoader,
+    wireUpButton: wireUpButton,
+    addIcon: addIcon,
+    listenToPop: listenToPop,
+    updateInfoPanelForumPosts: updateInfoPanelForumPosts,
+    appendForumStuff: appendForumStuff,
+    appendItem: appendItem,
+    testsToHtml: testsToHtml,
+    findItemByValue: findItemByValue,
+    appendExample: appendExample,
+    addVitem: addVitem,
+    appendExtraAttributes: appendExtraAttributes,
+    covValue: covValue,
+    covName: covName,
+    effectiveCoverage: effectiveCoverage,
+    updateCovFromJson: updateCovFromJson,
+    updateCoverage: updateCoverage,
+    appendIcon: appendIcon,
+    setOverrideDir: setOverrideDir,
+    setLang: setLang,
+    showVoteTable: showVoteTable,
+    refreshCounterVetting: refreshCounterVetting,
+    chgPage: chgPage,
+    showAllItems: showAllItems,
+    getSurveyLevels: getSurveyLevels,
+    setSurveyLevels: setSurveyLevels,
+    getSurveyOrgCov: getSurveyOrgCov,
+    getXpathMap: getXpathMap,
+    getDidUnbust: getDidUnbust,
+    INHERITANCE_MARKER: INHERITANCE_MARKER,
+    cacheKill: cacheKill,
+    updateStatus: updateStatus,
 
     /*
      * The following are meant to be accessible for unit testing only:
      */
     // test: {
-    // getBodyHtml: getBodyHtml,
+    //   f: f,
     // },
   };
 })();
