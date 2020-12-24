@@ -20,13 +20,6 @@ const cldrSurvey = (function () {
 
   const xpathMap = new XpathMap(); // TODO: is it really a singleton?
 
-  /**
-   * Is debugging enabled?
-   */
-  const stdebug_enabled = window.location.search.indexOf("&stdebug=") > -1;
-
-  stdebug("stdebug is enabled.");
-
   let wasBusted = false;
   let didUnbust = false;
 
@@ -359,12 +352,6 @@ const cldrSurvey = (function () {
     }
   }
 
-  function stdebug(x) {
-    if (stdebug_enabled) {
-      console.log(x);
-    }
-  }
-
   /**
    * Update the item, if it exists
    *
@@ -455,8 +442,7 @@ const cldrSurvey = (function () {
    * Mark the page as busted. Don't do any more requests.
    */
   function busted() {
-    setIsDisconnected(true);
-    stdebug("disconnected.");
+    cldrStatus.setIsDisconnected(true);
     addClass(document.getElementsByTagName("body")[0], "disconnected");
   }
 
@@ -464,7 +450,7 @@ const cldrSurvey = (function () {
     didUnbust = true;
     console.log("Un-busting");
     progressWord = "unbusted";
-    setIsDisconnected(false);
+    cldrStatus.setIsDisconnected(false);
     saidDisconnect = false;
     removeClass(document.getElementsByTagName("body")[0], "disconnected");
     wasBusted = false;
@@ -512,7 +498,6 @@ const cldrSurvey = (function () {
         }
       }
     }
-    stdebug("Reloaded due to change: " + stamp);
     surveyNextLocaleStamp = stamp;
   }
 
@@ -532,7 +517,10 @@ const cldrSurvey = (function () {
       (progressWord && progressWord == "error")
     ) {
       // top priority
-      popupAlert("danger", cldrStatus.stopIcon() + cldrText.get(progressWord));
+      cldrEvent.popupAlert(
+        "danger",
+        cldrStatus.stopIcon() + cldrText.get(progressWord)
+      );
       busted(); // no further processing.
     } else if (ajaxWord) {
       p.className = "progress-ok";
@@ -544,7 +532,7 @@ const cldrSurvey = (function () {
       }
     } else if (progressWord == "startup") {
       p.className = "progress-ok";
-      popupAlert("warning", cldrText.get("online"));
+      cldrEvent.popupAlert("warning", cldrText.get("online"));
     }
   }
 
@@ -638,9 +626,6 @@ const cldrSurvey = (function () {
         p.appendChild(subDiv);
         showARIDialog(why, json, word, oneword, subDiv, what);
       }
-      if (json) {
-        stdebug("JSON: " + json.toString());
-      }
     }
   }
 
@@ -648,7 +633,7 @@ const cldrSurvey = (function () {
     console.log("showARIDialog");
     p.parentNode.removeChild(p);
 
-    if (cldrSurvey.didUnbust()) {
+    if (didUnbust) {
       why = why + "\n\n" + cldrText.get("ari_force_reload");
     }
 
@@ -669,22 +654,14 @@ const cldrSurvey = (function () {
       "ariScroller",
       window.location + "<br>" + why.replace(/\n/g, "<br>")
     );
-    hideOverlayAndSidebar(); // in redesign.js!
+    cldrEvent.hideOverlayAndSidebar();
 
-    if (!ariDialog) {
-      console.log("Error: no ariDialog in showARIDialog 1");
-    } else {
-      ariDialog.show();
-    }
+    cldrLoad.ariDialogShow();
 
     var oneword = document.getElementById("progress_oneword");
     oneword.onclick = function () {
       if (cldrStatus.isDisconnected()) {
-        if (!ariDialog) {
-          console.log("Error: no ariDialog in showARIDialog 2 onclick");
-        } else {
-          ariDialog.show();
-        }
+        ariDialogShow();
       }
     };
   }
@@ -902,7 +879,6 @@ const cldrSurvey = (function () {
    */
   function updateStatus() {
     if (cldrStatus.isDisconnected()) {
-      stdebug("Not updating status - disconnected.");
       return;
     }
     var surveyLocaleUrl = "";
@@ -990,29 +966,9 @@ const cldrSurvey = (function () {
         if (json.localeStamp) {
           if (surveyNextLocaleStamp == 0) {
             surveyNextLocaleStamp = json.localeStamp;
-            stdebug(
-              "STATUS0: " + json.localeStampName + "=" + json.localeStamp
-            );
           } else {
             if (json.localeStamp > surveyNextLocaleStamp) {
-              stdebug(
-                "STATUS=: " +
-                  json.localeStampName +
-                  "=" +
-                  json.localeStamp +
-                  " > " +
-                  surveyNextLocaleStamp
-              );
               handleChangedLocaleStamp(json.localeStamp, json.localeStampName);
-            } else {
-              stdebug(
-                "STATUS=: " +
-                  json.localeStampName +
-                  "=" +
-                  json.localeStamp +
-                  " <= " +
-                  surveyNextLocaleStamp
-              );
             }
           }
         }
@@ -1847,7 +1803,7 @@ const cldrSurvey = (function () {
       }
     }
 
-    if (isDashboard()) {
+    if (cldrStatus.isDashboard()) {
       fixPopoverVotePos();
     }
 
@@ -1900,14 +1856,14 @@ const cldrSurvey = (function () {
     // Now, copy or append the 'fragment' to the
     // appropriate spot. This depends on how we were called.
     if (tr) {
-      if (isDashboard()) {
+      if (cldrStatus.isDashboard()) {
         showHelpFixPanel(fragment);
       } else {
         removeAllChildNodes(pucontent);
         pucontent.appendChild(fragment);
       }
     } else {
-      if (!isDashboard()) {
+      if (!cldrStatus.isDashboard()) {
         // show, for example, dataPageInitialGuidance in Info Panel
         var clone = fragment.cloneNode(true);
         removeAllChildNodes(pucontent);
@@ -1940,7 +1896,7 @@ const cldrSurvey = (function () {
         $(this).closest("td").css("text-align", "left");
       }
     );
-    if (!isDashboard()) {
+    if (!cldrStatus.isDashboard()) {
       return pucontent;
     } else {
       return null;
@@ -2922,7 +2878,7 @@ const cldrSurvey = (function () {
       cldrStatus.getSessionId() +
       "&automatic=t";
 
-    if (isDashboard()) {
+    if (cldrStatus.isDashboard()) {
       ourUrl += "&dashboard=true";
     }
 
@@ -2935,7 +2891,7 @@ const cldrSurvey = (function () {
 
           hideLoader(tr.theTable.theDiv.loader);
           onSuccess(theRow);
-          if (isDashboard()) {
+          if (cldrStatus.isDashboard()) {
             refreshFixPanel(json);
           } else {
             window.showInPop(
@@ -3159,7 +3115,6 @@ const cldrSurvey = (function () {
       myUnDefer();
     };
     if (box) {
-      stdebug("this is a post: " + value);
       ourContent.value = value;
     }
     var xhrArgs = {
@@ -3814,7 +3769,7 @@ const cldrSurvey = (function () {
    * Update the counter on top of the vetting page
    */
   function refreshCounterVetting() {
-    if (cldrStatus.isVisitor() || isDashboard()) {
+    if (cldrStatus.isVisitor() || cldrStatus.isDashboard()) {
       // if the user is a visitor, or this is the Dashboard, don't display the counter information
       $("#nav-page .counter-infos, #nav-page .nav-progress").hide();
       return;
@@ -4331,6 +4286,10 @@ const cldrSurvey = (function () {
       });
   }
 
+  function setShower(id, func) {
+    showers[id] = func;
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
@@ -4382,6 +4341,8 @@ const cldrSurvey = (function () {
     INHERITANCE_MARKER: INHERITANCE_MARKER,
     cacheKill: cacheKill,
     updateStatus: updateStatus,
+    handleDisconnect: handleDisconnect,
+    setShower: setShower,
 
     /*
      * The following are meant to be accessible for unit testing only:

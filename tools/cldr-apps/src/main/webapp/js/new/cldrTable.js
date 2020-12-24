@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * cldrText: encapsulate code related to the main Survey Tool html table,
+ * cldrTable: encapsulate code related to the main Survey Tool html table,
  * whose rows describe xpaths.
  * This is the non-dojo version. For dojo, see CldrDojoTable.js
  *
@@ -69,9 +69,9 @@ const cldrTable = (function () {
       // console.log('🦞🦞🦞 make new table, ' + Object.keys(json.section.rows).length + ' rows');
       theTable = cloneLocalizeAnon(document.getElementById("proto-datatable"));
       /*
-       * Note: isDashboard() is currently never true here; see comments in insertRowsIntoTbody and updateRow
+       * Note: cldrStatus.isDashboard() is currently never true here; see comments in insertRowsIntoTbody and updateRow
        */
-      if (isDashboard()) {
+      if (cldrStatus.isDashboard()) {
         theTable.className += " dashboard";
       } else {
         theTable.className += " vetting-page";
@@ -137,7 +137,7 @@ const cldrTable = (function () {
       theDiv.appendChild(theTable);
     }
     insertRowsIntoTbody(theTable, reuseTable);
-    hideLoader(theDiv.loader);
+    cldrSurvey.hideLoader(theDiv.loader);
   }
 
   /**
@@ -176,7 +176,7 @@ const cldrTable = (function () {
    * Called by insertRows only.
    *
    * This function is not currently used for the Dashboard, only for the main vetting table.
-   * Still we may want to keep the calls to isDashboard for future use. Also note that updateRow,
+   * Still we may want to keep the calls to cldrStatus.isDashboard for future use. Also note that updateRow,
    * which is called from here, IS also used for the Dashboard.
    */
   function insertRowsIntoTbody(theTable, reuseTable) {
@@ -203,7 +203,7 @@ const cldrTable = (function () {
        * There is no partition (section headings) in the Dashboard.
        * Also we don't regenerate the headings if we're re-using an existing table.
        */
-      if (!reuseTable && !isDashboard()) {
+      if (!reuseTable && !cldrStatus.isDashboard()) {
         var newPartition = findPartition(
           partitions,
           partitionList,
@@ -327,8 +327,8 @@ const cldrTable = (function () {
    * IMPORTANT: this function is used for the Dashboard as well as the main Vetting table.
    * Mostly the Dashboard tables are currently created by review.js showReviewPage
    * (invoked through writeVettingViewerOutput);
-   * they're not created here. Nevertheless the calls here to isDashboard() do serve a purpose,
-   * isDashboard() is true here when called by insertFixInfo in review.js. To see this, put
+   * they're not created here. Nevertheless the calls here to cldrStatus.isDashboard() do serve a purpose,
+   * cldrStatus.isDashboard() is true here when called by insertFixInfo in review.js. To see this, put
    * a breakpoint in this function, go to Dashboard, and click on a "Fix" button, whose pop-up
    * window then will include portions of the item's row as well as a version of the Info Panel.
    *
@@ -495,10 +495,10 @@ const cldrTable = (function () {
      * If the user can make changes, add "+" button for adding new candidate item.
      *
      * This code is for Dashboard as well as the basic vetting table.
-     * This block concerns the "other" cell if isDashboard(), otherwise it concerns the "add" cell.
+     * This block concerns the "other" cell if cldrStatus.isDashboard(), otherwise it concerns the "add" cell.
      */
     if (tr.canChange) {
-      if (isDashboard()) {
+      if (cldrStatus.isDashboard()) {
         if (otherCell) {
           otherCell.appendChild(document.createElement("hr"));
           otherCell.appendChild(formAdd);

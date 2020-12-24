@@ -17,7 +17,7 @@ const cldrLoad = (function () {
    * Used for inhibiting $('#left-sidebar').hover in redesign.js.
    * Currently there are only two such dialogs, both for auto-import.
    */
-  let haveDialog = false; // TODO: a getter, to be called from whatever redesign.js becomes
+  let haveDialog = false;
 
   /**
    * copy of menu data
@@ -52,9 +52,8 @@ const cldrLoad = (function () {
 
     // menubuttons.set is called by updateLocaleMenu and updateHashAndMenus
     set: function (x, y) {
-      stdebug("menuset " + x + " = " + y);
       var cnode = document.getElementById(x + "-container");
-      var wnode = dijitRegistry.byId(x);
+      var wnode = pseudoDijitRegistrybyId(x);
       var dnode = document.getElementById(x);
       if (!cnode) {
         cnode = dnode; // for Elements that do their own stunts
@@ -65,9 +64,9 @@ const cldrLoad = (function () {
         } else {
           cldrSurvey.updateIf(x, y); // non widget
         }
-        setDisplayed(cnode, true);
+        cldrSurvey.setDisplayed(cnode, true);
       } else {
-        setDisplayed(cnode, false);
+        cldrSurvey.setDisplayed(cnode, false);
         if (wnode != null) {
           wnode.set("label", "-");
         } else {
@@ -81,17 +80,6 @@ const cldrLoad = (function () {
 
   let flipper = null;
 
-  // https://dojotoolkit.org/reference-guide/1.10/dijit/Dialog.html
-  // Note: "ARI" probably stands for "Abort, Retry, Ignore".
-  const ariDialog = {
-    show: function () {
-      console.log("ariDialog.show not implemented yet!");
-    },
-    hide: function () {
-      console.log("ariDialog.hide not implemented yet!");
-    },
-  };
-
   // TODO: implement things like these without using dojo/dijit
   const dijitDropDownMenu = null;
   const dijitDropDownButton = null;
@@ -99,9 +87,7 @@ const cldrLoad = (function () {
   const dijitMenuItem = null;
   const dijitButton = null;
   const dijitDialog = null;
-  const dijitRegistry = null;
   const dojoxBusyButton = null;
-  const dojoTopic = null;
 
   /**************************/
 
@@ -191,8 +177,8 @@ const cldrLoad = (function () {
         //tooltip locale
         $("a.locName").tooltip();
 
-        filterAllLocale();
-        //end of adding the locale data
+        cldrEvent.filterAllLocale();
+        // end of adding the locale data
 
         cldrSurvey.updateCovFromJson(json);
         // setup coverage level
@@ -262,10 +248,15 @@ const cldrLoad = (function () {
         reloadV();
 
         // watch for hashchange to make other changes..
-        dojoTopic.subscribe("/dojo/hashchange", doHashChange);
+        pseudoDojoTopicSubscribe("/dojo/hashchange", doHashChange);
       }
     });
   } // end getInitialMenusEtc
+
+  function pseudoDojoTopicSubscribe(a, b) {
+    // TODO: implement a replacement for https://dojotoolkit.org/reference-guide/1.10/dojo/topic.html
+    console.log("pseudoDojoTopicSubscribe is not implemented yet");
+  }
 
   function patternCoverageClick(event) {
     event.stopPropagation();
@@ -297,7 +288,7 @@ const cldrLoad = (function () {
           if (!verifyJson(json, "pref")) {
             return;
           } else {
-            unpackMenuSideBar(json); // in redesign.js!
+            cldrEvent.unpackMenuSideBar(json);
             if (
               cldrStatus.getCurrentSpecial() &&
               cldrSurvey.isReport(cldrStatus.getCurrentSpecial())
@@ -314,7 +305,7 @@ const cldrLoad = (function () {
     updateHashAndMenus(false); // TODO: why? Maybe to show an item?
     $("#coverage-info").text(ucFirst(newValue));
     $(this).parents(".dropdown-menu").dropdown("toggle");
-    if (!isDashboard()) {
+    if (!cldrStatus.cldrStatus.isDashboard()) {
       cldrSurvey.refreshCounterVetting();
     }
     return false;
@@ -458,7 +449,7 @@ const cldrLoad = (function () {
 
     // if there is no locale id, refresh the search.
     if (!cldrStatus.getCurrentLocale()) {
-      searchRefresh(); // in redesign.js!
+      cldrEvent.searchRefresh();
     }
   }
 
@@ -535,7 +526,7 @@ const cldrLoad = (function () {
   function verifyJson(json, subkey) {
     if (!json) {
       console.log("!json");
-      showLoader(
+      cldrSurvey.cldrSurvey.showLoader(
         null,
         "Error while  loading " +
           subkey +
@@ -562,7 +553,7 @@ const cldrLoad = (function () {
       return false;
     } else if (json.err) {
       console.log("json.err!" + json.err);
-      showLoader(
+      cldrSurvey.showLoader(
         null,
         "Error while  loading " +
           subkey +
@@ -570,11 +561,11 @@ const cldrLoad = (function () {
           json.err +
           "</div>"
       );
-      handleDisconnect("while loading " + subkey + "", json);
+      cldrSurvey.handleDisconnect("while loading " + subkey + "", json);
       return false;
     } else if (!json[subkey]) {
       console.log("!json.oldvotes");
-      showLoader(
+      cldrSurvey.showLoader(
         null,
         "Error while  loading " +
           subkey +
@@ -582,7 +573,7 @@ const cldrLoad = (function () {
           "no data" +
           "</div>"
       );
-      handleDisconnect("while loading- no " + subkey + "", json);
+      cldrSurvey.handleDisconnect("while loading- no " + subkey + "", json);
       return false;
     } else {
       return true;
@@ -591,7 +582,11 @@ const cldrLoad = (function () {
 
   function showCurrentId() {
     const curSpecial = cldrStatus.getCurrentSpecial();
-    if (curSpecial && curSpecial != "" && !isDashboard()) {
+    if (
+      curSpecial &&
+      curSpecial != "" &&
+      !cldrStatus.cldrStatus.isDashboard()
+    ) {
       otherSpecial.handleIdChanged(curSpecial, showCurrentId);
     } else {
       const curId = cldrStatus.getCurrentId();
@@ -610,7 +605,7 @@ const cldrLoad = (function () {
             true
           );
           console.log("Changed to " + cldrStatus.getCurrentId());
-          if (!isDashboard()) {
+          if (!cldrStatus.isDashboard()) {
             scrollToItem();
           }
         } else {
@@ -647,15 +642,6 @@ const cldrLoad = (function () {
       });
       ***/
     }
-  }
-
-  function ariRetry() {
-    if (!ariDialog) {
-      console.log("Error: no ariDialog in ariRetry");
-    } else {
-      ariDialog.hide();
-    }
-    window.location.reload(true);
   }
 
   function updateCoverageMenuTitle() {
@@ -804,7 +790,6 @@ const cldrLoad = (function () {
       cldrSurvey.cacheKill();
     myLoad(url, "possibleProblems", function (json) {
       if (verifyJson(json, "possibleProblems")) {
-        stdebug("json.possibleProblems OK..");
         if (json.dataLoadTime) {
           cldrSurvey.updateIf("dynload", json.dataLoadTime);
         }
@@ -833,7 +818,7 @@ const cldrLoad = (function () {
         var theInfo = cldrSurvey.createChunk("", "p", "special_general");
         theDiv.appendChild(theInfo);
         theInfo.innerHTML = cldrText.get("special_general"); // TODO replace with … ?
-        hideLoader(null);
+        cldrSurvey.hideLoader(null);
       }
     });
   }
@@ -856,18 +841,12 @@ const cldrLoad = (function () {
      */
     window.scrollTo(0, 0);
 
-    showers[flipper.get(pages.data).id] = function () {
-      console.log(
-        "reloadV()'s shower - ignoring reload request, we are in the middle of a load!"
-      );
-    };
+    const id = flipper.get(pages.data).id;
+    cldrSurvey.setShower(id, ignoreReloadRequest);
 
     // assume parseHash was already called, if we are taking input from the hash
-    if (!ariDialog) {
-      console.log("Error: no ariDialog in window.reloadV");
-    } else {
-      ariDialog.hide();
-    }
+
+    ariDialogHide();
 
     updateHashAndMenus(true);
 
@@ -940,10 +919,17 @@ const cldrLoad = (function () {
     // set up the "show-er" function so that if this locale gets reloaded,
     // the page will load again - except for the dashboard, where only the
     // row get updated
-    if (!isDashboard()) {
-      showers[flipper.get(pages.data).id] = shower;
+    if (!cldrStatus.isDashboard()) {
+      const id2 = flipper.get(pages.data).id;
+      cldrSurvey.setShower(id2, shower);
     }
   } // end reloadV -- the world's longest function?
+
+  function ignoreReloadRequest() {
+    console.log(
+      "reloadV()'s shower - ignoring reload request, we are in the middle of a load!"
+    );
+  }
 
   // now, load. Use a show-er function for indirection.
   function shower(itemLoadInfo) {
@@ -963,7 +949,7 @@ const cldrLoad = (function () {
       }
     }
 
-    showLoader(null, cldrText.get("loading"));
+    cldrSurvey.showLoader(null, cldrText.get("loading"));
 
     const curSpecial = cldrStatus.getCurrentSpecial();
     const curLocale = cldrStatus.getCurrentLocale();
@@ -1012,7 +998,7 @@ const cldrLoad = (function () {
         infoChunk.innerHTML = infoHtml;
         frag.appendChild(infoChunk);
         flipper.flipTo(pages.other, frag);
-        hideLoader(null);
+        cldrSurvey.hideLoader(null);
         isLoading = false;
       } else if (!cldrSurvey.isInputBusy()) {
         /*
@@ -1042,7 +1028,7 @@ const cldrLoad = (function () {
         $("#nav-page").show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
         myLoad(url, "section", function (json) {
           isLoading = false;
-          showLoader(theDiv.loader, cldrText.get("loading2"));
+          cldrSurvey.showLoader(theDiv.loader, cldrText.get("loading2"));
           if (!verifyJson(json, "section")) {
             return;
           } else if (json.section.nocontent) {
@@ -1052,20 +1038,19 @@ const cldrLoad = (function () {
             } else {
               cldrStatus.setCurrentPage("");
             }
-            showLoader(null);
+            cldrSurvey.showLoader(null);
             updateHashAndMenus(); // find out why there's no content. (locmap)
           } else if (!json.section.rows) {
             console.log("!json.section.rows");
-            showLoader(
+            cldrSurvey.showLoader(
               theDiv.loader,
               "Error while  loading: <br><div style='border: 1px solid red;'>" +
                 "no rows" +
                 "</div>"
             );
-            handleDisconnect("while loading- no rows", json);
+            cldrSurvey.handleDisconnect("while loading- no rows", json);
           } else {
-            stdebug("json.section.rows OK..");
-            showLoader(theDiv.loader, "loading..");
+            cldrSurvey.showLoader(theDiv.loader, "loading..");
             if (json.dataLoadTime) {
               cldrSurvey.updateIf("dynload", json.dataLoadTime);
             }
@@ -1099,7 +1084,7 @@ const cldrLoad = (function () {
               ); /* show the box the first time */
             }
             if (!cldrSurvey.isInputBusy()) {
-              showLoader(theDiv.loader, cldrText.get("loading3"));
+              cldrSurvey.showLoader(theDiv.loader, cldrText.get("loading3"));
               cldrTable.insertRows(
                 theDiv,
                 json.pageId,
@@ -1127,11 +1112,11 @@ const cldrLoad = (function () {
         cldrSurvey.cacheKill();
       myLoad(url, "(loading oldvotes " + curLocale + ")", function (json) {
         isLoading = false;
-        showLoader(null, cldrText.get("loading2"));
+        cldrSurvey.showLoader(null, cldrText.get("loading2"));
         if (!verifyJson(json, "oldvotes")) {
           return;
         } else {
-          showLoader(null, "loading..");
+          cldrSurvey.showLoader(null, "loading..");
           if (json.dataLoadTime) {
             cldrSurvey.updateIf("dynload", json.dataLoadTime);
           }
@@ -1294,7 +1279,7 @@ const cldrLoad = (function () {
                 });
 
                 submit.on("click", function (e) {
-                  setDisplayed(navChunk, false);
+                  cldrSurvey.setDisplayed(navChunk, false);
                   var confirmList = []; // these will be revoted with current params
 
                   // explicit confirm list -  save us desync hassle
@@ -1330,9 +1315,12 @@ const cldrLoad = (function () {
                     url,
                     "(submitting oldvotes " + curLocale + ")",
                     function (json) {
-                      showLoader(theDiv.loader, cldrText.get("loading2"));
+                      cldrSurvey.showLoader(
+                        theDiv.loader,
+                        cldrText.get("loading2")
+                      );
                       if (!verifyJson(json, "oldvotes")) {
-                        handleDisconnect(
+                        cldrSurvey.handleDisconnect(
                           "Error submitting votes!",
                           json,
                           "Error"
@@ -1351,7 +1339,7 @@ const cldrLoad = (function () {
 
                 submit.placeAt(content);
                 // hide by default
-                setDisplayed(content, false);
+                cldrSurvey.setDisplayed(content, false);
 
                 frag.appendChild(content);
                 return content;
@@ -1381,9 +1369,9 @@ const cldrLoad = (function () {
               }
 
               if (contestedChunk == null && uncontestedChunk != null) {
-                setDisplayed(uncontestedChunk, true); // only item
+                cldrSurvey.setDisplayed(uncontestedChunk, true); // only item
               } else if (contestedChunk != null && uncontestedChunk == null) {
-                setDisplayed(contestedChunk, true); // only item
+                cldrSurvey.setDisplayed(contestedChunk, true); // only item
               } else {
                 // navigation
                 navChunk.appendChild(
@@ -1393,8 +1381,8 @@ const cldrLoad = (function () {
                   cldrSurvey.createLinkToFn(
                     uncontestedChunk.strid,
                     function () {
-                      setDisplayed(contestedChunk, false);
-                      setDisplayed(uncontestedChunk, true);
+                      cldrSurvey.setDisplayed(contestedChunk, false);
+                      cldrSurvey.setDisplayed(uncontestedChunk, true);
                     },
                     "button"
                   )
@@ -1403,8 +1391,8 @@ const cldrLoad = (function () {
                   cldrSurvey.createLinkToFn(
                     contestedChunk.strid,
                     function () {
-                      setDisplayed(contestedChunk, true);
-                      setDisplayed(uncontestedChunk, false);
+                      cldrSurvey.setDisplayed(contestedChunk, true);
+                      cldrSurvey.setDisplayed(uncontestedChunk, false);
                     },
                     "button"
                   )
@@ -1414,7 +1402,7 @@ const cldrLoad = (function () {
                   cldrSurvey.createLinkToFn(
                     "v_oldvotes_hide",
                     function () {
-                      setDisplayed(contestedChunk, false);
+                      cldrSurvey.setDisplayed(contestedChunk, false);
                     },
                     "button"
                   )
@@ -1423,7 +1411,7 @@ const cldrLoad = (function () {
                   cldrSurvey.createLinkToFn(
                     "v_oldvotes_hide",
                     function () {
-                      setDisplayed(uncontestedChunk, false);
+                      cldrSurvey.setDisplayed(uncontestedChunk, false);
                     },
                     "button"
                   )
@@ -1442,7 +1430,7 @@ const cldrLoad = (function () {
             }
           }
         }
-        hideLoader(null);
+        cldrSurvey.hideLoader(null);
       });
     } else if (cldrStatus.getCurrentSpecial() == "mail") {
       var url =
@@ -1455,7 +1443,7 @@ const cldrLoad = (function () {
         url,
         "(loading mail " + cldrStatus.getCurrentLocale() + ")",
         function (json) {
-          hideLoader(null, cldrText.get("loading2"));
+          cldrSurvey.hideLoader(null, cldrText.get("loading2"));
           isLoading = false;
           if (!verifyJson(json, "mail")) {
             return;
@@ -1478,7 +1466,7 @@ const cldrLoad = (function () {
             theDiv.appendChild(listDiv);
             theDiv.appendChild(contentDiv);
 
-            setDisplayed(contentDiv, false);
+            cldrSurvey.setDisplayed(contentDiv, false);
             var header = json.mail.header;
             var data = json.mail.data;
 
@@ -1551,7 +1539,7 @@ const cldrLoad = (function () {
                         }
                       );
                     }
-                    setDisplayed(contentDiv, false);
+                    cldrSurvey.setDisplayed(contentDiv, false);
 
                     cldrSurvey.removeAllChildNodes(contentDiv);
 
@@ -1593,7 +1581,7 @@ const cldrLoad = (function () {
                       )
                     );
 
-                    setDisplayed(contentDiv, true);
+                    cldrSurvey.setDisplayed(contentDiv, true);
                   };
                 })(li, row, header);
               }
@@ -1602,7 +1590,7 @@ const cldrLoad = (function () {
         }
       );
     } else if (cldrSurvey.isReport(cldrStatus.getCurrentSpecial())) {
-      showLoader(theDiv.loader);
+      cldrSurvey.showLoader(theDiv.loader);
       cldrSurvey.showInPop2(
         cldrText.get("reportGuidance"),
         null,
@@ -1622,7 +1610,7 @@ const cldrLoad = (function () {
         cldrSurvey.cacheKill();
       var errFunction = function errFunction(err) {
         console.log("Error: loading " + url + " -> " + err);
-        hideLoader(null, cldrText.get("loading2"));
+        cldrSurvey.hideLoader(null, cldrText.get("loading2"));
         isLoading = false;
         const html =
           "<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>" +
@@ -1633,10 +1621,10 @@ const cldrLoad = (function () {
         const frag = cldrDomConstruct(html);
         flipper.flipTo(pages.other, frag);
       };
-      if (isDashboard()) {
+      if (cldrStatus.isDashboard()) {
         if (!cldrStatus.isVisitor()) {
           const loadHandler = function (json) {
-            hideLoader(null, cldrText.get("loading2"));
+            cldrSurvey.hideLoader(null, cldrText.get("loading2"));
             isLoading = false;
             // further errors are handled in JSON
             showReviewPage(json, function () {
@@ -1658,9 +1646,9 @@ const cldrLoad = (function () {
           reloadV();
         }
       } else {
-        hideLoader(null, cldrText.get("loading2"));
+        cldrSurvey.hideLoader(null, cldrText.get("loading2"));
         const loadHandler = function (html) {
-          hideLoader(null, cldrText.get("loading2"));
+          cldrSurvey.hideLoader(null, cldrText.get("loading2"));
           isLoading = false;
           const frag = cldrDomConstruct(html);
           flipper.flipTo(pages.other, frag);
@@ -1676,24 +1664,24 @@ const cldrLoad = (function () {
       }
     } else if (cldrStatus.getCurrentSpecial() == "none") {
       // for now - redirect
-      hideLoader(null);
+      cldrSurvey.hideLoader(null);
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
     } else if (cldrStatus.getCurrentSpecial() == "locales") {
-      hideLoader(null);
+      cldrSurvey.hideLoader(null);
       isLoading = false;
       var theDiv = document.createElement("div");
       theDiv.className = "localeList";
 
-      addTopLocale("root");
+      addTopLocale("root", theDiv);
       // top locales
       for (var n in locmap.locmap.topLocales) {
         var topLoc = locmap.locmap.topLocales[n];
-        addTopLocale(topLoc);
+        addTopLocale(topLoc, theDiv);
       }
       flipper.flipTo(pages.other, null);
-      filterAllLocale(); //filter for init data
-      forceSidebar();
+      cldrEvent.filterAllLocale(); // filter for init data
+      cldrEvent.forceSidebar();
       cldrStatus.setCurrentLocale(null);
       cldrStatus.setCurrentSpecial("locales");
       cldrSurvey.showInPop2(
@@ -2024,24 +2012,24 @@ const cldrLoad = (function () {
       if (curSpecial != null && curSpecial != "") {
         var specialId = "special_" + curSpecial;
         $("#section-current").html(cldrText.get(specialId));
-        setDisplayed(titlePageContainer, false);
+        cldrSurvey.setDisplayed(titlePageContainer, false);
       } else if (!menuMap) {
-        setDisplayed(titlePageContainer, false);
+        cldrSurvey.setDisplayed(titlePageContainer, false);
       } else {
         const curPage = cldrStatus.getCurrentPage();
         if (menuMap.sectionMap[curPage]) {
           const curSection = curPage; // section = page
           cldrStatus.setCurrentSection(curSection);
           $("#section-current").html(menuMap.sectionMap[curSection].name);
-          setDisplayed(titlePageContainer, false); // will fix title later
+          cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
         } else if (menuMap.pageToSection[curPage]) {
           var mySection = menuMap.pageToSection[curPage];
           cldrStatus.setCurrentSection(mySection.id);
           $("#section-current").html(mySection.name);
-          setDisplayed(titlePageContainer, false); // will fix title later
+          cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
         } else {
           $("#section-current").html(cldrText.get("section_general"));
-          setDisplayed(titlePageContainer, false);
+          cldrSurvey.setDisplayed(titlePageContainer, false);
         }
       }
     }
@@ -2060,7 +2048,7 @@ const cldrLoad = (function () {
           );
           menu.set("disabled", disabled);
         };
-        var menuSection = dijitRegistry.byId("menu-section");
+        var menuSection = pseudoDijitRegistrybyId("menu-section");
         menuMap.section_general = new dijitMenuItem({
           label: cldrText.get("section_general"),
           iconClass: "dijitMenuItemIcon ",
@@ -2195,12 +2183,10 @@ const cldrLoad = (function () {
           } else {
             $("#title-page-container").html("").hide();
           }
-          setDisplayed(showMenu, true);
-          setDisplayed(titlePageContainer, true); // will fix title later
+          cldrSurvey.setDisplayed(showMenu, true);
+          cldrSurvey.setDisplayed(titlePageContainer, true); // will fix title later
         }
       }
-
-      stdebug("Updating menus.. ecov = " + cldrSurvey.effectiveCoverage());
 
       menuMap.setCheck(
         menuMap.section_general,
@@ -2215,14 +2201,6 @@ const cldrLoad = (function () {
         var aSection = menuMap.sections[j];
         // need to see if any items are visible @ current coverage
         const curLocale = cldrStatus.getCurrentLocale();
-        stdebug(
-          "for " +
-            aSection.name +
-            " minLev[" +
-            curLocale +
-            "] = " +
-            aSection.minLev[curLocale]
-        );
         const curSection = cldrStatus.getCurrentSection();
         menuMap.setCheck(
           aSection.menuItem,
@@ -2251,7 +2229,7 @@ const cldrLoad = (function () {
         cldrStatus.getCurrentSpecial() == "forum",
         cldrStatus.getSurveyUser() === null
       );
-      resizeSidebar();
+      cldrEvent.resizeSidebar();
     }
 
     const curLocale = cldrStatus.getCurrentLocale();
@@ -2291,7 +2269,7 @@ const cldrLoad = (function () {
           updateCoverageMenuTitle();
           cldrSurvey.updateCoverage(flipper.get(pages.data)); // update CSS and auto menu title
           unpackMenus(json);
-          unpackMenuSideBar(json); // in redesign.js!
+          cldrEvent.unpackMenuSideBar(json);
           updateMenus(_thePages);
         });
       }
@@ -2305,7 +2283,6 @@ const cldrLoad = (function () {
     var menus = json.menus;
 
     if (_thePages) {
-      stdebug("Updating cov info into menus for " + json.loc);
       for (var k in menus.sections) {
         var oldSection = _thePages.sectionMap[menus.sections[k].id];
         for (var j in menus.sections[k].pages) {
@@ -2316,7 +2293,6 @@ const cldrLoad = (function () {
         }
       }
     } else {
-      stdebug("setting up new hashes for " + json.loc);
       // set up some hashes
       menus.haveLocs = {};
       menus.sectionMap = {};
@@ -2335,7 +2311,6 @@ const cldrLoad = (function () {
       _thePages = menus;
     }
 
-    stdebug("Calculating minimum section coverage for " + json.loc);
     for (var k in _thePages.sectionMap) {
       var min = 200;
       for (var j in _thePages.sectionMap[k].pageMap) {
@@ -2389,7 +2364,7 @@ const cldrLoad = (function () {
     });
     autoImportProgressDialog.show();
     haveDialog = true;
-    hideOverlayAndSidebar(); // in redesign.js!
+    cldrEvent.hideOverlayAndSidebar();
     /*
      * See WHAT_AUTO_IMPORT = "auto_import" in SurveyAjax.java
      */
@@ -2421,7 +2396,7 @@ const cldrLoad = (function () {
         );
         autoImportedDialog.show();
         haveDialog = true;
-        hideOverlayAndSidebar(); // in redesign.js!
+        cldrEvent.hideOverlayAndSidebar();
       }
     });
   }
@@ -2434,7 +2409,7 @@ const cldrLoad = (function () {
     console.log("MyLoad: " + url + " for " + message);
     const errorHandler = function (err) {
       console.log("Error: " + err);
-      handleDisconnect(
+      cldrSurvey.handleDisconnect(
         "Could not fetch " +
           message +
           " - error " +
@@ -2460,7 +2435,7 @@ const cldrLoad = (function () {
         console.log(
           "Error in ajax post [" + message + "]  " + e.message + " / " + e.name
         );
-        handleDisconnect(
+        cldrSurvey.handleDisconnect(
           "Exception while loading: " +
             message +
             " - " +
@@ -2558,6 +2533,33 @@ const cldrLoad = (function () {
     return "locales///";
   }
 
+  // Note: "ARI" probably stands for "Abort, Retry, Ignore".
+  function ariRetry() {
+    ariDialogHide();
+    window.location.reload(true);
+  }
+
+  function ariDialogShow() {
+    // TODO: implement a replacement for dijit/Dialog
+    // https://dojotoolkit.org/reference-guide/1.10/dijit/Dialog.html
+    // "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title=...
+    console.log("ariDialogShow not implemented yet!");
+  }
+
+  function ariDialogHide() {
+    console.log("ariDialogHide not implemented yet!");
+  }
+
+  function dialogIsOpen() {
+    return haveDialog;
+  }
+
+  function pseudoDijitRegistrybyId(id) {
+    // TODO: implement a replacement for dijit/Registry byId()
+    // https://dojotoolkit.org/reference-guide/1.10/dijit/registry.html
+    return null;
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
@@ -2572,6 +2574,8 @@ const cldrLoad = (function () {
     showCurrentId: showCurrentId,
     insertLocaleSpecialNote: insertLocaleSpecialNote,
     ariRetry: ariRetry,
+    ariDialogShow: ariDialogShow,
+    dialogIsOpen: dialogIsOpen,
 
     /*
      * The following are meant to be accessible for unit testing only:

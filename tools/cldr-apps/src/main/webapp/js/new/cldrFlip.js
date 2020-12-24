@@ -43,7 +43,7 @@ Flipper.prototype.flipTo = function (id, node) {
   }
   this._killfn = []; // pop?
   if (node !== null && node !== undefined) {
-    removeAllChildNodes(this._map[id]);
+    cldrSurvey.removeAllChildNodes(this._map[id]);
     if (node.nodeType > 0) {
       this._map[id].appendChild(node);
     } else {

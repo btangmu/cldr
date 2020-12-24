@@ -9,6 +9,8 @@ function OtherSpecial() {
   this.pages = {};
 }
 
+const OTHER_SPECIAL_DEBUG = true;
+
 /**
  * @function getSpecial
  */
@@ -27,26 +29,38 @@ OtherSpecial.prototype.loadSpecial = function loadSpecial(
   var special = this.getSpecial(name);
   var otherThis = this;
   if (special) {
-    stdebug("OS: Using cached special: " + name);
+    if (OTHER_SPECIAL_DEBUG) {
+      console.log("OS: Using cached special: " + name);
+    }
     onSuccess(special);
   } else if (special === null) {
-    stdebug("OS: cached NULL: " + name);
+    if (OTHER_SPECIAL_DEBUG) {
+      console.log("OS: cached NULL: " + name);
+    }
     onFailure("Special page failed to load: " + name);
   } else {
-    stdebug("OS: Attempting load.." + name);
+    if (OTHER_SPECIAL_DEBUG) {
+      console.log("OS: Attempting load.." + name);
+    }
     /***
         try {
           require(["js/special/" + name + ".js"], function (specialFn) {
-            stdebug("OS: Loaded, instantiatin':" + name);
+            if (OTHER_SPECIAL_DEBUG) {
+    	      console.log("OS: Loaded, instantiatin':" + name);
+    	    }
             var special = new specialFn();
             special.name = name;
             otherThis.pages[name] = special; // cache for next time
 
-            stdebug("OS: SUCCESS! " + name);
+            if (OTHER_SPECIAL_DEBUG) {
+    	      console.log("OS: SUCCESS! " + name);
+    	    }
             onSuccess(special);
           });
         } catch (e) {
-          stdebug("OS: Load FAIL!:" + name + " - " + e.message + " - " + e);
+          if (OTHER_SPECIAL_DEBUG) {
+    	    console.log("OS: Load FAIL!:" + name + " - " + e.message + " - " + e);
+    	  }
           if (!otherThis.pages[name]) {
             // if the load didn't complete:
             otherThis.pages[name] = null; // mark as don't retry load.
@@ -109,9 +123,8 @@ OtherSpecial.prototype.show = function show(name, params) {
       // add anything from scope..
 
       params.exports = {
-        // All things that should be separate AMD modules..
         appendLocaleLink: cldrLoad.appendLocaleLink,
-        handleDisconnect: handleDisconnect,
+        handleDisconnect: cldrSurvey.handleDisconnect,
         clickToSelect: cldrSurvey.clickToSelect,
       };
 
