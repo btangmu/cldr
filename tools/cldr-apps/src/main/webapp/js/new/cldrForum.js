@@ -546,7 +546,7 @@ const cldrForum = (function () {
             cldrStatus.setCurrentSpecial("forum");
             cldrLoad.reloadV();
           }
-          return stStopPropagation(e);
+          return cldrSurvey.cldrSurvey.stStopPropagation(e);
         });
       })(post);
       headingLine.appendChild(dateChunk);
@@ -908,7 +908,7 @@ const cldrForum = (function () {
             });
           }
         );
-        stStopPropagation(e);
+        cldrSurvey.stStopPropagation(e);
         return false;
       });
     }
@@ -935,7 +935,7 @@ const cldrForum = (function () {
           replyData: post,
           postType: postType,
         });
-        stStopPropagation(e);
+        cldrSurvey.stStopPropagation(e);
         return false;
       });
     }

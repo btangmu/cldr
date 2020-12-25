@@ -491,8 +491,8 @@ const cldrSurvey = (function () {
         locDiv.style.display = "block";
       }
     } else {
-      for (i in showers) {
-        var fn = showers[i];
+      for (let i in showers) {
+        const fn = showers[i];
         if (fn) {
           fn();
         }
@@ -1233,7 +1233,7 @@ const cldrSurvey = (function () {
    * @param {Function} fn
    * @param {Boolean} immediate
    */
-  function showInPop(str, tr, theObj, fn, immediate) {
+  function showInPop(str, tr, hideIfLast, fn, immediate) {
     showInPop2(str, tr, hideIfLast, fn);
   }
 
@@ -1457,7 +1457,7 @@ const cldrSurvey = (function () {
                 var newLoc = popupSelect.value;
                 if (newLoc !== cldrStatus.getCurrentLocale()) {
                   cldrStatus.setCurrentLocale(newLoc);
-                  reloadV();
+                  cldrLoad.reloadV();
                 }
                 return stStopPropagation(e);
               });
@@ -1917,7 +1917,7 @@ const cldrSurvey = (function () {
     ***/
 
   function resetPop() {
-    lastShown = null;
+    gPopStatus.lastShown = null;
   }
 
   /**
@@ -2111,7 +2111,7 @@ const cldrSurvey = (function () {
         if (tr.myProposal) tr.myProposal.style.display = "none";
       }
       if (ourItem || (replaceErrors && value === "") /* Abstain */) {
-        str = cldrText.sub(
+        let str = cldrText.sub(
           "StatusAction_msg",
           [cldrText.get("StatusAction_" + json.statusAction)],
           "p",
@@ -2894,7 +2894,7 @@ const cldrSurvey = (function () {
           if (cldrStatus.isDashboard()) {
             refreshFixPanel(json);
           } else {
-            window.showInPop(
+            showInPop(
               "",
               tr,
               tr.proposedcell,
@@ -3860,7 +3860,7 @@ const cldrSurvey = (function () {
     cldrStatus.setCurrentSection(menus[parentIndex].id);
     cldrStatus.setCurrentPage(menus[parentIndex].pagesFiltered[index].id);
 
-    reloadV();
+    cldrLoad.reloadV();
 
     var sidebar = $("#locale-menu #" + cldrStatus.getCurrentPage());
     sidebar.closest(".open-menu").click();
@@ -4290,6 +4290,21 @@ const cldrSurvey = (function () {
     showers[id] = func;
   }
 
+  /**
+   * Add to the radio button, a more button style
+   *
+   * @param button
+   * @returns a newly created label element
+   */
+  function wrapRadio(button) {
+    var label = document.createElement("label");
+    label.title = "Vote";
+    label.className = "btn btn-default";
+    label.appendChild(button);
+    $(label).tooltip();
+    return label;
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
@@ -4336,6 +4351,8 @@ const cldrSurvey = (function () {
     getSurveyLevels: getSurveyLevels,
     setSurveyLevels: setSurveyLevels,
     getSurveyOrgCov: getSurveyOrgCov,
+    getSurveyUserCov: getSurveyUserCov,
+    setSurveyUserCov: setSurveyUserCov,
     getXpathMap: getXpathMap,
     getDidUnbust: getDidUnbust,
     INHERITANCE_MARKER: INHERITANCE_MARKER,
@@ -4343,6 +4360,13 @@ const cldrSurvey = (function () {
     updateStatus: updateStatus,
     handleDisconnect: handleDisconnect,
     setShower: setShower,
+    handleWiredClick: handleWiredClick,
+    cloneAnon: cloneAnon,
+    cloneLocalizeAnon: cloneLocalizeAnon,
+    localizeFlyover: localizeFlyover,
+    getTagChildren: getTagChildren,
+    parseStatusAction: parseStatusAction,
+    wrapRadio: wrapRadio,
 
     /*
      * The following are meant to be accessible for unit testing only:

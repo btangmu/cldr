@@ -53,7 +53,7 @@ const cldrLoad = (function () {
     // menubuttons.set is called by updateLocaleMenu and updateHashAndMenus
     set: function (x, y) {
       var cnode = document.getElementById(x + "-container");
-      var wnode = pseudoDijitRegistrybyId(x);
+      var wnode = pseudoDijitRegistryById(x);
       var dnode = document.getElementById(x);
       if (!cnode) {
         cnode = dnode; // for Elements that do their own stunts
@@ -81,12 +81,8 @@ const cldrLoad = (function () {
   let flipper = null;
 
   // TODO: implement things like these without using dojo/dijit
-  const dijitDropDownMenu = null;
-  const dijitDropDownButton = null;
   const dijitMenuSeparator = null;
-  const dijitMenuItem = null;
   const dijitButton = null;
-  const dijitDialog = null;
   const dojoxBusyButton = null;
 
   /**************************/
@@ -128,7 +124,7 @@ const cldrLoad = (function () {
   }
 
   function getInitialMenusEtc(sessionId) {
-    parseHashAndUpdate(dojoHash()); // get the initial settings
+    parseHashAndUpdate(getHash()); // get the initial settings
     // load the menus - first.
 
     var theLocale = cldrStatus.getCurrentLocale();
@@ -247,16 +243,11 @@ const cldrLoad = (function () {
 
         reloadV();
 
-        // watch for hashchange to make other changes..
-        pseudoDojoTopicSubscribe("/dojo/hashchange", doHashChange);
+        // watch for hashchange to make other changes; cf. old "/dojo/hashchange"
+        window.addEventListener("hashchange", doHashChange);
       }
     });
   } // end getInitialMenusEtc
-
-  function pseudoDojoTopicSubscribe(a, b) {
-    // TODO: implement a replacement for https://dojotoolkit.org/reference-guide/1.10/dojo/topic.html
-    console.log("pseudoDojoTopicSubscribe is not implemented yet");
-  }
 
   function patternCoverageClick(event) {
     event.stopPropagation();
@@ -311,7 +302,16 @@ const cldrLoad = (function () {
     return false;
   }
 
-  function doHashChange(changedHash) {
+  function doHashChange(event) {
+    const changedHash = getHash();
+    if (sliceHash(new URL(event.newURL).hash) !== changedHash) {
+      console.log(
+        "Error in doHashChange: expected " +
+          event.newURL.hash +
+          " === " +
+          changedHash
+      );
+    }
     var oldLocale = trimNull(cldrStatus.getCurrentLocale());
     var oldSpecial = trimNull(cldrStatus.getCurrentSpecial());
     var oldPage = trimNull(cldrStatus.getCurrentPage());
@@ -364,7 +364,7 @@ const cldrLoad = (function () {
    * Parse the hash string into surveyCurrent___ variables.
    * Expected to update document.title also.
    *
-   * @param {String} id
+   * @param {String} hash
    */
   function parseHashAndUpdate(hash) {
     if (hash) {
@@ -487,7 +487,7 @@ const cldrLoad = (function () {
    *
    * @param doPush {Boolean} if true, do a push (instead of replace)
    *
-   * Called by cldrForum.parseContent, as well as locally.
+   * Called by cldrForum.parseContent (doPush false), as well as locally.
    */
   function replaceHash(doPush) {
     if (!doPush) {
@@ -509,10 +509,9 @@ const cldrLoad = (function () {
     if (theLocale == null) {
       theLocale = "";
     }
-    var newHash =
-      "#" + theSpecial + "/" + theLocale + "/" + thePage + "/" + theId;
-    if (newHash != dojoHash()) {
-      dojoHash(newHash, !doPush);
+    var newHash = theSpecial + "/" + theLocale + "/" + thePage + "/" + theId;
+    if (newHash != getHash()) {
+      setHash(newHash, !doPush);
     }
   }
 
@@ -526,7 +525,7 @@ const cldrLoad = (function () {
   function verifyJson(json, subkey) {
     if (!json) {
       console.log("!json");
-      cldrSurvey.cldrSurvey.showLoader(
+      cldrSurvey.showLoader(
         null,
         "Error while  loading " +
           subkey +
@@ -923,7 +922,7 @@ const cldrLoad = (function () {
       const id2 = flipper.get(pages.data).id;
       cldrSurvey.setShower(id2, shower);
     }
-  } // end reloadV -- the world's longest function?
+  } // end reloadV
 
   function ignoreReloadRequest() {
     console.log(
@@ -1652,7 +1651,7 @@ const cldrLoad = (function () {
           isLoading = false;
           const frag = cldrDomConstruct(html);
           flipper.flipTo(pages.other, frag);
-          hideRightPanel(); // CLDR-14365
+          cldrEvent.hideRightPanel(); // CLDR-14365
         };
         const xhrArgs = {
           url: url,
@@ -2042,14 +2041,16 @@ const cldrLoad = (function () {
       if (!menuMap.menusSetup) {
         menuMap.menusSetup = true;
         menuMap.setCheck = function (menu, checked, disabled) {
-          menu.set(
-            "iconClass",
-            checked ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o"
-          );
-          menu.set("disabled", disabled);
+          if (menu) {
+            menu.set(
+              "iconClass",
+              checked ? "dijitMenuItemIcon menu-x" : "dijitMenuItemIcon menu-o"
+            );
+            menu.set("disabled", disabled);
+          }
         };
-        var menuSection = pseudoDijitRegistrybyId("menu-section");
-        menuMap.section_general = new dijitMenuItem({
+        var menuSection = pseudoDijitRegistryById("menu-section");
+        menuMap.section_general = newPseudoDijitMenuItem({
           label: cldrText.get("section_general"),
           iconClass: "dijitMenuItemIcon ",
           disabled: true,
@@ -2068,10 +2069,12 @@ const cldrLoad = (function () {
             }
           },
         });
-        menuSection.addChild(menuMap.section_general);
+        if (menuSection) {
+          menuSection.addChild(menuMap.section_general);
+        }
         for (var j in menuMap.sections) {
           (function (aSection) {
-            aSection.menuItem = new dijitMenuItem({
+            aSection.menuItem = newPseudoDijitMenuItem({
               label: aSection.name,
               iconClass: "dijitMenuItemIcon",
               onClick: function () {
@@ -2084,14 +2087,16 @@ const cldrLoad = (function () {
               },
               disabled: true,
             });
-
-            menuSection.addChild(aSection.menuItem);
+            if (menuSection) {
+              menuSection.addChild(aSection.menuItem);
+            }
           })(menuMap.sections[j]);
         }
 
-        menuSection.addChild(new dijitMenuSeparator());
-
-        menuMap.forumMenu = new dijitMenuItem({
+        if (menuSection) {
+          menuSection.addChild(new dijitMenuSeparator());
+        }
+        menuMap.forumMenu = newPseudoDijitMenuItem({
           label: cldrText.get("section_forum"),
           iconClass: "dijitMenuItemIcon", // menu-chat
           disabled: true,
@@ -2104,7 +2109,9 @@ const cldrLoad = (function () {
             reloadV();
           },
         });
-        menuSection.addChild(menuMap.forumMenu);
+        if (menuSection) {
+          menuSection.addChild(menuMap.forumMenu);
+        }
       }
 
       updateMenuTitles(menuMap);
@@ -2132,18 +2139,22 @@ const cldrLoad = (function () {
           // hide all. TODO use a foreach model?
           for (var zz in titlePageContainer.menus) {
             var aMenu = titlePageContainer.menus[zz];
-            aMenu.set("label", "-");
+            if (aMenu) {
+              aMenu.set("label", "-");
+            } else {
+              console.log("warning: aMenu is falsy in updateMenus");
+            }
           }
 
           var showMenu = titlePageContainer.menus[mySection.id];
 
           if (!showMenu) {
             // doesn't exist - add it.
-            var menuPage = new dijitDropDownMenu();
+            var menuPage = newPseudoDijitDropDownMenu();
             for (var k in mySection.pages) {
               // use given order
               (function (aPage) {
-                var pageMenu = (aPage.menuItem = new dijitMenuItem({
+                var pageMenu = (aPage.menuItem = newPseudoDijitMenuItem({
                   label: aPage.name,
                   iconClass:
                     aPage.id == cldrStatus.getCurrentPage()
@@ -2162,7 +2173,7 @@ const cldrLoad = (function () {
               })(mySection.pages[k]);
             }
 
-            showMenu = new dijitDropDownButton({
+            showMenu = newPseudoDijitDropDownButton({
               label: "-",
               dropDown: menuPage,
             });
@@ -2173,10 +2184,6 @@ const cldrLoad = (function () {
           }
 
           if (myPage !== null) {
-            /*
-             * TODO: if 'use strict' in this file, we get:
-             * Ignoring get or set of property that has [LenientThis] because the “this” object is incorrect.
-             */
             $("#title-page-container")
               .html("<h1>" + myPage.name + "</h1>")
               .show();
@@ -2358,11 +2365,13 @@ const cldrLoad = (function () {
    * Automatically import old winning votes
    */
   function doAutoImport() {
-    var autoImportProgressDialog = new dijitDialog({
+    var autoImportProgressDialog = newProgressDialog({
       title: cldrText.get("v_oldvote_auto_msg"),
       content: cldrText.get("v_oldvote_auto_progress_msg"),
     });
-    autoImportProgressDialog.show();
+    if (autoImportProgressDialog) {
+      autoImportProgressDialog.show();
+    }
     haveDialog = true;
     cldrEvent.hideOverlayAndSidebar();
     /*
@@ -2374,27 +2383,31 @@ const cldrLoad = (function () {
       cldrStatus.getSessionId() +
       cldrSurvey.cacheKill();
     myLoad(url, "auto-importing votes", function (json) {
-      autoImportProgressDialog.hide();
+      if (autoImportProgressDialog) {
+        autoImportProgressDialog.hide();
+      }
       haveDialog = false;
       if (json.autoImportedOldWinningVotes) {
         var vals = {
           count: json.autoImportedOldWinningVotes,
         };
-        var autoImportedDialog = new dijitDialog({
+        var autoImportedDialog = newProgressDialog({
           title: cldrText.get("v_oldvote_auto_msg"),
           content: cldrText.sub("v_oldvote_auto_desc_msg", vals),
         });
-        autoImportedDialog.addChild(
-          new dijitButton({
-            label: "OK",
-            onClick: function () {
-              haveDialog = false;
-              autoImportedDialog.hide();
-              reloadV();
-            },
-          })
-        );
-        autoImportedDialog.show();
+        if (autoImportedDialog) {
+          autoImportedDialog.addChild(
+            new dijitButton({
+              label: "OK",
+              onClick: function () {
+                haveDialog = false;
+                autoImportedDialog.hide();
+                reloadV();
+              },
+            })
+          );
+          autoImportedDialog.show();
+        }
         haveDialog = true;
         cldrEvent.hideOverlayAndSidebar();
       }
@@ -2528,9 +2541,57 @@ const cldrLoad = (function () {
     return locmap;
   }
 
-  function dojoHash() {
-    // TODO: implement a replacement for dojo/hash
-    return "locales///";
+  // getHash and setHash are replacements for dojo/hash
+  // https://dojotoolkit.org/reference-guide/1.10/dojo/hash.html
+  // return "locales///";
+
+  /**
+   * Get the window location hash
+   *
+   * For example, if the current URL is "https:...#bar", return "bar".
+   *
+   * Typically the first value we return is "locales///"
+   */
+  function getHash() {
+    // https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+    // https://developer.mozilla.org/en-US/docs/Web/API/Window/location
+    let hash = sliceHash(window.location.hash);
+    console.log("getHash returning " + hash);
+    return hash;
+  }
+
+  /**
+   * Set the window location hash
+   *
+   * ... TODO: implement setHash with "replace"
+   */
+  function setHash(newHash, replace) {
+    // To manipulate the value of the hash, simply call dojo/hash with the new value.
+    // It will be added to the browser history stack and it will publish a /dojo/hashchange topic,
+    // triggering anything subscribed
+
+    // In order to not to add to the history stack, pass true as the second parameter (replace).
+    // This will update the current browser URL and replace the current history state
+
+    newHash = sliceHash(newHash);
+    if (newHash !== sliceHash(window.location.hash)) {
+      const oldUrl = window.location.href;
+      const newUrl = oldUrl.split("#")[0] + "#" + newHash;
+      console.log(
+        "setHash going to " +
+          newUrl +
+          " - Called with: " +
+          newHash +
+          " - " +
+          replace
+      );
+      window.location.href = newUrl;
+    }
+  }
+
+  // given "#foo" or "foo", return "foo"
+  function sliceHash(hash) {
+    return hash.charAt(0) === "#" ? hash.slice(1) : hash;
   }
 
   // Note: "ARI" probably stands for "Abort, Retry, Ignore".
@@ -2554,9 +2615,38 @@ const cldrLoad = (function () {
     return haveDialog;
   }
 
-  function pseudoDijitRegistrybyId(id) {
+  function pseudoDijitRegistryById(id) {
     // TODO: implement a replacement for dijit/Registry byId()
     // https://dojotoolkit.org/reference-guide/1.10/dijit/registry.html
+    console.log("pseudoDijitRegistryById not implemented yet! id = " + id);
+    return null;
+  }
+
+  function newProgressDialog(args) {
+    // TODO: implement a replacement for dijit/Dialog (or something simpler)
+    console.log("newProgressDialog not implemented yet! args = " + args);
+    return null;
+  }
+
+  function newPseudoDijitMenuItem(args) {
+    // TODO: implement a replacement for dijit/MenuItem (or something simpler)
+    console.log("newPseudoDijitMenuItem not implemented yet! args = " + args);
+    return null;
+  }
+
+  function newPseudoDijitDropDownMenu(args) {
+    // TODO: implement a replacement for dijit/DropDownMenu (or something simpler)
+    console.log(
+      "newPseudoDijitDropDownMenu not implemented yet! args = " + args
+    );
+    return null;
+  }
+
+  function newPseudoDijitDropDownButton(args) {
+    // TODO: implement a replacement for dijit/DropDownButton (or something simpler)
+    console.log(
+      "newPseudoDijitDropDownButton not implemented yet! args = " + args
+    );
     return null;
   }
 

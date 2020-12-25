@@ -399,7 +399,7 @@ const cldrEvent = (function () {
     $(".sidebar-chooser").click(function () {
       cldrStatus.setCurrentPage($(this).attr("id"));
       cldrStatus.setCurrentSpecial("");
-      reloadV();
+      cldrLoad.reloadV();
       $("#left-sidebar").removeClass("active");
       toggleOverlay();
     });
@@ -420,7 +420,7 @@ const cldrEvent = (function () {
         cldrStatus.setCurrentSpecial($(this).data("url"));
         cldrStatus.setCurrentId("");
         cldrStatus.setCurrentPage("");
-        reloadV();
+        cldrLoad.reloadV();
       }
     });
 
@@ -540,8 +540,6 @@ const cldrEvent = (function () {
    * Create/update the pull-down menu popover
    *
    * @param event
-   *
-   * Called only by the Startup function at the top of this file
    */
   function interceptPulldownLink(event) {
     var menu = $(this).closest(".pull-menu");
@@ -568,60 +566,9 @@ const cldrEvent = (function () {
   }
 
   /**
-   * Handle new value submission
-   *
-   * @param td
-   * @param tr
-   * @param theRow
-   * @param newValue
-   * @param newButton
-   *
-   * Called twice, only from CldrSurveyVettingTable.js
-   */
-  function addValueVote(td, tr, theRow, newValue, newButton) {
-    tr.inputTd = td; // cause the proposed item to show up in the right box
-    handleWiredClick(tr, theRow, "", { value: newValue }, newButton);
-  }
-
-  /**
-   * Transform input + submit button to the add button for the "add translation"
-   *
-   * @param btn
-   *
-   * Called only from CldrSurveyVettingTable.js
-   */
-  function toAddVoteButton(btn) {
-    btn.className = "btn btn-primary";
-    btn.title = "Add";
-    btn.type = "submit";
-    btn.innerHTML = '<span class="glyphicon glyphicon-plus"></span>';
-    $(btn).parent().popover("destroy");
-    $(btn).tooltip("destroy").tooltip();
-    $(btn).closest("form").next(".subSpan").show();
-    $(btn).parent().children("input").remove();
-  }
-
-  /**
-   * Transform the add button to a submit
-   *
-   * @param btn the button
-   * @return the transformed button (return value is ignored by caller)
-   *
-   * Called only from CldrSurveyVettingTable.js
-   */
-  function toSubmitVoteButton(btn) {
-    btn.innerHTML = '<span class="glyphicon glyphicon-ok-circle"></span>';
-    btn.className = "btn btn-success vote-submit";
-    btn.title = "Submit";
-    $(btn).tooltip("destroy").tooltip();
-    $(btn).closest("form").next(".subSpan").hide();
-    return btn;
-  }
-
-  /**
    * Add some label with a tooltip to every icon
    *
-   * Called only from review.js
+   * Called only from review.js -- not yet used for !USE_DOJO
    */
   function labelizeIcon() {
     var icons = [
@@ -698,8 +645,6 @@ const cldrEvent = (function () {
 
   /**
    * Show or hide the right panel
-   *
-   * Called only by the Startup function at the top of this file
    */
   function toggleRightPanel() {
     var main = $("#main-row > .col-md-9");
@@ -712,8 +657,6 @@ const cldrEvent = (function () {
 
   /**
    * Show the right panel
-   *
-   * Called only by toggleRightPanel
    */
   function showRightPanel() {
     $("#main-row > .col-md-12, #nav-page > .col-md-12")
@@ -748,5 +691,6 @@ const cldrEvent = (function () {
     filterAllLocale: filterAllLocale,
     forceSidebar: forceSidebar,
     popupAlert: popupAlert,
+    hideRightPanel: hideRightPanel,
   };
 })();
