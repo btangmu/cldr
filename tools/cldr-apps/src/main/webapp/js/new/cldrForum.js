@@ -125,7 +125,7 @@ const cldrForum = (function () {
         summaryDiv.innerHTML = getForumSummaryHtml(forumLocale, userId, true); // after parseContent
       }
       // No longer loading
-      cldrSurvey.hideLoader(null);
+      cldrSurvey.hideLoader();
       params.flipper.flipTo(params.pages.other, ourDiv);
       params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
     };

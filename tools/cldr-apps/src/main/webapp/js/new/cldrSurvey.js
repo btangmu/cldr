@@ -446,6 +446,7 @@ const cldrSurvey = (function () {
     addClass(document.getElementsByTagName("body")[0], "disconnected");
   }
 
+  // referenced in cldrGui.js but not actually called yet for non-dojo, due to data-dojo-props dependency
   function unbust() {
     didUnbust = true;
     console.log("Un-busting");
@@ -624,12 +625,12 @@ const cldrSurvey = (function () {
         subDiv.appendChild(detailsButton);
         oneword.details = detailsButton;
         p.appendChild(subDiv);
-        showARIDialog(why, json, word, oneword, subDiv, what);
+        showARIDialog(why, json, oneword, subDiv, what);
       }
     }
   }
 
-  function showARIDialog(why, json, word, oneword, p, what) {
+  function showARIDialog(why, json, oneword, p, what) {
     console.log("showARIDialog");
     p.parentNode.removeChild(p);
 
@@ -857,7 +858,7 @@ const cldrSurvey = (function () {
         var kmsg = cldrText.get("ari_sessiondisconnect_message");
         console.log(kmsg);
         updateSpecialHeader(standOutMessage(kmsg));
-        cldrStatus.setDisconnected(true);
+        cldrStatus.setIsDisconnected(true);
         addClass(document.getElementsByTagName("body")[0], "disconnected");
         if (!json.session_err) {
           json.session_err = "disconnected";
@@ -1130,25 +1131,6 @@ const cldrSurvey = (function () {
       }
     }
     return rowChildren;
-  }
-
-  /**
-   * Show the 'loading' sign
-   *
-   * @param loaderDiv ignored
-   * @param {String} text text to use
-   */
-  function showLoader(loaderDiv, text) {
-    updateAjaxWord(text);
-  }
-
-  /**
-   * Hide the 'loading' sign
-   *
-   * @param loaderDiv ignored
-   */
-  function hideLoader(loaderDiv) {
-    updateAjaxWord(null);
   }
 
   /**
@@ -1923,10 +1905,9 @@ const cldrSurvey = (function () {
   /**
    * Check if we need LRM/RLM marker to display
    * @param field choice field to append if needed
-   * @param dir direction of current locale (control float direction0
    * @param value the value of votes (check &lrm; &rlm)
    */
-  function checkLRmarker(field, dir, value) {
+  function checkLRmarker(field, value) {
     if (value) {
       if (value.indexOf("\u200E") > -1 || value.indexOf("\u200F") > -1) {
         value = value
@@ -2356,7 +2337,7 @@ const cldrSurvey = (function () {
     choiceField.appendChild(subSpan);
 
     setLang(span);
-    checkLRmarker(choiceField, span.dir, item.value);
+    checkLRmarker(choiceField, item.value);
 
     if (item.isBaselineValue == true) {
       appendIcon(choiceField, "i-star", cldrText.get("voteInfo_baseline_desc"));
@@ -2367,7 +2348,7 @@ const cldrSurvey = (function () {
         theRow.canFlagOnLosing &&
         !theRow.rowFlagged
       ) {
-        var newIcon = addIcon(choiceField, "i-stop"); // DEBUG
+        addIcon(choiceField, "i-stop"); // DEBUG
       }
     }
 
@@ -2863,7 +2844,7 @@ const cldrSurvey = (function () {
    * Called by loadHandler in handleWiredClick
    */
   function refreshSingleRow(tr, theRow, onSuccess, onFailure) {
-    showLoader(tr.theTable.theDiv.loader, cldrText.get("loadingOneRow"));
+    showLoader(cldrText.get("loadingOneRow"));
 
     let ourUrl =
       cldrStatus.getContextPath() +
@@ -2889,7 +2870,7 @@ const cldrSurvey = (function () {
           tr.theTable.json.section.rows[tr.rowHash] = theRow;
           cldrTable.updateRow(tr, theRow);
 
-          hideLoader(tr.theTable.theDiv.loader);
+          hideLoader();
           onSuccess(theRow);
           if (cldrStatus.isDashboard()) {
             refreshFixPanel(json);
@@ -2962,9 +2943,9 @@ const cldrSurvey = (function () {
     }
     if (what == "submit") {
       button.className = "ichoice-x-ok"; // TODO: ichoice-inprogress? spinner?
-      showLoader(tr.theTable.theDiv.loader, cldrText.get("voting"));
+      showLoader(cldrText.get("voting"));
     } else {
-      showLoader(tr.theTable.theDiv.loader, cldrText.get("checking"));
+      showLoader(cldrText.get("checking"));
     }
 
     // select
@@ -3039,7 +3020,7 @@ const cldrSurvey = (function () {
                 // submit went through. Now show the pop.
                 button.className = "ichoice-o";
                 button.checked = false;
-                hideLoader(tr.theTable.theDiv.loader);
+                hideLoader();
                 if (
                   json.testResults &&
                   (json.testWarnings || json.testErrors)
@@ -3084,7 +3065,7 @@ const cldrSurvey = (function () {
             }
             button.className = "ichoice-o";
             button.checked = false;
-            hideLoader(tr.theTable.theDiv.loader);
+            hideLoader();
             myUnDefer();
           }
         }
@@ -3125,6 +3106,22 @@ const cldrSurvey = (function () {
       error: errorHandler,
     };
     cldrAjax.queueXhr(xhrArgs);
+  }
+
+  /**
+   * Show the 'loading' sign
+   *
+   * @param {String} text text to use
+   */
+  function showLoader(text) {
+    updateAjaxWord(text);
+  }
+
+  /**
+   * Hide the 'loading' sign
+   */
+  function hideLoader() {
+    updateAjaxWord(null);
   }
 
   /**
@@ -3449,9 +3446,6 @@ const cldrSurvey = (function () {
 
         removeAllChildNodes(div);
         div.appendChild(c2s);
-        var clicked = null;
-
-        var last = -1;
 
         var exceptions = [];
 
@@ -3509,7 +3503,6 @@ const cldrSurvey = (function () {
                 stack.innerHTML = cldrText.get("adminClickToViewExceptions");
               }
               // TODO: if(json.threads.dead) frag2.appendChunk(json.threads.dead.toString(),"span","adminDeadThreads");
-              last = json.exceptions.lastTime;
               if (json.exceptions.entry) {
                 var e = json.exceptions.entry;
                 exceptions.push(json.exceptions.entry);
@@ -3904,40 +3897,6 @@ const cldrSurvey = (function () {
     return menus;
   }
 
-  ///////////////////
-
-  /**
-   * For vetting
-   *
-   * @param hideRegex
-   */
-  function changeStyle(hideRegex) {
-    for (m in document.styleSheets) {
-      var theRules;
-      if (document.styleSheets[m].cssRules) {
-        theRules = document.styleSheets[m].cssRules;
-      } else if (document.styleSheets[m].rules) {
-        theRules = document.styleSheets[m].rules;
-      }
-      for (n in theRules) {
-        var rule = theRules[n];
-        var sel = rule.selectorText;
-        if (sel != undefined && sel.match(/vv/)) {
-          var theStyle = rule.style;
-          if (sel.match(hideRegex)) {
-            if (theStyle.display == "table-row") {
-              theStyle.display = null;
-            }
-          } else {
-            if (theStyle.display != "table-row") {
-              theStyle.display = "table-row";
-            }
-          }
-        }
-      }
-    }
-  }
-
   function createLocLink(loc, locName, className) {
     var cl = createChunk(locName, "a", "localeChunk " + className);
     cl.title = loc;
@@ -3955,7 +3914,7 @@ const cldrSurvey = (function () {
       var errorHandler = function (err) {
         handleDisconnect("Error in showrecent: " + err);
       };
-      showLoader(null, "Loading recent items");
+      showLoader("Loading recent items");
       var loadHandler = function (json) {
         try {
           if (json && json.mine) {
@@ -4008,7 +3967,7 @@ const cldrSurvey = (function () {
 
             removeAllChildNodes(div);
             div.appendChild(frag);
-            hideLoader(null);
+            hideLoader();
           } else {
             handleDisconnect("Failed to load JSON recent items", json);
           }
@@ -4056,7 +4015,7 @@ const cldrSurvey = (function () {
       var errorHandler = function (err) {
         handleDisconnect("Error in showrecent: " + err);
       };
-      showLoader(null, "Loading recent items");
+      showLoader("Loading recent items");
       var loadHandler = function (json) {
         try {
           if (json && json.recent) {
@@ -4112,7 +4071,7 @@ const cldrSurvey = (function () {
             }
             removeAllChildNodes(div);
             div.appendChild(frag);
-            hideLoader(null);
+            hideLoader();
           } else {
             handleDisconnect("Failed to load JSON recent items", json);
           }
@@ -4309,63 +4268,65 @@ const cldrSurvey = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    updateIf: updateIf,
-    isReport: isReport,
-    addClass: addClass,
-    removeClass: removeClass,
-    removeAllChildNodes: removeAllChildNodes,
-    setDisplayed: setDisplayed,
-    isInputBusy: isInputBusy,
-    createChunk: createChunk,
-    clickToSelect: clickToSelect,
-    createLinkToFn: createLinkToFn,
-    createGravitar: createGravitar,
-    stStopPropagation: stStopPropagation,
-    showInPop: showInPop,
-    showInPop2: showInPop2,
-    showLoader: showLoader,
-    hideLoader: hideLoader,
-    wireUpButton: wireUpButton,
-    addIcon: addIcon,
-    listenToPop: listenToPop,
-    updateInfoPanelForumPosts: updateInfoPanelForumPosts,
-    appendForumStuff: appendForumStuff,
-    appendItem: appendItem,
-    testsToHtml: testsToHtml,
-    findItemByValue: findItemByValue,
-    appendExample: appendExample,
-    addVitem: addVitem,
-    appendExtraAttributes: appendExtraAttributes,
-    covValue: covValue,
-    covName: covName,
-    effectiveCoverage: effectiveCoverage,
-    updateCovFromJson: updateCovFromJson,
-    updateCoverage: updateCoverage,
-    appendIcon: appendIcon,
-    setOverrideDir: setOverrideDir,
-    setLang: setLang,
-    showVoteTable: showVoteTable,
-    refreshCounterVetting: refreshCounterVetting,
-    chgPage: chgPage,
-    showAllItems: showAllItems,
-    getSurveyLevels: getSurveyLevels,
-    setSurveyLevels: setSurveyLevels,
-    getSurveyOrgCov: getSurveyOrgCov,
-    getSurveyUserCov: getSurveyUserCov,
-    setSurveyUserCov: setSurveyUserCov,
-    getXpathMap: getXpathMap,
-    getDidUnbust: getDidUnbust,
     INHERITANCE_MARKER: INHERITANCE_MARKER,
+    addClass: addClass,
+    addIcon: addIcon,
+    addVitem: addVitem,
+    appendExample: appendExample,
+    appendExtraAttributes: appendExtraAttributes,
+    appendForumStuff: appendForumStuff,
+    appendIcon: appendIcon,
+    appendItem: appendItem,
     cacheKill: cacheKill,
-    updateStatus: updateStatus,
-    handleDisconnect: handleDisconnect,
-    setShower: setShower,
-    handleWiredClick: handleWiredClick,
+    chgPage: chgPage,
+    clickToSelect: clickToSelect,
     cloneAnon: cloneAnon,
     cloneLocalizeAnon: cloneLocalizeAnon,
-    localizeFlyover: localizeFlyover,
+    covName: covName,
+    covValue: covValue,
+    createChunk: createChunk,
+    createGravitar: createGravitar,
+    createLinkToFn: createLinkToFn,
+    effectiveCoverage: effectiveCoverage,
+    findItemByValue: findItemByValue,
+    getDidUnbust: getDidUnbust,
+    getSurveyLevels: getSurveyLevels,
+    getSurveyOrgCov: getSurveyOrgCov,
+    getSurveyUserCov: getSurveyUserCov,
     getTagChildren: getTagChildren,
+    getXpathMap: getXpathMap,
+    handleDisconnect: handleDisconnect,
+    handleWiredClick: handleWiredClick,
+    hideLoader: hideLoader,
+    isInputBusy: isInputBusy,
+    isReport: isReport,
+    listenToPop: listenToPop,
+    loadAdminPanel: loadAdminPanel,
+    localizeFlyover: localizeFlyover,
     parseStatusAction: parseStatusAction,
+    refreshCounterVetting: refreshCounterVetting,
+    removeAllChildNodes: removeAllChildNodes,
+    removeClass: removeClass,
+    setDisplayed: setDisplayed,
+    setLang: setLang,
+    setOverrideDir: setOverrideDir,
+    setShower: setShower,
+    setSurveyLevels: setSurveyLevels,
+    setSurveyUserCov: setSurveyUserCov,
+    showAllItems: showAllItems,
+    showInPop2: showInPop2,
+    showInPop: showInPop,
+    showLoader: showLoader,
+    showVoteTable: showVoteTable,
+    stStopPropagation: stStopPropagation,
+    testsToHtml: testsToHtml,
+    unbust: unbust,
+    updateCovFromJson: updateCovFromJson,
+    updateCoverage: updateCoverage,
+    updateIf: updateIf,
+    updateInfoPanelForumPosts: updateInfoPanelForumPosts,
+    updateStatus: updateStatus,
+    wireUpButton: wireUpButton,
     wrapRadio: wrapRadio,
 
     /*

@@ -140,7 +140,7 @@ const cldrTable = (function () {
       theDiv.appendChild(theTable);
     }
     insertRowsIntoTbody(theTable, reuseTable);
-    cldrSurvey.hideLoader(theDiv.loader);
+    cldrSurvey.hideLoader();
   }
 
   /**

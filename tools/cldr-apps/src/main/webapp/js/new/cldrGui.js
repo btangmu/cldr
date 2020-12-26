@@ -45,7 +45,7 @@ const cldrGui = (function () {
   const vhtml1 =
     "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title='CLDR Survey Tool'\n" +
     '    data-dojo-props=\'onHide: function(){ariReload.style.display="";ariRetry.style.display="none";\n' +
-    "      if (disconnected) {unbust();}}'>\n" +
+    "      if (cldrStatus.isDisconnected()) {cldrSurvey.unbust();}}'>\n" +
     "\n" +
     "  <div id='ariContent' class='dijitDialogPaneContentArea'>\n" +
     "    <div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>\n" +

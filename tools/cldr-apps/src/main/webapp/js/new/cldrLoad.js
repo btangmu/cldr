@@ -236,7 +236,9 @@ const cldrLoad = (function () {
             patternCoverage.append(html);
           }
         }
-        patternCoverage.find("li a").click(patternCoverageClick);
+        patternCoverage.find("li a").click(function (event) {
+          patternCoverageClick(event, theLocale, $(this));
+        });
         if (json.canAutoImport) {
           doAutoImport();
         }
@@ -249,10 +251,10 @@ const cldrLoad = (function () {
     });
   } // end getInitialMenusEtc
 
-  function patternCoverageClick(event) {
+  function patternCoverageClick(event, theLocale, clickedElement) {
     event.stopPropagation();
     event.preventDefault();
-    var newValue = $(this).data("value");
+    var newValue = clickedElement.data("value");
     var setUserCovTo = null;
     if (newValue == "auto") {
       setUserCovTo = null; // auto
@@ -295,8 +297,8 @@ const cldrLoad = (function () {
     cldrSurvey.updateCoverage(flipper.get(pages.data)); // update CSS and 'auto' menu title
     updateHashAndMenus(false); // TODO: why? Maybe to show an item?
     $("#coverage-info").text(ucFirst(newValue));
-    $(this).parents(".dropdown-menu").dropdown("toggle");
-    if (!cldrStatus.cldrStatus.isDashboard()) {
+    clickedElement.parents(".dropdown-menu").dropdown("toggle");
+    if (!cldrStatus.isDashboard()) {
       cldrSurvey.refreshCounterVetting();
     }
     return false;
@@ -526,7 +528,6 @@ const cldrLoad = (function () {
     if (!json) {
       console.log("!json");
       cldrSurvey.showLoader(
-        null,
         "Error while  loading " +
           subkey +
           ":  <br><div style='border: 1px solid red;'>" +
@@ -553,7 +554,6 @@ const cldrLoad = (function () {
     } else if (json.err) {
       console.log("json.err!" + json.err);
       cldrSurvey.showLoader(
-        null,
         "Error while  loading " +
           subkey +
           ": <br><div style='border: 1px solid red;'>" +
@@ -565,7 +565,6 @@ const cldrLoad = (function () {
     } else if (!json[subkey]) {
       console.log("!json.oldvotes");
       cldrSurvey.showLoader(
-        null,
         "Error while  loading " +
           subkey +
           ": <br><div style='border: 1px solid red;'>" +
@@ -581,11 +580,7 @@ const cldrLoad = (function () {
 
   function showCurrentId() {
     const curSpecial = cldrStatus.getCurrentSpecial();
-    if (
-      curSpecial &&
-      curSpecial != "" &&
-      !cldrStatus.cldrStatus.isDashboard()
-    ) {
+    if (curSpecial && curSpecial != "" && !cldrStatus.isDashboard()) {
       otherSpecial.handleIdChanged(curSpecial, showCurrentId);
     } else {
       const curId = cldrStatus.getCurrentId();
@@ -817,7 +812,7 @@ const cldrLoad = (function () {
         var theInfo = cldrSurvey.createChunk("", "p", "special_general");
         theDiv.appendChild(theInfo);
         theInfo.innerHTML = cldrText.get("special_general"); // TODO replace with … ?
-        cldrSurvey.hideLoader(null);
+        cldrSurvey.hideLoader();
       }
     });
   }
@@ -948,7 +943,7 @@ const cldrLoad = (function () {
       }
     }
 
-    cldrSurvey.showLoader(null, cldrText.get("loading"));
+    cldrSurvey.showLoader(cldrText.get("loading"));
 
     const curSpecial = cldrStatus.getCurrentSpecial();
     const curLocale = cldrStatus.getCurrentLocale();
@@ -997,7 +992,7 @@ const cldrLoad = (function () {
         infoChunk.innerHTML = infoHtml;
         frag.appendChild(infoChunk);
         flipper.flipTo(pages.other, frag);
-        cldrSurvey.hideLoader(null);
+        cldrSurvey.hideLoader();
         isLoading = false;
       } else if (!cldrSurvey.isInputBusy()) {
         /*
@@ -1027,7 +1022,7 @@ const cldrLoad = (function () {
         $("#nav-page").show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
         myLoad(url, "section", function (json) {
           isLoading = false;
-          cldrSurvey.showLoader(theDiv.loader, cldrText.get("loading2"));
+          cldrSurvey.showLoader(cldrText.get("loading2"));
           if (!verifyJson(json, "section")) {
             return;
           } else if (json.section.nocontent) {
@@ -1042,14 +1037,13 @@ const cldrLoad = (function () {
           } else if (!json.section.rows) {
             console.log("!json.section.rows");
             cldrSurvey.showLoader(
-              theDiv.loader,
               "Error while  loading: <br><div style='border: 1px solid red;'>" +
                 "no rows" +
                 "</div>"
             );
             cldrSurvey.handleDisconnect("while loading- no rows", json);
           } else {
-            cldrSurvey.showLoader(theDiv.loader, "loading..");
+            cldrSurvey.showLoader("loading..");
             if (json.dataLoadTime) {
               cldrSurvey.updateIf("dynload", json.dataLoadTime);
             }
@@ -1083,7 +1077,7 @@ const cldrLoad = (function () {
               ); /* show the box the first time */
             }
             if (!cldrSurvey.isInputBusy()) {
-              cldrSurvey.showLoader(theDiv.loader, cldrText.get("loading3"));
+              cldrSurvey.showLoader(cldrText.get("loading3"));
               cldrTable.insertRows(
                 theDiv,
                 json.pageId,
@@ -1111,11 +1105,11 @@ const cldrLoad = (function () {
         cldrSurvey.cacheKill();
       myLoad(url, "(loading oldvotes " + curLocale + ")", function (json) {
         isLoading = false;
-        cldrSurvey.showLoader(null, cldrText.get("loading2"));
+        cldrSurvey.showLoader(cldrText.get("loading2"));
         if (!verifyJson(json, "oldvotes")) {
           return;
         } else {
-          cldrSurvey.showLoader(null, "loading..");
+          cldrSurvey.showLoader("loading..");
           if (json.dataLoadTime) {
             cldrSurvey.updateIf("dynload", json.dataLoadTime);
           }
@@ -1314,10 +1308,7 @@ const cldrLoad = (function () {
                     url,
                     "(submitting oldvotes " + curLocale + ")",
                     function (json) {
-                      cldrSurvey.showLoader(
-                        theDiv.loader,
-                        cldrText.get("loading2")
-                      );
+                      cldrSurvey.showLoader(cldrText.get("loading2"));
                       if (!verifyJson(json, "oldvotes")) {
                         cldrSurvey.handleDisconnect(
                           "Error submitting votes!",
@@ -1429,7 +1420,7 @@ const cldrLoad = (function () {
             }
           }
         }
-        cldrSurvey.hideLoader(null);
+        cldrSurvey.hideLoader();
       });
     } else if (cldrStatus.getCurrentSpecial() == "mail") {
       var url =
@@ -1442,7 +1433,7 @@ const cldrLoad = (function () {
         url,
         "(loading mail " + cldrStatus.getCurrentLocale() + ")",
         function (json) {
-          cldrSurvey.hideLoader(null, cldrText.get("loading2"));
+          cldrSurvey.hideLoader();
           isLoading = false;
           if (!verifyJson(json, "mail")) {
             return;
@@ -1589,7 +1580,7 @@ const cldrLoad = (function () {
         }
       );
     } else if (cldrSurvey.isReport(cldrStatus.getCurrentSpecial())) {
-      cldrSurvey.showLoader(theDiv.loader);
+      cldrSurvey.showLoader(null);
       cldrSurvey.showInPop2(
         cldrText.get("reportGuidance"),
         null,
@@ -1609,7 +1600,7 @@ const cldrLoad = (function () {
         cldrSurvey.cacheKill();
       var errFunction = function errFunction(err) {
         console.log("Error: loading " + url + " -> " + err);
-        cldrSurvey.hideLoader(null, cldrText.get("loading2"));
+        cldrSurvey.hideLoader();
         isLoading = false;
         const html =
           "<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>" +
@@ -1623,7 +1614,7 @@ const cldrLoad = (function () {
       if (cldrStatus.isDashboard()) {
         if (!cldrStatus.isVisitor()) {
           const loadHandler = function (json) {
-            cldrSurvey.hideLoader(null, cldrText.get("loading2"));
+            cldrSurvey.hideLoader();
             isLoading = false;
             // further errors are handled in JSON
             showReviewPage(json, function () {
@@ -1645,9 +1636,9 @@ const cldrLoad = (function () {
           reloadV();
         }
       } else {
-        cldrSurvey.hideLoader(null, cldrText.get("loading2"));
+        cldrSurvey.hideLoader();
         const loadHandler = function (html) {
-          cldrSurvey.hideLoader(null, cldrText.get("loading2"));
+          cldrSurvey.hideLoader();
           isLoading = false;
           const frag = cldrDomConstruct(html);
           flipper.flipTo(pages.other, frag);
@@ -1663,11 +1654,11 @@ const cldrLoad = (function () {
       }
     } else if (cldrStatus.getCurrentSpecial() == "none") {
       // for now - redirect
-      cldrSurvey.hideLoader(null);
+      cldrSurvey.hideLoader();
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
     } else if (cldrStatus.getCurrentSpecial() == "locales") {
-      cldrSurvey.hideLoader(null);
+      cldrSurvey.hideLoader();
       isLoading = false;
       var theDiv = document.createElement("div");
       theDiv.className = "localeList";
