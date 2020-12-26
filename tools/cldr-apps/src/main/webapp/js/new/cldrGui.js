@@ -33,8 +33,6 @@ const cldrGui = (function () {
       debugElements();
     }
 
-    // cldrStatus.setCurrentLocale("aa"); // until we have a left sidebar locale chooser?
-
     cldrSurvey.updateStatus();
 
     cldrLoad.showV();
