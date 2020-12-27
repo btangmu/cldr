@@ -1790,7 +1790,7 @@ const cldrLoad = (function () {
   function makeMenuArray() {
     const surveyUser = cldrStatus.getSurveyUser();
     if (!surveyUser) {
-      return newArray();
+      return new Array();
     }
     const sessionId = cldrStatus.getSessionId();
     const userID = surveyUser.id ? surveyUser.id : 0;
@@ -1946,6 +1946,7 @@ const cldrLoad = (function () {
       },
       {
         title: "About",
+        // special: "about",
         level: 2,
         url: surveyUserURL.about,
       },
