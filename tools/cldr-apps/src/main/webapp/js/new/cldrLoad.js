@@ -57,8 +57,8 @@ const cldrLoad = (function () {
       if (!cnode) {
         cnode = dnode; // for Elements that do their own stunts
       }
-      if (y && y !== "-" && y !== "") {
-        if (wnode != null) {
+      if (y && y !== "-") {
+        if (wnode) {
           wnode.set("label", y);
         } else {
           cldrSurvey.updateIf(x, y); // non widget
@@ -66,7 +66,7 @@ const cldrLoad = (function () {
         cldrSurvey.setDisplayed(cnode, true);
       } else {
         cldrSurvey.setDisplayed(cnode, false);
-        if (wnode != null) {
+        if (wnode) {
           wnode.set("label", "-");
         } else {
           cldrSurvey.updateIf(x, "-"); // non widget
@@ -75,7 +75,7 @@ const cldrLoad = (function () {
     },
   };
 
-  const otherSpecial = new OtherSpecial();
+  let otherSpecial = null;
 
   let flipper = null;
 
@@ -91,6 +91,7 @@ const cldrLoad = (function () {
    */
   function showV() {
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
+    otherSpecial = new OtherSpecial();
 
     const pucontent = document.getElementById("itemInfo");
     const theDiv = flipper.get(pages.data);
@@ -832,7 +833,7 @@ const cldrLoad = (function () {
       ))
     );
 
-    var itemLoadInfo = cldrSurvey.createChunk("", "div", "itemLoadInfo");
+    const itemLoadInfo = cldrSurvey.createChunk("", "div", "itemLoadInfo");
 
     // Create a little spinner to spin "..." so the user knows we are doing something..
     var spinChunk = cldrSurvey.createChunk("...", "i", "loadingMsgSpin");
@@ -895,7 +896,7 @@ const cldrLoad = (function () {
     let theDiv = flipper.get(pages.data);
     let theTable = theDiv.theTable;
     if (!theTable) {
-      var theTableList = theDiv.getElementsByTagName("table");
+      const theTableList = theDiv.getElementsByTagName("table");
       if (theTableList) {
         theTable = theTableList[0];
         theDiv.theTable = theTable;
@@ -1044,77 +1045,80 @@ const cldrLoad = (function () {
       cldrSurvey.cacheKill();
     $("#nav-page").show(); // make top "Prev/Next" buttons visible while loading, cf. '#nav-page-footer' below
     myLoad(url, "section", function (json) {
-      isLoading = false;
-      cldrSurvey.showLoader(cldrText.get("loading2"));
-      if (!verifyJson(json, "section")) {
-        return;
-      } else if (json.section.nocontent) {
-        cldrStatus.setCurrentSection("");
-        if (json.pageId) {
-          cldrStatus.setCurrentPage(json.pageId);
-        } else {
-          cldrStatus.setCurrentPage("");
-        }
-        cldrSurvey.showLoader(null);
-        updateHashAndMenus(); // find out why there's no content. (locmap)
-      } else if (!json.section.rows) {
-        console.log("!json.section.rows");
-        cldrSurvey.showLoader(
-          "Error while  loading: <br><div style='border: 1px solid red;'>" +
-            "no rows" +
-            "</div>"
-        );
-        cldrSurvey.handleDisconnect("while loading- no rows", json);
-      } else {
-        cldrSurvey.showLoader("loading..");
-        if (json.dataLoadTime) {
-          cldrSurvey.updateIf("dynload", json.dataLoadTime);
-        }
-
-        cldrStatus.setCurrentSection("");
-        cldrStatus.setCurrentPage(json.pageId);
-        updateHashAndMenus(); // now that we have a pageid
-        if (!cldrStatus.getSurveyUser()) {
-          cldrSurvey.showInPop2(
-            cldrText.get("loginGuidance"),
-            null,
-            null,
-            null,
-            true
-          ); /* show the box the first time */
-        } else if (!json.canModify) {
-          cldrSurvey.showInPop2(
-            cldrText.get("readonlyGuidance"),
-            null,
-            null,
-            null,
-            true
-          ); /* show the box the first time */
-        } else {
-          cldrSurvey.showInPop2(
-            cldrText.get("dataPageInitialGuidance"),
-            null,
-            null,
-            null,
-            true
-          ); /* show the box the first time */
-        }
-        if (!cldrSurvey.isInputBusy()) {
-          cldrSurvey.showLoader(cldrText.get("loading3"));
-          cldrTable.insertRows(
-            theDiv,
-            json.pageId,
-            cldrStatus.getSessionId(),
-            json
-          ); // pageid is the xpath..
-          cldrSurvey.updateCoverage(flipper.get(pages.data)); // make sure cov is set right before we show.
-          flipper.flipTo(pages.data); // TODO now? or later?
-          showCurrentId(); // already calls scroll
-          cldrSurvey.refreshCounterVetting();
-          $("#nav-page-footer").show(); // make bottom "Prev/Next" buttons visible after building table
-        }
-      }
+      loadAllRowsFromJson(json, theDiv);
     });
+  }
+
+  function loadAllRowsFromJson(json, theDiv) {
+    isLoading = false;
+    cldrSurvey.showLoader(cldrText.get("loading2"));
+    if (!verifyJson(json, "section")) {
+      return;
+    } else if (json.section.nocontent) {
+      cldrStatus.setCurrentSection("");
+      if (json.pageId) {
+        cldrStatus.setCurrentPage(json.pageId);
+      } else {
+        cldrStatus.setCurrentPage("");
+      }
+      cldrSurvey.showLoader(null);
+      updateHashAndMenus(); // find out why there's no content. (locmap)
+    } else if (!json.section.rows) {
+      console.log("!json.section.rows");
+      cldrSurvey.showLoader(
+        "Error while  loading: <br><div style='border: 1px solid red;'>" +
+          "no rows" +
+          "</div>"
+      );
+      cldrSurvey.handleDisconnect("while loading- no rows", json);
+    } else {
+      cldrSurvey.showLoader("loading..");
+      if (json.dataLoadTime) {
+        cldrSurvey.updateIf("dynload", json.dataLoadTime);
+      }
+      cldrStatus.setCurrentSection("");
+      cldrStatus.setCurrentPage(json.pageId);
+      updateHashAndMenus(); // now that we have a pageid
+      if (!cldrStatus.getSurveyUser()) {
+        cldrSurvey.showInPop2(
+          cldrText.get("loginGuidance"),
+          null,
+          null,
+          null,
+          true
+        );
+      } else if (!json.canModify) {
+        cldrSurvey.showInPop2(
+          cldrText.get("readonlyGuidance"),
+          null,
+          null,
+          null,
+          true
+        );
+      } else {
+        cldrSurvey.showInPop2(
+          cldrText.get("dataPageInitialGuidance"),
+          null,
+          null,
+          null,
+          true
+        );
+      }
+      if (!cldrSurvey.isInputBusy()) {
+        cldrSurvey.showLoader(cldrText.get("loading3"));
+        cldrTable.insertRows(
+          theDiv,
+          json.pageId,
+          cldrStatus.getSessionId(),
+          json
+        ); // pageid is the xpath..
+        cldrSurvey.updateCoverage(flipper.get(pages.data)); // make sure cov is set right before we show.
+        flipper.flipTo(pages.data); // TODO now? or later?
+        showCurrentId(); // already calls scroll
+        cldrSurvey.refreshCounterVetting();
+        $("#nav-page-footer").show(); // make bottom "Prev/Next" buttons visible after building table
+      }
+    }
   }
 
   function loadOldVotes() {
@@ -1688,7 +1692,7 @@ const cldrLoad = (function () {
       null,
       null,
       true
-    ); /* show the box the first time */
+    );
     $("#itemInfo").html("");
   }
 
@@ -1766,7 +1770,7 @@ const cldrLoad = (function () {
       menubuttons.set(menubuttons.section);
       const curSpecial = cldrStatus.getCurrentSpecial();
       if (curSpecial != null) {
-        var specialId = "special_" + curSpecial;
+        const specialId = "special_" + curSpecial;
         menubuttons.set(menubuttons.page, cldrText.get(specialId));
       } else {
         menubuttons.set(menubuttons.page);
@@ -1774,7 +1778,7 @@ const cldrLoad = (function () {
       return; // nothing to do.
     }
 
-    const specialItems = makeGearMenuArray();
+    const specialItems = makeMenuArray();
     if (_thePages == null || _thePages.loc != curLocale) {
       getMenusFromServer(specialItems);
     } else {
@@ -1783,7 +1787,7 @@ const cldrLoad = (function () {
     }
   }
 
-  function makeGearMenuArray() {
+  function makeMenuArray() {
     const surveyUser = cldrStatus.getSurveyUser();
     if (!surveyUser) {
       return newArray();
