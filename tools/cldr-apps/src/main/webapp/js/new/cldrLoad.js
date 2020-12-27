@@ -2006,6 +2006,12 @@ const cldrLoad = (function () {
    * Update the menus
    */
   function updateMenus(menuMap, specialItems) {
+    if (!menuMap) {
+      console.log("❌ menuMap is FALSY in updateMenus!");
+    }
+    if (!specialItems) {
+      console.log("❌ specialItems is FALSY in updateMenus!");
+    }
     // initialize menus
     if (!menuMap.menusSetup) {
       menuMap.menusSetup = true;

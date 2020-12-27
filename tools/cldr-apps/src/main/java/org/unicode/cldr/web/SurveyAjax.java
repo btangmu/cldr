@@ -561,7 +561,7 @@ public class SurveyAjax extends HttpServlet {
                                 mySession.userDidAction();
                                 JSONWriter r = newJSONStatus(request, sm);
                                 r.put("what", what);
-                                new AdminPanel().getJson(r);
+                                // new AdminPanel().getJson(r);
                                 send(r, out);
                             }
                         } else {
