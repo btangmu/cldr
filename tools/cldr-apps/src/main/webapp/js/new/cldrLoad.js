@@ -1755,8 +1755,37 @@ const cldrLoad = (function () {
    * @param doPush {Boolean} if false, do not add to history
    */
   function updateHashAndMenus(doPush) {
-    const sessionId = cldrStatus.getSessionId();
+    replaceHash(doPush || false); // update the hash
+    updateLocaleMenu();
+
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (!curLocale) {
+      menubuttons.set(menubuttons.section);
+      const curSpecial = cldrStatus.getCurrentSpecial();
+      if (curSpecial != null) {
+        var specialId = "special_" + curSpecial;
+        menubuttons.set(menubuttons.page, cldrText.get(specialId));
+      } else {
+        menubuttons.set(menubuttons.page);
+      }
+      return; // nothing to do.
+    }
+
+    const specialItems = makeGearMenuArray();
+    if (_thePages == null || _thePages.loc != curLocale) {
+      getMenuFromServer(specialItems);
+    } else {
+      // go ahead and update
+      updateMenus(_thePages, specialItems);
+    }
+  }
+
+  function makeGearMenuArray() {
     const surveyUser = cldrStatus.getSurveyUser();
+    if (!surveyUser) {
+      return newArray();
+    }
+    const sessionId = cldrStatus.getSessionId();
     const userID = surveyUser && surveyUser.id ? surveyUser.id : 0;
     const surveyUserPerms = cldrStatus.getPermissions();
     const surveyUserURL = {
@@ -1776,225 +1805,194 @@ const cldrLoad = (function () {
      * 'hidden' - true to hide the item
      * 'title' - override of menu name
      */
-    let specialItems = new Array();
-    if (surveyUser != null) { // make the "gear" menu
-      specialItems = [
-        {
-          divider: true,
-        },
+    return [
+      {
+        divider: true,
+      },
 
-        {
-          title: "Admin Panel",
-          url: surveyUserURL.adminPanel,
-          display: surveyUser && surveyUser.userlevelName === "ADMIN",
-        },
-        {
-          divider: true,
-          display: surveyUser && surveyUser.userlevelName === "ADMIN",
-        },
+      {
+        title: "Admin Panel",
+        url: surveyUserURL.adminPanel,
+        display: surveyUser && surveyUser.userlevelName === "ADMIN",
+      },
+      {
+        divider: true,
+        display: surveyUser && surveyUser.userlevelName === "ADMIN",
+      },
 
-        {
-          title: "My Account",
-        }, // My Account section
+      {
+        title: "My Account",
+      }, // My Account section
 
-        {
-          title: "Settings",
-          level: 2,
-          url: surveyUserURL.myAccountSetting,
-          display: surveyUser && true,
-        },
-        {
-          title: "Lock (Disable) My Account",
-          level: 2,
-          url: surveyUserURL.disableMyAccount,
-          display: surveyUser && true,
-        },
+      {
+        title: "Settings",
+        level: 2,
+        url: surveyUserURL.myAccountSetting,
+        display: surveyUser && true,
+      },
+      {
+        title: "Lock (Disable) My Account",
+        level: 2,
+        url: surveyUserURL.disableMyAccount,
+        display: surveyUser && true,
+      },
 
-        {
-          divider: true,
-        },
-        {
-          title: "My Votes",
-        }, // My Votes section
+      {
+        divider: true,
+      },
+      {
+        title: "My Votes",
+      }, // My Votes section
 
-        /*
-         * This indirectly references "special_oldvotes" in cldrText.js
-         */
-        {
-          special: "oldvotes",
-          level: 2,
-          display: surveyUserPerms && surveyUserPerms.userCanImportOldVotes,
-        },
-        {
-          title: "See My Recent Activity",
-          level: 2,
-          url: surveyUserURL.recentActivity,
-        },
-        {
-          title: "Upload XML",
-          level: 2,
-          url: surveyUserURL.xmlUpload,
-        },
+      /*
+       * This indirectly references "special_oldvotes" in cldrText.js
+       */
+      {
+        special: "oldvotes",
+        level: 2,
+        display: surveyUserPerms && surveyUserPerms.userCanImportOldVotes,
+      },
+      {
+        title: "See My Recent Activity",
+        level: 2,
+        url: surveyUserURL.recentActivity,
+      },
+      {
+        title: "Upload XML",
+        level: 2,
+        url: surveyUserURL.xmlUpload,
+      },
 
-        {
-          divider: true,
-        },
-        {
-          title: "My Organization(" + cldrStatus.getOrganizationName() + ")",
-        }, // My Organization section
+      {
+        divider: true,
+      },
+      {
+        title: "My Organization(" + cldrStatus.getOrganizationName() + ")",
+      }, // My Organization section
 
-        {
-          special: "vsummary" /* Cf. special_vsummary */,
-          level: 2,
-          display: surveyUserPerms && surveyUserPerms.userCanUseVettingSummary,
-        },
-        {
-          title: "List " + cldrStatus.getOrganizationName() + " Users",
-          level: 2,
-          url: surveyUserURL.manageUser,
-          display:
-            surveyUserPerms &&
-            (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter),
-        },
-        {
-          special: "forum_participation" /* Cf. special_forum_participation */,
-          level: 2,
-          display: surveyUserPerms && surveyUserPerms.userCanMonitorForum,
-        },
-        {
-          special:
-            "vetting_participation" /* Cf. special_vetting_participation */,
-          level: 2,
-          display:
-            surveyUserPerms &&
-            (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter),
-        },
-        {
-          title: "LOCKED: Note: your account is currently locked.",
-          level: 2,
-          display: surveyUserPerms && surveyUserPerms.userIsLocked,
-          bold: true,
-        },
+      {
+        special: "vsummary" /* Cf. special_vsummary */,
+        level: 2,
+        display: surveyUserPerms && surveyUserPerms.userCanUseVettingSummary,
+      },
+      {
+        title: "List " + cldrStatus.getOrganizationName() + " Users",
+        level: 2,
+        url: surveyUserURL.manageUser,
+        display:
+          surveyUserPerms &&
+          (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter),
+      },
+      {
+        special: "forum_participation" /* Cf. special_forum_participation */,
+        level: 2,
+        display: surveyUserPerms && surveyUserPerms.userCanMonitorForum,
+      },
+      {
+        special:
+          "vetting_participation" /* Cf. special_vetting_participation */,
+        level: 2,
+        display:
+          surveyUserPerms &&
+          (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter),
+      },
+      {
+        title: "LOCKED: Note: your account is currently locked.",
+        level: 2,
+        display: surveyUserPerms && surveyUserPerms.userIsLocked,
+        bold: true,
+      },
 
-        {
-          divider: true,
-        },
-        {
-          title: "Forum",
-        }, // Forum section
+      {
+        divider: true,
+      },
+      {
+        title: "Forum",
+      }, // Forum section
 
-        {
-          special: "flagged",
-          level: 2,
-          hasFlag: true,
-        },
-        {
-          special: "mail",
-          level: 2,
-          display: cldrStatus.getIsUnofficial(),
-        },
-        {
-          special: "bulk_close_posts" /* Cf. special_bulk_close_posts */,
-          level: 2,
-          display: surveyUser && surveyUser.userlevelName === "ADMIN",
-        },
+      {
+        special: "flagged",
+        level: 2,
+        hasFlag: true,
+      },
+      {
+        special: "mail",
+        level: 2,
+        display: cldrStatus.getIsUnofficial(),
+      },
+      {
+        special: "bulk_close_posts" /* Cf. special_bulk_close_posts */,
+        level: 2,
+        display: surveyUser && surveyUser.userlevelName === "ADMIN",
+      },
 
-        {
-          divider: true,
-        },
-        {
-          title: "Informational",
-        }, // Informational section
+      {
+        divider: true,
+      },
+      {
+        title: "Informational",
+      }, // Informational section
 
-        {
-          special: "statistics",
-          level: 2,
-        },
-        {
-          title: "About",
-          level: 2,
-          url: surveyUserURL.about,
-        },
-        {
-          title: "Lookup a code or xpath",
-          level: 2,
-          url: surveyUserURL.browse,
-        },
-        {
-          title: "Error Subtypes",
-          level: 2,
-          url: "./tc-all-errors.jsp",
-          display: surveyUserPerms && surveyUserPerms.userIsTC,
-        },
-        {
-          divider: true,
-        },
-      ];
-    }
-    if (!doPush) {
-      doPush = false;
-    }
-    replaceHash(doPush); // update the hash
-    updateLocaleMenu();
+      {
+        special: "statistics",
+        level: 2,
+      },
+      {
+        title: "About",
+        level: 2,
+        url: surveyUserURL.about,
+      },
+      {
+        title: "Lookup a code or xpath",
+        level: 2,
+        url: surveyUserURL.browse,
+      },
+      {
+        title: "Error Subtypes",
+        level: 2,
+        url: "./tc-all-errors.jsp",
+        display: surveyUserPerms && surveyUserPerms.userIsTC,
+      },
+      {
+        divider: true,
+      },
+    ];
+  }
 
-    if (cldrStatus.getCurrentLocale() == null) {
-      menubuttons.set(menubuttons.section);
-      const curSpecial = cldrStatus.getCurrentSpecial();
-      if (curSpecial != null) {
-        var specialId = "special_" + curSpecial;
-        menubuttons.set(menubuttons.page, cldrText.get(specialId));
-      } else {
-        menubuttons.set(menubuttons.page);
+  function getMenuFromServer() {
+    // show the raw IDs while loading.
+    updateMenuTitles(null, specialItems);
+
+    const url =
+      cldrStatus.getContextPath() +
+      "/SurveyAjax?what=menus&_=" +
+      curLocale +
+      "&locmap=" +
+      false +
+      "&s=" +
+      cldrStatus.getSessionId() +
+      cldrSurvey.cacheKill();
+    myLoad(url, "menus", function (json) {
+      if (!verifyJson(json, "menus")) {
+        return; // busted?
       }
-      return; // nothing to do.
-    }
-
-    const curLocale = cldrStatus.getCurrentLocale();
-    if (_thePages == null || _thePages.loc != curLocale) {
-      // show the raw IDs while loading.
-      updateMenuTitles(null, specialItems);
-
-      if (curLocale != null && curLocale != "") {
-        var needLocTable = false;
-
-        var url =
-          cldrStatus.getContextPath() +
-          "/SurveyAjax?what=menus&_=" +
-          curLocale +
-          "&locmap=" +
-          needLocTable +
-          "&s=" +
-          cldrStatus.getSessionId() +
-          cldrSurvey.cacheKill();
-        myLoad(url, "menus", function (json) {
-          if (!verifyJson(json, "menus")) {
-            return; // busted?
-          }
-
-          if (json.locmap) {
-            locmap = new LocaleMap(locmap); // overwrite with real data
-          }
-
-          // make this into a hashmap.
-          if (json.canmodify) {
-            for (var k in json.canmodify) {
-              canmodify[json.canmodify[k]] = true;
-            }
-          }
-
-          cldrSurvey.updateCovFromJson(json);
-          updateCoverageMenuTitle();
-          cldrSurvey.updateCoverage(flipper.get(pages.data)); // update CSS and auto menu title
-          unpackMenus(json);
-          cldrEvent.unpackMenuSideBar(json);
-          updateMenus(_thePages, specialItems);
-        });
+      if (json.locmap) {
+        locmap = new LocaleMap(locmap); // overwrite with real data
       }
-    } else {
-      // go ahead and update
+      // make this into a hashmap.
+      if (json.canmodify) {
+        for (let k in json.canmodify) {
+          canmodify[json.canmodify[k]] = true;
+        }
+      }
+      cldrSurvey.updateCovFromJson(json);
+      updateCoverageMenuTitle();
+      cldrSurvey.updateCoverage(flipper.get(pages.data)); // update CSS and auto menu title
+      unpackMenus(json);
+      cldrEvent.unpackMenuSideBar(json);
       updateMenus(_thePages, specialItems);
-    }
-  } // updateHashAndMenus
+    });
+  }
 
   /**
    * Update the menus
@@ -2094,7 +2092,9 @@ const cldrLoad = (function () {
         myPage = mySection.pageMap[curPage];
       }
       if (mySection !== null) {
-        const titlePageContainer = document.getElementById("title-page-container");
+        const titlePageContainer = document.getElementById(
+          "title-page-container"
+        );
 
         // update menus under 'page' - peer pages
         if (!titlePageContainer.menus) {
