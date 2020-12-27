@@ -814,7 +814,7 @@ const cldrTable = (function () {
          * theRow.inheritedValue can be undefined here; then do not append
          */
         if (theRow.inheritedValue) {
-          cldrSurvey.appendItem(valdiv, theRow.inheritedValue, item.pClass, tr);
+          cldrSurvey.appendItem(valdiv, theRow.inheritedValue, item.pClass);
           valdiv.appendChild(
             cldrSurvey.createChunk(
               cldrText.get("voteInfo_votesForInheritance"),
@@ -826,8 +826,7 @@ const cldrTable = (function () {
         cldrSurvey.appendItem(
           valdiv,
           value,
-          value === theRow.winningValue ? "winner" : "value",
-          tr
+          value === theRow.winningValue ? "winner" : "value"
         );
         if (value === theRow.inheritedValue) {
           valdiv.appendChild(

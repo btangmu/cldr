@@ -108,7 +108,7 @@ const cldrForum = (function () {
       const ourDiv = document.createElement("div");
       ourDiv.appendChild(forumCreateChunk(forumMessage, "h4", ""));
 
-      const filterMenu = cldrForumFilter.createMenu(reloadV);
+      const filterMenu = cldrForumFilter.createMenu(cldrLoad.reloadV);
       const summaryDiv = document.createElement("div");
       summaryDiv.innerHTML = "";
       ourDiv.appendChild(summaryDiv);
@@ -126,8 +126,8 @@ const cldrForum = (function () {
       }
       // No longer loading
       cldrSurvey.hideLoader();
-      params.flipper.flipTo(params.pages.other, ourDiv);
-      params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
+      cldrLoad.flipflop(ourDiv);
+      handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
     };
     const xhrArgs = {
       url: url,
@@ -136,6 +136,37 @@ const cldrForum = (function () {
       error: errorHandler,
     };
     cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function handleIdChanged(strid) {
+    if (strid) {
+      var id = new Number(strid);
+      if (id == NaN) {
+        cldrStatus.setCurrentId("");
+      } else {
+        cldrStatus.setCurrentId(id.toString());
+      }
+      var itemid = "fp" + id;
+      var pdiv = document.getElementById(itemid);
+      if (pdiv) {
+        console.log(
+          "scrollIntoView not yet implemented for forum! itemid = " + itemid
+        );
+        /***
+        console.log("Scrolling " + itemid);
+        win.scrollIntoView(pdiv);
+        TODO: that was a dojo/window thing...
+        ***/
+        (function (o, itemid, pdiv) {
+          pdiv.style["background-color"] = "yellow";
+          window.setTimeout(function () {
+            pdiv.style["background-color"] = null;
+          }, 2000);
+        })(this, itemid, pdiv);
+      } else {
+        console.log("No item " + itemid);
+      }
+    }
   }
 
   /**
@@ -525,7 +556,7 @@ const cldrForum = (function () {
       );
       (function (post) {
         /*
-         * TODO: encapsulate "listenFor" and "reloadV" dependencies
+         * TODO: encapsulate "listenFor" dependency
          */
         if (typeof listenFor === "undefined") {
           return;

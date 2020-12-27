@@ -554,7 +554,16 @@ public class SurveyAjax extends HttpServlet {
                     if (what.equals(WHAT_ADMIN_PANEL)) {
                         mySession.userDidAction();
                         if (UserRegistry.userIsAdmin(mySession.user)) {
-                            response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
+                            if (SurveyTool.USE_DOJO) {
+                                response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
+                            } else {
+                                // this doesn't work yet...
+                                mySession.userDidAction();
+                                JSONWriter r = newJSONStatus(request, sm);
+                                r.put("what", what);
+                                new AdminPanel().getJson(r);
+                                send(r, out);
+                            }
                         } else {
                             sendError(out, "Only Admin can access Admin Panel", ErrorCode.E_NO_PERMISSION);
                         }
@@ -2686,7 +2695,6 @@ public class SurveyAjax extends HttpServlet {
         CLDRConfigImpl.setUrls(request);
         WebContext ctx = new WebContext(request, response);
         ElapsedTimer et = new ElapsedTimer();
-
         String loc = locale.toString();
         ctx.setLocale(locale);
         xpath = WebContext.decodeFieldString(xpath); // TODO: why doesn't processRequest do decodeFieldString? Not needed, all ASCII?

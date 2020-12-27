@@ -347,6 +347,7 @@ const cldrText = (function () {
     users_infoVotesButton: "View Old Vote Stats",
     users_loadVotesButton: "Transfer Old Votes...",
 
+    special_about: "About Survey Tool",
     special_general:
       "Please hover over the sidebar to choose a section to begin entering data. If you have not already done so, please read the <a target='_blank' href='http://www.unicode.org/cldr/survey_tool.html'>Instructions</a>, particularly the Guide and the Walkthrough. You can also use the Dashboard to see all the errors, warnings, and missing items in one place.",
     special_forum: "Forum Posts",
