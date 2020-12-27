@@ -33,9 +33,8 @@ const cldrLoad = (function () {
 
   /**
    * list of pages to use with the flipper
-   * @property pages
    */
-  let pages = {
+  const pages = {
     loading: "LoadingMessageSection",
     data: "DynamicDataSection",
     other: "OtherSection",
@@ -93,8 +92,8 @@ const cldrLoad = (function () {
   function showV() {
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
 
-    var pucontent = document.getElementById("itemInfo");
-    var theDiv = flipper.get(pages.data);
+    const pucontent = document.getElementById("itemInfo");
+    const theDiv = flipper.get(pages.data);
     theDiv.pucontent = pucontent;
 
     pucontent.appendChild(
@@ -126,13 +125,12 @@ const cldrLoad = (function () {
 
   function getInitialMenusEtc(sessionId) {
     parseHashAndUpdate(getHash()); // get the initial settings
-    // load the menus - first.
 
-    var theLocale = cldrStatus.getCurrentLocale();
-    if (theLocale === null || theLocale == "") {
+    let theLocale = cldrStatus.getCurrentLocale();
+    if (!theLocale) {
       theLocale = "root"; // Default.
     }
-    var xurl =
+    const xurl =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=menus&_=" +
       theLocale +
@@ -142,115 +140,120 @@ const cldrLoad = (function () {
       sessionId +
       cldrSurvey.cacheKill();
     myLoad(xurl, "initial menus for " + theLocale, function (json) {
-      if (!verifyJson(json, "locmap")) {
-        return;
-      } else {
-        locmap = new LocaleMap(json.locmap);
-        if (cldrStatus.getCurrentLocale() === "USER" && json.loc) {
-          cldrStatus.setCurrentLocale(json.loc);
-        }
-        // make this into a hashmap.
-        if (json.canmodify) {
-          for (var k in json.canmodify) {
-            canmodify[json.canmodify[k]] = true;
-          }
-        }
-
-        // update left sidebar with locale data
-        var theDiv = document.createElement("div");
-        theDiv.className = "localeList";
-
-        addTopLocale("root", theDiv);
-        // top locales
-        for (var n in locmap.locmap.topLocales) {
-          var topLoc = locmap.locmap.topLocales[n];
-          addTopLocale(topLoc, theDiv);
-        }
-        $("#locale-list").html(theDiv.innerHTML);
-
-        if (cldrStatus.isVisitor()) {
-          $("#show-read").prop("checked", true);
-        }
-        //tooltip locale
-        $("a.locName").tooltip();
-
-        cldrEvent.filterAllLocale();
-        // end of adding the locale data
-
-        cldrSurvey.updateCovFromJson(json);
-        // setup coverage level
-        const surveyLevels = json.menus.levels;
-        cldrSurvey.setSurveyLevels(surveyLevels);
-
-        var levelNums = []; // numeric levels
-        for (var k in surveyLevels) {
-          levelNums.push({
-            num: parseInt(surveyLevels[k].level),
-            level: surveyLevels[k],
-          });
-        }
-        levelNums.sort(function (a, b) {
-          return a.num - b.num;
-        });
-
-        var store = [];
-
-        store.push({
-          label: "Auto",
-          value: "auto",
-          title: cldrText.get("coverage_auto_desc"),
-        });
-
-        store.push({
-          type: "separator",
-        });
-
-        for (var j in levelNums) {
-          // use given order
-          if (levelNums[j].num == 0) continue; // none - skip
-          if (levelNums[j].num < cldrSurvey.covValue("minimal")) {
-            continue; // don't bother showing these
-          }
-          if (cldrStatus.getIsUnofficial() === false && levelNums[j].num == 101)
-            continue; // hide Optional in production
-          var level = levelNums[j].level;
-          store.push({
-            label: cldrText.get("coverage_" + level.name),
-            value: level.name,
-            title: cldrText.get("coverage_" + level.name + "_desc"),
-          });
-        }
-        //coverage menu
-        var patternCoverage = $("#title-coverage .dropdown-menu");
-        if (store[0].value) {
-          $("#coverage-info").text(store[0].label);
-        }
-        for (var index = 0; index < store.length; ++index) {
-          var data = store[index];
-          if (data.value) {
-            var html =
-              '<li><a class="coverage-list" data-value="' +
-              data.value +
-              '"href="#">' +
-              data.label +
-              "</a></li>";
-            patternCoverage.append(html);
-          }
-        }
-        patternCoverage.find("li a").click(function (event) {
-          patternCoverageClick(event, theLocale, $(this));
-        });
-        if (json.canAutoImport) {
-          doAutoImport();
-        }
-
-        reloadV();
-
-        // watch for hashchange to make other changes; cf. old "/dojo/hashchange"
-        window.addEventListener("hashchange", doHashChange);
-      }
+      loadInitialMenusFromJson(json, theLocale, sessionId);
     });
-  } // end getInitialMenusEtc
+  }
+
+  function loadInitialMenusFromJson(json, theLocale, sessionId) {
+    if (!verifyJson(json, "locmap")) {
+      return;
+    }
+    locmap = new LocaleMap(json.locmap);
+    if (cldrStatus.getCurrentLocale() === "USER" && json.loc) {
+      cldrStatus.setCurrentLocale(json.loc);
+    }
+    // make this into a hashmap.
+    if (json.canmodify) {
+      for (let k in json.canmodify) {
+        canmodify[json.canmodify[k]] = true;
+      }
+    }
+    // update left sidebar with locale data
+    var theDiv = document.createElement("div");
+    theDiv.className = "localeList";
+
+    addTopLocale("root", theDiv);
+    // top locales
+    for (let n in locmap.locmap.topLocales) {
+      const topLoc = locmap.locmap.topLocales[n];
+      addTopLocale(topLoc, theDiv);
+    }
+    $("#locale-list").html(theDiv.innerHTML);
+
+    if (cldrStatus.isVisitor()) {
+      $("#show-read").prop("checked", true);
+    }
+    // tooltip locale
+    $("a.locName").tooltip();
+
+    cldrEvent.filterAllLocale();
+    // end of adding the locale data
+
+    cldrSurvey.updateCovFromJson(json);
+    // setup coverage level
+    const surveyLevels = json.menus.levels;
+    cldrSurvey.setSurveyLevels(surveyLevels);
+
+    let levelNums = []; // numeric levels
+    for (let k in surveyLevels) {
+      levelNums.push({
+        num: parseInt(surveyLevels[k].level),
+        level: surveyLevels[k],
+      });
+    }
+    levelNums.sort(function (a, b) {
+      return a.num - b.num;
+    });
+
+    let store = [];
+
+    store.push({
+      label: "Auto",
+      value: "auto",
+      title: cldrText.get("coverage_auto_desc"),
+    });
+
+    store.push({
+      type: "separator",
+    });
+
+    for (let j in levelNums) {
+      // use given order
+      if (levelNums[j].num == 0) {
+        continue; // none - skip
+      }
+      if (levelNums[j].num < cldrSurvey.covValue("minimal")) {
+        continue; // don't bother showing these
+      }
+      if (cldrStatus.getIsUnofficial() === false && levelNums[j].num == 101) {
+        continue; // hide Optional in production
+      }
+      const level = levelNums[j].level;
+      store.push({
+        label: cldrText.get("coverage_" + level.name),
+        value: level.name,
+        title: cldrText.get("coverage_" + level.name + "_desc"),
+      });
+    }
+    //coverage menu
+    let patternCoverage = $("#title-coverage .dropdown-menu");
+    if (store[0].value) {
+      $("#coverage-info").text(store[0].label);
+    }
+    for (let index = 0; index < store.length; ++index) {
+      const data = store[index];
+      if (data.value) {
+        var html =
+          '<li><a class="coverage-list" data-value="' +
+          data.value +
+          '"href="#">' +
+          data.label +
+          "</a></li>";
+        patternCoverage.append(html);
+      }
+    }
+    patternCoverage.find("li a").click(function (event) {
+      patternCoverageClick(event, theLocale, $(this));
+    });
+    if (json.canAutoImport) {
+      doAutoImport();
+    }
+
+    reloadV();
+
+    // watch for hashchange to make other changes; cf. old "/dojo/hashchange"
+    window.addEventListener("hashchange", doHashChange);
+  }
 
   function patternCoverageClick(event, theLocale, clickedElement) {
     event.stopPropagation();
@@ -266,7 +269,7 @@ const cldrLoad = (function () {
       console.log("No change in user cov: " + setUserCovTo);
     } else {
       cldrSurvey.setSurveyUserCov(setUserCovTo);
-      var updurl =
+      const updurl =
         cldrStatus.getContextPath() +
         "/SurveyAjax?what=pref&_=" +
         theLocale +
@@ -279,9 +282,7 @@ const cldrLoad = (function () {
         updurl,
         "updating covlev to  " + cldrSurvey.getSurveyUserCov(),
         function (json) {
-          if (!verifyJson(json, "pref")) {
-            return;
-          } else {
+          if (verifyJson(json, "pref")) {
             cldrEvent.unpackMenuSideBar(json);
             if (
               cldrStatus.getCurrentSpecial() &&
@@ -315,10 +316,10 @@ const cldrLoad = (function () {
           changedHash
       );
     }
-    var oldLocale = trimNull(cldrStatus.getCurrentLocale());
-    var oldSpecial = trimNull(cldrStatus.getCurrentSpecial());
-    var oldPage = trimNull(cldrStatus.getCurrentPage());
-    var oldId = trimNull(cldrStatus.getCurrentId());
+    const oldLocale = trimNull(cldrStatus.getCurrentLocale());
+    const oldSpecial = trimNull(cldrStatus.getCurrentSpecial());
+    const oldPage = trimNull(cldrStatus.getCurrentPage());
+    const oldId = trimNull(cldrStatus.getCurrentId());
 
     parseHashAndUpdate(changedHash);
 
@@ -474,7 +475,7 @@ const cldrLoad = (function () {
   }
 
   function updateWindowTitle() {
-    var t = cldrText.get("survey_title");
+    let t = cldrText.get("survey_title");
     const curLocale = cldrStatus.getCurrentLocale();
     if (curLocale && curLocale != "") {
       t = t + ": " + locmap.getLocaleName(curLocale);
@@ -492,7 +493,7 @@ const cldrLoad = (function () {
 
   // Compare the similar function updateCurrentId in cldrSurvey.js -- difference: replaceHash
   function updateCurrentId(id) {
-    if (id == null) {
+    if (!id) {
       id = "";
     }
     if (cldrStatus.getCurrentId() != id) {
@@ -583,7 +584,7 @@ const cldrLoad = (function () {
     } else if (!json[subkey]) {
       console.log("!json.oldvotes");
       cldrSurvey.showLoader(
-        "Error while  loading " +
+        "Error while loading " +
           subkey +
           ": <br><div style='border: 1px solid red;'>" +
           "no data" +
@@ -602,7 +603,7 @@ const cldrLoad = (function () {
       otherSpecial.handleIdChanged(curSpecial, showCurrentId);
     } else {
       const curId = cldrStatus.getCurrentId();
-      if (curId != "") {
+      if (curId) {
         var xtr = document.getElementById("r@" + curId);
         if (!xtr) {
           console.log("Warning could not load id " + curId + " does not exist");
@@ -720,8 +721,8 @@ const cldrLoad = (function () {
         locale: cldrStatus.getCurrentLocale(),
         msg: msg,
       });
-      var theChunk = cldrDomConstruct(html);
-      var subDiv = document.createElement("div");
+      const theChunk = cldrDomConstruct(html);
+      const subDiv = document.createElement("div");
       subDiv.appendChild(theChunk);
       subDiv.className = "warnText";
       theDiv.insertBefore(subDiv, theDiv.childNodes[0]);
@@ -873,7 +874,9 @@ const cldrLoad = (function () {
     // row get updated
     if (!cldrStatus.isDashboard()) {
       const id2 = flipper.get(pages.data).id;
-      cldrSurvey.setShower(id2, shower);
+      cldrSurvey.setShower(id2, function () {
+        shower(itemLoadInfo);
+      });
     }
   } // end reloadV
 
@@ -921,18 +924,18 @@ const cldrLoad = (function () {
       cldrSurvey.hideLoader();
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
-    } else if (curSpecial === "oldvotes") {
-      loadOldVotes();
-    } else if (curSpecial === "mail") {
-      loadMail();
     } else if (cldrSurvey.isReport(curSpecial)) {
       loadReport();
-    } else if (curSpecial === "locales") {
-      loadLocales();
-    } else if (curSpecial === "forum") {
-      loadForumSpecial();
     } else if (curSpecial === "about") {
       loadAbout();
+    } else if (curSpecial === "forum") {
+      loadForumSpecial();
+    } else if (curSpecial === "locales") {
+      loadLocales();
+    } else if (curSpecial === "mail") {
+      loadMail();
+    } else if (curSpecial === "oldvotes") {
+      loadOldVotes();
     } else {
       otherSpecial.show(curSpecial, {
         flipper: flipper,
@@ -1773,7 +1776,7 @@ const cldrLoad = (function () {
 
     const specialItems = makeGearMenuArray();
     if (_thePages == null || _thePages.loc != curLocale) {
-      getMenuFromServer(specialItems);
+      getMenusFromServer(specialItems);
     } else {
       // go ahead and update
       updateMenus(_thePages, specialItems);
@@ -1786,7 +1789,7 @@ const cldrLoad = (function () {
       return newArray();
     }
     const sessionId = cldrStatus.getSessionId();
-    const userID = surveyUser && surveyUser.id ? surveyUser.id : 0;
+    const userID = surveyUser.id ? surveyUser.id : 0;
     const surveyUserPerms = cldrStatus.getPermissions();
     const surveyUserURL = {
       myAccountSetting: "survey?do=listu",
@@ -1959,14 +1962,14 @@ const cldrLoad = (function () {
     ];
   }
 
-  function getMenuFromServer() {
+  function getMenusFromServer(specialItems) {
     // show the raw IDs while loading.
     updateMenuTitles(null, specialItems);
 
     const url =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=menus&_=" +
-      curLocale +
+      cldrStatus.getCurrentLocale() +
       "&locmap=" +
       false +
       "&s=" +
@@ -2316,7 +2319,7 @@ const cldrLoad = (function () {
     const titlePageContainer = document.getElementById("title-page-container");
 
     if (curSpecial != null && curSpecial != "") {
-      var specialId = "special_" + curSpecial;
+      const specialId = "special_" + curSpecial;
       $("#section-current").html(cldrText.get(specialId));
       cldrSurvey.setDisplayed(titlePageContainer, false);
     } else if (!menuMap) {
@@ -2329,7 +2332,7 @@ const cldrLoad = (function () {
         $("#section-current").html(menuMap.sectionMap[curSection].name);
         cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
       } else if (menuMap.pageToSection[curPage]) {
-        var mySection = menuMap.pageToSection[curPage];
+        const mySection = menuMap.pageToSection[curPage];
         cldrStatus.setCurrentSection(mySection.id);
         $("#section-current").html(mySection.name);
         cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
@@ -2341,13 +2344,13 @@ const cldrLoad = (function () {
   }
 
   function unpackMenus(json) {
-    var menus = json.menus;
+    const menus = json.menus;
 
     if (_thePages) {
-      for (var k in menus.sections) {
-        var oldSection = _thePages.sectionMap[menus.sections[k].id];
-        for (var j in menus.sections[k].pages) {
-          var oldPage = oldSection.pageMap[menus.sections[k].pages[j].id];
+      for (let k in menus.sections) {
+        const oldSection = _thePages.sectionMap[menus.sections[k].id];
+        for (let j in menus.sections[k].pages) {
+          const oldPage = oldSection.pageMap[menus.sections[k].pages[j].id];
 
           // copy over levels
           oldPage.levs[json.loc] = menus.sections[k].pages[j].levs[json.loc];
@@ -2358,11 +2361,11 @@ const cldrLoad = (function () {
       menus.haveLocs = {};
       menus.sectionMap = {};
       menus.pageToSection = {};
-      for (var k in menus.sections) {
+      for (let k in menus.sections) {
         menus.sectionMap[menus.sections[k].id] = menus.sections[k];
         menus.sections[k].pageMap = {};
         menus.sections[k].minLev = {};
-        for (var j in menus.sections[k].pages) {
+        for (let j in menus.sections[k].pages) {
           menus.sections[k].pageMap[menus.sections[k].pages[j].id] =
             menus.sections[k].pages[j];
           menus.pageToSection[menus.sections[k].pages[j].id] =
@@ -2372,10 +2375,10 @@ const cldrLoad = (function () {
       _thePages = menus;
     }
 
-    for (var k in _thePages.sectionMap) {
-      var min = 200;
-      for (var j in _thePages.sectionMap[k].pageMap) {
-        var thisLev = parseInt(
+    for (let k in _thePages.sectionMap) {
+      let min = 200;
+      for (let j in _thePages.sectionMap[k].pageMap) {
+        const thisLev = parseInt(
           _thePages.sectionMap[k].pageMap[j].levs[json.loc]
         );
         if (min > thisLev) {
@@ -2419,7 +2422,7 @@ const cldrLoad = (function () {
    * Automatically import old winning votes
    */
   function doAutoImport() {
-    var autoImportProgressDialog = newProgressDialog({
+    const autoImportProgressDialog = newProgressDialog({
       title: cldrText.get("v_oldvote_auto_msg"),
       content: cldrText.get("v_oldvote_auto_progress_msg"),
     });
@@ -2431,7 +2434,7 @@ const cldrLoad = (function () {
     /*
      * See WHAT_AUTO_IMPORT = "auto_import" in SurveyAjax.java
      */
-    var url =
+    const url =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=auto_import&s=" +
       cldrStatus.getSessionId() +
@@ -2442,10 +2445,10 @@ const cldrLoad = (function () {
       }
       haveDialog = false;
       if (json.autoImportedOldWinningVotes) {
-        var vals = {
+        const vals = {
           count: json.autoImportedOldWinningVotes,
         };
-        var autoImportedDialog = newProgressDialog({
+        const autoImportedDialog = newProgressDialog({
           title: cldrText.get("v_oldvote_auto_msg"),
           content: cldrText.sub("v_oldvote_auto_desc_msg", vals),
         });
@@ -2528,27 +2531,26 @@ const cldrLoad = (function () {
 
   function addSubLocales(parLocDiv, subLocInfo) {
     if (subLocInfo.sub) {
-      for (var n in subLocInfo.sub) {
-        var subLoc = subLocInfo.sub[n];
+      for (let n in subLocInfo.sub) {
+        const subLoc = subLocInfo.sub[n];
         addSubLocale(parLocDiv, subLoc);
       }
     }
   }
 
   function addSubLocale(parLocDiv, subLoc) {
-    var subLocInfo = locmap.getLocaleInfo(subLoc);
-    var subLocDiv = cldrSurvey.createChunk(null, "div", "subLocale");
+    const subLocInfo = locmap.getLocaleInfo(subLoc);
+    const subLocDiv = cldrSurvey.createChunk(null, "div", "subLocale");
     appendLocaleLink(subLocDiv, subLoc, subLocInfo);
-
     parLocDiv.appendChild(subLocDiv);
   }
 
   function appendLocaleLink(subLocDiv, subLoc, subInfo, fullTitle) {
-    var name = locmap.getRegionAndOrVariantName(subLoc);
+    let name = locmap.getRegionAndOrVariantName(subLoc);
     if (fullTitle) {
       name = locmap.getLocaleName(subLoc);
     }
-    var clickyLink = cldrSurvey.createChunk(name, "a", "locName");
+    const clickyLink = cldrSurvey.createChunk(name, "a", "locName");
     clickyLink.href = linkToLocale(subLoc);
     subLocDiv.appendChild(clickyLink);
     if (subInfo == null) {
