@@ -45,7 +45,7 @@ const cldrGui = (function () {
     '    data-dojo-props=\'onHide: function(){ariReload.style.display="";ariRetry.style.display="none";\n' +
     "      if (cldrStatus.isDisconnected()) {cldrSurvey.unbust();}}'>\n" +
     "\n" +
-    "  <div id='ariContent' class='dijitDialogPaneContentArea'>\n" +
+    "  <div id='ariContent' class='dijitDialogPaneContentArea' style='display:none'>\n" +
     "    <div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>\n" +
     "    <p id='ariMessage'>This page is still loading.</p>\n" +
     "    <p id='ariSubMessage'>Please wait for this page to load.</p>\n" +
@@ -53,7 +53,7 @@ const cldrGui = (function () {
     "      <p id='ariScroller'></p>\n" +
     "    </div>\n" +
     "  </div>\n" +
-    "  <div class='dijitDialogPaneActionBar'>\n" +
+    "  <div class='dijitDialogPaneActionBar' style='display:none'>\n" +
     "    <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type='dijit/form/Button'\n" +
     "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +

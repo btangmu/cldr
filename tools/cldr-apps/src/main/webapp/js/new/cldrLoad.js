@@ -583,7 +583,7 @@ const cldrLoad = (function () {
       cldrSurvey.handleDisconnect("while loading " + subkey + "", json);
       return false;
     } else if (!json[subkey]) {
-      console.log("!json.oldvotes");
+      console.log("!json." + subkey);
       cldrSurvey.showLoader(
         "Error while loading " +
           subkey +
@@ -1062,7 +1062,7 @@ const cldrLoad = (function () {
         cldrStatus.setCurrentPage("");
       }
       cldrSurvey.showLoader(null);
-      updateHashAndMenus(); // find out why there's no content. (locmap)
+      updateHashAndMenus(false); // find out why there's no content. (locmap)
     } else if (!json.section.rows) {
       console.log("!json.section.rows");
       cldrSurvey.showLoader(
@@ -1078,7 +1078,7 @@ const cldrLoad = (function () {
       }
       cldrStatus.setCurrentSection("");
       cldrStatus.setCurrentPage(json.pageId);
-      updateHashAndMenus(); // now that we have a pageid
+      updateHashAndMenus(false); // now that we have a pageid
       if (!cldrStatus.getSurveyUser()) {
         cldrSurvey.showInPop2(
           cldrText.get("loginGuidance"),
@@ -1151,7 +1151,7 @@ const cldrLoad = (function () {
 
         if (!json.oldvotes.locale) {
           cldrStatus.setCurrentLocale("");
-          updateHashAndMenus();
+          updateHashAndMenus(false);
 
           var ul = document.createElement("div");
           ul.className = "oldvotes_list";
@@ -1211,7 +1211,7 @@ const cldrLoad = (function () {
           }
         } else {
           cldrStatus.setCurrentLocale(json.oldvotes.locale);
-          updateHashAndMenus();
+          updateHashAndMenus(false);
           var loclink;
           theDiv.appendChild(
             (loclink = cldrSurvey.createChunk(
@@ -1762,11 +1762,16 @@ const cldrLoad = (function () {
    * @param doPush {Boolean} if false, do not add to history
    */
   function updateHashAndMenus(doPush) {
-    replaceHash(doPush || false); // update the hash
+    if (!doPush) {
+      doPush = false;
+    }
+    replaceHash(doPush); // update the hash
     updateLocaleMenu();
 
     const curLocale = cldrStatus.getCurrentLocale();
-    if (!curLocale) {
+    if (curLocale == null) {
+      /* Do this for null, but not for empty string ""; it's originally null, later may be "".
+         Note that ("" == null) is false. */
       menubuttons.set(menubuttons.section);
       const curSpecial = cldrStatus.getCurrentSpecial();
       if (curSpecial != null) {
@@ -1970,11 +1975,14 @@ const cldrLoad = (function () {
   function getMenusFromServer(specialItems) {
     // show the raw IDs while loading.
     updateMenuTitles(null, specialItems);
-
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (!curLocale) {
+      return;
+    }
     const url =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=menus&_=" +
-      cldrStatus.getCurrentLocale() +
+      curLocale +
       "&locmap=" +
       false +
       "&s=" +
@@ -1982,6 +1990,7 @@ const cldrLoad = (function () {
       cldrSurvey.cacheKill();
     myLoad(url, "menus", function (json) {
       if (!verifyJson(json, "menus")) {
+        console.log("JSON verification failed for menus in cldrLoad");
         return; // busted?
       }
       if (json.locmap) {

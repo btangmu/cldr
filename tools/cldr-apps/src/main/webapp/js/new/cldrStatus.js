@@ -152,6 +152,10 @@ const cldrStatus = (function () {
   /**
    * A string such as 'en', 'fr', etc., identifying a locale
    * a.k.a. surveyCurrentLocale
+   * Caution: cldrLoad.updateHashAndMenus makes a distinction between null and
+   * empty string "" for getCurrentLocale, seemingly with the assumption that
+   * null is the original value. Later it may become empty string "", and
+   * cldrLoad.updateHashAndMenus doesn't treat that the same way.
    */
   let currentLocale = null;
 
