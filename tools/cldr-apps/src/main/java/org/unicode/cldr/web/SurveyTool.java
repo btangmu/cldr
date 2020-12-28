@@ -337,6 +337,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "review" + js); // review.js
             out.write(prefix + "CldrDojoGui" + js); // CldrGuiDojo.js
         } else {
+            out.write(prefix + "new/cldrAbout" + js); // new/cldrAbout.js
             out.write(prefix + "new/cldrBulkClosePosts" + js); // new/cldrBulkClosePosts.js
             out.write(prefix + "new/cldrForumParticipation" + js); // new/cldrForumParticipation.js
             out.write(prefix + "new/cldrForumFilter" + js); // new/cldrForumFilter.js

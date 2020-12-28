@@ -928,7 +928,7 @@ const cldrLoad = (function () {
     } else if (cldrSurvey.isReport(curSpecial)) {
       loadReport();
     } else if (curSpecial === "about") {
-      loadAbout();
+      cldrAbout.load();
     } else if (curSpecial === "forum") {
       loadForumSpecial();
     } else if (curSpecial === "locales") {
@@ -1726,36 +1726,6 @@ const cldrLoad = (function () {
     }
   }
 
-  function loadAbout() {
-    const url = ""; // TODO
-    const errorHandler = function (err) {
-      handleDisconnect();
-    };
-    const loadHandler = function (json) {
-      if (json.err) {
-        return; // TODO
-      }
-      // set up the 'right sidebar'
-      cldrSurvey.showInPop2("Hello my name is About", null, null, null, true);
-
-      const ourDiv = document.createElement("div");
-      ourDiv.innerHTML = "<h1>TODO: About! What's it all about, ST?</h1>";
-      cldrSurvey.hideLoader();
-      cldrLoad.flipflop(ourDiv);
-    };
-    const xhrArgs = {
-      url: url,
-      handleAs: "json",
-      load: loadHandler,
-      error: errorHandler,
-    };
-    if (true) {
-      loadHandler({});
-    } else {
-      cldrAjax.sendXhr(xhrArgs);
-    }
-  }
-
   /**
    * Update the #hash and menus to the current settings.
    *
@@ -1807,7 +1777,7 @@ const cldrLoad = (function () {
       xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
       manageUser: "survey?do=list",
       flag: "tc-flagged.jsp?s=" + sessionId,
-      about: "about.jsp",
+      // about: "about.jsp",
       browse: "browse.jsp",
       adminPanel: "SurveyAjax?what=admin_panel&s=" + sessionId,
     };
@@ -1951,9 +1921,9 @@ const cldrLoad = (function () {
       },
       {
         title: "About",
-        // special: "about",
+        special: "about",
         level: 2,
-        url: surveyUserURL.about,
+        // url: surveyUserURL.about,
       },
       {
         title: "Lookup a code or xpath",
