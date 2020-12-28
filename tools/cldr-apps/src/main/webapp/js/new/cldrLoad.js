@@ -1763,9 +1763,14 @@ const cldrLoad = (function () {
   }
 
   function makeMenuArray() {
+    const aboutMenu = {
+      title: "About",
+      special: "about",
+      level: 2,
+    };
     const surveyUser = cldrStatus.getSurveyUser();
     if (!surveyUser) {
-      return new Array();
+      return [aboutMenu];
     }
     const sessionId = cldrStatus.getSessionId();
     const userID = surveyUser.id ? surveyUser.id : 0;
@@ -1788,10 +1793,6 @@ const cldrLoad = (function () {
      * 'title' - override of menu name
      */
     return [
-      {
-        divider: true,
-      },
-
       {
         title: "Admin Panel",
         url: surveyUserURL.adminPanel,
@@ -1919,12 +1920,9 @@ const cldrLoad = (function () {
         special: "statistics",
         level: 2,
       },
-      {
-        title: "About",
-        special: "about",
-        level: 2,
-        // url: surveyUserURL.about,
-      },
+
+      aboutMenu,
+
       {
         title: "Lookup a code or xpath",
         level: 2,
@@ -1935,9 +1933,6 @@ const cldrLoad = (function () {
         level: 2,
         url: "./tc-all-errors.jsp",
         display: surveyUserPerms && surveyUserPerms.userIsTC,
-      },
-      {
-        divider: true,
       },
     ];
   }

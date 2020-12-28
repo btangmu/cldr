@@ -72,10 +72,10 @@ const cldrGui = (function () {
     "        <li class='pull-menu'>\n" +
     "          <a href='#'><span class='glyphicon glyphicon-cog'></span> <b class='caret'></b></a>\n" +
     "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'>\n" +
-    "            <li>\n" +
-    "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
-    "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
-    "            </li>\n" +
+    // "            <li>\n" +
+    // "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
+    // "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
+    // "            </li>\n" +
     "          </ul>\n" +
     "        </li>\n" +
     "        <li class='dropdown' id='title-coverage' style='display:none'>\n" +

@@ -11,8 +11,10 @@
  */
 
 const cldrAbout = (function () {
-  const logoAndReference =
-    "<img src='STLogo.png' align='right' border='0' title='[logo]' alt='[logo]' />\n" +
+  const logo =
+    "<img src='STLogo.png' align='right' border='0' title='[logo]' alt='[logo]' />\n";
+
+  const moreInfo =
     "<p class='hang'>For more information about the Survey Tool, " +
     "see <a href='http://www.unicode.org/cldr'>unicode.org/cldr</a>.</p>\n";
 
@@ -54,11 +56,12 @@ const cldrAbout = (function () {
   }
 
   function getHtml(json) {
-    let html = logoAndReference;
+    let html = logo;
     html += javaVersions(json) + otherVersions(json) + stInfo(json);
     if (json["hasDataSource"]) {
       html += dbInfo(json);
     }
+    html += moreInfo;
     return html;
   }
 
