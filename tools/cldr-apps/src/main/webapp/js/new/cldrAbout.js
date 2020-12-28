@@ -66,7 +66,8 @@ const cldrAbout = (function () {
     let html = "<h4 class='selected'>Java Versions</h4>\n";
     html += "<table class='userlist' border='2'>\n";
     for (let i in javaOsVersionKeys) {
-      const key = javaOsVersionKeys[i].replaceAll(".", "_");
+      const label = javaOsVersionKeys[i];
+      const key = label.replaceAll(".", "_");
       const val = json[key];
       // Style of rows alternates between classes 'row0' and 'row1', hence i % 2
       const rowClass = "row" + (i % 2);
@@ -74,7 +75,7 @@ const cldrAbout = (function () {
         "<tr class='" +
         rowClass +
         "'><th><tt>" +
-        key +
+        label +
         "</tt></th><td>" +
         val +
         "</td></tr>\n";

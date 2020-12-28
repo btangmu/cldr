@@ -31,11 +31,11 @@
       );
     });
 
-    it("should contain ICU and " + json.ICU_VERSION, function () {
-      const key = "ICU";
-      const val = json.ICU_VERSION;
-      assert(html.indexOf(key) !== -1, key + " does occur in " + html);
-      assert(html.indexOf(val) !== -1, val + " does occur in " + html);
+    const label = "ICU";
+    const value = json.ICU_VERSION;
+    it("should contain " + label + " and " + value, function () {
+      assert(html.indexOf(label) !== -1, label + " does occur in " + html);
+      assert(html.indexOf(value) !== -1, value + " does occur in " + html);
     });
   });
 }
