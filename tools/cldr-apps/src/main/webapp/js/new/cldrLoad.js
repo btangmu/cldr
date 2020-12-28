@@ -456,6 +456,9 @@ const cldrLoad = (function () {
         } else if (curSpec === "about") {
           cldrStatus.setCurrentPage("");
           cldrStatus.setCurrentId("");
+        } else if (curSpec === "admin") {
+          cldrStatus.setCurrentPage("");
+          cldrStatus.setCurrentId("");
         } else {
           otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
         }
@@ -929,6 +932,8 @@ const cldrLoad = (function () {
       loadReport();
     } else if (curSpecial === "about") {
       cldrAbout.load();
+    } else if (curSpecial === "admin") {
+      cldrAdmin.load();
     } else if (curSpecial === "forum") {
       loadForumSpecial();
     } else if (curSpecial === "locales") {
@@ -1173,7 +1178,7 @@ const cldrLoad = (function () {
               (function (loc, link) {
                 return function () {
                   var clicky;
-                  listenFor(
+                  cldrSurvey.listenFor(
                     link,
                     "click",
                     (clicky = function (e) {
@@ -1220,7 +1225,7 @@ const cldrLoad = (function () {
               "notselected"
             ))
           );
-          listenFor(loclink, "click", function (e) {
+          cldrSurvey.listenFor(loclink, "click", function (e) {
             cldrStatus.setCurrentLocale("");
             reloadV();
             cldrSurvey.stStopPropagation(e);
@@ -1766,25 +1771,25 @@ const cldrLoad = (function () {
     const aboutMenu = {
       title: "About",
       special: "about",
-      level: 2,
+      level: 2, // TODO: no indent if !surveyUser; refactor to obviate "level"; make valid html
     };
     const surveyUser = cldrStatus.getSurveyUser();
     if (!surveyUser) {
-      return [aboutMenu];
+      return [aboutMenu]; // TODO: enable more menu items when not logged in, e.g., browse
     }
     const sessionId = cldrStatus.getSessionId();
     const userID = surveyUser.id ? surveyUser.id : 0;
     const surveyUserPerms = cldrStatus.getPermissions();
     const surveyUserURL = {
+      // TODO: make these all like #about -- no url or jsp here
       myAccountSetting: "survey?do=listu",
       disableMyAccount: "lock.jsp",
       recentActivity: "myvotes.jsp?user=" + userID + "&s=" + sessionId,
       xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
       manageUser: "survey?do=list",
       flag: "tc-flagged.jsp?s=" + sessionId,
-      // about: "about.jsp",
       browse: "browse.jsp",
-      adminPanel: "SurveyAjax?what=admin_panel&s=" + sessionId,
+      // adminPanel: "SurveyAjax?what=admin_panel&s=" + sessionId,
     };
 
     /**
@@ -1795,7 +1800,8 @@ const cldrLoad = (function () {
     return [
       {
         title: "Admin Panel",
-        url: surveyUserURL.adminPanel,
+        special: "admin",
+        // url: surveyUserURL.adminPanel,
         display: surveyUser && surveyUser.userlevelName === "ADMIN",
       },
       {

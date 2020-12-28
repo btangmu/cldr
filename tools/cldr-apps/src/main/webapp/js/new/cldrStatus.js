@@ -347,6 +347,15 @@ const cldrStatus = (function () {
     );
   }
 
+  function logoIcon() {
+    const src = cldrStatus.getContextPath() + "/STLogo.png";
+    return (
+      "<img src='" +
+      src +
+      "' align='right' border='0' title='[logo]' alt='[logo]' />"
+    );
+  }
+
   function getSurvUrl() {
     return getContextPath() + "/survey";
   }
@@ -439,6 +448,7 @@ const cldrStatus = (function () {
 
     stopIcon: stopIcon,
     warnIcon: warnIcon,
+    logoIcon: logoIcon,
 
     getSurvUrl: getSurvUrl,
 

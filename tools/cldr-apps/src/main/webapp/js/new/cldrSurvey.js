@@ -2523,75 +2523,6 @@ const cldrSurvey = (function () {
     return whom;
   }
 
-  function appendInputBox(parent, which) {
-    var label = createChunk(cldrText.get(which), "div", which);
-    var input = document.createElement("input");
-    input.stChange = function (onOk, onErr) {};
-    var change = createChunk(
-      cldrText.get("appendInputBoxChange"),
-      "button",
-      "appendInputBoxChange"
-    );
-    var cancel = createChunk(
-      cldrText.get("appendInputBoxCancel"),
-      "button",
-      "appendInputBoxCancel"
-    );
-    var notify = document.createElement("div");
-    notify.className = "appendInputBoxNotify";
-    input.className = "appendInputBox";
-    label.appendChild(change);
-    label.appendChild(cancel);
-    label.appendChild(notify);
-    label.appendChild(input);
-    parent.appendChild(label);
-    input.label = label;
-
-    var doChange = function () {
-      addClass(label, "d-item-selected");
-      removeAllChildNodes(notify);
-      notify.appendChild(createChunk(cldrText.get("loading"), "i"));
-      var onOk = function (msg) {
-        removeClass(label, "d-item-selected");
-        removeAllChildNodes(notify);
-        notify.appendChild(hideAfter(createChunk(msg, "span", "okayText")));
-      };
-      var onErr = function (msg) {
-        removeClass(label, "d-item-selected");
-        removeAllChildNodes(notify);
-        notify.appendChild(createChunk(msg, "span", "stopText"));
-      };
-
-      input.stChange(onOk, onErr);
-    };
-
-    var changeFn = function (e) {
-      doChange();
-      stStopPropagation(e);
-      return false;
-    };
-    var cancelFn = function (e) {
-      input.value = "";
-      doChange();
-      stStopPropagation(e);
-      return false;
-    };
-    var keypressFn = function (e) {
-      if (!e || !e.keyCode) {
-        return true; // not getting the point here.
-      } else if (e.keyCode == 13) {
-        doChange();
-        return false;
-      } else {
-        return true;
-      }
-    };
-    listenFor(change, "click", changeFn);
-    listenFor(cancel, "click", cancelFn);
-    listenFor(input, "keypress", keypressFn);
-    return input;
-  }
-
   /**
    * @param loc optional
    * @returns locale bundle
@@ -3641,6 +3572,7 @@ const cldrSurvey = (function () {
     createChunk: createChunk,
     createGravitar: createGravitar,
     createLinkToFn: createLinkToFn,
+    createUser: createUser,
     effectiveCoverage: effectiveCoverage,
     findItemByValue: findItemByValue,
     formatErrMsg: formatErrMsg,
@@ -3655,6 +3587,7 @@ const cldrSurvey = (function () {
     hideLoader: hideLoader,
     isInputBusy: isInputBusy,
     isReport: isReport,
+    listenFor: listenFor,
     listenToPop: listenToPop,
     localizeFlyover: localizeFlyover,
     parseStatusAction: parseStatusAction,
@@ -3679,6 +3612,7 @@ const cldrSurvey = (function () {
     updateCoverage: updateCoverage,
     updateIf: updateIf,
     updateInfoPanelForumPosts: updateInfoPanelForumPosts,
+    updateSpecialHeader: updateSpecialHeader,
     updateStatus: updateStatus,
     wireUpButton: wireUpButton,
     wrapRadio: wrapRadio,

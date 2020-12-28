@@ -289,6 +289,7 @@ const cldrText = (function () {
       "${count} old winning votes were automatically imported",
     "v-title_desc":
       "This area shows the date before which votes are considered “old”.",
+    special_admin: "Admin Panel",
     special_oldvotes: "Import Old Votes",
     special_locales: "Locale List",
     section_general: "General Info",
@@ -397,6 +398,7 @@ const cldrText = (function () {
 
     special_vsummary: "Priority Items Summary (slow)",
     special_flagged: "Flagged Items",
+
     flaggedGuidance:
       "This shows a list of items which are flagged for TC review. Items are sorted by locale and then date. ",
     flaggedTotalCount: "Total: ",
