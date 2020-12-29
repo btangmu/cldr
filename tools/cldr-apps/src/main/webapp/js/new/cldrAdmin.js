@@ -353,7 +353,7 @@ const cldrAdmin = (function () {
     loadNext(null); // load the first exception
   }
 
-function loadNext(from) {
+  function loadNext(from) {
     let append = "do=exceptions";
     if (from) {
       append = append + "&before=" + from;
@@ -361,13 +361,9 @@ function loadNext(from) {
     console.log("Loading: " + append);
     const u = document.getElementById("admin_u");
     loadOrFail(append, u, function (json) {
-      loadAdminExceptions(
-        json,
-        u,
-        from
-      );
+      loadAdminExceptions(json, u, from);
     });
-  };
+  }
 
   function loadAdminExceptions(json, u, from) {
     const v = document.getElementById("admin_v");

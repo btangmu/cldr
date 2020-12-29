@@ -437,6 +437,15 @@ const cldrLoad = (function () {
             cldrStatus.setCurrentPage("");
             cldrStatus.setCurrentId("");
           }
+        } else if (curSpec === "about") {
+          cldrStatus.setCurrentPage("");
+          cldrStatus.setCurrentId("");
+        } else if (curSpec === "admin") {
+          cldrStatus.setCurrentPage("");
+          cldrStatus.setCurrentId("");
+        } else if (curSpec === "createLogin") {
+          cldrStatus.setCurrentPage("");
+          cldrStatus.setCurrentId("");
         } else if (curSpec === "forum") {
           cldrStatus.setCurrentPage("");
           if (pieces && pieces.length > 3) {
@@ -454,12 +463,6 @@ const cldrLoad = (function () {
               }
             }
           }
-        } else if (curSpec === "about") {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
-        } else if (curSpec === "admin") {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
         } else {
           otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
         }
@@ -935,8 +938,10 @@ const cldrLoad = (function () {
       cldrAbout.load();
     } else if (curSpecial === "admin") {
       cldrAdmin.load();
+    } else if (curSpecial === "createAndLogin") {
+      cldrCreateLogin.load();
     } else if (curSpecial === "forum") {
-      loadForumSpecial();
+      cldrForum.load();
     } else if (curSpecial === "locales") {
       loadLocales();
     } else if (curSpecial === "mail") {
@@ -1700,36 +1705,6 @@ const cldrLoad = (function () {
       true
     );
     $("#itemInfo").html("");
-  }
-
-  function loadForumSpecial() {
-    const curLocale = cldrStatus.getCurrentLocale();
-    if (!curLocale) {
-      hideLoader();
-      flipper.flipTo(
-        pages.other,
-        createChunk(cldrText.get("generic_nolocale"), "p", "helpContent")
-      );
-    } else {
-      const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
-      const forumMessage = cldrText.sub("forum_msg", {
-        forum: forumName,
-        locale: cldrStatus.getCurrentLocaleName(),
-      });
-      const surveyUser = cldrStatus.getSurveyUser();
-      const userId = surveyUser && surveyUser.id ? surveyUser.id : 0;
-      const params = {
-        name: "forum",
-        exports: {
-          appendLocaleLink: cldrLoad.appendLocaleLink,
-          handleDisconnect: cldrSurvey.handleDisconnect,
-          clickToSelect: cldrSurvey.clickToSelect,
-        },
-        // special = ??,
-        // otherSpecial = ??,
-      };
-      cldrForum.loadForum(curLocale, userId, forumMessage, params);
-    }
   }
 
   /**
@@ -2702,23 +2677,36 @@ const cldrLoad = (function () {
     flipper.flipTo(pages.other, div);
   }
 
+  function flipToGenericNoLocale() {
+    cldrSurvey.hideLoader();
+    flipper.flipTo(
+      pages.other,
+      cldrSurvey.createChunk(
+        cldrText.get("generic_nolocale"),
+        "p",
+        "helpContent"
+      )
+    );
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
   return {
-    showV: showV,
-    reloadV: reloadV,
-    getThePages: getThePages,
-    getTheLocaleMap: getTheLocaleMap,
-    myLoad: myLoad,
     appendLocaleLink: appendLocaleLink,
+    ariDialogShow: ariDialogShow,
+    ariRetry: ariRetry,
+    dialogIsOpen: dialogIsOpen,
+    flipToGenericNoLocale: flipToGenericNoLocale,
+    flipflop: flipflop,
+    getTheLocaleMap: getTheLocaleMap,
+    getThePages: getThePages,
+    insertLocaleSpecialNote: insertLocaleSpecialNote,
+    myLoad: myLoad,
+    reloadV: reloadV,
     replaceHash: replaceHash,
     showCurrentId: showCurrentId,
-    insertLocaleSpecialNote: insertLocaleSpecialNote,
-    ariRetry: ariRetry,
-    ariDialogShow: ariDialogShow,
-    dialogIsOpen: dialogIsOpen,
-    flipflop: flipflop,
+    showV: showV,
 
     /*
      * The following are meant to be accessible for unit testing only:

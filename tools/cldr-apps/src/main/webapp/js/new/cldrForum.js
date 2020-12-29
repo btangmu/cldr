@@ -59,6 +59,32 @@ const cldrForum = (function () {
    */
   let displayUtc = false;
 
+  function load() {
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (!curLocale) {
+      cldrLoad.flipToGenericNoLocale();
+    } else {
+      const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
+      const forumMessage = cldrText.sub("forum_msg", {
+        forum: forumName,
+        locale: cldrStatus.getCurrentLocaleName(),
+      });
+      const surveyUser = cldrStatus.getSurveyUser();
+      const userId = surveyUser && surveyUser.id ? surveyUser.id : 0;
+      const params = {
+        name: "forum",
+        exports: {
+          appendLocaleLink: cldrLoad.appendLocaleLink,
+          handleDisconnect: cldrSurvey.handleDisconnect,
+          clickToSelect: cldrSurvey.clickToSelect,
+        },
+        // special = ??,
+        // otherSpecial = ??,
+      };
+      loadForum(curLocale, userId, forumMessage, params);
+    }
+  }
+
   /**
    * Fetch the Forum data from the server, and "load" it
    *
@@ -1457,7 +1483,7 @@ const cldrForum = (function () {
     addNewPostButtons: addNewPostButtons,
     getForumSummaryHtml: getForumSummaryHtml,
     handleIdChanged: handleIdChanged,
-    loadForum: loadForum,
+    load: load,
     parseContent: parseContent,
     reload: reload,
     setUserCanPost: setUserCanPost,

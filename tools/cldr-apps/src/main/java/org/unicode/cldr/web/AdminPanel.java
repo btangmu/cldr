@@ -195,20 +195,6 @@ public class AdminPanel {
             r.put("isSetup", false);
             return;
         }
-        // generate random name
-        StringBuilder genname = new StringBuilder();
-
-        // http://en.wikipedia.org/wiki/List_of_most_popular_given_names#Oceania
-        genname.append(choose("Tarita", "Hiro", "Teiki", "Moana", "Manua", "Marama", "Teiva", "Teva", "Maui", "Tehei", "Tamatoa",
-            "Ioane", "Tapuarii",
-            "Tiare", "Hinano", "Poema", "Maeva", "Hina", "Vaea", "Titaua", "Moea", "Moeata", "Tarita", "Titaina", "Teura",
-            "Heikapu", "Mareva"));
-        genname.append(' ');
-        genname.append((char) ('A' + new Random().nextInt(26)));
-        genname.append('.');
-        genname.append(' ');
-        genname.append(choose("Vetter", "Linguist", "User", "Typer", "Tester", "Specialist", "Person", "Account", "Login",
-            "CLDR"));
         // zap any current login
         Cookie c0 = WebContext.getCookie(request, SurveyMain.QUERY_EMAIL);
         if (c0 != null) {
@@ -225,16 +211,40 @@ public class AdminPanel {
         sm.reg.setOrgList();
         String orgs[] = UserRegistry.getOrgList();
         String myorg = orgs[(int) Math.rint(Math.random() * (orgs.length - 1))];
+        String defaultLevel = "";
         ArrayList<String> levelStr = new ArrayList<>();
         for (int lev : UserRegistry.ALL_LEVELS) {
             if (lev != UserRegistry.ADMIN) {
-                levelStr.add(UserRegistry.levelAsStr(lev));
+                String s = String.valueOf(lev) + " (" + UserRegistry.levelAsStr(lev) + ")";
+                levelStr.add(s);
+                if (lev == UserRegistry.TC) {
+                    defaultLevel = s;
+                }
             }
         }
+        r.put("name", randomName());
         r.put("orgs", orgs);
         r.put("defaultOrg", myorg);
         r.put("levels", levelStr.toArray());
-        r.put("defaultLevel", UserRegistry.levelAsStr(UserRegistry.TC));
+        r.put("defaultLevel", defaultLevel);
+    }
+
+    private String randomName() {
+        // generate random name
+        StringBuilder genname = new StringBuilder();
+
+        // http://en.wikipedia.org/wiki/List_of_most_popular_given_names#Oceania
+        genname.append(choose("Tarita", "Hiro", "Teiki", "Moana", "Manua", "Marama",
+            "Teiva", "Teva", "Maui", "Tehei", "Tamatoa", "Ioane", "Tapuarii",
+            "Tiare", "Hinano", "Poema", "Maeva", "Hina", "Vaea", "Titaua", "Moea",
+            "Moeata", "Tarita", "Titaina", "Teura", "Heikapu", "Mareva"));
+        genname.append(' ');
+        genname.append((char) ('A' + new Random().nextInt(26)));
+        genname.append('.');
+        genname.append(' ');
+        genname.append(choose("Vetter", "Linguist", "User", "Typer", "Tester", "Specialist",
+            "Person", "Account", "Login", "CLDR"));
+        return genname.toString();
     }
 
     private String choose(String... option) {

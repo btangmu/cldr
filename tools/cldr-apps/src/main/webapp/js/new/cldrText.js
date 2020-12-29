@@ -290,6 +290,7 @@ const cldrText = (function () {
     "v-title_desc":
       "This area shows the date before which votes are considered “old”.",
     special_admin: "Admin Panel",
+    special_createAndLogin: "Create and Login",
     special_oldvotes: "Import Old Votes",
     special_locales: "Locale List",
     section_general: "General Info",
