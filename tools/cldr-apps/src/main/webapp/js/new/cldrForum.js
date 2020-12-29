@@ -10,11 +10,7 @@
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
  *
- * Dependencies on external code:
- * listenFor, bootstrap.js,
- *
- * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts,
- * updateInfoPanelForumPosts, appendForumStuff; also some/all code from forum.js
+ * Dependencies on external code: bootstrap.js
  */
 const cldrForum = (function () {
   const FORUM_DEBUG = false;
@@ -386,7 +382,7 @@ const cldrForum = (function () {
         if (curSpecial && curSpecial === "forum") {
           cldrLoad.reloadV();
         } else {
-          cldrSurvey.updateInfoPanelForumPosts(null);
+          cldrForumPanel.updatePosts(null);
         }
       } else {
         const post = $(".post").first();
@@ -555,13 +551,7 @@ const cldrForum = (function () {
         "label label-primary pull-right forumLink"
       );
       (function (post) {
-        /*
-         * TODO: encapsulate "listenFor" dependency
-         */
-        if (typeof listenFor === "undefined") {
-          return;
-        }
-        listenFor(dateChunk, "click", function (e) {
+        cldrSurvey.listenFor(dateChunk, "click", function (e) {
           const locmap = cldrLoad.getTheLocaleMap();
           if (
             post.locale &&
@@ -577,7 +567,7 @@ const cldrForum = (function () {
             cldrStatus.setCurrentSpecial("forum");
             cldrLoad.reloadV();
           }
-          return cldrSurvey.cldrSurvey.stStopPropagation(e);
+          return cldrSurvey.stStopPropagation(e);
         });
       })(post);
       headingLine.appendChild(dateChunk);
@@ -1464,12 +1454,14 @@ const cldrForum = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    parseContent: parseContent,
-    getForumSummaryHtml: getForumSummaryHtml,
-    loadForum: loadForum,
-    reload: reload,
     addNewPostButtons: addNewPostButtons,
+    getForumSummaryHtml: getForumSummaryHtml,
+    handleIdChanged: handleIdChanged,
+    loadForum: loadForum,
+    parseContent: parseContent,
+    reload: reload,
     setUserCanPost: setUserCanPost,
+
     /*
      * The following are meant to be accessible for unit testing only:
      */

@@ -1082,7 +1082,7 @@ const cldrTable = (function () {
         tr.forumDiv = document.createElement("div");
         tr.forumDiv.className = "forumDiv";
       }
-      cldrSurvey.appendForumStuff(tr, theRow, tr.forumDiv);
+      cldrForumPanel.appendForumStuff(tr, theRow, tr.forumDiv);
     }
     // extra attributes
     if (

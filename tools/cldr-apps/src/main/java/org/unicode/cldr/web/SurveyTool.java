@@ -337,6 +337,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "review" + js); // review.js
             out.write(prefix + "CldrDojoGui" + js); // CldrGuiDojo.js
         } else {
+            out.write(prefix + "bootstrap.min.js" + tail); // exceptional
             out.write(prefix + "new/cldrAbout" + js); // new/cldrAbout.js
             out.write(prefix + "new/cldrBulkClosePosts" + js); // new/cldrBulkClosePosts.js
             out.write(prefix + "new/cldrForumParticipation" + js); // new/cldrForumParticipation.js
@@ -344,6 +345,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "new/cldrCsvFromTable" + js); // new/cldrCsvFromTable.js
             out.write(prefix + "new/cldrDeferHelp" + js); // new/cldrDeferHelp.js
             out.write(prefix + "new/cldrForum" + js); // new/cldrForum.js
+            out.write(prefix + "new/cldrForumPanel" + js); // new/cldrForumPanel.js
             out.write(prefix + "new/cldrOtherSpecial" + js); // new/cldrOtherSpecial.js
             out.write(prefix + "new/cldrFlip" + js); // new/cldrFlip.js
             out.write(prefix + "new/cldrLocaleMap" + js); // new/cldrLocaleMap.js
@@ -352,7 +354,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "new/cldrAdmin" + js); // new/cldrAdmin.js
             out.write(prefix + "new/cldrLoad" + js); // new/cldrLoad.js
             out.write(prefix + "new/cldrTable" + js); // new/cldrTable.js
-            out.write(prefix + "bootstrap.min.js" + tail); // exceptional
+            // out.write(prefix + "bootstrap.min.js" + tail); // exceptional
             out.write(prefix + "new/cldrEvent" + js); // new/cldrEvent.js
             out.write(prefix + "new/cldrGui" + js); // new/cldrGui.js
         }
