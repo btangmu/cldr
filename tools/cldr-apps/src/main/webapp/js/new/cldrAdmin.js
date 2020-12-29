@@ -31,27 +31,20 @@ const cldrAdmin = (function () {
   }
 
   function getHtml() {
-    let html = cldrStatus.logoIcon();
-    html +=
+    let html =
+      cldrStatus.logoIcon() +
       "<h2>Survey Tool Administration | " +
       window.location.hostname +
-      "</h2>\n";
-    // TODO: "raw SQL"
-
-    html += "<a href='#createAndLogin'>CreateAndLogin</a>\n";
-
-    html +=
+      "</h2>\n" +
+      // TODO: "raw SQL"
+      "<a href='#createAndLogin'>CreateAndLogin</a>\n" +
       "<div style='float: right; font-size: x-small;'>" +
-      "<span id='visitors'></span></div>\n";
-
-    html += "<hr />";
-
-    html +=
+      "<span id='visitors'></span></div>\n" +
+      "<hr />\n" +
       "<div class='fnotebox'>" +
       "For instructions, see <a href='http://cldr.unicode.org/index/survey-tool/admin'>Admin Docs</a>.<br />" +
-      "Tabs do not (currently) auto update. Click a tab again to update.</div>\n";
-
-    html += "<div id='adminStuff'></div>\n";
+      "Tabs do not (currently) auto update. Click a tab again to update.</div>\n" +
+      "<div id='adminStuff'></div>\n";
     return html;
   }
 
@@ -60,12 +53,11 @@ const cldrAdmin = (function () {
     if (!adminStuff) {
       return;
     }
-
     const content = document.createDocumentFragment();
-
     const list = document.createElement("ul");
     list.className = "adminList";
     content.appendChild(list);
+
     addAdminPanel("admin_users", adminUsers, list, content);
     addAdminPanel("admin_threads", adminThreads, list, content);
     addAdminPanel("admin_exceptions", adminExceptions, list, content);
@@ -74,6 +66,7 @@ const cldrAdmin = (function () {
 
     // last panel loaded.
     // If it's in the hashtag, use it, otherwise first.
+    // TODO: this doesn't work since we no longer have "#!"; if needed, revise the mechanism
     if (window.location.hash && window.location.hash.indexOf("#!") == 0) {
       panelSwitch(window.location.hash.substring(2));
     }
@@ -85,7 +78,7 @@ const cldrAdmin = (function () {
   }
 
   function addAdminPanel(type, fn, list, content) {
-    var panel = (panels[type] = {
+    const panel = (panels[type] = {
       type: type,
       name: cldrText.get(type) || type,
       desc:
@@ -97,7 +90,7 @@ const cldrAdmin = (function () {
     panel.div.style.display = "none";
     panel.div.className = "adminPanel";
 
-    var h = document.createElement("h3");
+    const h = document.createElement("h3");
     h.className = "adminTitle";
     h.appendChild(document.createTextNode(panel.desc || type));
     panel.div.appendChild(h);
@@ -169,14 +162,14 @@ const cldrAdmin = (function () {
   }
 
   function loadAdminUsers(json, u) {
-    var frag2 = document.createDocumentFragment();
+    const frag2 = document.createDocumentFragment();
 
     if (!json || !json.users || Object.keys(json.users) == 0) {
       frag2.appendChild(document.createTextNode(cldrText.get("No users.")));
     } else {
       for (let sess in json.users) {
-        var cs = json.users[sess];
-        var user = cldrSurvey.createChunk(null, "div", "adminUser");
+        const cs = json.users[sess];
+        const user = cldrSurvey.createChunk(null, "div", "adminUser");
         user.appendChild(
           cldrSurvey.createChunk("Session: " + sess, "span", "adminUserSession")
         );
@@ -208,7 +201,7 @@ const cldrAdmin = (function () {
           )
         );
 
-        var unlinkButton = cldrSurvey.createChunk(
+        const unlinkButton = cldrSurvey.createChunk(
           cldrText.get("admin_users_action_kick"),
           "button",
           "admin_users_action_kick"
@@ -242,20 +235,20 @@ const cldrAdmin = (function () {
       cldrSurvey.removeAllChildNodes(u);
       u.appendChild(document.createTextNode(cldrText.get("No threads.")));
     } else {
-      var frag2 = document.createDocumentFragment();
+      const frag2 = document.createDocumentFragment();
       cldrSurvey.removeAllChildNodes(stack);
       stack.innerHTML = cldrText.get("adminClickToViewThreads");
       let deadThreads = {};
       if (json.threads.dead) {
-        var header = cldrSurvey.createChunk(
+        const header = cldrSurvey.createChunk(
           cldrText.get("adminDeadThreadsHeader"),
           "div",
           "adminDeadThreadsHeader"
         );
-        var deadul = cldrSurvey.createChunk("", "ul", "adminDeadThreads");
-        for (var jj = 0; jj < json.threads.dead.length; jj++) {
-          var theThread = json.threads.dead[jj];
-          var deadLi = cldrSurvey.createChunk("#" + theThread.id, "li");
+        const deadul = cldrSurvey.createChunk("", "ul", "adminDeadThreads");
+        for (let jj = 0; jj < json.threads.dead.length; jj++) {
+          const theThread = json.threads.dead[jj];
+          const deadLi = cldrSurvey.createChunk("#" + theThread.id, "li");
           deadThreads[theThread.id] = theThread.text;
           deadul.appendChild(deadLi);
         }
@@ -263,12 +256,10 @@ const cldrAdmin = (function () {
         stack.appendChild(header);
       }
       for (let id in json.threads.all) {
-        var t = json.threads.all[id];
-        var thread = cldrSurvey.createChunk(null, "div", "adminThread");
-        var tid;
-        thread.appendChild(
-          (tid = cldrSurvey.createChunk(id, "span", "adminThreadId"))
-        );
+        const t = json.threads.all[id];
+        const thread = cldrSurvey.createChunk(null, "div", "adminThread");
+        const tid = cldrSurvey.createChunk(id, "span", "adminThreadId");
+        thread.appendChild(tid);
         if (deadThreads[id]) {
           tid.className = tid.className + " deadThread";
         }
@@ -293,7 +284,7 @@ const cldrAdmin = (function () {
             stack.appendChild(
               cldrSurvey.createChunk("\n\n```\n", "pre", "textForTrac")
             );
-            for (var q in t.stack) {
+            for (let q in t.stack) {
               stack.innerHTML = stack.innerHTML + t.stack[q] + "\n";
             }
             stack.appendChild(
@@ -303,11 +294,11 @@ const cldrAdmin = (function () {
         })(t, id);
         frag2.appendChild(thread);
       }
-
       cldrSurvey.removeAllChildNodes(u);
       u.appendChild(frag2);
     }
   }
+
   function adminExceptions(div) {
     const frag = document.createDocumentFragment();
 
@@ -381,6 +372,7 @@ const cldrAdmin = (function () {
           )
         );
       } else {
+        // just the last one
         v.removeChild(loading);
         v.appendChild(
           cldrSurvey.createChunk(
@@ -389,7 +381,6 @@ const cldrAdmin = (function () {
             "adminExceptionFooter"
           )
         );
-        // just the last one.
       }
     } else {
       if (json.exceptions.entry.time == from) {
@@ -397,13 +388,17 @@ const cldrAdmin = (function () {
         v.removeChild(loading);
         return;
       }
-      var frag2 = document.createDocumentFragment();
+      const frag2 = document.createDocumentFragment();
       if (!from) {
         cldrSurvey.removeAllChildNodes(stack);
         stack.innerHTML = cldrText.get("adminClickToViewExceptions");
       }
       // TODO: if(json.threads.dead) frag2.appendChunk(json.threads.dead.toString(),"span","adminDeadThreads");
       if (json.exceptions.entry) {
+        /*
+         * TODO: clarify usage of "var e" here! "e" is used for json.exceptions.entry,
+         * and also in "clicky" below, where it might or might not represent the click "event"???
+         */
         var e = json.exceptions.entry;
         exceptions.push(json.exceptions.entry);
         var exception = cldrSurvey.createChunk(null, "div", "adminException");
@@ -426,7 +421,9 @@ const cldrAdmin = (function () {
           cldrSurvey.createChunk(e.DATE, "span", "adminExceptionDate")
         );
         var clicky = (function (e) {
+          // TODO: what is "e" here? entry, or event??
           return function (ee) {
+            // TODO: "ee"? This is a mess!
             var frag3 = document.createDocumentFragment();
             frag3.appendChild(
               cldrSurvey.createChunk(e.header, "span", "adminExceptionHeader")
@@ -556,19 +553,16 @@ const cldrAdmin = (function () {
       cldrSurvey.removeAllChildNodes(u);
       u.appendChild(document.createTextNode(cldrText.get("nosettings")));
     } else {
-      var frag2 = document.createDocumentFragment();
+      const frag2 = document.createDocumentFragment();
       for (let id in json.settings.all) {
-        var t = json.settings.all[id];
-
-        var thread = cldrSurvey.createChunk(null, "div", "adminSetting");
-
+        const t = json.settings.all[id];
+        const thread = cldrSurvey.createChunk(null, "div", "adminSetting");
         thread.appendChild(
           cldrSurvey.createChunk(id, "span", "adminSettingId")
         );
-        if (id == "CLDR_HEADER") {
+        if (id === "CLDR_HEADER") {
           (function (theHeader, theValue) {
-            var setHeader = null;
-            setHeader = appendInputBox(thread, "adminSettingsChangeTemp");
+            let setHeader = appendInputBox(thread, "adminSettingsChangeTemp");
             setHeader.value = theValue;
             setHeader.stChange = function (onOk, onErr) {
               loadOrFail(
@@ -599,7 +593,7 @@ const cldrAdmin = (function () {
             };
           })(id, t); // call it
 
-          if (id == "CLDR_HEADER") {
+          if (id === "CLDR_HEADER") {
             cldrSurvey.updateSpecialHeader(t);
           }
         } else {
@@ -613,26 +607,23 @@ const cldrAdmin = (function () {
       u.appendChild(frag2);
     }
   }
+
   function adminOps(div) {
     const frag = document.createDocumentFragment();
-
     div.className = "adminThreads";
-
     const sessionId = cldrStatus.getSessionId();
 
-    let baseUrl =
+    const baseUrl =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=admin_panel&s=" +
       sessionId +
       "&do=";
 
-    var hashSuff = ""; //  "#" + window.location.hash;
-
-    var actions = ["rawload"];
-    for (var k in actions) {
-      var action = actions[k];
-      var newUrl = baseUrl + action + hashSuff;
-      var b = cldrSurvey.createChunk(cldrText.get(action), "button");
+    const actions = ["rawload"];
+    for (let k in actions) {
+      const action = actions[k];
+      const newUrl = baseUrl + action;
+      const b = cldrSurvey.createChunk(cldrText.get(action), "button");
       b.onclick = function () {
         window.location = newUrl;
         return false;
@@ -705,20 +696,20 @@ const cldrAdmin = (function () {
   }
 
   function appendInputBox(parent, which) {
-    var label = cldrSurvey.createChunk(cldrText.get(which), "div", which);
-    var input = document.createElement("input");
+    const label = cldrSurvey.createChunk(cldrText.get(which), "div", which);
+    const input = document.createElement("input");
     input.stChange = function (onOk, onErr) {};
-    var change = cldrSurvey.createChunk(
+    const change = cldrSurvey.createChunk(
       cldrText.get("appendInputBoxChange"),
       "button",
       "appendInputBoxChange"
     );
-    var cancel = cldrSurvey.createChunk(
+    const cancel = cldrSurvey.createChunk(
       cldrText.get("appendInputBoxCancel"),
       "button",
       "appendInputBoxCancel"
     );
-    var notify = document.createElement("div");
+    const notify = document.createElement("div");
     notify.className = "appendInputBoxNotify";
     input.className = "appendInputBox";
     label.appendChild(change);
@@ -728,38 +719,37 @@ const cldrAdmin = (function () {
     parent.appendChild(label);
     input.label = label;
 
-    var doChange = function () {
+    const doChange = function () {
       addClass(label, "d-item-selected");
       removeAllChildNodes(notify);
       notify.appendChild(cldrSurvey.createChunk(cldrText.get("loading"), "i"));
-      var onOk = function (msg) {
+      const onOk = function (msg) {
         removeClass(label, "d-item-selected");
         removeAllChildNodes(notify);
         notify.appendChild(
           hideAfter(cldrSurvey.createChunk(msg, "span", "okayText"))
         );
       };
-      var onErr = function (msg) {
+      const onErr = function (msg) {
         removeClass(label, "d-item-selected");
         removeAllChildNodes(notify);
         notify.appendChild(cldrSurvey.createChunk(msg, "span", "stopText"));
       };
-
       input.stChange(onOk, onErr);
     };
 
-    var changeFn = function (e) {
+    const changeFn = function (e) {
       doChange();
       cldrSurvey.stStopPropagation(e);
       return false;
     };
-    var cancelFn = function (e) {
+    const cancelFn = function (e) {
       input.value = "";
       doChange();
       cldrSurvey.stStopPropagation(e);
       return false;
     };
-    var keypressFn = function (e) {
+    const keypressFn = function (e) {
       if (!e || !e.keyCode) {
         return true; // not getting the point here.
       } else if (e.keyCode == 13) {
