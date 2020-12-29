@@ -565,11 +565,10 @@ public class SurveyAjax extends HttpServlet {
                             if (SurveyTool.USE_DOJO) {
                                 response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
                             } else {
-                                // this doesn't work yet...
                                 mySession.userDidAction();
                                 JSONWriter r = newJSONStatus(request, sm);
                                 r.put("what", what);
-                                new AdminPanel().getJson(r, request);
+                                new AdminPanel().getJson(r, request, response, sm);
                                 send(r, out);
                             }
                         } else {

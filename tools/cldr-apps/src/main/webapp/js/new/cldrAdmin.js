@@ -16,47 +16,29 @@ const cldrAdmin = (function () {
   let panels = {};
   let panelFirst = null;
 
-  function load() {
-    const sessionId = cldrStatus.getSessionId();
-    const url =
-      cldrStatus.getContextPath() +
-      "/SurveyAjax?what=admin_panel&s=" +
-      sessionId;
-    const xhrArgs = {
-      url: url,
-      handleAs: "json",
-      load: loadHandler,
-      error: errorHandler,
-    };
-    cldrAjax.sendXhr(xhrArgs);
-  }
+  let exceptions = [];
+  let exceptionNames = {};
 
-  function loadHandler(json) {
-    // Clear the 'right sidebar'
-    // TODO: substitute a version of showInPop2 for which these args are implicit/default
+  function load() {
     cldrSurvey.showInPop2("", null, null, null, true);
 
     const ourDiv = document.createElement("div");
-    ourDiv.innerHTML = getHtml(json);
+    ourDiv.innerHTML = getHtml();
     // caution: ourDiv isn't added to DOM until we call flipflop
     cldrSurvey.hideLoader();
     cldrLoad.flipflop(ourDiv);
     loadAdminPanel();
   }
 
-  function errorHandler(err) {
-    const ourDiv = document.createElement("div");
-    ourDiv.innerHTML = err;
-  }
-
-  function getHtml(json) {
+  function getHtml() {
     let html = cldrStatus.logoIcon();
     html +=
       "<h2>Survey Tool Administration | " +
       window.location.hostname +
       "</h2>\n";
     // TODO: "raw SQL"
-    // TODO: "createAndLogin"
+
+    html += "<a href='#createAndLogin'>CreateAndLogin</a>\n";
 
     html +=
       "<div style='float: right; font-size: x-small;'>" +
@@ -70,10 +52,6 @@ const cldrAdmin = (function () {
       "Tabs do not (currently) auto update. Click a tab again to update.</div>\n";
 
     html += "<div id='adminStuff'></div>\n";
-
-    if (false && ADMIN_DEBUG) {
-      html += "<p>" + JSON.stringify(json) + "</p>\n";
-    }
     return html;
   }
 
@@ -249,7 +227,7 @@ const cldrAdmin = (function () {
               unlinkButton.appendChild(document.createTextNode("Removed."));
             }
           });
-          return stStopPropagation(e);
+          return cldrSurvey.stStopPropagation(e);
         };
         frag2.appendChild(user);
         frag2.appendChild(document.createElement("hr"));
@@ -335,9 +313,13 @@ const cldrAdmin = (function () {
 
     div.className = "adminThreads";
     const v = cldrSurvey.createChunk(null, "div", "adminExceptionList");
+    v.setAttribute("id", "admin_v");
     const stack = cldrSurvey.createChunk(null, "div", "adminThreadStack");
+    stack.setAttribute("id", "admin_stack");
+
     frag.appendChild(v);
     const u = cldrSurvey.createChunk(null, "div");
+    u.setAttribute("id", "admin_u");
     v.appendChild(u);
     frag.appendChild(stack);
 
@@ -351,8 +333,8 @@ const cldrAdmin = (function () {
     cldrSurvey.removeAllChildNodes(div);
     div.appendChild(c2s);
 
-    let exceptions = [];
-    let exceptionNames = {};
+    exceptions = [];
+    exceptionNames = {};
 
     div.appendChild(frag);
     const more = cldrSurvey.createChunk(
@@ -365,42 +347,34 @@ const cldrAdmin = (function () {
       "p",
       "adminExceptionFooter"
     );
-
+    more.setAttribute("id", "admin_more");
+    loading.setAttribute("id", "admin_loading");
     v.appendChild(loading);
-    const loadNext = function (from) {
-      let append = "do=exceptions";
-      if (from) {
-        append = append + "&before=" + from;
-      }
-      console.log("Loading: " + append);
-      loadOrFail(append, u, function (json) {
-        loadAdminExceptions(
-          json,
-          u,
-          v,
-          stack,
-          from,
-          exceptions,
-          exceptionNames,
-          more,
-          loading
-        );
-      });
-    };
-    loadNext(); // load the first exception
+    loadNext(null); // load the first exception
   }
 
-  function loadAdminExceptions(
-    json,
-    u,
-    v,
-    stack,
-    from,
-    exceptions,
-    exceptionNames,
-    more,
-    loading
-  ) {
+function loadNext(from) {
+    let append = "do=exceptions";
+    if (from) {
+      append = append + "&before=" + from;
+    }
+    console.log("Loading: " + append);
+    const u = document.getElementById("admin_u");
+    loadOrFail(append, u, function (json) {
+      loadAdminExceptions(
+        json,
+        u,
+        from
+      );
+    });
+  };
+
+  function loadAdminExceptions(json, u, from) {
+    const v = document.getElementById("admin_v");
+    const more = document.getElementById("admin_more");
+    const loading = document.getElementById("admin_loading");
+    const stack = document.getElementById("admin_stack");
+
     if (!json || !json.exceptions || !json.exceptions.entry) {
       if (!from) {
         v.appendChild(
@@ -512,7 +486,7 @@ const cldrAdmin = (function () {
             }
             cldrSurvey.removeAllChildNodes(stack);
             stack.appendChild(frag3);
-            stStopPropagation(ee);
+            cldrSurvey.stStopPropagation(ee);
             return false;
           };
         })(e);
@@ -545,7 +519,7 @@ const cldrAdmin = (function () {
               }
               cldrSurvey.removeAllChildNodes(stack);
               stack.appendChild(head.otherdiv);
-              stStopPropagation(e);
+              cldrSurvey.stStopPropagation(e);
               return false;
             });
             head.appendChild(countSpan);
@@ -780,13 +754,13 @@ const cldrAdmin = (function () {
 
     var changeFn = function (e) {
       doChange();
-      stStopPropagation(e);
+      cldrSurvey.stStopPropagation(e);
       return false;
     };
     var cancelFn = function (e) {
       input.value = "";
       doChange();
-      stStopPropagation(e);
+      cldrSurvey.stStopPropagation(e);
       return false;
     };
     var keypressFn = function (e) {
@@ -815,7 +789,7 @@ const cldrAdmin = (function () {
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      // getHtml: getHtml,
+      getHtml: getHtml,
     },
   };
 })();

@@ -446,7 +446,8 @@ const cldrLoad = (function () {
               var id = new Number(pieces[3]);
               if (id == NaN) {
                 cldrStatus.setCurrentId("");
-              } else { // e.g., http://localhost:8080/cldr-apps/v#forum/ar//69009
+              } else {
+                // e.g., http://localhost:8080/cldr-apps/v#forum/ar//69009
                 const idStr = id.toString();
                 cldrStatus.setCurrentId(idStr);
                 cldrForum.handleIdChanged(idStr);

@@ -316,7 +316,6 @@ const cldrForumPanel = (function () {
     return null;
   }
 
-
   /**
    * Update the forum posts in the Info Panel
    *
@@ -465,7 +464,7 @@ const cldrForumPanel = (function () {
     loadInfo: loadInfo,
     appendForumStuff: appendForumStuff,
     updatePosts: updatePosts,
-    
+
     /*
      * The following are meant to be accessible for unit testing only:
      */
