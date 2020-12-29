@@ -10,12 +10,7 @@
  * but not all Survey Tool JavaScript code is capable yet of being in modules
  * and running in strict mode.
  *
- * Dependencies on external code:
- * window.locmap,
- * listenFor, bootstrap.js, reloadV,
- *
- * TODO: possibly move these functions here from survey.js: showForumStuff, havePosts,
- * updateInfoPanelForumPosts, appendForumStuff; also some/all code from forum.js
+ * Dependencies on external code: bootstrap.js
  */
 const cldrForum = (function () {
   const FORUM_DEBUG = false;
@@ -64,6 +59,32 @@ const cldrForum = (function () {
    */
   let displayUtc = false;
 
+  function load() {
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (!curLocale) {
+      cldrLoad.flipToGenericNoLocale();
+    } else {
+      const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
+      const forumMessage = cldrText.sub("forum_msg", {
+        forum: forumName,
+        locale: cldrStatus.getCurrentLocaleName(),
+      });
+      const surveyUser = cldrStatus.getSurveyUser();
+      const userId = surveyUser && surveyUser.id ? surveyUser.id : 0;
+      const params = {
+        name: "forum",
+        exports: {
+          appendLocaleLink: cldrLoad.appendLocaleLink,
+          handleDisconnect: cldrSurvey.handleDisconnect,
+          clickToSelect: cldrSurvey.clickToSelect,
+        },
+        // special = ??,
+        // otherSpecial = ??,
+      };
+      loadForum(curLocale, userId, forumMessage, params);
+    }
+  }
+
   /**
    * Fetch the Forum data from the server, and "load" it
    *
@@ -109,7 +130,7 @@ const cldrForum = (function () {
       const ourDiv = document.createElement("div");
       ourDiv.appendChild(forumCreateChunk(forumMessage, "h4", ""));
 
-      const filterMenu = cldrForumFilter.createMenu(reloadV);
+      const filterMenu = cldrForumFilter.createMenu(cldrLoad.reloadV);
       const summaryDiv = document.createElement("div");
       summaryDiv.innerHTML = "";
       ourDiv.appendChild(summaryDiv);
@@ -126,9 +147,9 @@ const cldrForum = (function () {
         summaryDiv.innerHTML = getForumSummaryHtml(forumLocale, userId, true); // after parseContent
       }
       // No longer loading
-      cldrSurvey.hideLoader(null);
-      params.flipper.flipTo(params.pages.other, ourDiv);
-      params.special.handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
+      cldrSurvey.hideLoader();
+      cldrLoad.flipflop(ourDiv);
+      handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
     };
     const xhrArgs = {
       url: url,
@@ -137,6 +158,37 @@ const cldrForum = (function () {
       error: errorHandler,
     };
     cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function handleIdChanged(strid) {
+    if (strid) {
+      var id = new Number(strid);
+      if (id == NaN) {
+        cldrStatus.setCurrentId("");
+      } else {
+        cldrStatus.setCurrentId(id.toString());
+      }
+      var itemid = "fp" + id;
+      var pdiv = document.getElementById(itemid);
+      if (pdiv) {
+        console.log(
+          "scrollIntoView not yet implemented for forum! itemid = " + itemid
+        );
+        /***
+        console.log("Scrolling " + itemid);
+        win.scrollIntoView(pdiv);
+        TODO: that was a dojo/window thing...
+        ***/
+        (function (o, itemid, pdiv) {
+          pdiv.style["background-color"] = "yellow";
+          window.setTimeout(function () {
+            pdiv.style["background-color"] = null;
+          }, 2000);
+        })(this, itemid, pdiv);
+      } else {
+        console.log("No item " + itemid);
+      }
+    }
   }
 
   /**
@@ -354,9 +406,9 @@ const cldrForum = (function () {
         postModal.modal("hide");
         const curSpecial = cldrStatus.getCurrentSpecial();
         if (curSpecial && curSpecial === "forum") {
-          reloadV();
+          cldrLoad.reloadV();
         } else {
-          updateInfoPanelForumPosts(null);
+          cldrForumPanel.updatePosts(null);
         }
       } else {
         const post = $(".post").first();
@@ -432,6 +484,7 @@ const cldrForum = (function () {
           const topicInfo = forumCreateChunk("", "h4", "postTopicInfo");
           topicDiv.appendChild(topicInfo);
           if (post.locale) {
+            const locmap = cldrLoad.getTheLocaleMap();
             const localeLink = forumCreateChunk(
               locmap.getLocaleName(post.locale),
               "a",
@@ -524,13 +577,8 @@ const cldrForum = (function () {
         "label label-primary pull-right forumLink"
       );
       (function (post) {
-        /*
-         * TODO: encapsulate "listenFor" and "reloadV" dependencies
-         */
-        if (typeof listenFor === "undefined") {
-          return;
-        }
-        listenFor(dateChunk, "click", function (e) {
+        cldrSurvey.listenFor(dateChunk, "click", function (e) {
+          const locmap = cldrLoad.getTheLocaleMap();
           if (
             post.locale &&
             locmap.getLanguage(cldrStatus.getCurrentLocale()) !=
@@ -540,12 +588,12 @@ const cldrForum = (function () {
           }
           cldrStatus.setCurrentPage("");
           cldrStatus.setCurrentId(post.id);
-          replaceHash(false);
+          cldrLoad.replaceHash(false);
           if (cldrStatus.getCurrentSpecial() != "forum") {
             cldrStatus.setCurrentSpecial("forum");
-            reloadV();
+            cldrLoad.reloadV();
           }
-          return stStopPropagation(e);
+          return cldrSurvey.stStopPropagation(e);
         });
       })(post);
       headingLine.appendChild(dateChunk);
@@ -713,6 +761,8 @@ const cldrForum = (function () {
       "loadingMsg"
     );
     topicInfo.appendChild(loadingMsg);
+
+    const xpathMap = cldrSurvey.getXpathMap();
     xpathMap.get(
       {
         hex: rootPost.xpath,
@@ -883,6 +933,7 @@ const cldrForum = (function () {
       newButton.disabled = true;
     } else if (typeof listenFor !== "undefined") {
       listenFor(newButton, "click", function (e) {
+        const xpathMap = cldrSurvey.getXpathMap();
         xpathMap.get(
           {
             hex: xpstrid,
@@ -904,7 +955,7 @@ const cldrForum = (function () {
             });
           }
         );
-        stStopPropagation(e);
+        cldrSurvey.stStopPropagation(e);
         return false;
       });
     }
@@ -931,7 +982,7 @@ const cldrForum = (function () {
           replyData: post,
           postType: postType,
         });
-        stStopPropagation(e);
+        cldrSurvey.stStopPropagation(e);
         return false;
       });
     }
@@ -1382,7 +1433,7 @@ const cldrForum = (function () {
     cldrStatus.setCurrentSpecial("forum");
     cldrStatus.setCurrentId("");
     cldrStatus.setCurrentPage("");
-    reloadV();
+    cldrLoad.reloadV();
   }
 
   /**
@@ -1429,12 +1480,14 @@ const cldrForum = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    parseContent: parseContent,
-    getForumSummaryHtml: getForumSummaryHtml,
-    loadForum: loadForum,
-    reload: reload,
     addNewPostButtons: addNewPostButtons,
+    getForumSummaryHtml: getForumSummaryHtml,
+    handleIdChanged: handleIdChanged,
+    load: load,
+    parseContent: parseContent,
+    reload: reload,
     setUserCanPost: setUserCanPost,
+
     /*
      * The following are meant to be accessible for unit testing only:
      */

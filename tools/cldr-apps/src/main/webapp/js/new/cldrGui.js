@@ -33,18 +33,19 @@ const cldrGui = (function () {
       debugElements();
     }
 
-    cldrStatus.setCurrentLocale("aa"); // until we have a left sidebar locale chooser
+    cldrSurvey.updateStatus();
 
-    // showV(); // in CldrSurveyVettingLoader.js
-    cldrLoad.showV(); // for the first time
+    cldrLoad.showV();
+
+    cldrEvent.startup();
   }
 
   const vhtml1 =
     "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title='CLDR Survey Tool'\n" +
     '    data-dojo-props=\'onHide: function(){ariReload.style.display="";ariRetry.style.display="none";\n' +
-    "      if (disconnected) {unbust();}}'>\n" +
+    "      if (cldrStatus.isDisconnected()) {cldrSurvey.unbust();}}'>\n" +
     "\n" +
-    "  <div id='ariContent' class='dijitDialogPaneContentArea'>\n" +
+    "  <div id='ariContent' class='dijitDialogPaneContentArea' style='display:none'>\n" +
     "    <div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>\n" +
     "    <p id='ariMessage'>This page is still loading.</p>\n" +
     "    <p id='ariSubMessage'>Please wait for this page to load.</p>\n" +
@@ -52,12 +53,12 @@ const cldrGui = (function () {
     "      <p id='ariScroller'></p>\n" +
     "    </div>\n" +
     "  </div>\n" +
-    "  <div class='dijitDialogPaneActionBar'>\n" +
+    "  <div class='dijitDialogPaneActionBar' style='display:none'>\n" +
     "    <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type='dijit/form/Button'\n" +
     "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +
     "    </button>\n" +
-    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='ariRetry()'>\n" +
+    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrLoad.ariRetry()'>\n" +
     "      <b>Reload</b>\n" +
     "    </button>\n" +
     "  </div>\n" +
@@ -71,10 +72,10 @@ const cldrGui = (function () {
     "        <li class='pull-menu'>\n" +
     "          <a href='#'><span class='glyphicon glyphicon-cog'></span> <b class='caret'></b></a>\n" +
     "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'>\n" +
-    "            <li>\n" +
-    "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
-    "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
-    "            </li>\n" +
+    // "            <li>\n" +
+    // "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
+    // "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
+    // "            </li>\n" +
     "          </ul>\n" +
     "        </li>\n" +
     "        <li class='dropdown' id='title-coverage' style='display:none'>\n" +
@@ -179,8 +180,8 @@ const cldrGui = (function () {
     "        <div class='row' id='nav-page'>\n" +
     "          <div class='col-md-9'>\n" +
     "            <p class='nav-button'>\n" +
-    "              <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
-    "              <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
+    "              <button type='button' class='btn btn-primary btn-xs' onclick='cldrSurvey.chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
+    "              <button type='button' class='btn btn-primary btn-xs' onclick='cldrSurvey.chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
     "              <button type='button' class='btn btn-default btn-xs toggle-right'>Toggle Sidebar <span class='glyphicon glyphicon-align-right'></span></button>\n" +
     "            </p>\n" +
     "            <div class='progress nav-progress'>\n" +
@@ -205,8 +206,8 @@ const cldrGui = (function () {
     "        <div id='DynamicDataSection'></div>\n" +
     "        <div id='nav-page-footer'>\n" +
     "          <p class='nav-button'>\n" +
-    "            <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
-    "            <button type='button' class='btn btn-primary btn-xs' onclick='chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
+    "            <button type='button' class='btn btn-primary btn-xs' onclick='cldrSurvey.chgPage(-1)'><span class='glyphicon glyphicon-arrow-left'></span> Previous</button>\n" +
+    "            <button type='button' class='btn btn-primary btn-xs' onclick='cldrSurvey.chgPage(1)'>Next <span class='glyphicon glyphicon-arrow-right'></span></button>\n" +
     "            <button type='button' class='btn btn-default btn-xs toggle-right'>Toggle Sidebar <span class='glyphicon glyphicon-align-right'></span></button>\n" +
     "          </p>\n" +
     "        </div>\n" +

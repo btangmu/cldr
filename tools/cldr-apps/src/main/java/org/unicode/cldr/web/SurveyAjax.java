@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +44,7 @@ import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRInfo.CandidateInfo;
 import org.unicode.cldr.util.CLDRInfo.UserInfo;
 import org.unicode.cldr.util.CLDRLocale;
+import org.unicode.cldr.util.CLDRURLS;
 import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.CoverageInfo;
 import org.unicode.cldr.util.DateTimeFormats;
@@ -70,6 +72,7 @@ import org.unicode.cldr.web.WebContext.HTMLDirection;
 import com.ibm.icu.dev.util.ElapsedTimer;
 import com.ibm.icu.text.UnicodeSet;
 import com.ibm.icu.util.Output;
+import com.ibm.icu.util.VersionInfo;
 
 /**
  * Servlet implementation class SurveyAjax
@@ -285,10 +288,11 @@ public class SurveyAjax extends HttpServlet {
     public static final String WHAT_USER_LIST = "user_list"; // users.js
     public static final String WHAT_USER_OLDVOTES = "user_oldvotes"; // users.js
     public static final String WHAT_USER_XFEROLDVOTES = "user_xferoldvotes"; // users.js
-    public static final String WHAT_OLDVOTES = "oldvotes"; // CldrSurveyVettingLoader.js
-    public static final String WHAT_FLAGGED = "flagged"; // CldrSurveyVettingLoader.js
-    public static final String WHAT_AUTO_IMPORT = "auto_import"; // CldrSurveyVettingLoader.js
-    public static final String WHAT_ADMIN_PANEL = "admin_panel"; // CldrSurveyVettingLoader.js
+    public static final String WHAT_OLDVOTES = "oldvotes"; // cldrLoad.js
+    public static final String WHAT_FLAGGED = "flagged"; // cldrLoad.js
+    public static final String WHAT_AUTO_IMPORT = "auto_import"; // cldrLoad.js
+    public static final String WHAT_ADMIN_PANEL = "admin_panel"; // cldrAdmin.js
+    public static final String WHAT_ABOUT = "about"; // cldrLoad.js, cldrAbout.js
 
     public static final int oldestVersionForImportingVotes = 25; // Oldest table is cldr_vote_value_25, as of 2018-05-23.
 
@@ -379,6 +383,10 @@ public class SurveyAjax extends HttpServlet {
                 getRow(request, response, out, sm, sess, l, xpath);
             } else if (what.equals(WHAT_REPORT)) {
                 generateReport(request, response, out, sm, sess, l);
+            } else if (what.equals(WHAT_ABOUT)) {
+                JSONWriter r = newJSONStatus(request, sm);
+                surveyAbout(r, sm);
+                send(r, out);
             } else if (what.equals(WHAT_STATS_BYLOC)) {
                 JSONWriter r = newJSONStatusQuick(sm);
                 JSONObject query = DBUtils.queryToCachedJSON(what, 5 * 60 * 1000, StatisticsUtils.QUERY_ALL_VOTES);
@@ -554,7 +562,15 @@ public class SurveyAjax extends HttpServlet {
                     if (what.equals(WHAT_ADMIN_PANEL)) {
                         mySession.userDidAction();
                         if (UserRegistry.userIsAdmin(mySession.user)) {
-                            response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
+                            if (SurveyTool.USE_DOJO) {
+                                response.sendRedirect(request.getContextPath() + "/AdminPanel.jsp" + "?vap=" + SurveyMain.vap);
+                            } else {
+                                mySession.userDidAction();
+                                JSONWriter r = newJSONStatus(request, sm);
+                                r.put("what", what);
+                                new AdminPanel().getJson(r, request, response, sm);
+                                send(r, out);
+                            }
                         } else {
                             sendError(out, "Only Admin can access Admin Panel", ErrorCode.E_NO_PERMISSION);
                         }
@@ -1070,6 +1086,36 @@ public class SurveyAjax extends HttpServlet {
         } catch (SQLException e) {
             SurveyLog.logException(e, "Processing: " + what);
             sendError(out, "SQLException: " + e, ErrorCode.E_INTERNAL);
+        }
+    }
+
+    private void surveyAbout(JSONWriter r, SurveyMain sm) {
+        String props[] = {
+            "java.version", "java.vendor", "java.vm.version", "java.vm.vendor",
+            "java.vm.name", "os.name", "os.arch", "os.version"};
+        for (int i = 0; i < props.length; i++) {
+            r.put(props[i].replace('.', '_'), java.lang.System.getProperty(props[i]));
+        }
+        r.put("GEN_VERSION", CLDRFile.GEN_VERSION);
+        r.put("ICU_VERSION", VersionInfo.ICU_VERSION);
+        ServletContext sc = sm.getServletContext();
+        r.put("serverInfo", sc.getServerInfo());
+        r.put("servletMajorVersion", sc.getMajorVersion());
+        r.put("servletMinorVersion", sc.getMinorVersion());
+        r.put("TRANS_HINT_LOCALE", SurveyMain.TRANS_HINT_LOCALE.toLanguageTag());
+        r.put("TRANS_HINT_LANGUAGE_NAME", SurveyMain.TRANS_HINT_LANGUAGE_NAME);
+        if (SurveyMain.isConfigSetup) {
+            for (String k : org.unicode.cldr.util.CLDRConfigImpl.ALL_GIT_HASHES) {
+                r.put(k, CLDRURLS.gitHashToLink(CLDRConfigImpl.getInstance().getProperty(k)));
+            }
+        }
+        if (SurveyMain.isDbSetup) {
+            org.unicode.cldr.web.DBUtils d = org.unicode.cldr.web.DBUtils.getInstance();
+            if (d != null) {
+                r.put("hasDataSource", d.hasDataSource());
+                r.put("dbKind", DBUtils.getDBKind());
+                r.put("dbInfo", d.getDBInfo());
+            }
         }
     }
 
@@ -2686,7 +2732,6 @@ public class SurveyAjax extends HttpServlet {
         CLDRConfigImpl.setUrls(request);
         WebContext ctx = new WebContext(request, response);
         ElapsedTimer et = new ElapsedTimer();
-
         String loc = locale.toString();
         ctx.setLocale(locale);
         xpath = WebContext.decodeFieldString(xpath); // TODO: why doesn't processRequest do decodeFieldString? Not needed, all ASCII?
@@ -3140,7 +3185,8 @@ public class SurveyAjax extends HttpServlet {
                 out.write("<td title='vote:' style='" + resultStyle + "'>\n");
                 if (!checkResult.isEmpty()) {
                     out.write("<script>\n");
-                    out.write("document.write(testsToHtml(" + SurveyAjax.JSONWriter.wrap(checkResult) + ")");
+                    String testsToHtml = SurveyTool.USE_DOJO ? "cldrSurvey.testsToHtml" : "testsToHtml";
+                    out.write("document.write(" + testsToHtml + "(" + SurveyAjax.JSONWriter.wrap(checkResult) + ")");
                     out.write("</script>\n");
                 }
                 out.write(WebContext.iconHtml(request, resultIcon, result) + result);

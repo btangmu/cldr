@@ -114,9 +114,7 @@ const cldrStatus = (function () {
   }
 
   function setCurrentId(id) {
-    if (id || id === "") {
-      currentId = id;
-    }
+    currentId = id ? id : "";
   }
 
   /**
@@ -154,6 +152,10 @@ const cldrStatus = (function () {
   /**
    * A string such as 'en', 'fr', etc., identifying a locale
    * a.k.a. surveyCurrentLocale
+   * Caution: cldrLoad.updateHashAndMenus makes a distinction between null and
+   * empty string "" for getCurrentLocale, seemingly with the assumption that
+   * null is the original value. Later it may become empty string "", and
+   * cldrLoad.updateHashAndMenus doesn't treat that the same way.
    */
   let currentLocale = null;
 
@@ -345,6 +347,15 @@ const cldrStatus = (function () {
     );
   }
 
+  function logoIcon() {
+    const src = cldrStatus.getContextPath() + "/STLogo.png";
+    return (
+      "<img src='" +
+      src +
+      "' align='right' border='0' title='[logo]' alt='[logo]' />"
+    );
+  }
+
   function getSurvUrl() {
     return getContextPath() + "/survey";
   }
@@ -364,6 +375,15 @@ const cldrStatus = (function () {
 
   function setIsDisconnected(d) {
     disconnected = d;
+  }
+
+  /**
+   * Are we in the Dashboard or not?
+   *
+   * @return true or false
+   */
+  function isDashboard() {
+    return getCurrentSpecial() === "r_vetting_json";
   }
 
   /*
@@ -428,6 +448,7 @@ const cldrStatus = (function () {
 
     stopIcon: stopIcon,
     warnIcon: warnIcon,
+    logoIcon: logoIcon,
 
     getSurvUrl: getSurvUrl,
 
@@ -435,5 +456,7 @@ const cldrStatus = (function () {
 
     isDisconnected: isDisconnected,
     setIsDisconnected: setIsDisconnected,
+
+    isDashboard: isDashboard,
   };
 })();

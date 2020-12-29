@@ -592,8 +592,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 }
             }
 
-            if (isUnofficial() && (ctx.hasTestPassword() || ctx.hasAdminPassword())
-                && ctx.field("action").equals("new_and_login")) { // accessed from createAndLogin.jsp
+            if (isUnofficial() && ctx.field("action").equals("new_and_login") &&
+                    (ctx.hasTestPassword() || ctx.hasAdminPassword() || requestIsByAdmin(request))) {
+                // accessed from createAndLogin.jsp or cldrCreateLogin.js
                 ctx.println("<hr>");
                 String real = ctx.field("real").trim();
                 if (real.isEmpty() || real.equals("REALNAME")) {
@@ -673,6 +674,18 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             Thread.currentThread().setName(baseThreadName);
             ctx.close();
         }
+    }
+
+    private boolean requestIsByAdmin(HttpServletRequest request) {
+        String sess = request.getParameter(SurveyMain.QUERY_SESSION);
+        if (sess != null) {
+            CookieSession.checkForExpiredSessions();
+            CookieSession mySession = CookieSession.retrieve(sess);
+            if (mySession != null && UserRegistry.userIsAdmin(mySession.user)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -2256,7 +2269,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 ctx.println("</tbody></table>");
 
                 // now, serialize the list..
-                ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\r\nshowUserActivity(shownUsers, 'userListTable');\r\n</script>\n");
+                ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\n" +
+                		"showUserActivity(shownUsers, 'userListTable');\n</script>\n");
 
                 if (hideUserList) {
                     ctx.println("</div>");
@@ -3026,7 +3040,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             whySent = "You are being notified of the CLDR vetting account for you.\n";
         } else {
             fromId = null;
-            whySent = "Your CLDR vetting account information is being sent to you\r\n\r\n";
+            whySent = "Your CLDR vetting account information is being sent to you\n\n";
         }
         String body = whySent + "To access it, visit: \n<"
             + defaultBase + "?" + QUERY_PASSWORD + "=" + pass + "&"
