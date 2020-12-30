@@ -82,7 +82,6 @@ const cldrLoad = (function () {
   // TODO: implement things like these without using dojo/dijit
   const dijitMenuSeparator = null;
   const dijitButton = null;
-  const dojoxBusyButton = null;
 
   /**************************/
 

@@ -186,12 +186,12 @@ const cldrOldVotes = (function () {
                   showVoteTable(jsondata /* voteList */, type, json)
                 );
 
-                var submit = dojoxBusyButton({
-                  label: cldrText.get("v_submit_msg"),
-                  busyLabel: cldrText.get("v_submit_busy"),
-                });
-
-                submit.on("click", function (e) {
+                const button = document.createElement("button");
+                button.innerHTML = cldrText.get("v_submit_msg");
+                content.appendChild(button);
+                cldrSurvey.listenFor(button, "click", function (e) {
+                  button.innerHTML = cldrText.get("v_submit_busy");
+                  button.disabled = true;
                   cldrSurvey.setDisplayed(navChunk, false);
                   var confirmList = []; // these will be revoted with current params
 
@@ -247,7 +247,6 @@ const cldrOldVotes = (function () {
                   );
                 });
 
-                submit.placeAt(content);
                 // hide by default
                 cldrSurvey.setDisplayed(content, false);
 
