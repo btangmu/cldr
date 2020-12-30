@@ -77,7 +77,7 @@ const cldrForum = (function () {
         exports: {
           appendLocaleLink: cldrLoad.appendLocaleLink,
           handleDisconnect: cldrSurvey.handleDisconnect,
-          clickToSelect: cldrSurvey.clickToSelect,
+          clickToSelect: cldrDom.clickToSelect,
         },
         // special = ??,
         // otherSpecial = ??,
@@ -566,7 +566,7 @@ const cldrForum = (function () {
         "label label-primary pull-right forumLink"
       );
       (function (post) {
-        cldrSurvey.listenFor(dateChunk, "click", function (e) {
+        cldrDom.listenFor(dateChunk, "click", function (e) {
           const locmap = cldrLoad.getTheLocaleMap();
           if (
             post.locale &&
@@ -582,7 +582,7 @@ const cldrForum = (function () {
             cldrStatus.setCurrentSpecial("forum");
             cldrLoad.reloadV();
           }
-          return cldrSurvey.stStopPropagation(e);
+          return cldrEvent.stopPropagation(e);
         });
       })(post);
       headingLine.appendChild(dateChunk);
@@ -921,7 +921,7 @@ const cldrForum = (function () {
     if (postType === "Request" && value === null) {
       newButton.disabled = true;
     } else {
-      cldrSurvey.listenFor(newButton, "click", function (e) {
+      cldrDom.listenFor(newButton, "click", function (e) {
         const xpathMap = cldrSurvey.getXpathMap();
         xpathMap.get(
           {
@@ -944,7 +944,7 @@ const cldrForum = (function () {
             });
           }
         );
-        cldrSurvey.stStopPropagation(e);
+        cldrEvent.stopPropagation(e);
         return false;
       });
     }
@@ -957,7 +957,7 @@ const cldrForum = (function () {
       "button",
       "addPostButton btn btn-default btn-sm"
     );
-    cldrSurvey.listenFor(replyButton, "click", function (e) {
+    cldrDom.listenFor(replyButton, "click", function (e) {
       openPostOrReply({
         /*
          * Don't specify locale/xpath/subject/value/open for reply. Instead they will be set to
@@ -967,7 +967,7 @@ const cldrForum = (function () {
         replyData: post,
         postType: postType,
       });
-      cldrSurvey.stStopPropagation(e);
+      cldrEvent.stopPropagation(e);
       return false;
     });
     return replyButton;

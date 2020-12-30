@@ -18,9 +18,9 @@ const cldrInfo = (function () {
    * @param {Function} fn the draw function
    */
   function listen(str, tr, theObj, fn) {
-    cldrSurvey.listenFor(theObj, "click", function (e) {
+    cldrDom.listenFor(theObj, "click", function (e) {
       show(str, tr, theObj /* hideIfLast */, fn);
-      cldrSurvey.stStopPropagation(e);
+      cldrEvent.stopPropagation(e);
       return false;
     });
   }
@@ -77,16 +77,12 @@ const cldrInfo = (function () {
         theRow.extraAttributes &&
         Object.keys(theRow.extraAttributes).length > 0
       ) {
-        var extraHeading = cldrSurvey.createChunk(
+        var extraHeading = cldrDom.createChunk(
           cldrText.get("extraAttribute_heading"),
           "h3",
           "extraAttribute_heading"
         );
-        var extraContainer = cldrSurvey.createChunk(
-          "",
-          "div",
-          "extraAttributes"
-        );
+        var extraContainer = cldrDom.createChunk("", "div", "extraAttributes");
         appendExtraAttributes(extraContainer, theRow);
         theHelp.appendChild(extraHeading);
         theHelp.appendChild(extraContainer);
@@ -134,8 +130,8 @@ const cldrInfo = (function () {
 
     if (tr && tr.theRow && tr.theRow.xpath) {
       fragment.appendChild(
-        cldrSurvey.clickToSelect(
-          cldrSurvey.createChunk(tr.theRow.xpath, "div", "xpath")
+        cldrDom.clickToSelect(
+          cldrDom.createChunk(tr.theRow.xpath, "div", "xpath")
         )
       );
     }
@@ -151,14 +147,14 @@ const cldrInfo = (function () {
       if (cldrStatus.isDashboard()) {
         cldrSurvey.showHelpFixPanel(fragment);
       } else {
-        cldrSurvey.removeAllChildNodes(pucontent);
+        cldrDom.removeAllChildNodes(pucontent);
         pucontent.appendChild(fragment);
       }
     } else {
       if (!cldrStatus.isDashboard()) {
         // show, for example, dataPageInitialGuidance in Info Panel
         var clone = fragment.cloneNode(true);
-        cldrSurvey.removeAllChildNodes(pucontent);
+        cldrDom.removeAllChildNodes(pucontent);
         pucontent.appendChild(clone);
       }
     }
@@ -197,17 +193,17 @@ const cldrInfo = (function () {
 
   function setLastShown(obj) {
     if (lastShown && obj != lastShown) {
-      cldrSurvey.removeClass(lastShown, "pu-select");
+      cldrDom.removeClass(lastShown, "pu-select");
       const partr = parentOfType("TR", lastShown);
       if (partr) {
-        cldrSurvey.removeClass(partr, "selectShow");
+        cldrDom.removeClass(partr, "selectShow");
       }
     }
     if (obj) {
-      cldrSurvey.addClass(obj, "pu-select");
+      cldrDom.addClass(obj, "pu-select");
       const partr = parentOfType("TR", obj);
       if (partr) {
-        cldrSurvey.addClass(partr, "selectShow");
+        cldrDom.addClass(partr, "selectShow");
       }
     }
     lastShown = obj;

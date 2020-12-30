@@ -18,7 +18,7 @@ const cldrSurvey = (function () {
    */
   const INHERITANCE_MARKER = "↑↑↑";
 
-  const xpathMap = new XpathMap(); // TODO: is it really a singleton?
+  let xpathMap = null;
 
   let wasBusted = false;
   let didUnbust = false;
@@ -81,8 +81,6 @@ const cldrSurvey = (function () {
    */
   let timerSpeed = 15000; // 15 seconds
 
-  let unShow = null;
-
   let surveyLevels = null;
 
   let surveyOrgCov = null;
@@ -98,90 +96,10 @@ const cldrSurvey = (function () {
   }
 
   function getXpathMap() {
+    if (!xpathMap) {
+      xpathMap = new XpathMap(); // TODO: is it really a singleton?
+    }
     return xpathMap;
-  }
-
-  /**
-   * Is the given string for a report, that is, does it start with "r_"?
-   *
-   * @class GLOBAL
-   *
-   * @param str the string
-   * @return true if starts with "r_", else false
-   */
-  function isReport(str) {
-    return str[0] == "r" && str[1] == "_";
-  }
-
-  /**
-   * Remove a CSS class from a node
-   *
-   * @param {Node} obj
-   * @param {String} className
-   */
-  function removeClass(obj, className) {
-    if (!obj) {
-      return obj;
-    }
-    if (obj.className.indexOf(className) > -1) {
-      obj.className = obj.className.substring(className.length + 1);
-    }
-    return obj;
-  }
-
-  /**
-   * Add a CSS class from a node
-   *
-   * @param {Node} obj
-   * @param {String} className
-   */
-  function addClass(obj, className) {
-    if (!obj) {
-      return obj;
-    }
-    if (obj.className.indexOf(className) == -1) {
-      obj.className = className + " " + obj.className;
-    }
-    return obj;
-  }
-
-  /**
-   * Remove all subnodes
-   *
-   * @param {Node} td
-   */
-  function removeAllChildNodes(td) {
-    if (td == null) {
-      return;
-    }
-    while (td.firstChild) {
-      td.removeChild(td.firstChild);
-    }
-  }
-
-  /**
-   * Set/remove style.display
-   */
-  function setDisplayed(div, visible) {
-    if (div === null) {
-      console.log("cldrSurvey.setDisplayed: called on null");
-      return;
-    } else if (div.domNode) {
-      cldrSurvey.setDisplayed(div.domNode, visible); // recurse, it's a dijit
-    } else if (!div.style) {
-      console.log(
-        "cldrSurvey.setDisplayed: called on malformed node " +
-          div +
-          " - no style! " +
-          Object.keys(div)
-      );
-    } else {
-      if (visible) {
-        div.style.display = "";
-      } else {
-        div.style.display = "none";
-      }
-    }
   }
 
   /**
@@ -214,53 +132,6 @@ const cldrSurvey = (function () {
     return false;
   }
 
-  /**
-   * Create a DOM object with the specified text, tag, and HTML class.
-   *
-   * @param {String} text textual content of the new object, or null for none
-   * @param {String} tag which element type to create, or null for "span"
-   * @param {String} className CSS className, or null for none.
-   * @return {Object} new DOM object
-   */
-  function createChunk(text, tag, className) {
-    if (!tag) {
-      tag = "span";
-    }
-    var chunk = document.createElement(tag);
-    if (className) {
-      chunk.className = className;
-    }
-    if (text) {
-      chunk.appendChild(document.createTextNode(text));
-    }
-    return chunk;
-  }
-
-  /**
-   * Create a 'link' that goes to a function. By default it's an 'a', but could be a button, etc.
-   * @param strid  {String} string to be used with cldrText.get
-   * @param fn {function} function, given the DOM obj as param
-   * @param tag {String}  tag of new obj.  'a' by default.
-   * @return {Element} newobj
-   */
-  function createLinkToFn(strid, fn, tag) {
-    if (!tag) {
-      tag = "a";
-    }
-    var msg = cldrText.get(strid);
-    var obj = document.createElement(tag);
-    obj.appendChild(document.createTextNode(msg));
-    if (tag == "a") {
-      obj.href = "";
-    }
-    listenFor(obj, "click", function (e) {
-      fn(obj);
-      stStopPropagation(e);
-      return false;
-    });
-    return obj;
-  }
-
   function createGravitar(user) {
     if (user.emailHash) {
       var gravatar = document.createElement("img");
@@ -285,134 +156,31 @@ const cldrSurvey = (function () {
     var userLevelLc = user.userlevelName.toLowerCase();
     var userLevelClass = "userlevel_" + userLevelLc;
     var userLevelStr = cldrText.get(userLevelClass);
-    var div = createChunk(null, "div", "adminUserUser");
+    var div = cldrDom.createChunk(null, "div", "adminUserUser");
     div.appendChild(createGravitar(user));
-    div.userLevel = createChunk(userLevelStr, "i", userLevelClass);
+    div.userLevel = cldrDom.createChunk(userLevelStr, "i", userLevelClass);
     div.appendChild(div.userLevel);
     div.appendChild(
-      (div.userName = createChunk(user.name, "span", "adminUserName"))
+      (div.userName = cldrDom.createChunk(user.name, "span", "adminUserName"))
     );
     if (!user.orgName) {
       user.orgName = user.org;
     }
     div.appendChild(
-      (div.userOrg = createChunk(
+      (div.userOrg = cldrDom.createChunk(
         user.orgName + " #" + user.id,
         "span",
         "adminOrgName"
       ))
     );
     div.appendChild(
-      (div.userEmail = createChunk(user.email, "address", "adminUserAddress"))
+      (div.userEmail = cldrDom.createChunk(
+        user.email,
+        "address",
+        "adminUserAddress"
+      ))
     );
     return div;
-  }
-
-  /**
-   * Used from within event handlers. cross platform 'stop propagation'
-   *
-   * @param e event
-   * @returns true or false
-   *
-   * Called from numerous js files
-   */
-  function stStopPropagation(e) {
-    if (!e) {
-      return false;
-    } else if (e.stopPropagation) {
-      return e.stopPropagation();
-    } else if (e.cancelBubble) {
-      return e.cancelBubble();
-    } else {
-      // hope for the best
-      return false;
-    }
-  }
-
-  /**
-   * Update the item, if it exists
-   *
-   * @param id ID of DOM node, or a Node itself
-   * @param txt text to replace with - should just be plaintext, but currently can be HTML
-   */
-  function updateIf(id, txt) {
-    var something;
-    if (id instanceof Node) {
-      something = id;
-    } else {
-      something = document.getElementById(id);
-    }
-    if (something != null) {
-      something.innerHTML = txt; // TODO shold only use for plain text
-    }
-  }
-
-  /**
-   * Add an event listener function to the object.
-   *
-   * @param {DOM} what object to listen to (or array of them)
-   * @param {String} what event, bare name such as 'click'
-   * @param {Function} fn function, of the form:  function(e) { 	doSomething();  	stStopPropagation(e);  	return false; }
-   * @param {String} ievent IE name of an event, if not 'on'+what
-   * @return {DOM} returns the object what (or the array)
-   */
-  function listenFor(whatArray, event, fn, ievent) {
-    function listenForOne(what, event, fn, ievent) {
-      if (!what._stlisteners) {
-        what._stlisteners = {};
-      }
-
-      if (what.addEventListener) {
-        if (what._stlisteners[event]) {
-          if (what.removeEventListener) {
-            what.removeEventListener(event, what._stlisteners[event], false);
-          } else {
-            console.log("Err: no removeEventListener on " + what);
-          }
-        }
-        what.addEventListener(event, fn, false);
-      } else {
-        if (!ievent) {
-          ievent = "on" + event;
-        }
-        if (what._stlisteners[event]) {
-          what.detachEvent(ievent, what._stlisteners[event]);
-        }
-        what.attachEvent(ievent, fn);
-      }
-      what._stlisteners[event] = fn;
-
-      return what;
-    }
-
-    if (Array.isArray(whatArray)) {
-      for (var k in whatArray) {
-        listenForOne(whatArray[k], event, fn, ievent);
-      }
-      return whatArray;
-    } else {
-      return listenForOne(whatArray, event, fn, ievent);
-    }
-  }
-
-  /**
-   * On click, select all
-   *
-   * @param {Node} obj to listen to
-   * @param {Node} targ to select
-   */
-  function clickToSelect(obj, targ) {
-    if (!targ) {
-      targ = obj;
-    }
-    listenFor(obj, "click", function (e) {
-      if (window.getSelection) {
-        window.getSelection().selectAllChildren(targ);
-      }
-      stStopPropagation(e);
-      return false;
-    });
-    return obj;
   }
 
   /**
@@ -420,7 +188,7 @@ const cldrSurvey = (function () {
    */
   function busted() {
     cldrStatus.setIsDisconnected(true);
-    addClass(document.getElementsByTagName("body")[0], "disconnected");
+    cldrDom.addClass(document.getElementsByTagName("body")[0], "disconnected");
   }
 
   // referenced in cldrGui.js but not actually called yet for non-dojo, due to data-dojo-props dependency
@@ -430,7 +198,10 @@ const cldrSurvey = (function () {
     progressWord = "unbusted";
     cldrStatus.setIsDisconnected(false);
     saidDisconnect = false;
-    removeClass(document.getElementsByTagName("body")[0], "disconnected");
+    cldrDom.removeClass(
+      document.getElementsByTagName("body")[0],
+      "disconnected"
+    );
     wasBusted = false;
     cldrAjax.clearXhr();
     hideLoader();
@@ -463,7 +234,7 @@ const cldrSurvey = (function () {
        * TODO: explain this code. When, if ever, is it executed, and why?
        * Typically Object.keys(showers).length != 0.
        */
-      updateIf("stchanged_loc", name);
+      cldrDom.updateIf("stchanged_loc", name);
       var locDiv = document.getElementById("stchanged");
       if (locDiv) {
         locDiv.style.display = "block";
@@ -585,7 +356,7 @@ const cldrSurvey = (function () {
           subDiv.appendChild(chunk);
           p.appendChild(subDiv);
           if (oneword.details) {
-            cldrSurvey.setDisplayed(oneword.details, false);
+            cldrDom.setDisplayed(oneword.details, false);
           }
           oneword.onclick = null;
           return false;
@@ -626,9 +397,9 @@ const cldrSurvey = (function () {
 
     var ari_submessage = formatErrMsg(json, what);
 
-    cldrSurvey.updateIf("ariMessage", ari_message.replace(/\n/g, "<br>"));
-    cldrSurvey.updateIf("ariSubMessage", ari_submessage.replace(/\n/g, "<br>"));
-    cldrSurvey.updateIf(
+    cldrDom.updateIf("ariMessage", ari_message.replace(/\n/g, "<br>"));
+    cldrDom.updateIf("ariSubMessage", ari_submessage.replace(/\n/g, "<br>"));
+    cldrDom.updateIf(
       "ariScroller",
       window.location + "<br>" + why.replace(/\n/g, "<br>")
     );
@@ -780,15 +551,15 @@ const cldrSurvey = (function () {
         ugtext = ugtext + json.status.guests + " guests, ";
       }
       ugtext = ugtext + json.status.pages + "pg/" + json.status.uptime;
-      removeAllChildNodes(updateParts.ug);
+      cldrDom.removeAllChildNodes(updateParts.ug);
       updateParts.ug.appendChild(document.createTextNode(ugtext));
 
-      removeAllChildNodes(updateParts.load);
+      cldrDom.removeAllChildNodes(updateParts.load);
       updateParts.load.appendChild(
         document.createTextNode("Load:" + json.status.sysload)
       );
 
-      removeAllChildNodes(updateParts.db);
+      cldrDom.removeAllChildNodes(updateParts.db);
       updateParts.db.appendChild(
         document.createTextNode(
           "db:" + json.status.dbopen + "/" + json.status.dbused
@@ -803,7 +574,7 @@ const cldrSurvey = (function () {
       fragment.appendChild(updateParts.db);
 
       if (updateParts.visitors) {
-        removeAllChildNodes(updateParts.visitors);
+        cldrDom.removeAllChildNodes(updateParts.visitors);
         updateParts.visitors.appendChild(fragment);
       }
 
@@ -833,7 +604,10 @@ const cldrSurvey = (function () {
         console.log(kmsg);
         updateSpecialHeader(standOutMessage(kmsg));
         cldrStatus.setIsDisconnected(true);
-        addClass(document.getElementsByTagName("body")[0], "disconnected");
+        cldrDom.addClass(
+          document.getElementsByTagName("body")[0],
+          "disconnected"
+        );
         if (!json.session_err) {
           json.session_err = "disconnected";
         }
@@ -945,7 +719,7 @@ const cldrSurvey = (function () {
         busted();
       } else {
         st_err.className = "";
-        removeAllChildNodes(st_err);
+        cldrDom.removeAllChildNodes(st_err);
       }
     }
     updateStatusBox(json);
@@ -1150,9 +924,9 @@ const cldrSurvey = (function () {
     } else {
       button.id = "v" + vHash + "_" + tr.rowHash;
     }
-    listenFor(button, "click", function (e) {
+    cldrDom.listenFor(button, "click", function (e) {
       handleWiredClick(tr, theRow, vHash, box, button);
-      stStopPropagation(e);
+      cldrEvent.stopPropagation(e);
       return false;
     });
 
@@ -1425,7 +1199,7 @@ const cldrSurvey = (function () {
       newDiv.innerHTML = newHtml;
       if (json && !parseStatusAction(json.statusAction).vote) {
         div3.appendChild(
-          createChunk(
+          cldrDom.createChunk(
             cldrText.sub(
               "StatusAction_msg",
               [cldrText.get("StatusAction_" + json.statusAction)],
@@ -1490,7 +1264,7 @@ const cldrSurvey = (function () {
          *  TODO: why not show stars, etc., here?
          */
         h3.appendChild(
-          createChunk(
+          cldrDom.createChunk(
             cldrText.sub("pClass_" + item.pClass, item),
             "p",
             "pClassExplain"
@@ -1555,10 +1329,14 @@ const cldrSurvey = (function () {
         // current locale
         // i.e., following the alias would come back to the current item
         el.appendChild(
-          createChunk(cldrText.get("noFollowAlias"), "span", "followAlias")
+          cldrDom.createChunk(
+            cldrText.get("noFollowAlias"),
+            "span",
+            "followAlias"
+          )
         );
       } else {
-        var clickyLink = createChunk(
+        var clickyLink = cldrDom.createChunk(
           cldrText.get("followAlias"),
           "a",
           "followAlias"
@@ -1638,7 +1416,7 @@ const cldrSurvey = (function () {
      */
     if (item.history) {
       const historyText = " ☛" + item.history;
-      const historyTag = createChunk(historyText, "span", "");
+      const historyTag = cldrDom.createChunk(historyText, "span", "");
       choiceField.appendChild(historyTag);
       cldrInfo.listen(historyText, tr, historyTag, null);
     }
@@ -1651,7 +1429,7 @@ const cldrSurvey = (function () {
       theRow.items[theRow.voteVhash].votes[surveyUser.id] &&
       theRow.items[theRow.voteVhash].votes[surveyUser.id].overridedVotes
     ) {
-      var overrideTag = createChunk(
+      var overrideTag = cldrDom.createChunk(
         theRow.items[theRow.voteVhash].votes[surveyUser.id].overridedVotes,
         "span",
         "i-override"
@@ -1675,7 +1453,7 @@ const cldrSurvey = (function () {
   function appendExtraAttributes(container, theRow) {
     for (var attr in theRow.extraAttributes) {
       var attrval = theRow.extraAttributes[attr];
-      var extraChunk = createChunk(
+      var extraChunk = cldrDom.createChunk(
         attr + "=" + attrval,
         "span",
         "extraAttribute"
@@ -1792,7 +1570,7 @@ const cldrSurvey = (function () {
   }
 
   function appendIcon(toElement, className, title) {
-    var e = createChunk(null, "div", className);
+    var e = cldrDom.createChunk(null, "div", className);
     e.title = title;
     toElement.appendChild(e);
     return e;
@@ -1809,7 +1587,7 @@ const cldrSurvey = (function () {
       whom.style.opacity = "0.5";
     }, when / 2);
     setTimeout(function () {
-      cldrSurvey.setDisplayed(whom, false);
+      cldrDom.setDisplayed(whom, false);
     }, when);
     return whom;
   }
@@ -2268,7 +2046,7 @@ const cldrSurvey = (function () {
   }
 
   function createLocLink(loc, locName, className) {
-    var cl = createChunk(locName, "a", "localeChunk " + className);
+    var cl = cldrDom.createChunk(locName, "a", "localeChunk " + className);
     cl.title = loc;
     cl.href = "survey?_=" + loc;
     return cl;
@@ -2292,13 +2070,19 @@ const cldrSurvey = (function () {
             var header = json.mine.header;
             var data = json.mine.data;
             if (data.length == 0) {
-              frag.appendChild(createChunk(cldrText.get("recentNone"), "i"));
+              frag.appendChild(
+                cldrDom.createChunk(cldrText.get("recentNone"), "i")
+              );
             } else {
               var rowDiv = document.createElement("div");
               frag.appendChild(rowDiv);
 
-              rowDiv.appendChild(createChunk(cldrText.get("recentLoc"), "b"));
-              rowDiv.appendChild(createChunk(cldrText.get("recentCount"), "b"));
+              rowDiv.appendChild(
+                cldrDom.createChunk(cldrText.get("recentLoc"), "b")
+              );
+              rowDiv.appendChild(
+                cldrDom.createChunk(cldrText.get("recentCount"), "b")
+              );
 
               for (var q in data) {
                 var row = data[q];
@@ -2312,12 +2096,12 @@ const cldrSurvey = (function () {
                 var locname = row[header.LOCALE_NAME];
                 rowDiv.appendChild(createLocLink(loc, locname, "recentLoc"));
                 rowDiv.appendChild(
-                  createChunk(count, "span", "value recentCount")
+                  cldrDom.createChunk(count, "span", "value recentCount")
                 );
 
                 const sessionId = cldrStatus.getSessionId();
                 if (sessionId) {
-                  var dlLink = createChunk(
+                  var dlLink = cldrDom.createChunk(
                     cldrText.get("downloadXmlLink"),
                     "a",
                     "notselected"
@@ -2335,7 +2119,7 @@ const cldrSurvey = (function () {
               }
             }
 
-            removeAllChildNodes(div);
+            cldrDom.removeAllChildNodes(div);
             div.appendChild(frag);
             hideLoader();
           } else {
@@ -2394,17 +2178,25 @@ const cldrSurvey = (function () {
             var data = json.recent.data;
 
             if (data.length == 0) {
-              frag.appendChild(createChunk(cldrText.get("recentNone"), "i"));
+              frag.appendChild(
+                cldrDom.createChunk(cldrText.get("recentNone"), "i")
+              );
             } else {
               var rowDiv = document.createElement("div");
               frag.appendChild(rowDiv);
 
-              rowDiv.appendChild(createChunk(cldrText.get("recentLoc"), "b"));
               rowDiv.appendChild(
-                createChunk(cldrText.get("recentXpathCode"), "b")
+                cldrDom.createChunk(cldrText.get("recentLoc"), "b")
               );
-              rowDiv.appendChild(createChunk(cldrText.get("recentValue"), "b"));
-              rowDiv.appendChild(createChunk(cldrText.get("recentWhen"), "b"));
+              rowDiv.appendChild(
+                cldrDom.createChunk(cldrText.get("recentXpathCode"), "b")
+              );
+              rowDiv.appendChild(
+                cldrDom.createChunk(cldrText.get("recentValue"), "b")
+              );
+              rowDiv.appendChild(
+                cldrDom.createChunk(cldrText.get("recentWhen"), "b")
+              );
 
               for (var q in data) {
                 var row = data[q];
@@ -2424,14 +2216,18 @@ const cldrSurvey = (function () {
                 var xpathItem;
                 xpath_code = xpath_code.replace(/\t/g, " / ");
                 rowDiv.appendChild(
-                  (xpathItem = createChunk(xpath_code, "a", "recentXpath"))
+                  (xpathItem = cldrDom.createChunk(
+                    xpath_code,
+                    "a",
+                    "recentXpath"
+                  ))
                 );
                 xpathItem.href = "survey?_=" + loc + "&strid=" + xpath_hash;
                 rowDiv.appendChild(
-                  createChunk(value, "span", "value recentValue")
+                  cldrDom.createChunk(value, "span", "value recentValue")
                 );
                 rowDiv.appendChild(
-                  createChunk(
+                  cldrDom.createChunk(
                     new Date(last_mod).toLocaleString(),
                     "span",
                     "recentWhen"
@@ -2439,7 +2235,7 @@ const cldrSurvey = (function () {
                 );
               }
             }
-            removeAllChildNodes(div);
+            cldrDom.removeAllChildNodes(div);
             div.appendChild(frag);
             hideLoader();
           } else {
@@ -2482,7 +2278,7 @@ const cldrSurvey = (function () {
       table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0]
     );
 
-    cldrSurvey.setDisplayed(theadChildren[1], false);
+    cldrDom.setDisplayed(theadChildren[1], false);
     var rowById = [];
 
     for (var k in list) {
@@ -2493,11 +2289,11 @@ const cldrSurvey = (function () {
 
       var rowChildren = getTagChildren(tr);
 
-      removeAllChildNodes(rowChildren[1]); // org
-      removeAllChildNodes(rowChildren[2]); // name
+      cldrDom.removeAllChildNodes(rowChildren[1]); // org
+      cldrDom.removeAllChildNodes(rowChildren[2]); // name
 
       var theUser;
-      cldrSurvey.setDisplayed(rowChildren[1], false);
+      cldrDom.setDisplayed(rowChildren[1], false);
       rowChildren[2].appendChild((theUser = createUser(user)));
 
       rows.push({
@@ -2542,15 +2338,19 @@ const cldrSurvey = (function () {
           if (count > userRow.stats.length) {
             count = userRow.stats.length;
           }
-          removeAllChildNodes(userRow.seenSub);
+          cldrDom.removeAllChildNodes(userRow.seenSub);
           for (var k = 0; k < count; k++) {
             var theStat = userRow.stats[k];
-            var chartRow = createChunk("", "div", "chartRow");
+            var chartRow = cldrDom.createChunk("", "div", "chartRow");
 
-            var chartDay = createChunk(theStat.day, "span", "chartDay");
-            var chartLoc = createChunk(theStat.locale, "span", "chartLoc");
+            var chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
+            var chartLoc = cldrDom.createChunk(
+              theStat.locale,
+              "span",
+              "chartLoc"
+            );
             chartLoc.title = loc2name[theStat.locale];
-            var chartCount = createChunk(
+            var chartCount = cldrDom.createChunk(
               dojoNumber.format(theStat.count),
               "span",
               "chartCount"
@@ -2570,7 +2370,7 @@ const cldrSurvey = (function () {
         for (var k in rows) {
           var userRow = rows[k];
           if (userRow.total > 0) {
-            addClass(userRow.tr, "hadActivity");
+            cldrDom.addClass(userRow.tr, "hadActivity");
             userRow.tr
               .getElementsByClassName("recentActivity")[0]
               .appendChild(
@@ -2586,30 +2386,30 @@ const cldrSurvey = (function () {
             appendMiniChart(userRow, 3);
             if (userRow.stats.length > 3) {
               var chartMore, chartLess;
-              chartMore = createChunk("+", "span", "chartMore");
-              chartLess = createChunk("-", "span", "chartMore");
+              chartMore = cldrDom.createChunk("+", "span", "chartMore");
+              chartLess = cldrDom.createChunk("-", "span", "chartMore");
               chartMore.onclick = (function (chartMore, chartLess, userRow) {
                 return function () {
-                  cldrSurvey.setDisplayed(chartMore, false);
-                  cldrSurvey.setDisplayed(chartLess, true);
+                  cldrDom.setDisplayed(chartMore, false);
+                  cldrDom.setDisplayed(chartLess, true);
                   appendMiniChart(userRow, userRow.stats.length);
                   return false;
                 };
               })(chartMore, chartLess, userRow);
               chartLess.onclick = (function (chartMore, chartLess, userRow) {
                 return function () {
-                  cldrSurvey.setDisplayed(chartMore, true);
-                  cldrSurvey.setDisplayed(chartLess, false);
+                  cldrDom.setDisplayed(chartMore, true);
+                  cldrDom.setDisplayed(chartLess, false);
                   appendMiniChart(userRow, 3);
                   return false;
                 };
               })(chartMore, chartLess, userRow);
               userRow.seen.appendChild(chartMore);
-              cldrSurvey.setDisplayed(chartLess, false);
+              cldrDom.setDisplayed(chartLess, false);
               userRow.seen.appendChild(chartLess);
             }
           } else {
-            addClass(userRow.tr, "noActivity");
+            cldrDom.addClass(userRow.tr, "noActivity");
           }
         }
       });
@@ -2664,7 +2464,6 @@ const cldrSurvey = (function () {
    */
   return {
     INHERITANCE_MARKER: INHERITANCE_MARKER,
-    addClass: addClass,
     addIcon: addIcon,
     addVitem: addVitem,
     appendExample: appendExample,
@@ -2673,14 +2472,11 @@ const cldrSurvey = (function () {
     appendItem: appendItem,
     cacheKill: cacheKill,
     chgPage: chgPage,
-    clickToSelect: clickToSelect,
     cloneAnon: cloneAnon,
     cloneLocalizeAnon: cloneLocalizeAnon,
     covName: covName,
     covValue: covValue,
-    createChunk: createChunk,
     createGravitar: createGravitar,
-    createLinkToFn: createLinkToFn,
     createUser: createUser,
     effectiveCoverage: effectiveCoverage,
     findItemByValue: findItemByValue,
@@ -2695,14 +2491,9 @@ const cldrSurvey = (function () {
     handleWiredClick: handleWiredClick,
     hideLoader: hideLoader,
     isInputBusy: isInputBusy,
-    isReport: isReport,
-    listenFor: listenFor,
     localizeFlyover: localizeFlyover,
     parseStatusAction: parseStatusAction,
     refreshCounterVetting: refreshCounterVetting,
-    removeAllChildNodes: removeAllChildNodes,
-    removeClass: removeClass,
-    setDisplayed: setDisplayed,
     setLang: setLang,
     setOverrideDir: setOverrideDir,
     setShower: setShower,
@@ -2711,12 +2502,10 @@ const cldrSurvey = (function () {
     showAllItems: showAllItems,
     showHelpFixPanel: showHelpFixPanel,
     showLoader: showLoader,
-    stStopPropagation: stStopPropagation,
     testsToHtml: testsToHtml,
     unbust: unbust,
     updateCovFromJson: updateCovFromJson,
     updateCoverage: updateCoverage,
-    updateIf: updateIf,
     updateSpecialHeader: updateSpecialHeader,
     updateStatus: updateStatus,
     wireUpButton: wireUpButton,

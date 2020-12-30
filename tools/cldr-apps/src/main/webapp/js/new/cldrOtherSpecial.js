@@ -125,7 +125,7 @@ OtherSpecial.prototype.show = function show(name, params) {
       params.exports = {
         appendLocaleLink: cldrLoad.appendLocaleLink,
         handleDisconnect: cldrSurvey.handleDisconnect,
-        clickToSelect: cldrSurvey.clickToSelect,
+        clickToSelect: cldrDom.clickToSelect,
       };
 
       special.show(params);
@@ -138,7 +138,7 @@ OtherSpecial.prototype.show = function show(name, params) {
       });
       params.flipper.flipTo(
         params.pages.loading,
-        (loadingChunk = cldrSurvey.createChunk(msg_fmt, "p", "errCodeMsg"))
+        (loadingChunk = cldrDom.createChunk(msg_fmt, "p", "errCodeMsg"))
       );
       isLoading = false;
     }

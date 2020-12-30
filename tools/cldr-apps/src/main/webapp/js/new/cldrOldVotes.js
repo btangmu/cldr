@@ -32,14 +32,14 @@ const cldrOldVotes = (function () {
         } else {
           cldrSurvey.showLoader("loading..");
           if (json.dataLoadTime) {
-            cldrSurvey.updateIf("dynload", json.dataLoadTime);
+            cldrDom.updateIf("dynload", json.dataLoadTime);
           }
           // clean slate, and proceed
           const theDiv = cldrLoad.flipToEmptyOther();
-          cldrSurvey.removeAllChildNodes(theDiv);
+          cldrDom.removeAllChildNodes(theDiv);
 
           const h2txt = cldrText.get("v_oldvotes_title");
-          theDiv.appendChild(cldrSurvey.createChunk(h2txt, "h2", "v-title"));
+          theDiv.appendChild(cldrDom.createChunk(h2txt, "h2", "v-title"));
 
           if (!json.oldvotes.locale) {
             cldrStatus.setCurrentLocale("");
@@ -57,7 +57,7 @@ const cldrOldVotes = (function () {
               for (let k in data) {
                 var li = document.createElement("li");
 
-                var link = cldrSurvey.createChunk(
+                var link = cldrDom.createChunk(
                   data[k][header.LOCALE_NAME],
                   "a"
                 );
@@ -65,13 +65,13 @@ const cldrOldVotes = (function () {
                 (function (loc, link) {
                   return function () {
                     var clicky;
-                    cldrSurvey.listenFor(
+                    cldrDom.listenFor(
                       link,
                       "click",
                       (clicky = function (e) {
                         cldrStatus.setCurrentLocale(loc);
                         cldrLoad.reloadV();
-                        cldrSurvey.stStopPropagation(e);
+                        cldrEvent.stopPropagation(e);
                         return false;
                       })
                     );
@@ -79,9 +79,9 @@ const cldrOldVotes = (function () {
                   };
                 })(data[k][header.LOCALE], link)();
                 li.appendChild(link);
-                li.appendChild(cldrSurvey.createChunk(" "));
+                li.appendChild(cldrDom.createChunk(" "));
                 li.appendChild(
-                  cldrSurvey.createChunk("(" + data[k][header.COUNT] + ")")
+                  cldrDom.createChunk("(" + data[k][header.COUNT] + ")")
                 );
 
                 ul.appendChild(li);
@@ -90,7 +90,7 @@ const cldrOldVotes = (function () {
               theDiv.appendChild(ul);
 
               theDiv.appendChild(
-                cldrSurvey.createChunk(
+                cldrDom.createChunk(
                   cldrText.get("v_oldvotes_locale_list_help_msg"),
                   "p",
                   "helpContent"
@@ -98,7 +98,7 @@ const cldrOldVotes = (function () {
               );
             } else {
               theDiv.appendChild(
-                cldrSurvey.createChunk(cldrText.get("v_oldvotes_no_old"), "i")
+                cldrDom.createChunk(cldrText.get("v_oldvotes_no_old"), "i")
               ); // TODO fix
             }
           } else {
@@ -106,20 +106,20 @@ const cldrOldVotes = (function () {
             cldrLoad.updateHashAndMenus(false);
             var loclink;
             theDiv.appendChild(
-              (loclink = cldrSurvey.createChunk(
+              (loclink = cldrDom.createChunk(
                 cldrText.get("v_oldvotes_return_to_locale_list"),
                 "a",
                 "notselected"
               ))
             );
-            cldrSurvey.listenFor(loclink, "click", function (e) {
+            cldrDom.listenFor(loclink, "click", function (e) {
               cldrStatus.setCurrentLocale("");
               cldrLoad.reloadV();
-              cldrSurvey.stStopPropagation(e);
+              cldrEvent.stopPropagation(e);
               return false;
             });
             theDiv.appendChild(
-              cldrSurvey.createChunk(
+              cldrDom.createChunk(
                 json.oldvotes.localeDisplayName,
                 "h3",
                 "v-title2"
@@ -149,7 +149,7 @@ const cldrOldVotes = (function () {
               var summaryMsg = cldrText.sub("v_oldvotes_count_msg", {
                 count: oldVoteCount,
               });
-              frag.appendChild(cldrSurvey.createChunk(summaryMsg, "div", ""));
+              frag.appendChild(cldrDom.createChunk(summaryMsg, "div", ""));
 
               var navChunk = document.createElement("div");
               navChunk.className = "v-oldVotes-nav";
@@ -159,7 +159,7 @@ const cldrOldVotes = (function () {
               var contestedChunk = null;
 
               function addOldvotesType(type, jsondata, frag, navChunk) {
-                var content = cldrSurvey.createChunk(
+                var content = cldrDom.createChunk(
                   "",
                   "div",
                   "v-oldVotes-subDiv"
@@ -178,7 +178,7 @@ const cldrOldVotes = (function () {
                   var title = cldrText.get(content.strid);
                   content.title = title;
                   content.appendChild(
-                    cldrSurvey.createChunk(title, "h2", "v-oldvotes-sub")
+                    cldrDom.createChunk(title, "h2", "v-oldvotes-sub")
                   );
                 }
 
@@ -189,10 +189,10 @@ const cldrOldVotes = (function () {
                 const button = document.createElement("button");
                 button.innerHTML = cldrText.get("v_submit_msg");
                 content.appendChild(button);
-                cldrSurvey.listenFor(button, "click", function (e) {
+                cldrDom.listenFor(button, "click", function (e) {
                   button.innerHTML = cldrText.get("v_submit_busy");
                   button.disabled = true;
-                  cldrSurvey.setDisplayed(navChunk, false);
+                  cldrDom.setDisplayed(navChunk, false);
                   var confirmList = []; // these will be revoted with current params
 
                   // explicit confirm list -  save us desync hassle
@@ -248,7 +248,7 @@ const cldrOldVotes = (function () {
                 });
 
                 // hide by default
-                cldrSurvey.setDisplayed(content, false);
+                cldrDom.setDisplayed(content, false);
 
                 frag.appendChild(content);
                 return content;
@@ -278,49 +278,49 @@ const cldrOldVotes = (function () {
               }
 
               if (contestedChunk == null && uncontestedChunk != null) {
-                cldrSurvey.setDisplayed(uncontestedChunk, true); // only item
+                cldrDom.setDisplayed(uncontestedChunk, true); // only item
               } else if (contestedChunk != null && uncontestedChunk == null) {
-                cldrSurvey.setDisplayed(contestedChunk, true); // only item
+                cldrDom.setDisplayed(contestedChunk, true); // only item
               } else {
                 // navigation
                 navChunk.appendChild(
-                  cldrSurvey.createChunk(cldrText.get("v_oldvotes_show"))
+                  cldrDom.createChunk(cldrText.get("v_oldvotes_show"))
                 );
                 navChunk.appendChild(
-                  cldrSurvey.createLinkToFn(
+                  cldrDom.createLinkToFn(
                     uncontestedChunk.strid,
                     function () {
-                      cldrSurvey.setDisplayed(contestedChunk, false);
-                      cldrSurvey.setDisplayed(uncontestedChunk, true);
+                      cldrDom.setDisplayed(contestedChunk, false);
+                      cldrDom.setDisplayed(uncontestedChunk, true);
                     },
                     "button"
                   )
                 );
                 navChunk.appendChild(
-                  cldrSurvey.createLinkToFn(
+                  cldrDom.createLinkToFn(
                     contestedChunk.strid,
                     function () {
-                      cldrSurvey.setDisplayed(contestedChunk, true);
-                      cldrSurvey.setDisplayed(uncontestedChunk, false);
+                      cldrDom.setDisplayed(contestedChunk, true);
+                      cldrDom.setDisplayed(uncontestedChunk, false);
                     },
                     "button"
                   )
                 );
 
                 contestedChunk.appendChild(
-                  cldrSurvey.createLinkToFn(
+                  cldrDom.createLinkToFn(
                     "v_oldvotes_hide",
                     function () {
-                      cldrSurvey.setDisplayed(contestedChunk, false);
+                      cldrDom.setDisplayed(contestedChunk, false);
                     },
                     "button"
                   )
                 );
                 uncontestedChunk.appendChild(
-                  cldrSurvey.createLinkToFn(
+                  cldrDom.createLinkToFn(
                     "v_oldvotes_hide",
                     function () {
-                      cldrSurvey.setDisplayed(uncontestedChunk, false);
+                      cldrDom.setDisplayed(uncontestedChunk, false);
                     },
                     "button"
                   )
@@ -329,7 +329,7 @@ const cldrOldVotes = (function () {
               theDiv.appendChild(frag);
             } else {
               theDiv.appendChild(
-                cldrSurvey.createChunk(
+                cldrDom.createChunk(
                   cldrText.get("v_oldvotes_no_old_here"),
                   "i",
                   ""
@@ -369,13 +369,13 @@ const cldrOldVotes = (function () {
     var tb = document.createElement("tbody");
     var tr = document.createElement("tr");
     tr.appendChild(
-      cldrSurvey.createChunk(cldrText.get("v_oldvotes_path"), "th", "code")
+      cldrDom.createChunk(cldrText.get("v_oldvotes_path"), "th", "code")
     );
     tr.appendChild(
-      cldrSurvey.createChunk(translationHintsLanguage, "th", "v-comp")
+      cldrDom.createChunk(translationHintsLanguage, "th", "v-comp")
     );
     tr.appendChild(
-      cldrSurvey.createChunk(
+      cldrDom.createChunk(
         cldrText.sub("v_oldvotes_winning_msg", {
           version: lastVoteVersion,
         }),
@@ -384,14 +384,10 @@ const cldrOldVotes = (function () {
       )
     );
     tr.appendChild(
-      cldrSurvey.createChunk(cldrText.get("v_oldvotes_mine"), "th", "v-mine")
+      cldrDom.createChunk(cldrText.get("v_oldvotes_mine"), "th", "v-mine")
     );
     tr.appendChild(
-      cldrSurvey.createChunk(
-        cldrText.get("v_oldvotes_accept"),
-        "th",
-        "v-accept"
-      )
+      cldrDom.createChunk(cldrText.get("v_oldvotes_accept"), "th", "v-accept")
     );
     th.appendChild(tr);
     t.appendChild(th);
@@ -419,7 +415,7 @@ const cldrOldVotes = (function () {
         for (var nn in pathSplit) {
           if (nn < pathSplit.length - 1) {
             tdh.appendChild(
-              cldrSurvey.createChunk(pathSplit[nn], "span", "pathChunk")
+              cldrDom.createChunk(pathSplit[nn], "span", "pathChunk")
             );
           }
         }
@@ -432,30 +428,30 @@ const cldrOldVotes = (function () {
       oldSplit = pathSplit;
       rowTitle = pathSplit[pathSplit.length - 1];
 
-      tdp = cldrSurvey.createChunk("", "td", "v-path");
+      tdp = cldrDom.createChunk("", "td", "v-path");
 
-      var dtpl = cldrSurvey.createChunk(rowTitle, "a");
+      var dtpl = cldrDom.createChunk(rowTitle, "a");
       dtpl.href = "v#/" + cldrStatus.getCurrentLocale() + "//" + row.strid;
       dtpl.target = "_CLDR_ST_view";
       tdp.appendChild(dtpl);
 
       tr.appendChild(tdp);
-      var td00 = cldrSurvey.createChunk(row.baseValue, "td", "v-comp"); // english
+      var td00 = cldrDom.createChunk(row.baseValue, "td", "v-comp"); // english
       tr.appendChild(td00);
-      var td0 = cldrSurvey.createChunk("", "td", "v-win");
+      var td0 = cldrDom.createChunk("", "td", "v-win");
       if (row.winValue) {
         var span0 = cldrSurvey.appendItem(td0, row.winValue, "winner");
         span0.dir = dir;
       }
       tr.appendChild(td0);
-      var td1 = cldrSurvey.createChunk("", "td", "v-mine");
-      var label = cldrSurvey.createChunk("", "label", "");
+      var td1 = cldrDom.createChunk("", "td", "v-mine");
+      var label = cldrDom.createChunk("", "label", "");
       var span1 = cldrSurvey.appendItem(label, row.myValue, "value");
       td1.appendChild(label);
       span1.dir = dir;
       tr.appendChild(td1);
-      var td2 = cldrSurvey.createChunk("", "td", "v-accept");
-      var box = cldrSurvey.createChunk("", "input", "");
+      var td2 = cldrDom.createChunk("", "td", "v-accept");
+      var box = cldrDom.createChunk("", "input", "");
       box.type = "checkbox";
       if (type == "uncontested") {
         // uncontested true by default
@@ -468,14 +464,14 @@ const cldrOldVotes = (function () {
       (function (tr, box, tdp) {
         return function () {
           // allow click anywhere
-          cldrSurvey.listenFor(tr, "click", function (e) {
+          cldrDom.listenFor(tr, "click", function (e) {
             box.checked = !box.checked;
-            cldrSurvey.stStopPropagation(e);
+            cldrEvent.stopPropagation(e);
             return false;
           });
           // .. but not on the path.  Also listen to the box and do nothing
-          cldrSurvey.listenFor([tdp, box], "click", function (e) {
-            cldrSurvey.stStopPropagation(e);
+          cldrDom.listenFor([tdp, box], "click", function (e) {
+            cldrEvent.stopPropagation(e);
             return false;
           });
         };
@@ -503,7 +499,7 @@ const cldrOldVotes = (function () {
    */
   function addImportVotesFooter(voteTableDiv, voteList, mainCategories) {
     voteTableDiv.appendChild(
-      cldrSurvey.createLinkToFn(
+      cldrDom.createLinkToFn(
         "v_oldvotes_all",
         function () {
           for (var k in voteList) {
@@ -518,7 +514,7 @@ const cldrOldVotes = (function () {
     );
 
     voteTableDiv.appendChild(
-      cldrSurvey.createLinkToFn(
+      cldrDom.createLinkToFn(
         "v_oldvotes_none",
         function () {
           for (var k in voteList) {
@@ -543,14 +539,14 @@ const cldrOldVotes = (function () {
         checkbox.id = "cat" + cat;
         voteTableDiv.appendChild(checkbox);
         voteTableDiv.appendChild(document.createTextNode(mainCat + " "));
-        cldrSurvey.listenFor(checkbox, "click", function (e) {
+        cldrDom.listenFor(checkbox, "click", function (e) {
           for (var k in voteList) {
             var row = voteList[k];
             if (row.pathHeader.startsWith(mainCat)) {
               row.box.checked = this.checked;
             }
           }
-          cldrSurvey.stStopPropagation(e);
+          cldrEvent.stopPropagation(e);
           return false;
         });
       }

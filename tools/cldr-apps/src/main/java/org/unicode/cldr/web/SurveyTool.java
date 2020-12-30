@@ -3,6 +3,7 @@ package org.unicode.cldr.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.Arrays;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -318,6 +319,7 @@ public class SurveyTool extends HttpServlet {
         "cldrAbout.js",
         "cldrBulkClosePosts.js",
         "cldrCreateLogin.js",
+        "cldrDom.js",
         "cldrForumParticipation.js",
         "cldrForumFilter.js",
         "cldrCsvFromTable.js",
@@ -364,6 +366,7 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "CldrDojoGui" + js); // CldrGuiDojo.js
         } else {
             out.write(prefix + "bootstrap.min.js" + tail);
+            Arrays.sort(newJsFiles);
             for (String s: newJsFiles) {
                 String ss = s.replace(".js", "");
                 out.write(prefix + "new/" + ss + js);

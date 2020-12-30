@@ -678,18 +678,38 @@ const cldrEvent = (function () {
     $("#main-row #itemInfo").hide();
   }
 
+  /**
+   * Used from within event handlers. cross platform 'stop propagation'
+   *
+   * @param e event
+   * @returns true or false
+   */
+  function stopPropagation(e) {
+    if (!e) {
+      return false;
+    } else if (e.stopPropagation) {
+      return e.stopPropagation();
+    } else if (e.cancelBubble) {
+      return e.cancelBubble();
+    } else {
+      // hope for the best
+      return false;
+    }
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
   return {
-    startup: startup,
-    searchRefresh: searchRefresh,
-    unpackMenuSideBar: unpackMenuSideBar,
-    hideOverlayAndSidebar: hideOverlayAndSidebar,
-    resizeSidebar: resizeSidebar,
     filterAllLocale: filterAllLocale,
     forceSidebar: forceSidebar,
-    popupAlert: popupAlert,
+    hideOverlayAndSidebar: hideOverlayAndSidebar,
     hideRightPanel: hideRightPanel,
+    popupAlert: popupAlert,
+    resizeSidebar: resizeSidebar,
+    searchRefresh: searchRefresh,
+    startup: startup,
+    stopPropagation: stopPropagation,
+    unpackMenuSideBar: unpackMenuSideBar,
   };
 })();

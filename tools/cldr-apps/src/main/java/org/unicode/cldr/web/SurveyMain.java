@@ -1756,6 +1756,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
      * @param ctx
      *
      * TODO: this function is over 666 lines long. Shorten it with subroutines.
+     * Move it to a new class, maybe "UserList.java". Separate the model (data)
+     * from the presentation (html). Generate the presentation on the front end.
+     * Generate only the data on the back end, and deliver it as json.
      */
     private void doList(WebContext ctx) {
         int n = 0;
@@ -2269,6 +2272,11 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 ctx.println("</tbody></table>");
 
                 // now, serialize the list..
+                /*
+                 * TODO: implement this with strict js, without using java to write js!
+                 * ...this function SurveyMain.doList() is over 666 lines long...
+                 * showUserActivity doesn't work if called this way, if !SurveyTool.USE_DOJO
+                 */
                 ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\n" +
                 		"showUserActivity(shownUsers, 'userListTable');\n</script>\n");
 

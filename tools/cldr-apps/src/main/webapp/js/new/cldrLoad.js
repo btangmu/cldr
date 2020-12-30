@@ -24,8 +24,7 @@ const cldrLoad = (function () {
    */
   let _thePages = null;
 
-  let locmap = new LocaleMap(null); // TODO: is it really a singleton?
-  // it may be modified below with locmap = new LocaleMap(json.locmap)
+  let locmap = null;
 
   let canmodify = {};
 
@@ -61,15 +60,15 @@ const cldrLoad = (function () {
         if (wnode) {
           wnode.set("label", y);
         } else {
-          cldrSurvey.updateIf(x, y); // non widget
+          cldrDom.updateIf(x, y); // non widget
         }
-        cldrSurvey.setDisplayed(cnode, true);
+        cldrDom.setDisplayed(cnode, true);
       } else {
-        cldrSurvey.setDisplayed(cnode, false);
+        cldrDom.setDisplayed(cnode, false);
         if (wnode) {
           wnode.set("label", "-");
         } else {
-          cldrSurvey.updateIf(x, "-"); // non widget
+          cldrDom.updateIf(x, "-"); // non widget
         }
       }
     },
@@ -89,6 +88,8 @@ const cldrLoad = (function () {
    * Call this once in the page. It expects to find a node #DynamicDataSection
    */
   function showV() {
+    locmap = new LocaleMap(null); // TODO: is it really a singleton?
+    // it may be modified below with locmap = new LocaleMap(json.locmap)
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
     otherSpecial = new OtherSpecial();
 
@@ -97,12 +98,12 @@ const cldrLoad = (function () {
     theDiv.pucontent = pucontent;
 
     pucontent.appendChild(
-      cldrSurvey.createChunk(cldrText.get("itemInfoBlank"), "i")
+      cldrDom.createChunk(cldrText.get("itemInfoBlank"), "i")
     );
 
     // click on the title to copy (permalink)
-    cldrSurvey.clickToSelect(document.getElementById("ariScroller"));
-    cldrSurvey.updateIf(
+    cldrDom.clickToSelect(document.getElementById("ariScroller"));
+    cldrDom.updateIf(
       "title-dcontent-link",
       cldrText.get("defaultContent_titleLink")
     );
@@ -140,11 +141,11 @@ const cldrLoad = (function () {
       sessionId +
       cldrSurvey.cacheKill();
     myLoad(xurl, "initial menus for " + theLocale, function (json) {
-      loadInitialMenusFromJson(json, theLocale, sessionId);
+      loadInitialMenusFromJson(json, theLocale);
     });
   }
 
-  function loadInitialMenusFromJson(json, theLocale, sessionId) {
+  function loadInitialMenusFromJson(json, theLocale) {
     if (!verifyJson(json, "locmap")) {
       return;
     }
@@ -286,7 +287,7 @@ const cldrLoad = (function () {
             cldrEvent.unpackMenuSideBar(json);
             if (
               cldrStatus.getCurrentSpecial() &&
-              cldrSurvey.isReport(cldrStatus.getCurrentSpecial())
+              isReport(cldrStatus.getCurrentSpecial())
             ) {
               reloadV();
             }
@@ -423,7 +424,7 @@ const cldrLoad = (function () {
             cldrStatus.setCurrentPage("");
             cldrStatus.setCurrentId("");
           }
-        } else if (cldrSurvey.isReport(curSpec)) {
+        } else if (isReport(curSpec)) {
           // allow page and ID to fall through.
           if (pieces.length > 2) {
             cldrStatus.setCurrentPage(pieces[2]);
@@ -562,12 +563,9 @@ const cldrLoad = (function () {
       return false;
     } else if (json.err_code) {
       var msg_fmt = cldrSurvey.formatErrMsg(json, subkey);
-      var loadingChunk;
-      flipper.flipTo(
-        pages.loading,
-        (loadingChunk = cldrSurvey.createChunk(msg_fmt, "p", "errCodeMsg"))
-      );
-      var retryButton = cldrSurvey.createChunk(
+      var loadingChunk = cldrDom.createChunk(msg_fmt, "p", "errCodeMsg");
+      flipper.flipTo(pages.loading, loadingChunk);
+      var retryButton = cldrDom.createChunk(
         cldrText.get("loading_reload"),
         "button"
       );
@@ -734,12 +732,12 @@ const cldrLoad = (function () {
       var bund = locmap.getLocaleInfo(curLocale);
       if (bund) {
         if (bund.readonly) {
-          cldrSurvey.addClass(
+          cldrDom.addClass(
             document.getElementById(menubuttons.locale),
             "locked"
           );
         } else {
-          cldrSurvey.removeClass(
+          cldrDom.removeClass(
             document.getElementById(menubuttons.locale),
             "locked"
           );
@@ -758,7 +756,7 @@ const cldrLoad = (function () {
           menubuttons.set(menubuttons.dcontent);
         }
       } else {
-        cldrSurvey.removeClass(
+        cldrDom.removeClass(
           document.getElementById(menubuttons.locale),
           "locked"
         );
@@ -766,7 +764,7 @@ const cldrLoad = (function () {
       }
     } else {
       cldrStatus.setCurrentLocaleName("");
-      cldrSurvey.removeClass(
+      cldrDom.removeClass(
         document.getElementById(menubuttons.locale),
         "locked"
       );
@@ -776,7 +774,7 @@ const cldrLoad = (function () {
   }
   function reloadV() {
     if (cldrStatus.isDisconnected()) {
-      unbust();
+      cldrSurvey.unbust();
     }
 
     document.getElementById("DynamicDataSection").innerHTML = ""; //reset the data
@@ -820,20 +818,15 @@ const cldrLoad = (function () {
       }
     }
 
-    var loadingChunk;
     flipper.flipTo(
       pages.loading,
-      (loadingChunk = cldrSurvey.createChunk(
-        cldrText.get("loading"),
-        "i",
-        "loadingMsg"
-      ))
+      cldrDom.createChunk(cldrText.get("loading"), "i", "loadingMsg")
     );
 
-    const itemLoadInfo = cldrSurvey.createChunk("", "div", "itemLoadInfo");
+    const itemLoadInfo = cldrDom.createChunk("", "div", "itemLoadInfo");
 
     // Create a little spinner to spin "..." so the user knows we are doing something..
-    var spinChunk = cldrSurvey.createChunk("...", "i", "loadingMsgSpin");
+    var spinChunk = cldrDom.createChunk("...", "i", "loadingMsgSpin");
     var spin = 0;
     var timerToKill = window.setInterval(function () {
       var spinTxt = "";
@@ -849,7 +842,7 @@ const cldrLoad = (function () {
           spinTxt = "  .";
           break;
       }
-      cldrSurvey.removeAllChildNodes(spinChunk);
+      cldrDom.removeAllChildNodes(spinChunk);
       spinChunk.appendChild(document.createTextNode(spinTxt));
     }, 1000);
 
@@ -922,7 +915,7 @@ const cldrLoad = (function () {
       cldrSurvey.hideLoader();
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
-    } else if (cldrSurvey.isReport(curSpecial)) {
+    } else if (isReport(curSpecial)) {
       loadReport();
     } else if (curSpecial === "about") {
       cldrAbout.load();
@@ -944,6 +937,18 @@ const cldrLoad = (function () {
         pages: pages,
       });
     }
+  }
+
+  /**
+   * Is the given string for a report, that is, does it start with "r_"?
+   * Really only (?) 4: "r_vetting_json" (Dashboard), "r_datetime", "r_zones", "r_compact"
+   * Cf. SurveyMain.ReportMenu.PRIORITY_ITEMS
+   *
+   * @param str the string
+   * @return true if starts with "r_", else false
+   */
+  function isReport(str) {
+    return str[0] == "r" && str[1] == "_";
   }
 
   // the 'General Info' page.
@@ -980,24 +985,21 @@ const cldrLoad = (function () {
   function loadPossibleProblemsFromJson(json) {
     if (verifyJson(json, "possibleProblems")) {
       if (json.dataLoadTime) {
-        cldrSurvey.updateIf("dynload", json.dataLoadTime);
+        cldrDom.updateIf("dynload", json.dataLoadTime);
       }
       const theDiv = flipper.flipToEmpty(pages.other);
       insertLocaleSpecialNote(theDiv);
       if (json.possibleProblems.length > 0) {
-        const subDiv = cldrSurvey.createChunk("", "div");
+        const subDiv = cldrDom.createChunk("", "div");
         subDiv.className = "possibleProblems";
-        const h3 = cldrSurvey.createChunk(
-          cldrText.get("possibleProblems"),
-          "h3"
-        );
+        const h3 = cldrDom.createChunk(cldrText.get("possibleProblems"), "h3");
         subDiv.appendChild(h3);
         const div3 = document.createElement("div");
         div3.innerHTML = cldrSurvey.testsToHtml(json.possibleProblems);
         subDiv.appendChild(div3);
         theDiv.appendChild(subDiv);
       }
-      const theInfo = cldrSurvey.createChunk("", "p", "special_general");
+      const theInfo = cldrDom.createChunk("", "p", "special_general");
       theDiv.appendChild(theInfo);
       theInfo.innerHTML = cldrText.get("special_general");
       cldrSurvey.hideLoader();
@@ -1007,7 +1009,7 @@ const cldrLoad = (function () {
   function loadExclamationPoint() {
     var frag = document.createDocumentFragment();
     frag.appendChild(
-      cldrSurvey.createChunk(cldrText.get("section_help"), "p", "helpContent")
+      cldrDom.createChunk(cldrText.get("section_help"), "p", "helpContent")
     );
     const curPage = cldrStatus.getCurrentPage();
     const infoHtml = cldrText.get("section_info_" + curPage);
@@ -1070,7 +1072,7 @@ const cldrLoad = (function () {
     } else {
       cldrSurvey.showLoader("loading..");
       if (json.dataLoadTime) {
-        cldrSurvey.updateIf("dynload", json.dataLoadTime);
+        cldrDom.updateIf("dynload", json.dataLoadTime);
       }
       cldrStatus.setCurrentSection("");
       cldrStatus.setCurrentPage(json.pageId);
@@ -1119,41 +1121,37 @@ const cldrLoad = (function () {
           return;
         }
         if (json.dataLoadTime) {
-          cldrSurvey.updateIf("dynload", json.dataLoadTime);
+          cldrDom.updateIf("dynload", json.dataLoadTime);
         }
 
         var theDiv = flipper.flipToEmpty(pages.other); // clean slate, and proceed..
 
-        cldrSurvey.removeAllChildNodes(theDiv);
+        cldrDom.removeAllChildNodes(theDiv);
 
-        var listDiv = cldrSurvey.createChunk("", "div", "mailListChunk");
-        var contentDiv = cldrSurvey.createChunk("", "div", "mailContentChunk");
+        var listDiv = cldrDom.createChunk("", "div", "mailListChunk");
+        var contentDiv = cldrDom.createChunk("", "div", "mailContentChunk");
 
         theDiv.appendChild(listDiv);
         theDiv.appendChild(contentDiv);
 
-        cldrSurvey.setDisplayed(contentDiv, false);
+        cldrDom.setDisplayed(contentDiv, false);
         var header = json.mail.header;
         var data = json.mail.data;
 
         if (data.length == 0) {
           listDiv.appendChild(
-            cldrSurvey.createChunk(
-              cldrText.get("mail_noMail"),
-              "p",
-              "helpContent"
-            )
+            cldrDom.createChunk(cldrText.get("mail_noMail"), "p", "helpContent")
           );
         } else {
           for (var ii in data) {
             var row = data[ii];
-            var li = cldrSurvey.createChunk(
+            var li = cldrDom.createChunk(
               row[header.QUEUE_DATE] + ": " + row[header.SUBJECT],
               "li",
               "mailRow"
             );
             if (row[header.READ_DATE]) {
-              cldrSurvey.addClass(li, "readMail");
+              cldrDom.addClass(li, "readMail");
             }
             if (header.USER !== undefined) {
               li.appendChild(
@@ -1161,12 +1159,10 @@ const cldrLoad = (function () {
               );
             }
             if (row[header.SENT_DATE] !== false) {
-              li.appendChild(
-                cldrSurvey.createChunk("(sent)", "span", "winner")
-              );
+              li.appendChild(cldrDom.createChunk("(sent)", "span", "winner"));
             } else if (row[header.TRY_COUNT] >= 3) {
               li.appendChild(
-                cldrSurvey.createChunk(
+                cldrDom.createChunk(
                   "(try#" + row[header.TRY_COUNT] + ")",
                   "span",
                   "loser"
@@ -1174,7 +1170,7 @@ const cldrLoad = (function () {
               );
             } else if (row[header.TRY_COUNT] > 0) {
               li.appendChild(
-                cldrSurvey.createChunk(
+                cldrDom.createChunk(
                   "(try#" + row[header.TRY_COUNT] + ")",
                   "span",
                   "warning"
@@ -1199,32 +1195,32 @@ const cldrLoad = (function () {
                       if (!verifyJson(json, "mail")) {
                         return;
                       } else {
-                        cldrSurvey.addClass(li, "readMail"); // mark as read when server answers
+                        cldrDom.addClass(li, "readMail"); // mark as read when server answers
                         row[header.READ_DATE] = true; // close enough
                       }
                     }
                   );
                 }
-                cldrSurvey.setDisplayed(contentDiv, false);
+                cldrDom.setDisplayed(contentDiv, false);
 
-                cldrSurvey.removeAllChildNodes(contentDiv);
+                cldrDom.removeAllChildNodes(contentDiv);
 
                 contentDiv.appendChild(
-                  cldrSurvey.createChunk(
+                  cldrDom.createChunk(
                     "Date: " + row[header.QUEUE_DATE],
                     "h2",
                     "mailHeader"
                   )
                 );
                 contentDiv.appendChild(
-                  cldrSurvey.createChunk(
+                  cldrDom.createChunk(
                     "Subject: " + row[header.SUBJECT],
                     "h2",
                     "mailHeader"
                   )
                 );
                 contentDiv.appendChild(
-                  cldrSurvey.createChunk(
+                  cldrDom.createChunk(
                     "Message-ID: " + row[header.ID],
                     "h2",
                     "mailHeader"
@@ -1232,7 +1228,7 @@ const cldrLoad = (function () {
                 );
                 if (header.USER !== undefined) {
                   contentDiv.appendChild(
-                    cldrSurvey.createChunk(
+                    cldrDom.createChunk(
                       "To: " + row[header.USER],
                       "h2",
                       "mailHeader"
@@ -1240,10 +1236,10 @@ const cldrLoad = (function () {
                   );
                 }
                 contentDiv.appendChild(
-                  cldrSurvey.createChunk(row[header.TEXT], "p", "mailContent")
+                  cldrDom.createChunk(row[header.TEXT], "p", "mailContent")
                 );
 
-                cldrSurvey.setDisplayed(contentDiv, true);
+                cldrDom.setDisplayed(contentDiv, true);
               };
             })(li, row, header);
           }
@@ -1761,8 +1757,8 @@ const cldrLoad = (function () {
         } else {
           $("#title-page-container").html("").hide();
         }
-        cldrSurvey.setDisplayed(showMenu, true);
-        cldrSurvey.setDisplayed(titlePageContainer, true); // will fix title later
+        cldrDom.setDisplayed(showMenu, true);
+        cldrDom.setDisplayed(titlePageContainer, true); // will fix title later
       }
     }
 
@@ -1849,7 +1845,7 @@ const cldrLoad = (function () {
               if (item.blank != false) {
                 subA.target = "_blank";
                 subA.appendChild(
-                  cldrSurvey.createChunk(
+                  cldrDom.createChunk(
                     "",
                     "span",
                     "glyphicon glyphicon-share manage-list-icon"
@@ -1913,7 +1909,7 @@ const cldrLoad = (function () {
     }
 
     if (menubuttons.lastspecial) {
-      cldrSurvey.removeClass(menubuttons.lastspecial, "selected");
+      cldrDom.removeClass(menubuttons.lastspecial, "selected");
     }
 
     updateLocaleMenu(menuMap);
@@ -1924,24 +1920,24 @@ const cldrLoad = (function () {
     if (curSpecial != null && curSpecial != "") {
       const specialId = "special_" + curSpecial;
       $("#section-current").html(cldrText.get(specialId));
-      cldrSurvey.setDisplayed(titlePageContainer, false);
+      cldrDom.setDisplayed(titlePageContainer, false);
     } else if (!menuMap) {
-      cldrSurvey.setDisplayed(titlePageContainer, false);
+      cldrDom.setDisplayed(titlePageContainer, false);
     } else {
       const curPage = cldrStatus.getCurrentPage();
       if (menuMap.sectionMap[curPage]) {
         const curSection = curPage; // section = page
         cldrStatus.setCurrentSection(curSection);
         $("#section-current").html(menuMap.sectionMap[curSection].name);
-        cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
       } else if (menuMap.pageToSection[curPage]) {
         const mySection = menuMap.pageToSection[curPage];
         cldrStatus.setCurrentSection(mySection.id);
         $("#section-current").html(mySection.name);
-        cldrSurvey.setDisplayed(titlePageContainer, false); // will fix title later
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
       } else {
         $("#section-current").html(cldrText.get("section_general"));
-        cldrSurvey.setDisplayed(titlePageContainer, false);
+        cldrDom.setDisplayed(titlePageContainer, false);
       }
     }
   }
@@ -2143,7 +2139,7 @@ const cldrLoad = (function () {
 
   function addSubLocale(parLocDiv, subLoc) {
     const subLocInfo = locmap.getLocaleInfo(subLoc);
-    const subLocDiv = cldrSurvey.createChunk(null, "div", "subLocale");
+    const subLocDiv = cldrDom.createChunk(null, "div", "subLocale");
     appendLocaleLink(subLocDiv, subLoc, subLocInfo);
     parLocDiv.appendChild(subLocDiv);
   }
@@ -2153,20 +2149,20 @@ const cldrLoad = (function () {
     if (fullTitle) {
       name = locmap.getLocaleName(subLoc);
     }
-    const clickyLink = cldrSurvey.createChunk(name, "a", "locName");
+    const clickyLink = cldrDom.createChunk(name, "a", "locName");
     clickyLink.href = linkToLocale(subLoc);
     subLocDiv.appendChild(clickyLink);
     if (subInfo == null) {
       console.log("* internal: subInfo is null for " + name + " / " + subLoc);
     }
     if (subInfo.name_var) {
-      cldrSurvey.addClass(clickyLink, "name_var");
+      cldrDom.addClass(clickyLink, "name_var");
     }
     clickyLink.title = subLoc; // remove auto generated "locName.title"
 
     if (subInfo.readonly) {
-      cldrSurvey.addClass(clickyLink, "locked");
-      cldrSurvey.addClass(subLocDiv, "hide");
+      cldrDom.addClass(clickyLink, "locked");
+      cldrDom.addClass(subLocDiv, "hide");
 
       if (subInfo.special_comment) {
         clickyLink.title = subInfo.special_comment;
@@ -2185,9 +2181,9 @@ const cldrLoad = (function () {
     }
 
     if (canmodify && subLoc in canmodify) {
-      cldrSurvey.addClass(clickyLink, "canmodify");
+      cldrDom.addClass(clickyLink, "canmodify");
     } else {
-      cldrSurvey.addClass(subLocDiv, "hide"); // not modifiable
+      cldrDom.addClass(subLocDiv, "hide"); // not modifiable
     }
     return clickyLink;
   }
@@ -2317,11 +2313,7 @@ const cldrLoad = (function () {
     cldrSurvey.hideLoader();
     flipper.flipTo(
       pages.other,
-      cldrSurvey.createChunk(
-        cldrText.get("generic_nolocale"),
-        "p",
-        "helpContent"
-      )
+      cldrDom.createChunk(cldrText.get("generic_nolocale"), "p", "helpContent")
     );
   }
 

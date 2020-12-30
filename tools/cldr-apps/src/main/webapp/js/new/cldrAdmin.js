@@ -23,11 +23,19 @@ const cldrAdmin = (function () {
     cldrInfo.showNothing();
 
     const ourDiv = document.createElement("div");
-    ourDiv.innerHTML = getHtml();
+    const surveyUser = cldrStatus.getUser();
+    const hasPermission = surveyUser && surveyUser.userlevelName !== "ADMIN";
+    if (!hasPermission) {
+      ourDiv.innerHTML = cldrText.get("E_NO_PERMISSION");
+    } else {
+      ourDiv.innerHTML = getHtml();
+    }
     // caution: ourDiv isn't added to DOM until we call flipToOtherDiv
     cldrSurvey.hideLoader();
     cldrLoad.flipToOtherDiv(ourDiv);
-    loadAdminPanel();
+    if (hasPermission) {
+      loadAdminPanel();
+    }
   }
 
   function getHtml() {
@@ -120,7 +128,7 @@ const cldrAdmin = (function () {
     const u = document.createElement("div");
     u.appendChild(document.createTextNode("Loading..."));
     frag.appendChild(u);
-    cldrSurvey.removeAllChildNodes(div);
+    cldrDom.removeAllChildNodes(div);
     div.appendChild(frag);
     loadOrFail("do=users", u, function (json) {
       loadAdminUsers(json, u);
@@ -130,18 +138,18 @@ const cldrAdmin = (function () {
   function adminThreads(div) {
     const frag = document.createDocumentFragment();
     div.className = "adminThreads";
-    const u = cldrSurvey.createChunk("Loading...", "div", "adminThreadList");
-    const stack = cldrSurvey.createChunk(null, "div", "adminThreadStack");
+    const u = cldrDom.createChunk("Loading...", "div", "adminThreadList");
+    const stack = cldrDom.createChunk(null, "div", "adminThreadStack");
     frag.appendChild(u);
     frag.appendChild(stack);
-    const c2s = cldrSurvey.createChunk(
+    const c2s = cldrDom.createChunk(
       cldrText.get("clickToSelect"),
       "button",
       "clickToSelect"
     );
-    cldrSurvey.clickToSelect(c2s, stack);
+    cldrDom.clickToSelect(c2s, stack);
 
-    cldrSurvey.removeAllChildNodes(div);
+    cldrDom.removeAllChildNodes(div);
     div.appendChild(c2s);
     div.appendChild(frag);
     loadOrFail("do=threads", u, function (json) {
@@ -152,12 +160,12 @@ const cldrAdmin = (function () {
   function adminSettings(div) {
     const frag = document.createDocumentFragment();
     div.className = "adminSettings";
-    const u = cldrSurvey.createChunk("Loading...", "div", "adminSettingsList");
+    const u = cldrDom.createChunk("Loading...", "div", "adminSettingsList");
     frag.appendChild(u);
     loadOrFail("do=settings", u, function (json) {
       loadAdminSettings(json, u);
     });
-    cldrSurvey.removeAllChildNodes(div);
+    cldrDom.removeAllChildNodes(div);
     div.appendChild(frag);
   }
 
@@ -169,15 +177,15 @@ const cldrAdmin = (function () {
     } else {
       for (let sess in json.users) {
         const cs = json.users[sess];
-        const user = cldrSurvey.createChunk(null, "div", "adminUser");
+        const user = cldrDom.createChunk(null, "div", "adminUser");
         user.appendChild(
-          cldrSurvey.createChunk("Session: " + sess, "span", "adminUserSession")
+          cldrDom.createChunk("Session: " + sess, "span", "adminUserSession")
         );
         if (cs.user) {
           user.appendChild(cldrSurvey.createUser(cs.user));
         } else {
           user.appendChild(
-            cldrSurvey.createChunk("(anonymous)", "div", "adminUserUser")
+            cldrDom.createChunk("(anonymous)", "div", "adminUserUser")
           );
         }
         /*
@@ -186,7 +194,7 @@ const cldrAdmin = (function () {
          * cs.millisTillKick = how many millis before user will be kicked if inactive
          */
         user.appendChild(
-          cldrSurvey.createChunk(
+          cldrDom.createChunk(
             "LastCall: " +
               cs.lastBrowserCallMillisSinceEpoch +
               ", LastAction: " +
@@ -201,7 +209,7 @@ const cldrAdmin = (function () {
           )
         );
 
-        const unlinkButton = cldrSurvey.createChunk(
+        const unlinkButton = cldrDom.createChunk(
           cldrText.get("admin_users_action_kick"),
           "button",
           "admin_users_action_kick"
@@ -211,7 +219,7 @@ const cldrAdmin = (function () {
           unlinkButton.className = "deactivated";
           unlinkButton.onclick = null;
           loadOrFail("do=unlink&s=" + cs.id, unlinkButton, function (json) {
-            cldrSurvey.removeAllChildNodes(unlinkButton);
+            cldrDom.removeAllChildNodes(unlinkButton);
             if (json.removing == null) {
               unlinkButton.appendChild(
                 document.createTextNode("Already Removed")
@@ -220,35 +228,35 @@ const cldrAdmin = (function () {
               unlinkButton.appendChild(document.createTextNode("Removed."));
             }
           });
-          return cldrSurvey.stStopPropagation(e);
+          return cldrEvent.stopPropagation(e);
         };
         frag2.appendChild(user);
         frag2.appendChild(document.createElement("hr"));
       }
     }
-    cldrSurvey.removeAllChildNodes(u);
+    cldrDom.removeAllChildNodes(u);
     u.appendChild(frag2);
   }
 
   function loadAdminThreads(json, u, stack) {
     if (!json || !json.threads || Object.keys(json.threads.all) == 0) {
-      cldrSurvey.removeAllChildNodes(u);
+      cldrDom.removeAllChildNodes(u);
       u.appendChild(document.createTextNode(cldrText.get("No threads.")));
     } else {
       const frag2 = document.createDocumentFragment();
-      cldrSurvey.removeAllChildNodes(stack);
+      cldrDom.removeAllChildNodes(stack);
       stack.innerHTML = cldrText.get("adminClickToViewThreads");
       let deadThreads = {};
       if (json.threads.dead) {
-        const header = cldrSurvey.createChunk(
+        const header = cldrDom.createChunk(
           cldrText.get("adminDeadThreadsHeader"),
           "div",
           "adminDeadThreadsHeader"
         );
-        const deadul = cldrSurvey.createChunk("", "ul", "adminDeadThreads");
+        const deadul = cldrDom.createChunk("", "ul", "adminDeadThreads");
         for (let jj = 0; jj < json.threads.dead.length; jj++) {
           const theThread = json.threads.dead[jj];
-          const deadLi = cldrSurvey.createChunk("#" + theThread.id, "li");
+          const deadLi = cldrDom.createChunk("#" + theThread.id, "li");
           deadThreads[theThread.id] = theThread.text;
           deadul.appendChild(deadLi);
         }
@@ -257,17 +265,17 @@ const cldrAdmin = (function () {
       }
       for (let id in json.threads.all) {
         const t = json.threads.all[id];
-        const thread = cldrSurvey.createChunk(null, "div", "adminThread");
-        const tid = cldrSurvey.createChunk(id, "span", "adminThreadId");
+        const thread = cldrDom.createChunk(null, "div", "adminThread");
+        const tid = cldrDom.createChunk(id, "span", "adminThreadId");
         thread.appendChild(tid);
         if (deadThreads[id]) {
           tid.className = tid.className + " deadThread";
         }
         thread.appendChild(
-          cldrSurvey.createChunk(t.name, "span", "adminThreadName")
+          cldrDom.createChunk(t.name, "span", "adminThreadName")
         );
         thread.appendChild(
-          cldrSurvey.createChunk(
+          cldrDom.createChunk(
             cldrText.get(t.state),
             "span",
             "adminThreadState_" + t.state
@@ -278,23 +286,23 @@ const cldrAdmin = (function () {
             stack.innerHTML = "<b>" + id + ":" + t.name + "</b>\n";
             if (deadThreads[id]) {
               stack.appendChild(
-                cldrSurvey.createChunk(deadThreads[id], "pre", "deadThreadInfo")
+                cldrDom.createChunk(deadThreads[id], "pre", "deadThreadInfo")
               );
             }
             stack.appendChild(
-              cldrSurvey.createChunk("\n\n```\n", "pre", "textForTrac")
+              cldrDom.createChunk("\n\n```\n", "pre", "textForTrac")
             );
             for (let q in t.stack) {
               stack.innerHTML = stack.innerHTML + t.stack[q] + "\n";
             }
             stack.appendChild(
-              cldrSurvey.createChunk("```\n\n", "pre", "textForTrac")
+              cldrDom.createChunk("```\n\n", "pre", "textForTrac")
             );
           };
         })(t, id);
         frag2.appendChild(thread);
       }
-      cldrSurvey.removeAllChildNodes(u);
+      cldrDom.removeAllChildNodes(u);
       u.appendChild(frag2);
     }
   }
@@ -303,37 +311,37 @@ const cldrAdmin = (function () {
     const frag = document.createDocumentFragment();
 
     div.className = "adminThreads";
-    const v = cldrSurvey.createChunk(null, "div", "adminExceptionList");
+    const v = cldrDom.createChunk(null, "div", "adminExceptionList");
     v.setAttribute("id", "admin_v");
-    const stack = cldrSurvey.createChunk(null, "div", "adminThreadStack");
+    const stack = cldrDom.createChunk(null, "div", "adminThreadStack");
     stack.setAttribute("id", "admin_stack");
 
     frag.appendChild(v);
-    const u = cldrSurvey.createChunk(null, "div");
+    const u = cldrDom.createChunk(null, "div");
     u.setAttribute("id", "admin_u");
     v.appendChild(u);
     frag.appendChild(stack);
 
-    const c2s = cldrSurvey.createChunk(
+    const c2s = cldrDom.createChunk(
       cldrText.get("clickToSelect"),
       "button",
       "clickToSelect"
     );
-    cldrSurvey.clickToSelect(c2s, stack);
+    cldrDom.clickToSelect(c2s, stack);
 
-    cldrSurvey.removeAllChildNodes(div);
+    cldrDom.removeAllChildNodes(div);
     div.appendChild(c2s);
 
     exceptions = [];
     exceptionNames = {};
 
     div.appendChild(frag);
-    const more = cldrSurvey.createChunk(
+    const more = cldrDom.createChunk(
       cldrText.get("more_exceptions"),
       "p",
       "adminExceptionMore adminExceptionFooter"
     );
-    const loading = cldrSurvey.createChunk(
+    const loading = cldrDom.createChunk(
       cldrText.get("loading"),
       "p",
       "adminExceptionFooter"
@@ -365,7 +373,7 @@ const cldrAdmin = (function () {
     if (!json || !json.exceptions || !json.exceptions.entry) {
       if (!from) {
         v.appendChild(
-          cldrSurvey.createChunk(
+          cldrDom.createChunk(
             cldrText.get("no_exceptions"),
             "p",
             "adminExceptionFooter"
@@ -375,7 +383,7 @@ const cldrAdmin = (function () {
         // just the last one
         v.removeChild(loading);
         v.appendChild(
-          cldrSurvey.createChunk(
+          cldrDom.createChunk(
             cldrText.get("last_exception"),
             "p",
             "adminExceptionFooter"
@@ -390,7 +398,7 @@ const cldrAdmin = (function () {
       }
       const frag2 = document.createDocumentFragment();
       if (!from) {
-        cldrSurvey.removeAllChildNodes(stack);
+        cldrDom.removeAllChildNodes(stack);
         stack.innerHTML = cldrText.get("adminClickToViewExceptions");
       }
       // TODO: if(json.threads.dead) frag2.appendChunk(json.threads.dead.toString(),"span","adminDeadThreads");
@@ -401,15 +409,15 @@ const cldrAdmin = (function () {
          */
         var e = json.exceptions.entry;
         exceptions.push(json.exceptions.entry);
-        var exception = cldrSurvey.createChunk(null, "div", "adminException");
+        var exception = cldrDom.createChunk(null, "div", "adminException");
         if (e.header && e.header.length < 80) {
           exception.appendChild(
-            cldrSurvey.createChunk(e.header, "span", "adminExceptionHeader")
+            cldrDom.createChunk(e.header, "span", "adminExceptionHeader")
           );
         } else {
           var t;
           exception.appendChild(
-            (t = cldrSurvey.createChunk(
+            (t = cldrDom.createChunk(
               e.header.substring(0, 80) + "...",
               "span",
               "adminExceptionHeader"
@@ -418,7 +426,7 @@ const cldrAdmin = (function () {
           t.title = e.header;
         }
         exception.appendChild(
-          cldrSurvey.createChunk(e.DATE, "span", "adminExceptionDate")
+          cldrDom.createChunk(e.DATE, "span", "adminExceptionDate")
         );
         var clicky = (function (e) {
           // TODO: what is "e" here? entry, or event??
@@ -426,64 +434,58 @@ const cldrAdmin = (function () {
             // TODO: "ee"? This is a mess!
             var frag3 = document.createDocumentFragment();
             frag3.appendChild(
-              cldrSurvey.createChunk(e.header, "span", "adminExceptionHeader")
+              cldrDom.createChunk(e.header, "span", "adminExceptionHeader")
             );
             frag3.appendChild(
-              cldrSurvey.createChunk(e.DATE, "span", "adminExceptionDate")
+              cldrDom.createChunk(e.DATE, "span", "adminExceptionDate")
             );
 
             if (e.UPTIME) {
               frag3.appendChild(
-                cldrSurvey.createChunk(e.UPTIME, "span", "adminExceptionUptime")
+                cldrDom.createChunk(e.UPTIME, "span", "adminExceptionUptime")
               );
             }
             if (e.CTX) {
               frag3.appendChild(
-                cldrSurvey.createChunk(e.CTX, "span", "adminExceptionUptime")
+                cldrDom.createChunk(e.CTX, "span", "adminExceptionUptime")
               );
             }
             for (var q in e.fields) {
               var f = e.fields[q];
               var k = Object.keys(f);
+              frag3.appendChild(cldrDom.createChunk(k[0], "h4", "textForTrac"));
               frag3.appendChild(
-                cldrSurvey.createChunk(k[0], "h4", "textForTrac")
+                cldrDom.createChunk("\n```", "pre", "textForTrac")
               );
               frag3.appendChild(
-                cldrSurvey.createChunk("\n```", "pre", "textForTrac")
+                cldrDom.createChunk(f[k[0]], "pre", "adminException" + k[0])
               );
               frag3.appendChild(
-                cldrSurvey.createChunk(f[k[0]], "pre", "adminException" + k[0])
-              );
-              frag3.appendChild(
-                cldrSurvey.createChunk("```\n", "pre", "textForTrac")
+                cldrDom.createChunk("```\n", "pre", "textForTrac")
               );
             }
 
             if (e.LOGSITE) {
               frag3.appendChild(
-                cldrSurvey.createChunk("LOGSITE\n", "h4", "textForTrac")
+                cldrDom.createChunk("LOGSITE\n", "h4", "textForTrac")
               );
               frag3.appendChild(
-                cldrSurvey.createChunk("\n```", "pre", "textForTrac")
+                cldrDom.createChunk("\n```", "pre", "textForTrac")
               );
               frag3.appendChild(
-                cldrSurvey.createChunk(
-                  e.LOGSITE,
-                  "pre",
-                  "adminExceptionLogsite"
-                )
+                cldrDom.createChunk(e.LOGSITE, "pre", "adminExceptionLogsite")
               );
               frag3.appendChild(
-                cldrSurvey.createChunk("```\n", "pre", "textForTrac")
+                cldrDom.createChunk("```\n", "pre", "textForTrac")
               );
             }
-            cldrSurvey.removeAllChildNodes(stack);
+            cldrDom.removeAllChildNodes(stack);
             stack.appendChild(frag3);
-            cldrSurvey.stStopPropagation(ee);
+            cldrEvent.stopPropagation(ee);
             return false;
           };
         })(e);
-        cldrSurvey.listenFor(exception, "click", clicky);
+        cldrDom.listenFor(exception, "click", clicky);
         var head = exceptionNames[e.header];
         if (head) {
           if (!head.others) {
@@ -492,16 +494,16 @@ const cldrAdmin = (function () {
             var countSpan = document.createElement("span");
             countSpan.appendChild(head.count);
             countSpan.className = "adminExceptionCount";
-            cldrSurvey.listenFor(countSpan, "click", function (e) {
+            cldrDom.listenFor(countSpan, "click", function (e) {
               // prepare div
               if (!head.otherdiv) {
-                head.otherdiv = cldrSurvey.createChunk(
+                head.otherdiv = cldrDom.createChunk(
                   null,
                   "div",
                   "adminExceptionOtherList"
                 );
                 head.otherdiv.appendChild(
-                  cldrSurvey.createChunk(
+                  cldrDom.createChunk(
                     cldrText.get("adminExceptionDupList"),
                     "h4"
                   )
@@ -510,9 +512,9 @@ const cldrAdmin = (function () {
                   head.otherdiv.appendChild(head.others[k]);
                 }
               }
-              cldrSurvey.removeAllChildNodes(stack);
+              cldrDom.removeAllChildNodes(stack);
               stack.appendChild(head.otherdiv);
-              cldrSurvey.stStopPropagation(e);
+              cldrEvent.stopPropagation(e);
               return false;
             });
             head.appendChild(countSpan);
@@ -550,16 +552,14 @@ const cldrAdmin = (function () {
 
   function loadAdminSettings(json, u) {
     if (!json || !json.settings || Object.keys(json.settings.all) == 0) {
-      cldrSurvey.removeAllChildNodes(u);
+      cldrDom.removeAllChildNodes(u);
       u.appendChild(document.createTextNode(cldrText.get("nosettings")));
     } else {
       const frag2 = document.createDocumentFragment();
       for (let id in json.settings.all) {
         const t = json.settings.all[id];
-        const thread = cldrSurvey.createChunk(null, "div", "adminSetting");
-        thread.appendChild(
-          cldrSurvey.createChunk(id, "span", "adminSettingId")
-        );
+        const thread = cldrDom.createChunk(null, "div", "adminSetting");
+        thread.appendChild(cldrDom.createChunk(id, "span", "adminSettingId"));
         if (id === "CLDR_HEADER") {
           (function (theHeader, theValue) {
             let setHeader = appendInputBox(thread, "adminSettingsChangeTemp");
@@ -598,12 +598,12 @@ const cldrAdmin = (function () {
           }
         } else {
           thread.appendChild(
-            cldrSurvey.createChunk(t, "span", "adminSettingValue")
+            cldrDom.createChunk(t, "span", "adminSettingValue")
           );
         }
         frag2.appendChild(thread);
       }
-      cldrSurvey.removeAllChildNodes(u);
+      cldrDom.removeAllChildNodes(u);
       u.appendChild(frag2);
     }
   }
@@ -623,14 +623,14 @@ const cldrAdmin = (function () {
     for (let k in actions) {
       const action = actions[k];
       const newUrl = baseUrl + action;
-      const b = cldrSurvey.createChunk(cldrText.get(action), "button");
+      const b = cldrDom.createChunk(cldrText.get(action), "button");
       b.onclick = function () {
         window.location = newUrl;
         return false;
       };
       frag.appendChild(b);
     }
-    cldrSurvey.removeAllChildNodes(div);
+    cldrDom.removeAllChildNodes(div);
     div.appendChild(frag);
   }
 
@@ -696,15 +696,15 @@ const cldrAdmin = (function () {
   }
 
   function appendInputBox(parent, which) {
-    const label = cldrSurvey.createChunk(cldrText.get(which), "div", which);
+    const label = cldrDom.createChunk(cldrText.get(which), "div", which);
     const input = document.createElement("input");
     input.stChange = function (onOk, onErr) {};
-    const change = cldrSurvey.createChunk(
+    const change = cldrDom.createChunk(
       cldrText.get("appendInputBoxChange"),
       "button",
       "appendInputBoxChange"
     );
-    const cancel = cldrSurvey.createChunk(
+    const cancel = cldrDom.createChunk(
       cldrText.get("appendInputBoxCancel"),
       "button",
       "appendInputBoxCancel"
@@ -720,33 +720,33 @@ const cldrAdmin = (function () {
     input.label = label;
 
     const doChange = function () {
-      cldrSurvey.addClass(label, "d-item-selected");
-      cldrSurvey.removeAllChildNodes(notify);
-      notify.appendChild(cldrSurvey.createChunk(cldrText.get("loading"), "i"));
+      cldrDom.addClass(label, "d-item-selected");
+      cldrDom.removeAllChildNodes(notify);
+      notify.appendChild(cldrDom.createChunk(cldrText.get("loading"), "i"));
       const onOk = function (msg) {
-        cldrSurvey.removeClass(label, "d-item-selected");
-        cldrSurvey.removeAllChildNodes(notify);
+        cldrDom.removeClass(label, "d-item-selected");
+        cldrDom.removeAllChildNodes(notify);
         notify.appendChild(
-          hideAfter(cldrSurvey.createChunk(msg, "span", "okayText"))
+          hideAfter(cldrDom.createChunk(msg, "span", "okayText"))
         );
       };
       const onErr = function (msg) {
-        cldrSurvey.removeClass(label, "d-item-selected");
-        removeAllChildNodes(notify);
-        notify.appendChild(cldrSurvey.createChunk(msg, "span", "stopText"));
+        cldrDom.removeClass(label, "d-item-selected");
+        cldrDom.removeAllChildNodes(notify);
+        notify.appendChild(cldrDom.createChunk(msg, "span", "stopText"));
       };
       input.stChange(onOk, onErr);
     };
 
     const changeFn = function (e) {
       doChange();
-      cldrSurvey.stStopPropagation(e);
+      cldrEvent.stopPropagation(e);
       return false;
     };
     const cancelFn = function (e) {
       input.value = "";
       doChange();
-      cldrSurvey.stStopPropagation(e);
+      cldrEvent.stopPropagation(e);
       return false;
     };
     const keypressFn = function (e) {
@@ -759,9 +759,9 @@ const cldrAdmin = (function () {
         return true;
       }
     };
-    cldrSurvey.listenFor(change, "click", changeFn);
-    cldrSurvey.listenFor(cancel, "click", cancelFn);
-    cldrSurvey.listenFor(input, "keypress", keypressFn);
+    cldrDom.listenFor(change, "click", changeFn);
+    cldrDom.listenFor(cancel, "click", cancelFn);
+    cldrDom.listenFor(input, "keypress", keypressFn);
     return input;
   }
 

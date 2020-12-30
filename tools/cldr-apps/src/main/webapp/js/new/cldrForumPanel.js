@@ -40,7 +40,7 @@ const cldrForumPanel = (function () {
       isOneLocale = true;
     }
     if (!isOneLocale) {
-      const sidewaysControl = cldrSurvey.createChunk(
+      const sidewaysControl = cldrDom.createChunk(
         cldrText.get("sideways_loading0"),
         "div",
         "sidewaysArea"
@@ -57,7 +57,7 @@ const cldrForumPanel = (function () {
       clearMyTimeout();
       sidewaysShowTimeout = window.setTimeout(function () {
         clearMyTimeout();
-        cldrSurvey.updateIf(sidewaysControl, cldrText.get("sideways_loading1"));
+        cldrDom.updateIf(sidewaysControl, cldrText.get("sideways_loading1"));
 
         var url =
           cldrStatus.getContextPath() +
@@ -81,12 +81,12 @@ const cldrForumPanel = (function () {
           // if there is 1 sublocale (+ 1 default), we do nothing
           if (Object.keys(relatedLocales).length <= 2) {
             oneLocales[cldrStatus.getCurrentLocale()] = true;
-            cldrSurvey.updateIf(sidewaysControl, "");
+            cldrDom.updateIf(sidewaysControl, "");
           } else {
             if (!json.others) {
-              cldrSurvey.updateIf(sidewaysControl, ""); // no sibling locales (or all null?)
+              cldrDom.updateIf(sidewaysControl, ""); // no sibling locales (or all null?)
             } else {
-              cldrSurvey.updateIf(sidewaysControl, ""); // remove string
+              cldrDom.updateIf(sidewaysControl, ""); // remove string
 
               var topLocale = json.topLocale;
               const locmap = cldrLoad.getTheLocaleMap();
@@ -212,13 +212,13 @@ const cldrForumPanel = (function () {
               var group = document.createElement("optGroup");
               popupSelect.appendChild(group);
 
-              cldrSurvey.listenFor(popupSelect, "change", function (e) {
+              cldrDom.listenFor(popupSelect, "change", function (e) {
                 var newLoc = popupSelect.value;
                 if (newLoc !== cldrStatus.getCurrentLocale()) {
                   cldrStatus.setCurrentLocale(newLoc);
                   cldrLoad.reloadV();
                 }
-                return cldrSurvey.stStopPropagation(e);
+                return cldrEvent.stopPropagation(e);
               });
 
               sidewaysControl.appendChild(popupSelect);
@@ -248,21 +248,21 @@ const cldrForumPanel = (function () {
       );
     }
 
-    let loader2 = cldrSurvey.createChunk(cldrText.get("loading"), "i");
+    let loader2 = cldrDom.createChunk(cldrText.get("loading"), "i");
     frag.appendChild(loader2);
 
     /**
      * @param {Integer} nrPosts
      */
     function havePosts(nrPosts) {
-      cldrSurvey.setDisplayed(loader2, false); // not needed
+      cldrDom.setDisplayed(loader2, false); // not needed
       tr.forumDiv.forumPosts = nrPosts;
 
       if (nrPosts == 0) {
         return; // nothing to do,
       }
 
-      var showButton = cldrSurvey.createChunk(
+      var showButton = cldrDom.createChunk(
         "Show " + tr.forumDiv.forumPosts + " posts",
         "button",
         "forumShow"
@@ -271,13 +271,13 @@ const cldrForumPanel = (function () {
       forumDivClone.appendChild(showButton);
 
       var theListen = function (e) {
-        cldrSurvey.setDisplayed(showButton, false);
+        cldrDom.setDisplayed(showButton, false);
         updatePosts(tr);
-        cldrSurvey.stStopPropagation(e);
+        cldrEvent.stopPropagation(e);
         return false;
       };
-      cldrSurvey.listenFor(showButton, "click", theListen);
-      cldrSurvey.listenFor(showButton, "mouseover", theListen);
+      cldrDom.listenFor(showButton, "click", theListen);
+      cldrDom.listenFor(showButton, "mouseover", theListen);
     }
 
     // still in the very long function loadInfo...
@@ -419,7 +419,7 @@ const cldrForumPanel = (function () {
   function appendForumStuff(tr, theRow, forumDiv) {
     cldrForum.setUserCanPost(tr.theTable.json.canModify);
 
-    cldrSurvey.removeAllChildNodes(forumDiv); // we may be updating.
+    cldrDom.removeAllChildNodes(forumDiv); // we may be updating.
     const locmap = cldrLoad.getTheLocaleMap();
     var theForum = locmap.getLanguage(cldrStatus.getCurrentLocale());
     forumDiv.replyStub =
