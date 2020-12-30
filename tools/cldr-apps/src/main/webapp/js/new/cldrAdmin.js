@@ -23,8 +23,8 @@ const cldrAdmin = (function () {
     cldrInfo.showNothing();
 
     const ourDiv = document.createElement("div");
-    const surveyUser = cldrStatus.getUser();
-    const hasPermission = surveyUser && surveyUser.userlevelName !== "ADMIN";
+    const surveyUser = cldrStatus.getSurveyUser();
+    const hasPermission = surveyUser && surveyUser.userlevelName === "ADMIN";
     if (!hasPermission) {
       ourDiv.innerHTML = cldrText.get("E_NO_PERMISSION");
     } else {
@@ -336,17 +336,11 @@ const cldrAdmin = (function () {
     exceptionNames = {};
 
     div.appendChild(frag);
-    const more = cldrDom.createChunk(
-      cldrText.get("more_exceptions"),
-      "p",
-      "adminExceptionMore adminExceptionFooter"
-    );
     const loading = cldrDom.createChunk(
       cldrText.get("loading"),
       "p",
       "adminExceptionFooter"
     );
-    more.setAttribute("id", "admin_more");
     loading.setAttribute("id", "admin_loading");
     v.appendChild(loading);
     loadNext(null); // load the first exception
@@ -366,7 +360,6 @@ const cldrAdmin = (function () {
 
   function loadAdminExceptions(json, u, from) {
     const v = document.getElementById("admin_v");
-    const more = document.getElementById("admin_more");
     const loading = document.getElementById("admin_loading");
     const stack = document.getElementById("admin_stack");
 
@@ -450,7 +443,7 @@ const cldrAdmin = (function () {
                 cldrDom.createChunk(e.CTX, "span", "adminExceptionUptime")
               );
             }
-            for (var q in e.fields) {
+            for (let q in e.fields) {
               var f = e.fields[q];
               var k = Object.keys(f);
               frag3.appendChild(cldrDom.createChunk(k[0], "h4", "textForTrac"));
@@ -508,7 +501,7 @@ const cldrAdmin = (function () {
                     "h4"
                   )
                 );
-                for (k in head.others) {
+                for (let k in head.others) {
                   head.otherdiv.appendChild(head.others[k]);
                 }
               }
@@ -534,13 +527,19 @@ const cldrAdmin = (function () {
       if (json.exceptions.entry && json.exceptions.entry.time) {
         if (exceptions.length > 0 && exceptions.length % 8 == 0) {
           v.removeChild(loading);
-          v.appendChild(more);
+          const more = cldrDom.createChunk(
+            cldrText.get("more_exceptions"),
+            "p",
+            "adminExceptionMore adminExceptionFooter"
+          );
+          more.setAttribute("id", "admin_more");
           more.onclick = more.onmouseover = function () {
             v.removeChild(more);
             v.appendChild(loading);
             loadNext(json.exceptions.entry.time);
             return false;
           };
+          v.appendChild(more);
         } else {
           setTimeout(function () {
             loadNext(json.exceptions.entry.time);

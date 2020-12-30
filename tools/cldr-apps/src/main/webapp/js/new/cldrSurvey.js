@@ -132,9 +132,9 @@ const cldrSurvey = (function () {
     return false;
   }
 
-  function createGravitar(user) {
+  function createGravatar(user) {
     if (user.emailHash) {
-      var gravatar = document.createElement("img");
+      const gravatar = document.createElement("img");
       gravatar.src =
         "https://www.gravatar.com/avatar/" +
         user.emailHash +
@@ -157,7 +157,7 @@ const cldrSurvey = (function () {
     var userLevelClass = "userlevel_" + userLevelLc;
     var userLevelStr = cldrText.get(userLevelClass);
     var div = cldrDom.createChunk(null, "div", "adminUserUser");
-    div.appendChild(createGravitar(user));
+    div.appendChild(createGravatar(user));
     div.userLevel = cldrDom.createChunk(userLevelStr, "i", userLevelClass);
     div.appendChild(div.userLevel);
     div.appendChild(
@@ -2476,7 +2476,7 @@ const cldrSurvey = (function () {
     cloneLocalizeAnon: cloneLocalizeAnon,
     covName: covName,
     covValue: covValue,
-    createGravitar: createGravitar,
+    createGravatar: createGravatar,
     createUser: createUser,
     effectiveCoverage: effectiveCoverage,
     findItemByValue: findItemByValue,

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collections;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -367,6 +368,7 @@ public class SurveyTool extends HttpServlet {
         } else {
             out.write(prefix + "bootstrap.min.js" + tail);
             Arrays.sort(newJsFiles);
+            Arrays.sort(newJsFiles, Collections.reverseOrder());
             for (String s: newJsFiles) {
                 String ss = s.replace(".js", "");
                 out.write(prefix + "new/" + ss + js);

@@ -2,7 +2,7 @@
 
 /**
  * cldrForum: encapsulate main Survey Tool Forum code.
- * This is the new non-dojo version; it depends on cldrSurvey.createGravitar. For dojo, see CldrDojoForum.js
+ * This is the new non-dojo version; it depends on cldrSurvey.createGravatar. For dojo, see CldrDojoForum.js
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
@@ -519,15 +519,9 @@ const cldrForum = (function () {
           forumCreateChunk("[Poster no longer active]", "span", "")
         );
       } else {
-        let gravitar;
-        if (typeof cldrSurvey !== "undefined") {
-          // cldrSurvey isn't defined if we're running mocha unit test, due to dependency on jquery
-          gravitar = cldrSurvey.createGravitar(post.posterInfo);
-        } else {
-          gravitar = document.createTextNode("");
-        }
-        gravitar.className = "gravitar pull-left";
-        subpost.appendChild(gravitar);
+        const gravatar = cldrSurvey.createGravatar(post.posterInfo);
+        gravatar.className = "gravatar pull-left";
+        subpost.appendChild(gravatar);
         const surveyUser = cldrStatus.getSurveyUser();
         if (surveyUser && post.posterInfo.id === surveyUser.id) {
           headingLine.appendChild(

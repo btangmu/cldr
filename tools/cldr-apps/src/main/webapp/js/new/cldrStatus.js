@@ -252,13 +252,24 @@ const cldrStatus = (function () {
    * a.k.a. surveySessionId
    */
   let sessionId = null;
+  let sessionIdChangeCallback = null;
 
   function getSessionId() {
     return sessionId;
   }
 
   function setSessionId(i) {
-    sessionId = i;
+    if (i !== sessionId) {
+      sessionId = i;
+      if (sessionIdChangeCallback) {
+        sessionIdChangeCallback(sessionId);
+        sessionIdChangeCallback = null;
+      }
+    }
+  }
+
+  function setSessionIdChangeCallback(func) {
+    sessionIdChangeCallback = func;
   }
 
   /**
@@ -430,6 +441,7 @@ const cldrStatus = (function () {
 
     getSessionId: getSessionId,
     setSessionId: setSessionId,
+    setSessionIdChangeCallback: setSessionIdChangeCallback,
 
     getSessionMessage: getSessionMessage,
     setSessionMessage: setSessionMessage,

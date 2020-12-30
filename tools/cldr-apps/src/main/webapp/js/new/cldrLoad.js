@@ -90,7 +90,9 @@ const cldrLoad = (function () {
   function showV() {
     locmap = new LocaleMap(null); // TODO: is it really a singleton?
     // it may be modified below with locmap = new LocaleMap(json.locmap)
+
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
+
     otherSpecial = new OtherSpecial();
 
     const pucontent = document.getElementById("itemInfo");
@@ -109,19 +111,14 @@ const cldrLoad = (function () {
     );
 
     /*
-     * Arrange for getInitialMenusEtc to be called after we've gotten the session id.
-     * TODO: call getInitialMenusEtc when get response to first "status" request instead; won't need getM, timer
+     * Arrange for getInitialMenusEtc to be called soon after we've gotten the session id.
+     * Add a short timeout to avoid interrupting the code that sets the session id. 
      */
-    getM();
-  }
-
-  function getM() {
-    const sessionId = cldrStatus.getSessionId();
-    if (sessionId) {
-      getInitialMenusEtc(sessionId);
-    } else {
-      setTimeout(getM, 100); // try again after 1/10 second
-    }
+    cldrStatus.setSessionIdChangeCallback(function(sessionId) {
+      setTimeout(function () {
+        getInitialMenusEtc(sessionId);
+      }, 100 /* one tenth of a second */);
+    });
   }
 
   function getInitialMenusEtc(sessionId) {
@@ -140,6 +137,7 @@ const cldrLoad = (function () {
       "&s=" +
       sessionId +
       cldrSurvey.cacheKill();
+
     myLoad(xurl, "initial menus for " + theLocale, function (json) {
       loadInitialMenusFromJson(json, theLocale);
     });
