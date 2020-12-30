@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -44,7 +43,6 @@ import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRInfo.CandidateInfo;
 import org.unicode.cldr.util.CLDRInfo.UserInfo;
 import org.unicode.cldr.util.CLDRLocale;
-import org.unicode.cldr.util.CLDRURLS;
 import org.unicode.cldr.util.CldrUtility;
 import org.unicode.cldr.util.CoverageInfo;
 import org.unicode.cldr.util.DateTimeFormats;
@@ -72,7 +70,6 @@ import org.unicode.cldr.web.WebContext.HTMLDirection;
 import com.ibm.icu.dev.util.ElapsedTimer;
 import com.ibm.icu.text.UnicodeSet;
 import com.ibm.icu.util.Output;
-import com.ibm.icu.util.VersionInfo;
 
 /**
  * Servlet implementation class SurveyAjax
@@ -385,7 +382,7 @@ public class SurveyAjax extends HttpServlet {
                 generateReport(request, response, out, sm, sess, l);
             } else if (what.equals(WHAT_ABOUT)) {
                 JSONWriter r = newJSONStatus(request, sm);
-                surveyAbout(r, sm);
+                new AboutST().getJson(r, sm);
                 send(r, out);
             } else if (what.equals(WHAT_STATS_BYLOC)) {
                 JSONWriter r = newJSONStatusQuick(sm);
@@ -1086,36 +1083,6 @@ public class SurveyAjax extends HttpServlet {
         } catch (SQLException e) {
             SurveyLog.logException(e, "Processing: " + what);
             sendError(out, "SQLException: " + e, ErrorCode.E_INTERNAL);
-        }
-    }
-
-    private void surveyAbout(JSONWriter r, SurveyMain sm) {
-        String props[] = {
-            "java.version", "java.vendor", "java.vm.version", "java.vm.vendor",
-            "java.vm.name", "os.name", "os.arch", "os.version"};
-        for (int i = 0; i < props.length; i++) {
-            r.put(props[i].replace('.', '_'), java.lang.System.getProperty(props[i]));
-        }
-        r.put("GEN_VERSION", CLDRFile.GEN_VERSION);
-        r.put("ICU_VERSION", VersionInfo.ICU_VERSION);
-        ServletContext sc = sm.getServletContext();
-        r.put("serverInfo", sc.getServerInfo());
-        r.put("servletMajorVersion", sc.getMajorVersion());
-        r.put("servletMinorVersion", sc.getMinorVersion());
-        r.put("TRANS_HINT_LOCALE", SurveyMain.TRANS_HINT_LOCALE.toLanguageTag());
-        r.put("TRANS_HINT_LANGUAGE_NAME", SurveyMain.TRANS_HINT_LANGUAGE_NAME);
-        if (SurveyMain.isConfigSetup) {
-            for (String k : org.unicode.cldr.util.CLDRConfigImpl.ALL_GIT_HASHES) {
-                r.put(k, CLDRURLS.gitHashToLink(CLDRConfigImpl.getInstance().getProperty(k)));
-            }
-        }
-        if (SurveyMain.isDbSetup) {
-            org.unicode.cldr.web.DBUtils d = org.unicode.cldr.web.DBUtils.getInstance();
-            if (d != null) {
-                r.put("hasDataSource", d.hasDataSource());
-                r.put("dbKind", DBUtils.getDBKind());
-                r.put("dbInfo", d.getDBInfo());
-            }
         }
     }
 

@@ -163,23 +163,16 @@ const cldrForum = (function () {
 
   function handleIdChanged(strid) {
     if (strid) {
-      var id = new Number(strid);
+      const id = new Number(strid);
       if (id == NaN) {
         cldrStatus.setCurrentId("");
       } else {
         cldrStatus.setCurrentId(id.toString());
       }
-      var itemid = "fp" + id;
-      var pdiv = document.getElementById(itemid);
+      const itemid = "fp" + id;
+      const pdiv = document.getElementById(itemid);
       if (pdiv) {
-        console.log(
-          "scrollIntoView not yet implemented for forum! itemid = " + itemid
-        );
-        /***
-        console.log("Scrolling " + itemid);
-        win.scrollIntoView(pdiv);
-        TODO: that was a dojo/window thing...
-        ***/
+        pdiv.scrollIntoView();
         (function (o, itemid, pdiv) {
           pdiv.style["background-color"] = "yellow";
           window.setTimeout(function () {
@@ -492,7 +485,7 @@ const cldrForum = (function () {
               "localeName"
             );
             if (post.locale != cldrStatus.getCurrentLocale()) {
-              localeLink.href = linkToLocale(post.locale);
+              localeLink.href = cldrLoad.linkToLocale(post.locale);
             }
             topicInfo.appendChild(localeLink);
           }

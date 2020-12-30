@@ -71,12 +71,7 @@ const cldrGui = (function () {
     "      <ul class='nav navbar-nav'>\n" +
     "        <li class='pull-menu'>\n" +
     "          <a href='#'><span class='glyphicon glyphicon-cog'></span> <b class='caret'></b></a>\n" +
-    "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'>\n" +
-    // "            <li>\n" +
-    // "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
-    // "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
-    // "            </li>\n" +
-    "          </ul>\n" +
+    "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'></ul>\n" +
     "        </li>\n" +
     "        <li class='dropdown' id='title-coverage' style='display:none'>\n" +
     "          <a href='#' class='dropdown-toggle' data-toggle='dropdown'>Coverage: <span id='coverage-info'></span></a>\n" +
@@ -101,6 +96,7 @@ const cldrGui = (function () {
     "    </div>\n" +
     "  </div>\n" +
     "</div>\n";
+
   const vhtml3 =
     "<div id='left-sidebar'>\n" +
     "  <div id='content-sidebar'>\n" +

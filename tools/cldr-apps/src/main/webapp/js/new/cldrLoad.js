@@ -651,17 +651,11 @@ const cldrLoad = (function () {
   function scrollToItem() {
     const curId = cldrStatus.getCurrentId();
     if (curId != null && curId != "") {
-      // TODO
-      console.log("scrollToItem not implemented yet; curId = " + curId);
-      /****
-      require(["dojo/window"], function (win) {
-        var xtr = document.getElementById("r@" + curId);
-        if (xtr != null) {
-          console.log("Scrolling to " + curId);
-          win.scrollIntoView("r@" + curId);
-        }
-      });
-      ***/
+      const xtr = document.getElementById("r@" + curId);
+      if (xtr != null) {
+        console.log("Scrolling to " + curId);
+        xtr.scrollIntoView();
+      }
     }
   }
 
@@ -2374,6 +2368,16 @@ const cldrLoad = (function () {
     isLoading = loading;
   }
 
+  function linkToLocale(subLoc) {
+    return (
+      "#/" +
+      subLoc +
+      "/" +
+      cldrStatus.getCurrentPage() +
+      "/" +
+      cldrStatus.getCurrentId()
+    );
+  }
   /*
    * Make only these functions accessible from other files:
    */
@@ -2388,6 +2392,7 @@ const cldrLoad = (function () {
     getTheLocaleMap: getTheLocaleMap,
     getThePages: getThePages,
     insertLocaleSpecialNote: insertLocaleSpecialNote,
+    linkToLocale: linkToLocale,
     myLoad: myLoad,
     reloadV: reloadV,
     replaceHash: replaceHash,
