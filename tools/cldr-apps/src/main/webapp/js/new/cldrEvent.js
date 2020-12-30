@@ -201,7 +201,6 @@ const cldrEvent = (function () {
         } else {
           parent.removeClass("hide");
           parent.parent().removeClass("hide");
-          //parent.next().children('div').removeClass('hide');
         }
       } else {
         parent.addClass("hide");

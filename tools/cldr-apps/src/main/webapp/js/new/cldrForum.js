@@ -144,7 +144,7 @@ const cldrForum = (function () {
       }
       // No longer loading
       cldrSurvey.hideLoader();
-      cldrLoad.flipflop(ourDiv);
+      cldrLoad.flipToOtherDiv(ourDiv);
       handleIdChanged(cldrStatus.getCurrentId()); // rescroll.
     };
     const xhrArgs = {

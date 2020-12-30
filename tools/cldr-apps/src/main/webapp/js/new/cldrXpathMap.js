@@ -53,7 +53,7 @@ function XpathMap() {
  */
 XpathMap.prototype.get = function get(search, onResult) {
   // see if we have anything immediately
-  result = null;
+  let result = null;
   if (!result && search.hex) {
     result = this.stridToInfo[search.hex];
   }

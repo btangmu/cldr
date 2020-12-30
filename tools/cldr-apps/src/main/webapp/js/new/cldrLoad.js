@@ -499,7 +499,6 @@ const cldrLoad = (function () {
     document.title = t;
   }
 
-  // Compare the similar function updateCurrentId in cldrSurvey.js -- difference: replaceHash
   function updateCurrentId(id) {
     if (!id) {
       id = "";
@@ -955,7 +954,7 @@ const cldrLoad = (function () {
     itemLoadInfo.appendChild(document.createTextNode(curLocaleName));
     showPossibleProblems();
     const message = cldrText.get("generalPageInitialGuidance");
-    cldrSurvey.showMessage(message);
+    cldrInfo.showMessage(message);
     isLoading = false;
   }
 
@@ -1079,13 +1078,13 @@ const cldrLoad = (function () {
       updateHashAndMenus(false); // now that we have a pageid
       if (!cldrStatus.getSurveyUser()) {
         const message = cldrText.get("loginGuidance");
-        cldrSurvey.showMessage(message);
+        cldrInfo.showMessage(message);
       } else if (!json.canModify) {
         const message = cldrText.get("readonlyGuidance");
-        cldrSurvey.showMessage(message);
+        cldrInfo.showMessage(message);
       } else {
         const message = cldrText.get("dataPageInitialGuidance");
-        cldrSurvey.showMessage(message);
+        cldrInfo.showMessage(message);
       }
       if (!cldrSurvey.isInputBusy()) {
         cldrSurvey.showLoader(cldrText.get("loading3"));
@@ -1257,7 +1256,7 @@ const cldrLoad = (function () {
   function loadReport() {
     cldrSurvey.showLoader(null);
     const message = cldrText.get("reportGuidance");
-    cldrSurvey.showMessage(message);
+    cldrInfo.showMessage(message);
     var url =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=report&x=" +
@@ -1341,7 +1340,7 @@ const cldrLoad = (function () {
     cldrStatus.setCurrentLocale(null);
     cldrStatus.setCurrentSpecial("locales");
     const message = cldrText.get("localesInitialGuidance");
-    cldrSurvey.showMessage(message);
+    cldrInfo.showMessage(message);
     $("#itemInfo").html("");
   }
 
@@ -2311,7 +2310,7 @@ const cldrLoad = (function () {
     return null;
   }
 
-  function flipflop(div) {
+  function flipToOtherDiv(div) {
     flipper.flipTo(pages.other, div);
   }
 
@@ -2328,7 +2327,7 @@ const cldrLoad = (function () {
   }
 
   function flipToEmptyOther() {
-    flipper.flipToEmpty(pages.other);
+    return flipper.flipToEmpty(pages.other);
   }
 
   function setLoading(loading) {
@@ -2355,7 +2354,7 @@ const cldrLoad = (function () {
     dialogIsOpen: dialogIsOpen,
     flipToEmptyOther: flipToEmptyOther,
     flipToGenericNoLocale: flipToGenericNoLocale,
-    flipflop: flipflop,
+    flipToOtherDiv: flipToOtherDiv,
     getTheLocaleMap: getTheLocaleMap,
     getThePages: getThePages,
     insertLocaleSpecialNote: insertLocaleSpecialNote,
@@ -2366,6 +2365,8 @@ const cldrLoad = (function () {
     setLoading: setLoading,
     showCurrentId: showCurrentId,
     showV: showV,
+    updateCurrentId: updateCurrentId,
+    updateHashAndMenus: updateHashAndMenus,
     verifyJson: verifyJson,
 
     /*

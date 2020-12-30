@@ -43,7 +43,7 @@ const cldrAbout = (function () {
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = getHtml(json);
     cldrSurvey.hideLoader();
-    cldrLoad.flipflop(ourDiv);
+    cldrLoad.flipToOtherDiv(ourDiv);
   }
 
   function errorHandler(err) {

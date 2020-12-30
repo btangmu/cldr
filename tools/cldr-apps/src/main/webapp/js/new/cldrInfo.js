@@ -56,7 +56,7 @@ const cldrInfo = (function () {
     }
 
     if (tr && tr.sethash) {
-      updateCurrentId(tr.sethash);
+      cldrLoad.updateCurrentId(tr.sethash);
     }
     setLastShown(hideIfLast);
 
@@ -77,12 +77,16 @@ const cldrInfo = (function () {
         theRow.extraAttributes &&
         Object.keys(theRow.extraAttributes).length > 0
       ) {
-        var extraHeading = createChunk(
+        var extraHeading = cldrSurvey.createChunk(
           cldrText.get("extraAttribute_heading"),
           "h3",
           "extraAttribute_heading"
         );
-        var extraContainer = createChunk("", "div", "extraAttributes");
+        var extraContainer = cldrSurvey.createChunk(
+          "",
+          "div",
+          "extraAttributes"
+        );
         appendExtraAttributes(extraContainer, theRow);
         theHelp.appendChild(extraHeading);
         theHelp.appendChild(extraContainer);
@@ -130,7 +134,9 @@ const cldrInfo = (function () {
 
     if (tr && tr.theRow && tr.theRow.xpath) {
       fragment.appendChild(
-        clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath"))
+        cldrSurvey.clickToSelect(
+          cldrSurvey.createChunk(tr.theRow.xpath, "div", "xpath")
+        )
       );
     }
     var pucontent = document.getElementById("itemInfo");
@@ -143,16 +149,16 @@ const cldrInfo = (function () {
     // appropriate spot. This depends on how we were called.
     if (tr) {
       if (cldrStatus.isDashboard()) {
-        showHelpFixPanel(fragment);
+        cldrSurvey.showHelpFixPanel(fragment);
       } else {
-        removeAllChildNodes(pucontent);
+        cldrSurvey.removeAllChildNodes(pucontent);
         pucontent.appendChild(fragment);
       }
     } else {
       if (!cldrStatus.isDashboard()) {
         // show, for example, dataPageInitialGuidance in Info Panel
         var clone = fragment.cloneNode(true);
-        removeAllChildNodes(pucontent);
+        cldrSurvey.removeAllChildNodes(pucontent);
         pucontent.appendChild(clone);
       }
     }
@@ -191,17 +197,17 @@ const cldrInfo = (function () {
 
   function setLastShown(obj) {
     if (lastShown && obj != lastShown) {
-      removeClass(lastShown, "pu-select");
+      cldrSurvey.removeClass(lastShown, "pu-select");
       const partr = parentOfType("TR", lastShown);
       if (partr) {
-        removeClass(partr, "selectShow");
+        cldrSurvey.removeClass(partr, "selectShow");
       }
     }
     if (obj) {
-      addClass(obj, "pu-select");
+      cldrSurvey.addClass(obj, "pu-select");
       const partr = parentOfType("TR", obj);
       if (partr) {
-        addClass(partr, "selectShow");
+        cldrSurvey.addClass(partr, "selectShow");
       }
     }
     lastShown = obj;

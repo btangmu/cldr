@@ -1191,23 +1191,6 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * Change the current id
-   *
-   * @param id the id to set
-   *
-   * Compare the similar function updateCurrentId in cldrForum.js
-   */
-  function updateCurrentId(id) {
-    if (id == null) {
-      id = "";
-    }
-    if (cldrStatus.getCurrentId() != id) {
-      // don't set if already set.
-      cldrStatus.setCurrentId(id);
-    }
-  }
-
-  /**
    * Check if we need LRM/RLM marker to display
    * @param field choice field to append if needed
    * @param value the value of votes (check &lrm; &rlm)
@@ -1862,210 +1845,6 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * Get a table showing old votes available for importing, along with
-   * controls for choosing which votes to import.
-   *
-   * @param voteList the array of old votes
-   * @param type "contested" for losing votes or "uncontested" for winning votes
-   * @param translationHintsLanguage a string indicating the translation hints language, generally "English"
-   * @param dir the direction, such as "ltr" for left-to-right
-   * @returns a new div element containing the table and controls
-   *
-   * Called only by addOldvotesType
-   */
-  function showVoteTable(voteList, type, json) {
-    let translationHintsLanguage = json.TRANS_HINT_LANGUAGE_NAME;
-    let dir = json.oldvotes.dir;
-    let lastVoteVersion = json.oldvotes.lastVoteVersion;
-
-    var voteTableDiv = document.createElement("div");
-    var t = document.createElement("table");
-    t.id = "oldVotesAcceptList";
-    voteTableDiv.appendChild(t);
-    var th = document.createElement("thead");
-    var tb = document.createElement("tbody");
-    var tr = document.createElement("tr");
-    tr.appendChild(createChunk(cldrText.get("v_oldvotes_path"), "th", "code"));
-    tr.appendChild(createChunk(translationHintsLanguage, "th", "v-comp"));
-    tr.appendChild(
-      createChunk(
-        cldrText.sub("v_oldvotes_winning_msg", {
-          version: lastVoteVersion,
-        }),
-        "th",
-        "v-win"
-      )
-    );
-    tr.appendChild(
-      createChunk(cldrText.get("v_oldvotes_mine"), "th", "v-mine")
-    );
-    tr.appendChild(
-      createChunk(cldrText.get("v_oldvotes_accept"), "th", "v-accept")
-    );
-    th.appendChild(tr);
-    t.appendChild(th);
-    var oldSplit = [];
-    var mainCategories = [];
-    for (var k in voteList) {
-      var row = voteList[k];
-      var tr = document.createElement("tr");
-      var tdp;
-      var rowTitle = "";
-
-      // delete common substring
-      var pathSplit = row.pathHeader.split("	");
-      for (var nn in pathSplit) {
-        if (pathSplit[nn] != oldSplit[nn]) {
-          break;
-        }
-      }
-      if (nn != pathSplit.length - 1) {
-        // need a header row.
-        var trh = document.createElement("tr");
-        trh.className = "subheading";
-        var tdh = document.createElement("th");
-        tdh.colSpan = 5;
-        for (var nn in pathSplit) {
-          if (nn < pathSplit.length - 1) {
-            tdh.appendChild(createChunk(pathSplit[nn], "span", "pathChunk"));
-          }
-        }
-        trh.appendChild(tdh);
-        tb.appendChild(trh);
-      }
-      if (mainCategories.indexOf(pathSplit[0]) === -1) {
-        mainCategories.push(pathSplit[0]);
-      }
-      oldSplit = pathSplit;
-      rowTitle = pathSplit[pathSplit.length - 1];
-
-      tdp = createChunk("", "td", "v-path");
-
-      var dtpl = createChunk(rowTitle, "a");
-      dtpl.href = "v#/" + cldrStatus.getCurrentLocale() + "//" + row.strid;
-      dtpl.target = "_CLDR_ST_view";
-      tdp.appendChild(dtpl);
-
-      tr.appendChild(tdp);
-      var td00 = createChunk(row.baseValue, "td", "v-comp"); // english
-      tr.appendChild(td00);
-      var td0 = createChunk("", "td", "v-win");
-      if (row.winValue) {
-        var span0 = appendItem(td0, row.winValue, "winner");
-        span0.dir = dir;
-      }
-      tr.appendChild(td0);
-      var td1 = createChunk("", "td", "v-mine");
-      var label = createChunk("", "label", "");
-      var span1 = appendItem(label, row.myValue, "value");
-      td1.appendChild(label);
-      span1.dir = dir;
-      tr.appendChild(td1);
-      var td2 = createChunk("", "td", "v-accept");
-      var box = createChunk("", "input", "");
-      box.type = "checkbox";
-      if (type == "uncontested") {
-        // uncontested true by default
-        box.checked = true;
-      }
-      row.box = box; // backlink
-      td2.appendChild(box);
-      tr.appendChild(td2);
-
-      (function (tr, box, tdp) {
-        return function () {
-          // allow click anywhere
-          listenFor(tr, "click", function (e) {
-            box.checked = !box.checked;
-            stStopPropagation(e);
-            return false;
-          });
-          // .. but not on the path.  Also listen to the box and do nothing
-          listenFor([tdp, box], "click", function (e) {
-            stStopPropagation(e);
-            return false;
-          });
-        };
-      })(tr, box, tdp)();
-
-      tb.appendChild(tr);
-    }
-    t.appendChild(tb);
-    addImportVotesFooter(voteTableDiv, voteList, mainCategories);
-    return voteTableDiv;
-  }
-
-  /**
-   * Add to the given div a footer with buttons for choosing all or none
-   * of the old votes, and with checkboxes for choosing all or none within
-   * each of two or more main categories such as "Locale Display Names".
-   *
-   * @param voteTableDiv the div to add to
-   * @param voteList the list of old votes
-   * @param mainCategories the list of main categories
-   *
-   * Called only by showVoteTable
-   *
-   * Reference: https://unicode.org/cldr/trac/ticket/11517
-   */
-  function addImportVotesFooter(voteTableDiv, voteList, mainCategories) {
-    "use strict";
-    voteTableDiv.appendChild(
-      createLinkToFn(
-        "v_oldvotes_all",
-        function () {
-          for (var k in voteList) {
-            voteList[k].box.checked = true;
-          }
-          for (var cat in mainCategories) {
-            $("#cat" + cat).prop("checked", true);
-          }
-        },
-        "button"
-      )
-    );
-
-    voteTableDiv.appendChild(
-      createLinkToFn(
-        "v_oldvotes_none",
-        function () {
-          for (var k in voteList) {
-            voteList[k].box.checked = false;
-          }
-          for (var cat in mainCategories) {
-            $("#cat" + cat).prop("checked", false);
-          }
-        },
-        "button"
-      )
-    );
-
-    if (mainCategories.length > 1) {
-      voteTableDiv.appendChild(
-        document.createTextNode(cldrText.get("v_oldvotes_all_section"))
-      );
-      for (var cat in mainCategories) {
-        let mainCat = mainCategories[cat];
-        var checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.id = "cat" + cat;
-        voteTableDiv.appendChild(checkbox);
-        voteTableDiv.appendChild(document.createTextNode(mainCat + " "));
-        listenFor(checkbox, "click", function (e) {
-          for (var k in voteList) {
-            var row = voteList[k];
-            if (row.pathHeader.startsWith(mainCat)) {
-              row.box.checked = this.checked;
-            }
-          }
-          stStopPropagation(e);
-          return false;
-        });
-      }
-    }
-  }
-
-  /**
    * Reload a specific row
    *
    * Called by loadHandler in handleWiredClick
@@ -2174,7 +1953,7 @@ const cldrSurvey = (function () {
     }
 
     // select
-    updateCurrentId(theRow.xpstrid);
+    cldrLoad.updateCurrentId(theRow.xpstrid);
 
     // and scroll
     cldrLoad.showCurrentId();
@@ -2855,6 +2634,31 @@ const cldrSurvey = (function () {
     return label;
   }
 
+  /**
+   * Show the vote summary part of the Fix panel
+   *
+   * @param cont
+   *
+   * This was in review.js; for Dashboard
+   */
+  function showHelpFixPanel(cont) {
+    $(".fix-parent .data-vote").html("");
+    $(".fix-parent .data-vote").append(cont);
+
+    $(".data-vote > .span, .data-vote > .pClassExplain").remove();
+    $(".data-vote > .span, .data-vote > .d-example").remove();
+
+    var helpBox = $(".data-vote > *:not(.voteDiv)").add(".data-vote hr");
+    $(".data-vote table:last").after(helpBox);
+
+    if ($(".trInfo").length != 0) {
+      $(".voteDiv").prepend("<hr/>");
+      $(".voteDiv").prepend($(".trInfo").parent());
+    }
+
+    // move the element
+    labelizeIcon();
+  }
   /*
    * Make only these functions accessible from other files:
    */
@@ -2905,8 +2709,8 @@ const cldrSurvey = (function () {
     setSurveyLevels: setSurveyLevels,
     setSurveyUserCov: setSurveyUserCov,
     showAllItems: showAllItems,
+    showHelpFixPanel: showHelpFixPanel,
     showLoader: showLoader,
-    showVoteTable: showVoteTable,
     stStopPropagation: stStopPropagation,
     testsToHtml: testsToHtml,
     unbust: unbust,

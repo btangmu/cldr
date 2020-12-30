@@ -16,9 +16,9 @@ const cldrCreateLogin = (function () {
     const ourDiv = document.createElement("div");
     ourDiv.setAttribute("id", "createLoginDiv");
     ourDiv.innerHTML = getHtml();
-    // caution: ourDiv isn't added to DOM until we call flipflop
+    // caution: ourDiv isn't added to DOM until we call flipToOtherDiv
     cldrSurvey.hideLoader();
-    cldrLoad.flipflop(ourDiv);
+    cldrLoad.flipToOtherDiv(ourDiv);
     fetchData();
   }
 

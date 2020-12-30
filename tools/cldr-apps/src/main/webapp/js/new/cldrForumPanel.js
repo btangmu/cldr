@@ -306,7 +306,7 @@ const cldrForumPanel = (function () {
       if (theRow.voteVhash && theRow.voteVhash !== "") {
         const item = theRow.items[theRow.voteVhash];
         if (item && item.votes && item.votes[surveyUser.id]) {
-          if (item.value === INHERITANCE_MARKER) {
+          if (item.value === cldrSurvey.INHERITANCE_MARKER) {
             return theRow.inheritedValue;
           }
           return item.value;

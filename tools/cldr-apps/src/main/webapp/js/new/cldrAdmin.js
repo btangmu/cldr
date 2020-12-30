@@ -24,9 +24,9 @@ const cldrAdmin = (function () {
 
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = getHtml();
-    // caution: ourDiv isn't added to DOM until we call flipflop
+    // caution: ourDiv isn't added to DOM until we call flipToOtherDiv
     cldrSurvey.hideLoader();
-    cldrLoad.flipflop(ourDiv);
+    cldrLoad.flipToOtherDiv(ourDiv);
     loadAdminPanel();
   }
 
@@ -720,18 +720,18 @@ const cldrAdmin = (function () {
     input.label = label;
 
     const doChange = function () {
-      addClass(label, "d-item-selected");
-      removeAllChildNodes(notify);
+      cldrSurvey.addClass(label, "d-item-selected");
+      cldrSurvey.removeAllChildNodes(notify);
       notify.appendChild(cldrSurvey.createChunk(cldrText.get("loading"), "i"));
       const onOk = function (msg) {
-        removeClass(label, "d-item-selected");
-        removeAllChildNodes(notify);
+        cldrSurvey.removeClass(label, "d-item-selected");
+        cldrSurvey.removeAllChildNodes(notify);
         notify.appendChild(
           hideAfter(cldrSurvey.createChunk(msg, "span", "okayText"))
         );
       };
       const onErr = function (msg) {
-        removeClass(label, "d-item-selected");
+        cldrSurvey.removeClass(label, "d-item-selected");
         removeAllChildNodes(notify);
         notify.appendChild(cldrSurvey.createChunk(msg, "span", "stopText"));
       };
