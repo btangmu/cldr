@@ -69,7 +69,7 @@ const cldrCreateLogin = (function () {
   function getHtml() {
     let html = "<h2>Add a Test Survey Tool user</h2>\n";
     html += createLoginNote;
-    html += "<hr />";
+    html += "<hr />\n";
     html += formHtml;
     return html;
   }

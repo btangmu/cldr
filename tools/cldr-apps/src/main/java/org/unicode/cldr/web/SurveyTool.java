@@ -331,6 +331,7 @@ public class SurveyTool extends HttpServlet {
         "cldrSurvey.js",
         "cldrAdmin.js",
         "cldrLoad.js",
+        "cldrOldVotes.js",
         "cldrTable.js",
         "cldrEvent.js",
         "cldrGui.js",

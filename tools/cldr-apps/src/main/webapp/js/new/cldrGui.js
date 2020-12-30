@@ -215,7 +215,7 @@ const cldrGui = (function () {
     "      </div>\n" +
     "    </div>\n" +
     "    <div class='col-md-3'>\n" +
-    "      <div id='itemInfo' class='right-info' data-dojo-type='dijit/layout/ContentPane' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
+    "      <div id='itemInfo' class='right-info' style='overflow-y: auto' data-dojo-type='dijit/layout/ContentPane' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "  <div id='ressources' style='display:none'></div>\n" +

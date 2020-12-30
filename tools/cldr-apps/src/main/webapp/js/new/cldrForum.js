@@ -64,6 +64,7 @@ const cldrForum = (function () {
     if (!curLocale) {
       cldrLoad.flipToGenericNoLocale();
     } else {
+      const locmap = cldrLoad.getTheLocaleMap();
       const forumName = locmap.getLocaleName(locmap.getLanguage(curLocale));
       const forumMessage = cldrText.sub("forum_msg", {
         forum: forumName,
