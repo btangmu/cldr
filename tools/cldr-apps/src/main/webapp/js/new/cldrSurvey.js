@@ -41,13 +41,6 @@ const cldrSurvey = (function () {
 
   let cacheKillStamp = null;
 
-  const gPopStatus = {
-    unShow: null,
-    lastShown: null,
-    lastTr: null,
-    popToken: 0,
-  };
-
   /**
    * Table mapping CheckCLDR.StatusAction into capabilities
    * @property statusActionTable
@@ -89,8 +82,6 @@ const cldrSurvey = (function () {
   let timerSpeed = 15000; // 15 seconds
 
   let unShow = null;
-
-  let hideInterval = null;
 
   let surveyLevels = null;
 
@@ -865,8 +856,20 @@ const cldrSurvey = (function () {
     if (cldrStatus.isDisconnected()) {
       return;
     }
-    var surveyLocaleUrl = "";
-    var surveySessionUrl = "";
+
+    const xhrArgs = {
+      url: makeUpdateStatusUrl(),
+      handleAs: "json",
+      load: updateStatusLoadHandler,
+      error: updateStatusErrHandler,
+    };
+
+    cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function makeUpdateStatusUrl() {
+    let surveyLocaleUrl = "";
+    let surveySessionUrl = "";
     const curLocale = cldrStatus.getCurrentLocale();
     if (curLocale !== null && curLocale != "") {
       surveyLocaleUrl = "&_=" + curLocale;
@@ -875,101 +878,99 @@ const cldrSurvey = (function () {
     if (sessionId) {
       surveySessionUrl = "&s=" + sessionId;
     }
+    return (
+      cldrStatus.getContextPath() +
+      "/SurveyAjax?what=status" +
+      surveyLocaleUrl +
+      surveySessionUrl +
+      cacheKill()
+    );
+  }
 
-    cldrAjax.sendXhr({
-      url:
-        cldrStatus.getContextPath() +
-        "/SurveyAjax?what=status" +
-        surveyLocaleUrl +
-        surveySessionUrl +
-        cacheKill(),
-      handleAs: "json",
-      load: function (json) {
-        if (json == null || (json.status && json.status.isBusted)) {
-          wasBusted = true;
-          busted();
-          return; // don't thrash
-        }
-        var st_err = document.getElementById("st_err");
-        if (!st_err) {
-          /*
-           * This happens if updateStatus is called for a page like about.jsp, browse.jsp;
-           * it shouldn't be called in such cases.
-           */
-          return;
-        }
-        if (json.err != null && json.err.length > 0) {
-          st_err.innerHTML = json.err;
-          if (
-            json.status &&
-            cldrStatus.runningStampChanged(json.status.surveyRunningStamp)
-          ) {
-            st_err.innerHTML =
-              st_err.innerHTML +
-              " <b>Note: Lost connection with Survey Tool or it restarted.</b>";
-            updateStatusBox({
-              disconnected: true,
-            });
-          }
-          st_err.className = "ferrbox";
-          wasBusted = true;
-          busted();
-        } else {
-          if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
-            st_err.className = "ferrbox";
-            st_err.innerHTML =
-              "The SurveyTool has been restarted. Please reload this page to continue.";
-            wasBusted = true;
-            busted();
-            // TODO: show ARI for reconnecting
-          } else if (
-            (wasBusted == true && !json.status.isBusted) ||
-            cldrStatus.runningStampChanged(json.status.surveyRunningStamp)
-          ) {
-            st_err.innerHTML =
-              "Note: Lost connection with Survey Tool or it restarted.";
-            if (clickContinue != null) {
-              st_err.innerHTML =
-                st_err.innerHTML +
-                " Please <a href='" +
-                clickContinue +
-                "'>click here</a> to continue.";
-            } else {
-              st_err.innerHTML =
-                st_err.innerHTML + " Please reload this page to continue.";
-            }
-            st_err.className = "ferrbox";
-            busted();
-          } else {
-            st_err.className = "";
-            removeAllChildNodes(st_err);
-          }
-        }
-        updateStatusBox(json);
-
-        if (json.localeStamp) {
-          if (surveyNextLocaleStamp == 0) {
-            surveyNextLocaleStamp = json.localeStamp;
-          } else {
-            if (json.localeStamp > surveyNextLocaleStamp) {
-              handleChangedLocaleStamp(json.localeStamp, json.localeStampName);
-            }
-          }
-        }
-
-        if (wasBusted == false && json.status.isSetup && loadOnOk != null) {
-          window.location.replace(loadOnOk);
-        } else {
-          setTimeout(updateStatus, timerSpeed);
-        }
-      },
-      error: function (err) {
-        wasBusted = true;
+  function updateStatusLoadHandler(json) {
+    if (json == null || (json.status && json.status.isBusted)) {
+      wasBusted = true;
+      busted();
+      return; // don't thrash
+    }
+    const st_err = document.getElementById("st_err");
+    if (!st_err) {
+      /*
+       * This happens if updateStatus is called for a page like about.jsp, browse.jsp;
+       * it shouldn't be called in such cases.
+       */
+      return;
+    }
+    if (json.err != null && json.err.length > 0) {
+      st_err.innerHTML = json.err;
+      if (
+        json.status &&
+        cldrStatus.runningStampChanged(json.status.surveyRunningStamp)
+      ) {
+        st_err.innerHTML =
+          st_err.innerHTML +
+          " <b>Note: Lost connection with Survey Tool or it restarted.</b>";
         updateStatusBox({
-          err: err,
           disconnected: true,
         });
-      },
+      }
+      st_err.className = "ferrbox";
+      wasBusted = true;
+      busted();
+    } else {
+      if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
+        st_err.className = "ferrbox";
+        st_err.innerHTML =
+          "The SurveyTool has been restarted. Please reload this page to continue.";
+        wasBusted = true;
+        busted();
+        // TODO: show ARI for reconnecting
+      } else if (
+        (wasBusted == true && !json.status.isBusted) ||
+        cldrStatus.runningStampChanged(json.status.surveyRunningStamp)
+      ) {
+        st_err.innerHTML =
+          "Note: Lost connection with Survey Tool or it restarted.";
+        if (clickContinue != null) {
+          st_err.innerHTML =
+            st_err.innerHTML +
+            " Please <a href='" +
+            clickContinue +
+            "'>click here</a> to continue.";
+        } else {
+          st_err.innerHTML =
+            st_err.innerHTML + " Please reload this page to continue.";
+        }
+        st_err.className = "ferrbox";
+        busted();
+      } else {
+        st_err.className = "";
+        removeAllChildNodes(st_err);
+      }
+    }
+    updateStatusBox(json);
+
+    if (json.localeStamp) {
+      if (surveyNextLocaleStamp == 0) {
+        surveyNextLocaleStamp = json.localeStamp;
+      } else {
+        if (json.localeStamp > surveyNextLocaleStamp) {
+          handleChangedLocaleStamp(json.localeStamp, json.localeStampName);
+        }
+      }
+    }
+    if (wasBusted == false && json.status.isSetup && loadOnOk != null) {
+      window.location.replace(loadOnOk);
+    } else {
+      setTimeout(updateStatus, timerSpeed);
+    }
+  }
+
+  function updateStatusErrHandler(err) {
+    wasBusted = true;
+    updateStatusBox({
+      err: err,
+      disconnected: true,
     });
   }
 
@@ -1190,42 +1191,6 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * This is the actual function is called to display the right-hand "info" panel.
-   *
-   * @param {String} str the string to show at the top
-   * @param {Node} tr the <TR> of the row
-   * @param {Boolean} hideIfLast
-   * @param {Function} fn
-   * @param {Boolean} immediate
-   */
-  function showInPop(str, tr, hideIfLast, fn, immediate) {
-    showInPop2(str, tr, hideIfLast, fn);
-  }
-
-  /**
-   * Make the object "theObj" cause the infowindow to show when clicked.
-   *
-   * @param {String} str
-   * @param {Node} tr the TR element that is clicked
-   * @param {Node} theObj to listen to
-   * @param {Function} fn the draw function
-   * @returns {Function}
-   */
-  function listenToPop(str, tr, theObj, fn) {
-    var theFn;
-    listenFor(
-      theObj,
-      "click",
-      (theFn = function (e) {
-        showInPop(str, tr, theObj, fn, true);
-        stStopPropagation(e);
-        return false;
-      })
-    );
-    return theFn;
-  }
-
-  /**
    * Change the current id
    *
    * @param id the id to set
@@ -1240,210 +1205,6 @@ const cldrSurvey = (function () {
       // don't set if already set.
       cldrStatus.setCurrentId(id);
     }
-  }
-
-  function parentOfType(tag, obj) {
-    if (!obj) {
-      return null;
-    }
-    if (obj.nodeName === tag) {
-      return obj;
-    }
-    return parentOfType(tag, obj.parentElement);
-  }
-
-  function setLastShown(obj) {
-    if (gPopStatus.lastShown && obj != gPopStatus.lastShown) {
-      removeClass(gPopStatus.lastShown, "pu-select");
-      var partr = parentOfType("TR", gPopStatus.lastShown);
-      if (partr) {
-        removeClass(partr, "selectShow");
-      }
-    }
-    if (obj) {
-      addClass(obj, "pu-select");
-      var partr = parentOfType("TR", obj);
-      if (partr) {
-        addClass(partr, "selectShow");
-      }
-    }
-    gPopStatus.lastShown = obj;
-  }
-
-  function clearLastShown() {
-    setLastShown(null);
-  }
-
-  /**
-   * This is the actual function called to display the right-hand "info" panel.
-   *
-   * @param {String} str the string to show at the top
-   * @param {Node} tr the <TR> of the row
-   * @param {Boolean} hideIfLast
-   * @param {Function} fn
-   * @param {Boolean} immediate
-   * @returns {Node} a reference to the right hand panel, if not in Dashboard mode
-   */
-  function showInPop2(str, tr, hideIfLast, fn, immediate, hide) {
-    if (unShow) {
-      unShow();
-      unShow = null;
-    }
-    ++gPopStatus.popToken;
-    if (hideInterval) {
-      clearTimeout(hideInterval);
-      hideInterval = null;
-    }
-
-    if (tr && tr.sethash) {
-      updateCurrentId(tr.sethash);
-    }
-    setLastShown(hideIfLast);
-
-    /*
-     * This is the temporary fragment used for the
-     * "info panel" contents.
-     */
-    var fragment = document.createDocumentFragment();
-
-    if (tr && tr.theRow) {
-      const { theRow } = tr;
-      const { helpHtml, rdf } = theRow;
-      if (helpHtml || rdf) {
-        cldrDeferHelp.addDeferredHelpTo(fragment, helpHtml, rdf);
-      }
-      // extra attributes
-      if (
-        theRow.extraAttributes &&
-        Object.keys(theRow.extraAttributes).length > 0
-      ) {
-        var extraHeading = createChunk(
-          cldrText.get("extraAttribute_heading"),
-          "h3",
-          "extraAttribute_heading"
-        );
-        var extraContainer = createChunk("", "div", "extraAttributes");
-        appendExtraAttributes(extraContainer, theRow);
-        theHelp.appendChild(extraHeading);
-        theHelp.appendChild(extraContainer);
-      }
-    }
-
-    if (cldrStatus.isDashboard()) {
-      fixPopoverVotePos();
-    }
-
-    if (str) {
-      // If a simple string, clone the string
-      var div2 = document.createElement("div");
-      div2.innerHTML = str;
-      fragment.appendChild(div2);
-    }
-    // If a generator fn (common case), call it.
-    if (fn != null) {
-      unShow = fn(fragment);
-    }
-
-    var theVoteinfo = null;
-    if (tr && tr.voteDiv) {
-      theVoteinfo = tr.voteDiv;
-    }
-    if (theVoteinfo) {
-      fragment.appendChild(theVoteinfo.cloneNode(true));
-    }
-    if (tr && tr.ticketLink) {
-      fragment.appendChild(tr.ticketLink.cloneNode(true));
-    }
-
-    // forum stuff
-    if (tr && tr.forumDiv) {
-      /*
-       * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
-       * TODO: explain the reason for using cloneNode here, rather than using
-       * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
-       * after cloning?
-       */
-      var forumDivClone = tr.forumDiv.cloneNode(true);
-      cldrForumPanel.loadInfo(fragment, forumDivClone, tr); // give a chance to update anything else
-      fragment.appendChild(forumDivClone);
-    }
-
-    if (tr && tr.theRow && tr.theRow.xpath) {
-      fragment.appendChild(
-        clickToSelect(createChunk(tr.theRow.xpath, "div", "xpath"))
-      );
-    }
-    var pucontent = document.getElementById("itemInfo");
-    if (!pucontent) {
-      console.log("itemInfo not found in showInPop2!");
-      return;
-    }
-
-    // Now, copy or append the 'fragment' to the
-    // appropriate spot. This depends on how we were called.
-    if (tr) {
-      if (cldrStatus.isDashboard()) {
-        showHelpFixPanel(fragment);
-      } else {
-        removeAllChildNodes(pucontent);
-        pucontent.appendChild(fragment);
-      }
-    } else {
-      if (!cldrStatus.isDashboard()) {
-        // show, for example, dataPageInitialGuidance in Info Panel
-        var clone = fragment.cloneNode(true);
-        removeAllChildNodes(pucontent);
-        pucontent.appendChild(clone);
-      }
-    }
-    fragment = null;
-
-    // for the voter
-    $(".voteInfo_voterInfo").hover(
-      function () {
-        var email = $(this).data("email").replace(" (at) ", "@");
-        if (email !== "") {
-          $(this).html(
-            '<a href="mailto:' +
-              email +
-              '" title="' +
-              email +
-              '" style="color:black"><span class="glyphicon glyphicon-envelope"></span></a>'
-          );
-          $(this).closest("td").css("text-align", "center");
-          $(this).children("a").tooltip().tooltip("show");
-        } else {
-          $(this).html($(this).data("name"));
-          $(this).closest("td").css("text-align", "left");
-        }
-      },
-      function () {
-        $(this).html($(this).data("name"));
-        $(this).closest("td").css("text-align", "left");
-      }
-    );
-    if (!cldrStatus.isDashboard()) {
-      return pucontent;
-    } else {
-      return null;
-    }
-  }
-
-  /***
-    // delay before show
-    window.showInPop = function (str, tr, hideIfLast, fn, immediate) {
-      if (hideInterval) {
-        clearTimeout(hideInterval);
-        hideInterval = null;
-      }
-      if (immediate) {
-        return showInPop2(str, tr, hideIfLast, fn);
-      }
-    };
-    ***/
-
-  function resetPop() {
-    gPopStatus.lastShown = null;
   }
 
   /**
@@ -1651,18 +1412,14 @@ const cldrSurvey = (function () {
         alert(str2);
 
         // show this message in a sidebar also
-        showInPop(cldrStatus.stopIcon() + str, tr, null, null, true);
+        const message = cldrStatus.stopIcon() + str;
+        cldrInfo.showWithRow(message, tr);
       }
       return;
     } else if (json && json.didNotSubmit) {
       ourDiv.className = "d-item-err";
-      showInPop(
-        "(ERROR: Unknown error - did not submit this value.)",
-        tr,
-        null,
-        null,
-        true
-      );
+      const message = "(ERROR: Unknown error - did not submit this value.)";
+      cldrInfo.showWithRow(message, tr);
       return;
     } else {
       setDivClass(ourDiv, testKind);
@@ -1712,8 +1469,8 @@ const cldrSurvey = (function () {
         }
         return retFn;
       };
-      listenToPop(null, tr, ourDiv, ourShowFn);
-      showInPop(null, tr, ourDiv, ourShowFn, true);
+      cldrInfo.listen(null, tr, ourDiv, ourShowFn);
+      cldrInfo.showRowObjFunc(tr, ourDiv, ourShowFn);
     }
 
     return false;
@@ -1900,7 +1657,7 @@ const cldrSurvey = (function () {
       const historyText = " ☛" + item.history;
       const historyTag = createChunk(historyText, "span", "");
       choiceField.appendChild(historyTag);
-      listenToPop(historyText, tr, historyTag);
+      cldrInfo.listen(historyText, tr, historyTag, null);
     }
 
     const surveyUser = cldrStatus.getSurveyUser();
@@ -1924,7 +1681,7 @@ const cldrSurvey = (function () {
     // wire up the onclick function for the Info Panel
     td.showFn = item.showFn = showItemInfoFn(theRow, item);
     div.popParent = tr;
-    listenToPop(null, tr, div, td.showFn);
+    cldrInfo.listen(null, tr, div, td.showFn);
     td.appendChild(div);
 
     if (item.example && item.value != item.examples) {
@@ -2345,12 +2102,10 @@ const cldrSurvey = (function () {
           if (cldrStatus.isDashboard()) {
             refreshFixPanel(json);
           } else {
-            showInPop(
-              "",
+            cldrInfo.showRowObjFunc(
               tr,
               tr.proposedcell,
-              tr.proposedcell.showFn,
-              true /* immediate */
+              tr.proposedcell.showFn
             );
             refreshCounterVetting();
           }
@@ -2436,7 +2191,7 @@ const cldrSurvey = (function () {
       tr.wait = false;
     };
     tr.wait = true;
-    resetPop(tr);
+    cldrInfo.reset();
     theRow.proposedResults = null;
 
     console.log(
@@ -3138,7 +2893,6 @@ const cldrSurvey = (function () {
     isInputBusy: isInputBusy,
     isReport: isReport,
     listenFor: listenFor,
-    listenToPop: listenToPop,
     localizeFlyover: localizeFlyover,
     parseStatusAction: parseStatusAction,
     refreshCounterVetting: refreshCounterVetting,
@@ -3151,8 +2905,6 @@ const cldrSurvey = (function () {
     setSurveyLevels: setSurveyLevels,
     setSurveyUserCov: setSurveyUserCov,
     showAllItems: showAllItems,
-    showInPop2: showInPop2,
-    showInPop: showInPop,
     showLoader: showLoader,
     showVoteTable: showVoteTable,
     stStopPropagation: stStopPropagation,

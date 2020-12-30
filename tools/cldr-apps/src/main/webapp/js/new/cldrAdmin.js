@@ -20,7 +20,7 @@ const cldrAdmin = (function () {
   let exceptionNames = {};
 
   function load() {
-    cldrSurvey.showInPop2("", null, null, null, true);
+    cldrInfo.showNothing();
 
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = getHtml();

@@ -38,8 +38,7 @@ const cldrAbout = (function () {
 
   function loadHandler(json) {
     // Clear the 'right sidebar'
-    // TODO: substitute a version of showInPop2 for which these args are implicit/default
-    cldrSurvey.showInPop2("", null, null, null, true);
+    cldrInfo.showNothing();
 
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = getHtml(json);

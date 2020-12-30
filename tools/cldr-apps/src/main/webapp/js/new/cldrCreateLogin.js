@@ -11,7 +11,7 @@
  */
 const cldrCreateLogin = (function () {
   function load() {
-    cldrSurvey.showInPop2("", null, null, null, true);
+    cldrInfo.showNothing();
 
     const ourDiv = document.createElement("div");
     ourDiv.setAttribute("id", "createLoginDiv");

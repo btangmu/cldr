@@ -35,13 +35,8 @@ const cldrForumParticipation = (function () {
     /*
      * Set up the 'right sidebar'; cf. forum_participationGuidance
      */
-    cldrSurvey.showInPop2(
-      cldrText.get(params.name + "Guidance"),
-      null,
-      null,
-      null,
-      true
-    );
+    const message = cldrText.get(params.name + "Guidance");
+    cldrInfo.showMessage(message);
 
     const url = getForumParticipationUrl();
     const errorHandler = function (err) {

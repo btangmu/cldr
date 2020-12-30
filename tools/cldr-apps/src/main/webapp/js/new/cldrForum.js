@@ -120,13 +120,8 @@ const cldrForum = (function () {
       setUserCanPost(true);
 
       // set up the 'right sidebar'
-      cldrSurvey.showInPop2(
-        cldrText.get(params.name + "Guidance"),
-        null,
-        null,
-        null,
-        true
-      ); /* show the box the first time */
+      const message = cldrText.get(params.name + "Guidance");
+      cldrInfo.showMessage(message);
 
       const ourDiv = document.createElement("div");
       ourDiv.appendChild(forumCreateChunk(forumMessage, "h4", ""));
@@ -925,8 +920,8 @@ const cldrForum = (function () {
     const newButton = forumCreateChunk(label, "button", buttonClass);
     if (postType === "Request" && value === null) {
       newButton.disabled = true;
-    } else if (typeof listenFor !== "undefined") {
-      listenFor(newButton, "click", function (e) {
+    } else {
+      cldrSurvey.listenFor(newButton, "click", function (e) {
         const xpathMap = cldrSurvey.getXpathMap();
         xpathMap.get(
           {
@@ -962,24 +957,19 @@ const cldrForum = (function () {
       "button",
       "addPostButton btn btn-default btn-sm"
     );
-    /*
-     * TODO: encapsulate "listenFor" dependency
-     */
-    if (typeof listenFor !== "undefined") {
-      listenFor(replyButton, "click", function (e) {
-        openPostOrReply({
-          /*
-           * Don't specify locale/xpath/subject/value/open for reply. Instead they will be set to
-           * match the original post in the thread.
-           */
-          replyTo: post.id,
-          replyData: post,
-          postType: postType,
-        });
-        cldrSurvey.stStopPropagation(e);
-        return false;
+    cldrSurvey.listenFor(replyButton, "click", function (e) {
+      openPostOrReply({
+        /*
+         * Don't specify locale/xpath/subject/value/open for reply. Instead they will be set to
+         * match the original post in the thread.
+         */
+        replyTo: post.id,
+        replyData: post,
+        postType: postType,
       });
-    }
+      cldrSurvey.stStopPropagation(e);
+      return false;
+    });
     return replyButton;
   }
 

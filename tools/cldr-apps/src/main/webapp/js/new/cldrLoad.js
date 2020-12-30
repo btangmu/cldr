@@ -340,7 +340,7 @@ const cldrLoad = (function () {
     ) {
       console.log("# just ID changed, to " + cldrStatus.getCurrentId());
       // surveyCurrentID and the hash have already changed.
-      // just call showInPop if the item is present. If not present, make sure it's visible.
+      // Make sure the item is visible.
       showCurrentId();
     }
   }
@@ -618,12 +618,10 @@ const cldrLoad = (function () {
           updateCurrentId(null);
         } else if (xtr.proposedcell && xtr.proposedcell.showFn) {
           // TODO: visible? coverage?
-          cldrSurvey.showInPop(
-            "",
+          cldrInfo.showRowObjFunc(
             xtr,
             xtr.proposedcell,
-            xtr.proposedcell.showFn,
-            true
+            xtr.proposedcell.showFn
           );
           console.log("Changed to " + cldrStatus.getCurrentId());
           if (!cldrStatus.isDashboard()) {
@@ -956,13 +954,8 @@ const cldrLoad = (function () {
     const curLocaleName = locmap.getLocaleName(curLocale);
     itemLoadInfo.appendChild(document.createTextNode(curLocaleName));
     showPossibleProblems();
-    cldrSurvey.showInPop2(
-      cldrText.get("generalPageInitialGuidance"),
-      null,
-      null,
-      null,
-      true
-    ); /* show the box the first time */
+    const message = cldrText.get("generalPageInitialGuidance");
+    cldrSurvey.showMessage(message);
     isLoading = false;
   }
 
@@ -1085,29 +1078,14 @@ const cldrLoad = (function () {
       cldrStatus.setCurrentPage(json.pageId);
       updateHashAndMenus(false); // now that we have a pageid
       if (!cldrStatus.getSurveyUser()) {
-        cldrSurvey.showInPop2(
-          cldrText.get("loginGuidance"),
-          null,
-          null,
-          null,
-          true
-        );
+        const message = cldrText.get("loginGuidance");
+        cldrSurvey.showMessage(message);
       } else if (!json.canModify) {
-        cldrSurvey.showInPop2(
-          cldrText.get("readonlyGuidance"),
-          null,
-          null,
-          null,
-          true
-        );
+        const message = cldrText.get("readonlyGuidance");
+        cldrSurvey.showMessage(message);
       } else {
-        cldrSurvey.showInPop2(
-          cldrText.get("dataPageInitialGuidance"),
-          null,
-          null,
-          null,
-          true
-        );
+        const message = cldrText.get("dataPageInitialGuidance");
+        cldrSurvey.showMessage(message);
       }
       if (!cldrSurvey.isInputBusy()) {
         cldrSurvey.showLoader(cldrText.get("loading3"));
@@ -1278,14 +1256,8 @@ const cldrLoad = (function () {
 
   function loadReport() {
     cldrSurvey.showLoader(null);
-    cldrSurvey.showInPop2(
-      cldrText.get("reportGuidance"),
-      null,
-      null,
-      null,
-      true,
-      true
-    ); /* show the box the first time */
+    const message = cldrText.get("reportGuidance");
+    cldrSurvey.showMessage(message);
     var url =
       cldrStatus.getContextPath() +
       "/SurveyAjax?what=report&x=" +
@@ -1368,13 +1340,8 @@ const cldrLoad = (function () {
     cldrEvent.forceSidebar();
     cldrStatus.setCurrentLocale(null);
     cldrStatus.setCurrentSpecial("locales");
-    cldrSurvey.showInPop2(
-      cldrText.get("localesInitialGuidance"),
-      null,
-      null,
-      null,
-      true
-    );
+    const message = cldrText.get("localesInitialGuidance");
+    cldrSurvey.showMessage(message);
     $("#itemInfo").html("");
   }
 

@@ -329,6 +329,7 @@ public class SurveyTool extends HttpServlet {
         "cldrLocaleMap.js",
         "cldrXpathMap.js",
         "cldrSurvey.js",
+        "cldrInfo.js",
         "cldrAdmin.js",
         "cldrLoad.js",
         "cldrOldVotes.js",

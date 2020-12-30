@@ -640,7 +640,7 @@ const cldrTable = (function () {
     cell.className = "d-dr-" + statusClass + " d-dr-status statuscell";
 
     if (!cell.isSetup) {
-      cldrSurvey.listenToPop("", tr, cell);
+      cldrInfo.listen("", tr, cell, null);
       cell.isSetup = true;
     }
 
@@ -1111,7 +1111,7 @@ const cldrTable = (function () {
       js.className = "anch-go";
       js.appendChild(document.createTextNode("{JSON}"));
       js.popParent = tr;
-      cldrSurvey.listenToPop(JSON.stringify(theRow), tr, js);
+      cldrInfo.listen(JSON.stringify(theRow), tr, js, null);
       cell.appendChild(js);
       cell.appendChild(cldrSurvey.createChunk(" c=" + theRow.coverageValue));
     }
@@ -1120,7 +1120,7 @@ const cldrTable = (function () {
       if (CLDR_TABLE_DEBUG) {
         xpathStr = "XPath: " + theRow.xpath;
       }
-      cldrSurvey.listenToPop(xpathStr, tr, cell);
+      cldrInfo.listen(xpathStr, tr, cell, null);
       cell.isSetup = true;
     }
   }
@@ -1177,11 +1177,7 @@ const cldrTable = (function () {
     } else {
       cell.appendChild(document.createTextNode(""));
     }
-    /* The next line (cldrSurvey.listenToPop...) had been commented out, for unknown reasons.
-     * Restored (uncommented) for http://unicode.org/cldr/trac/ticket/10573 so that
-     * the right-side panel info changes when you click on the English column.
-     */
-    cldrSurvey.listenToPop(null, tr, cell);
+    cldrInfo.listen(null, tr, cell, null);
     cell.isSetup = true;
   }
 
@@ -1223,7 +1219,7 @@ const cldrTable = (function () {
     } else {
       cell.showFn = function () {}; // nothing else to show
     }
-    cldrSurvey.listenToPop(null, tr, cell, cell.showFn);
+    cldrInfo.listen(null, tr, cell, cell.showFn);
   }
 
   /**
@@ -1372,7 +1368,7 @@ const cldrTable = (function () {
     }
 
     if (!hadOtherItems /*!onIE*/) {
-      cldrSurvey.listenToPop(null, tr, cell);
+      cldrInfo.listen(null, tr, cell);
     }
     if (
       tr.myProposal &&
@@ -1460,7 +1456,7 @@ const cldrTable = (function () {
       noOpinion.value = null;
       var wrap = cldrSurvey.wrapRadio(noOpinion);
       noCell.appendChild(wrap);
-      cldrSurvey.listenToPop(null, tr, noCell);
+      cldrInfo.listen(null, tr, noCell);
     } else if (tr.ticketOnly) {
       // ticket link
       if (!tr.theTable.json.canModify) {

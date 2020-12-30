@@ -181,7 +181,7 @@ const cldrForumPanel = (function () {
                * Set curValue = the value for cldrStatus.getCurrentLocale()
                */
               var curValue = null;
-              for (var l = 0; l < dataList.length; l++) {
+              for (let l = 0; l < dataList.length; l++) {
                 var loc = dataList[l][0];
                 if (loc === cldrStatus.getCurrentLocale()) {
                   curValue = dataList[l][1];
@@ -350,14 +350,12 @@ const cldrForumPanel = (function () {
 
     let errorHandler = function (err) {
       console.log("Error in updatePosts: " + err);
-      showInPop(
+      const message =
         cldrStatus.stopIcon() +
-          " Couldn't load forum post for this row- please refresh the page. <br>Error: " +
-          err +
-          "</td>",
-        tr,
-        null
-      );
+        " Couldn't load forum post for this row- please refresh the page. <br>Error: " +
+        err +
+        "</td>";
+      cldrInfo.showWithRow(message, tr);
       handleDisconnect("Could not load for updatePosts:" + err, null);
     };
 
@@ -396,16 +394,13 @@ const cldrForumPanel = (function () {
       } catch (e) {
         console.log("Error in ajax forum read ", e.message);
         console.log(" response: " + json);
-        showInPop(
-          cldrStatus.stopIcon() + " exception in ajax forum read: " + e.message,
-          tr,
-          null,
-          true
-        );
+        const message =
+          cldrStatus.stopIcon() + " exception in ajax forum read: " + e.message;
+        cldrInfo.showWithRow(message, tr);
       }
     };
 
-    let xhrArgs = {
+    const xhrArgs = {
       url: ourUrl,
       handleAs: "json",
       load: loadHandler,
