@@ -373,46 +373,9 @@ const cldrSurvey = (function () {
         subDiv.appendChild(detailsButton);
         oneword.details = detailsButton;
         p.appendChild(subDiv);
-        showARIDialog(why, json, oneword, subDiv, what);
+        cldrErr.show(why, json, subDiv, what);
       }
     }
-  }
-
-  function showARIDialog(why, json, oneword, p, what) {
-    console.log("showARIDialog");
-    p.parentNode.removeChild(p);
-
-    if (didUnbust) {
-      why = why + "\n\n" + cldrText.get("ari_force_reload");
-    }
-
-    // setup with why
-    var ari_message;
-
-    if (json && json.session_err) {
-      ari_message = cldrText.get("ari_sessiondisconnect_message");
-    } else {
-      ari_message = cldrText.get("ari_message");
-    }
-
-    var ari_submessage = formatErrMsg(json, what);
-
-    cldrDom.updateIf("ariMessage", ari_message.replace(/\n/g, "<br>"));
-    cldrDom.updateIf("ariSubMessage", ari_submessage.replace(/\n/g, "<br>"));
-    cldrDom.updateIf(
-      "ariScroller",
-      window.location + "<br>" + why.replace(/\n/g, "<br>")
-    );
-    cldrEvent.hideOverlayAndSidebar();
-
-    cldrLoad.ariDialogShow();
-
-    var oneword = document.getElementById("progress_oneword");
-    oneword.onclick = function () {
-      if (cldrStatus.isDisconnected()) {
-        ariDialogShow();
-      }
-    };
   }
 
   /**
@@ -451,36 +414,6 @@ const cldrSurvey = (function () {
         url: url,
       });
     } catch (e) {}
-  }
-
-  function formatErrMsg(json, subkey) {
-    if (!subkey) {
-      subkey = "unknown";
-    }
-    var theCode = "E_UNKNOWN";
-    if (json && json.session_err) {
-      theCode = "E_SESSION_DISCONNECTED";
-    }
-    var msg_str = theCode;
-    if (json && json.err_code) {
-      msg_str = theCode = json.err_code;
-      if (cldrText.get(json.err_code) == json.err_code) {
-        console.log("** Unknown error code: " + json.err_code);
-        msg_str = "E_UNKNOWN";
-      }
-    }
-    if (json === null) {
-      json = {}; // handle cases with no input data
-    }
-    return cldrText.sub(msg_str, {
-      /* Possibilities include: err_what_section, err_what_locmap, err_what_menus,
-			err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
-      what: cldrText.get("err_what_" + subkey),
-      code: theCode,
-      message:
-        json.err_data && json.err_data.message ? json.err_data.message : "",
-      surveyCurrentLocale: cldrStatus.getCurrentLocale(),
-    });
   }
 
   /**
@@ -698,7 +631,6 @@ const cldrSurvey = (function () {
           "The SurveyTool has been restarted. Please reload this page to continue.";
         wasBusted = true;
         busted();
-        // TODO: show ARI for reconnecting
       } else if (
         (wasBusted == true && !json.status.isBusted) ||
         cldrStatus.runningStampChanged(json.status.surveyRunningStamp)
@@ -2479,54 +2411,52 @@ const cldrSurvey = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    INHERITANCE_MARKER: INHERITANCE_MARKER,
-    addIcon: addIcon,
-    addVitem: addVitem,
-    appendExample: appendExample,
-    appendExtraAttributes: appendExtraAttributes,
-    appendIcon: appendIcon,
-    appendItem: appendItem,
-    cacheKill: cacheKill,
-    chgPage: chgPage,
-    cloneAnon: cloneAnon,
-    cloneLocalizeAnon: cloneLocalizeAnon,
-    covName: covName,
-    covValue: covValue,
-    createGravatar: createGravatar,
-    createUser: createUser,
-    effectiveCoverage: effectiveCoverage,
-    findItemByValue: findItemByValue,
-    formatErrMsg: formatErrMsg,
-    getDidUnbust: getDidUnbust,
-    getSurveyLevels: getSurveyLevels,
-    getSurveyOrgCov: getSurveyOrgCov,
-    getSurveyUserCov: getSurveyUserCov,
-    getTagChildren: getTagChildren,
-    getXpathMap: getXpathMap,
-    handleDisconnect: handleDisconnect,
-    handleWiredClick: handleWiredClick,
-    hideLoader: hideLoader,
-    isInputBusy: isInputBusy,
-    localizeFlyover: localizeFlyover,
-    parseStatusAction: parseStatusAction,
-    refreshCounterVetting: refreshCounterVetting,
-    setLang: setLang,
-    setOverrideDir: setOverrideDir,
-    setShower: setShower,
-    setSurveyLevels: setSurveyLevels,
-    setSurveyUserCov: setSurveyUserCov,
-    showAllItems: showAllItems,
-    showHelpFixPanel: showHelpFixPanel,
-    showLoader: showLoader,
-    testsToHtml: testsToHtml,
-    unbust: unbust,
-    updateCovFromJson: updateCovFromJson,
-    updateCoverage: updateCoverage,
-    updateSpecialHeader: updateSpecialHeader,
-    updateStatus: updateStatus,
-    wireUpButton: wireUpButton,
-    wrapRadio: wrapRadio,
-
+    INHERITANCE_MARKER,
+    addIcon,
+    addVitem,
+    appendExample,
+    appendExtraAttributes,
+    appendIcon,
+    appendItem,
+    cacheKill,
+    chgPage,
+    cloneAnon,
+    cloneLocalizeAnon,
+    covName,
+    covValue,
+    createGravatar,
+    createUser,
+    effectiveCoverage,
+    findItemByValue,
+    getDidUnbust,
+    getSurveyLevels,
+    getSurveyOrgCov,
+    getSurveyUserCov,
+    getTagChildren,
+    getXpathMap,
+    handleDisconnect,
+    handleWiredClick,
+    hideLoader,
+    isInputBusy,
+    localizeFlyover,
+    parseStatusAction,
+    refreshCounterVetting,
+    setLang,
+    setOverrideDir,
+    setShower,
+    setSurveyLevels,
+    setSurveyUserCov,
+    showAllItems,
+    showHelpFixPanel,
+    showLoader,
+    testsToHtml,
+    unbust,
+    updateCovFromJson,
+    updateCoverage,
+    updateSpecialHeader,
+    updateStatus,
+    wireUpButton,
+    wrapRadio,
     /*
      * The following are meant to be accessible for unit testing only:
      */

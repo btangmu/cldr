@@ -1538,13 +1538,13 @@ const cldrTable = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    insertRows: insertRows,
-    updateRow: updateRow,
+    insertRows,
+    updateRow,
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      cldrChecksum: cldrChecksum,
+      cldrChecksum,
     },
   };
 })();

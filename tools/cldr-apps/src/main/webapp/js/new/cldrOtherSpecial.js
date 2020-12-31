@@ -1,5 +1,5 @@
-// "use strict";
-// TODO: modernize, make strict, possibly a class
+"use strict";
+// TODO: this file currently serves no purpose, without dojo; reinvent, modernize, possibly a class
 /**
  * Manage additional special pages
  * @class OtherSpecial

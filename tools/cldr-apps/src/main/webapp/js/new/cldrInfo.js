@@ -227,13 +227,12 @@ const cldrInfo = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    listen: listen,
-    reset: reset,
-    showMessage: showMessage,
-    showNothing: showNothing,
-    showRowObjFunc: showRowObjFunc,
-    showWithRow: showWithRow,
-
+    listen,
+    reset,
+    showMessage,
+    showNothing,
+    showRowObjFunc,
+    showWithRow,
     /*
      * The following are meant to be accessible for unit testing only:
      */

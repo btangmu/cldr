@@ -219,21 +219,21 @@ const cldrDom = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    addClass: addClass,
-    clickToSelect: clickToSelect,
-    createChunk: createChunk,
-    createLinkToFn: createLinkToFn,
-    listenFor: listenFor,
-    removeAllChildNodes: removeAllChildNodes,
-    removeClass: removeClass,
-    setDisplayed: setDisplayed,
-    updateIf: updateIf,
+    addClass,
+    clickToSelect,
+    createChunk,
+    createLinkToFn,
+    listenFor,
+    removeAllChildNodes,
+    removeClass,
+    setDisplayed,
+    updateIf,
 
     /*
      * The following are meant to be accessible for unit testing only:
      */
     // test: {
-    //   f: f,
+    //   f,
     // },
   };
 })();

@@ -154,13 +154,13 @@ const cldrBulkClosePosts = (function () {
    * Make only these functions accessible from other files
    */
   return {
-    load: load,
-    execute: execute,
+    load,
+    execute,
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      makeHtmlFromJson: makeHtmlFromJson,
+      makeHtmlFromJson,
     },
   };
 })();

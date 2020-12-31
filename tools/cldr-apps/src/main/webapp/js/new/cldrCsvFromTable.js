@@ -45,12 +45,12 @@ const cldrCsvFromTable = (function () {
    * Make only these functions accessible from other files
    */
   return {
-    download: download,
+    download,
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      get: get,
+      get,
     },
   };
 })();

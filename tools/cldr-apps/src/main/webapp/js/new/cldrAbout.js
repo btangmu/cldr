@@ -172,13 +172,12 @@ const cldrAbout = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    load: load,
-
+    load,
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      getHtml: getHtml,
+      getHtml,
     },
   };
 })();

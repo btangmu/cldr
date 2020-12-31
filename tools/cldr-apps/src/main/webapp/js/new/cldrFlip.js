@@ -1,5 +1,5 @@
-// "use strict";
-// TODO: modernize, make strict, possibly a class
+"use strict";
+// TODO: modernize, possibly a class
 /**
  * Section flipping class
  * @class Flipper

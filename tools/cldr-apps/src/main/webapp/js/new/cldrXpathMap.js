@@ -1,7 +1,7 @@
 "use strict";
 // TODO: modernize, possibly make into a class; though it seems to be used as a singleton?
 
-const CLDR_XPATH_DEBUG = true;
+const CLDR_XPATH_DEBUG = false;
 
 /**
  * @class XpathMap

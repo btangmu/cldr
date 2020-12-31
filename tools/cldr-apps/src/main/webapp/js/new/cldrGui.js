@@ -58,7 +58,7 @@ const cldrGui = (function () {
     "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +
     "    </button>\n" +
-    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrLoad.ariRetry()'>\n" +
+    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrErr.etry()'>\n" +
     "      <b>Reload</b>\n" +
     "    </button>\n" +
     "  </div>\n" +

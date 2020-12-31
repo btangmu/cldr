@@ -1458,20 +1458,20 @@ const cldrForum = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    addNewPostButtons: addNewPostButtons,
-    getForumSummaryHtml: getForumSummaryHtml,
-    handleIdChanged: handleIdChanged,
-    load: load,
-    parseContent: parseContent,
-    reload: reload,
-    setUserCanPost: setUserCanPost,
+    addNewPostButtons,
+    getForumSummaryHtml,
+    handleIdChanged,
+    load,
+    parseContent,
+    reload,
+    setUserCanPost,
 
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      getThreadHash: getThreadHash,
-      setDisplayUtc: setDisplayUtc,
+      getThreadHash,
+      setDisplayUtc,
     },
   };
 })();

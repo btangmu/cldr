@@ -17,18 +17,31 @@ const cldrDeferHelp = (function () {
   const format = "JSON";
   const abstractLang = "en";
 
-  /**
-   * run a sparql query
-   * @param query - SPARQL query
-   * @param endpoint - endpoint, defaults to defaultEndpoint
-   * @returns Promise<Object>
-   */
-  const sparqlQuery = function sparqlQuery(query, endpoint) {
-    endpoint = endpoint || defaultEndpoint;
-    return $.getJSON(endpoint, { query, format });
-  };
+  function addDeferredHelpTo(fragment, helpHtml, resource) {
+    // Always have help (if available).
+    const theHelp = $("<div/>", {
+      class: "alert alert-info fix-popover-help vote-help",
+    });
+    // helpHtml is loaded immediately in the DataSection, no separate query needed
+    if (helpHtml) {
+      theHelp.append(
+        $("<span/>", {
+          html: helpHtml,
+          class: "helpHtml",
+        })
+      );
+    }
 
-  const subloadAbstract = function subloadAbstract(resource) {
+    // fetch the abstract- may be cached.
+    if (resource) {
+      const absDiv = subloadAbstract(resource);
+      theHelp.append(absDiv);
+    }
+
+    $(fragment).append(theHelp);
+  }
+
+  function subloadAbstract(resource) {
     const absDiv = $("<div/>", { class: "helpAbstract" });
     const absContent = $("<p/>", { text: `Loading ${resource}` });
     absDiv.append(absContent);
@@ -69,50 +82,20 @@ const cldrDeferHelp = (function () {
     );
 
     return absDiv;
-  };
+  }
 
   /**
+   * run a sparql query
+   * @param query - SPARQL query
+   * @param endpoint - endpoint, defaults to defaultEndpoint
+   * @returns Promise<Object>
    */
-  const addDeferredHelpTo = function addDeferredHelpTo(
-    fragment,
-    helpHtml,
-    resource
-  ) {
-    // Always have help (if available).
-    const theHelp = $("<div/>", {
-      class: "alert alert-info fix-popover-help vote-help",
-    });
-    // helpHtml is loaded immediately in the DataSection, no separate query needed
-    if (helpHtml) {
-      theHelp.append(
-        $("<span/>", {
-          html: helpHtml,
-          class: "helpHtml",
-        })
-      );
-    }
-
-    // fetch the abstract- may be cached.
-    if (resource) {
-      const absDiv = subloadAbstract(resource);
-      theHelp.append(absDiv);
-    }
-
-    $(fragment).append(theHelp);
-  };
-
-  // TODO: defaultEndpoint and sparqlQuery are unused outside this file, so don't export them;
-  // if they are to be shared, make getter/setter functions. Also, make this file consistent with
-  // our other files that use the IIFE pattern: instead of
-  // "const addDeferredHelpTo = function addDeferredHelpTo"
-  // make it simply
-  // "function addDeferredHelpTo"
-  // and call it as cldrDeferHelp.addDeferredHelpTo().
-  // addDeferredHelpTo: addDeferredHelpTo
+  function sparqlQuery(query, endpoint) {
+    endpoint = endpoint || defaultEndpoint;
+    return $.getJSON(endpoint, { query, format });
+  }
 
   return {
     addDeferredHelpTo,
-    defaultEndpoint,
-    sparqlQuery,
   };
 })();

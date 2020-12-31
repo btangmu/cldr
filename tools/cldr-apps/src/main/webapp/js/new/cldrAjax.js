@@ -264,9 +264,15 @@ const cldrAjax = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    queueXhr: queueXhr,
-    clearXhr: clearXhr,
-    sendXhr: sendXhr,
-    queueCount: queueCount,
+    clearXhr,
+    sendXhr,
+    queueCount,
+    queueXhr,
+    /*
+     * The following are meant to be accessible for unit testing only:
+     */
+    // test: {
+    // f,
+    // },
   };
 })();

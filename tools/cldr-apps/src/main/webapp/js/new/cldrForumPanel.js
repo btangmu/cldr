@@ -356,7 +356,10 @@ const cldrForumPanel = (function () {
         err +
         "</td>";
       cldrInfo.showWithRow(message, tr);
-      handleDisconnect("Could not load for updatePosts:" + err, null);
+      cldrSurvey.handleDisconnect(
+        "Could not load for updatePosts:" + err,
+        null
+      );
     };
 
     let loadHandler = function (json) {
@@ -456,15 +459,14 @@ const cldrForumPanel = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    loadInfo: loadInfo,
-    appendForumStuff: appendForumStuff,
-    updatePosts: updatePosts,
-
+    loadInfo,
+    appendForumStuff,
+    updatePosts,
     /*
      * The following are meant to be accessible for unit testing only:
      */
-    test: {
-      // f: f,
-    },
+    // test: {
+    // f,
+    // },
   };
 })();

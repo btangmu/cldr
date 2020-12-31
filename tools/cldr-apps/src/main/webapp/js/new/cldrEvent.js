@@ -701,15 +701,21 @@ const cldrEvent = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    filterAllLocale: filterAllLocale,
-    forceSidebar: forceSidebar,
-    hideOverlayAndSidebar: hideOverlayAndSidebar,
-    hideRightPanel: hideRightPanel,
-    popupAlert: popupAlert,
-    resizeSidebar: resizeSidebar,
-    searchRefresh: searchRefresh,
-    startup: startup,
-    stopPropagation: stopPropagation,
-    unpackMenuSideBar: unpackMenuSideBar,
+    filterAllLocale,
+    forceSidebar,
+    hideOverlayAndSidebar,
+    hideRightPanel,
+    popupAlert,
+    resizeSidebar,
+    searchRefresh,
+    startup,
+    stopPropagation,
+    unpackMenuSideBar,
+    /*
+     * The following are meant to be accessible for unit testing only:
+     */
+    // test: {
+    // f,
+    // },
   };
 })();

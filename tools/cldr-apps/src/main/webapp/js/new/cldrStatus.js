@@ -401,74 +401,51 @@ const cldrStatus = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    updateAll: updateAll,
-
-    getRunningStamp: getRunningStamp,
-    runningStampChanged: runningStampChanged,
-
-    getContextPath: getContextPath,
-    setContextPath: setContextPath,
-
-    getCurrentId: getCurrentId,
-    setCurrentId: setCurrentId,
-
-    getCurrentPage: getCurrentPage,
-    setCurrentPage: setCurrentPage,
-
-    getCurrentSpecial: getCurrentSpecial,
-    setCurrentSpecial: setCurrentSpecial,
-
-    getCurrentLocale: getCurrentLocale,
-    setCurrentLocale: setCurrentLocale,
-
-    getCurrentLocaleName: getCurrentLocaleName,
-    setCurrentLocaleName: setCurrentLocaleName,
-
-    getCurrentSection: getCurrentSection,
-    setCurrentSection: setCurrentSection,
-
-    getNewVersion: getNewVersion,
-    setNewVersion: setNewVersion,
-
-    getIsUnofficial: getIsUnofficial,
-    setIsUnofficial: setIsUnofficial,
-
-    getPhase: getPhase,
-    setPhase: setPhase,
-
-    getIsPhaseBeta: getIsPhaseBeta,
-    setIsPhaseBeta: setIsPhaseBeta,
-
-    getSessionId: getSessionId,
-    setSessionId: setSessionId,
-    setSessionIdChangeCallback: setSessionIdChangeCallback,
-
-    getSessionMessage: getSessionMessage,
-    setSessionMessage: setSessionMessage,
-
-    getSurveyUser: getSurveyUser,
-    setSurveyUser: setSurveyUser,
-
-    getOrganizationName: getOrganizationName,
-    setOrganizationName: setOrganizationName,
-
-    getSpecialHeader: getSpecialHeader,
-    setSpecialHeader: setSpecialHeader,
-
-    getPermissions: getPermissions,
-    setPermissions: setPermissions,
-
-    stopIcon: stopIcon,
-    warnIcon: warnIcon,
-    logoIcon: logoIcon,
-
-    getSurvUrl: getSurvUrl,
-
-    isVisitor: isVisitor,
-
-    isDisconnected: isDisconnected,
-    setIsDisconnected: setIsDisconnected,
-
-    isDashboard: isDashboard,
+    getContextPath,
+    getCurrentId,
+    getCurrentLocale,
+    getCurrentLocaleName,
+    getCurrentPage,
+    getCurrentSection,
+    getCurrentSpecial,
+    getIsPhaseBeta,
+    getIsUnofficial,
+    getNewVersion,
+    getOrganizationName,
+    getPermissions,
+    getPhase,
+    getRunningStamp,
+    getSessionId,
+    getSessionMessage,
+    getSpecialHeader,
+    getSurvUrl,
+    getSurveyUser,
+    isDashboard,
+    isDisconnected,
+    isVisitor,
+    logoIcon,
+    runningStampChanged,
+    setContextPath,
+    setCurrentId,
+    setCurrentLocale,
+    setCurrentLocaleName,
+    setCurrentPage,
+    setCurrentSection,
+    setCurrentSpecial,
+    setIsDisconnected,
+    setIsPhaseBeta,
+    setIsUnofficial,
+    setNewVersion,
+    setOrganizationName,
+    setPermissions,
+    setPhase,
+    setSessionId,
+    setSessionIdChangeCallback,
+    setSessionMessage,
+    setSpecialHeader,
+    setSurveyUser,
+    stopIcon,
+    updateAll,
+    warnIcon,
   };
 })();

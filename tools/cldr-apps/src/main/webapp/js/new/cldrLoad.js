@@ -560,7 +560,7 @@ const cldrLoad = (function () {
       );
       return false;
     } else if (json.err_code) {
-      var msg_fmt = cldrSurvey.formatErrMsg(json, subkey);
+      var msg_fmt = cldrErr.format(json, subkey);
       var loadingChunk = cldrDom.createChunk(msg_fmt, "p", "errCodeMsg");
       flipper.flipTo(pages.loading, loadingChunk);
       var retryButton = cldrDom.createChunk(
@@ -794,7 +794,7 @@ const cldrLoad = (function () {
 
     // assume parseHash was already called, if we are taking input from the hash
 
-    ariDialogHide();
+    cldrErr.ariDialogHide();
 
     updateHashAndMenus(true);
 
@@ -2252,23 +2252,6 @@ const cldrLoad = (function () {
     return hash.charAt(0) === "#" ? hash.slice(1) : hash;
   }
 
-  // Note: "ARI" probably stands for "Abort, Retry, Ignore".
-  function ariRetry() {
-    ariDialogHide();
-    window.location.reload(true);
-  }
-
-  function ariDialogShow() {
-    // TODO: implement a replacement for dijit/Dialog
-    // https://dojotoolkit.org/reference-guide/1.10/dijit/Dialog.html
-    // "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title=...
-    console.log("ariDialogShow not implemented yet!");
-  }
-
-  function ariDialogHide() {
-    console.log("ariDialogHide not implemented yet!");
-  }
-
   function dialogIsOpen() {
     return haveDialog;
   }
@@ -2342,26 +2325,24 @@ const cldrLoad = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    appendLocaleLink: appendLocaleLink,
-    ariDialogShow: ariDialogShow,
-    ariRetry: ariRetry,
-    dialogIsOpen: dialogIsOpen,
-    flipToEmptyOther: flipToEmptyOther,
-    flipToGenericNoLocale: flipToGenericNoLocale,
-    flipToOtherDiv: flipToOtherDiv,
-    getTheLocaleMap: getTheLocaleMap,
-    getThePages: getThePages,
-    insertLocaleSpecialNote: insertLocaleSpecialNote,
-    linkToLocale: linkToLocale,
-    myLoad: myLoad,
-    reloadV: reloadV,
-    replaceHash: replaceHash,
-    setLoading: setLoading,
-    showCurrentId: showCurrentId,
-    showV: showV,
-    updateCurrentId: updateCurrentId,
-    updateHashAndMenus: updateHashAndMenus,
-    verifyJson: verifyJson,
+    appendLocaleLink,
+    dialogIsOpen,
+    flipToEmptyOther,
+    flipToGenericNoLocale,
+    flipToOtherDiv,
+    getTheLocaleMap,
+    getThePages,
+    insertLocaleSpecialNote,
+    linkToLocale,
+    myLoad,
+    reloadV,
+    replaceHash,
+    setLoading,
+    showCurrentId,
+    showV,
+    updateCurrentId,
+    updateHashAndMenus,
+    verifyJson,
 
     /*
      * The following are meant to be accessible for unit testing only:

@@ -302,9 +302,15 @@ const cldrForumFilter = (function () {
    * Make only these functions accessible from other files
    */
   return {
-    setUserId: setUserId,
-    createMenu: createMenu,
-    getFilteredThreadIds: getFilteredThreadIds,
-    getFilteredThreadCounts: getFilteredThreadCounts,
+    createMenu,
+    getFilteredThreadCounts,
+    getFilteredThreadIds,
+    setUserId,
+    /*
+     * The following are meant to be accessible for unit testing only:
+     */
+    // test: {
+    // f,
+    // },
   };
 })();
