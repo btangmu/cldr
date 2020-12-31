@@ -3,8 +3,6 @@ package org.unicode.cldr.web;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.Arrays;
-import java.util.Collections;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -20,7 +18,7 @@ import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    public static final boolean USE_DOJO = false;
+    public static final boolean USE_DOJO = true;
 
     @Override
     public final void init(final ServletConfig config) throws ServletException {
@@ -368,8 +366,8 @@ public class SurveyTool extends HttpServlet {
             out.write(prefix + "CldrDojoGui" + js); // CldrGuiDojo.js
         } else {
             out.write(prefix + "bootstrap.min.js" + tail);
-            Arrays.sort(newJsFiles);
-            Arrays.sort(newJsFiles, Collections.reverseOrder());
+            // Arrays.sort(newJsFiles);
+            // Arrays.sort(newJsFiles, Collections.reverseOrder());
             for (String s: newJsFiles) {
                 String ss = s.replace(".js", "");
                 out.write(prefix + "new/" + ss + js);
