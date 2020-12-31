@@ -236,11 +236,13 @@ const cldrAjax = (function () {
       if (request.response) {
         msg += JSON.stringify(request.response);
       }
-    } else if (ST_AJAX_DEBUG) {
+    } else {
       msg += " Response type: " + request.responseType;
-      console.log(
-        "cldrAjax.makeErrorMessage got responseType=" + request.responseType
-      );
+      if (ST_AJAX_DEBUG) {
+        console.log(
+          "cldrAjax.makeErrorMessage got responseType=" + request.responseType
+        );
+      }
     }
     return msg;
   }

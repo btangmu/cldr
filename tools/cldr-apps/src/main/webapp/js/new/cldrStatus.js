@@ -152,6 +152,10 @@ const cldrStatus = (function () {
   /**
    * A string such as 'en', 'fr', etc., identifying a locale
    * a.k.a. surveyCurrentLocale
+   * Caution: cldrLoad.updateHashAndMenus makes a distinction between null and
+   * empty string "" for getCurrentLocale, seemingly with the assumption that
+   * null is the original value. Later it may become empty string "", and
+   * cldrLoad.updateHashAndMenus doesn't treat that the same way.
    */
   let currentLocale = null;
 
@@ -248,13 +252,24 @@ const cldrStatus = (function () {
    * a.k.a. surveySessionId
    */
   let sessionId = null;
+  let sessionIdChangeCallback = null;
 
   function getSessionId() {
     return sessionId;
   }
 
   function setSessionId(i) {
-    sessionId = i;
+    if (i !== sessionId) {
+      sessionId = i;
+      if (sessionIdChangeCallback) {
+        sessionIdChangeCallback(sessionId);
+        sessionIdChangeCallback = null;
+      }
+    }
+  }
+
+  function setSessionIdChangeCallback(func) {
+    sessionIdChangeCallback = func;
   }
 
   /**
@@ -343,6 +358,15 @@ const cldrStatus = (function () {
     );
   }
 
+  function logoIcon() {
+    const src = cldrStatus.getContextPath() + "/STLogo.png";
+    return (
+      "<img src='" +
+      src +
+      "' align='right' border='0' title='[logo]' alt='[logo]' />"
+    );
+  }
+
   function getSurvUrl() {
     return getContextPath() + "/survey";
   }
@@ -417,6 +441,7 @@ const cldrStatus = (function () {
 
     getSessionId: getSessionId,
     setSessionId: setSessionId,
+    setSessionIdChangeCallback: setSessionIdChangeCallback,
 
     getSessionMessage: getSessionMessage,
     setSessionMessage: setSessionMessage,
@@ -435,6 +460,7 @@ const cldrStatus = (function () {
 
     stopIcon: stopIcon,
     warnIcon: warnIcon,
+    logoIcon: logoIcon,
 
     getSurvUrl: getSurvUrl,
 

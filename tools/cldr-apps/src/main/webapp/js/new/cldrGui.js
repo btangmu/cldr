@@ -45,7 +45,7 @@ const cldrGui = (function () {
     '    data-dojo-props=\'onHide: function(){ariReload.style.display="";ariRetry.style.display="none";\n' +
     "      if (cldrStatus.isDisconnected()) {cldrSurvey.unbust();}}'>\n" +
     "\n" +
-    "  <div id='ariContent' class='dijitDialogPaneContentArea'>\n" +
+    "  <div id='ariContent' class='dijitDialogPaneContentArea' style='display:none'>\n" +
     "    <div id='ariHelp'><a href='http://cldr.unicode.org/index/survey-tool#disconnected'>Help</a></div>\n" +
     "    <p id='ariMessage'>This page is still loading.</p>\n" +
     "    <p id='ariSubMessage'>Please wait for this page to load.</p>\n" +
@@ -53,7 +53,7 @@ const cldrGui = (function () {
     "      <p id='ariScroller'></p>\n" +
     "    </div>\n" +
     "  </div>\n" +
-    "  <div class='dijitDialogPaneActionBar'>\n" +
+    "  <div class='dijitDialogPaneActionBar' style='display:none'>\n" +
     "    <button id='ariMain' style='display: none; margin-right: 2em;' data-dojo-type='dijit/form/Button'\n" +
     "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +
@@ -71,12 +71,7 @@ const cldrGui = (function () {
     "      <ul class='nav navbar-nav'>\n" +
     "        <li class='pull-menu'>\n" +
     "          <a href='#'><span class='glyphicon glyphicon-cog'></span> <b class='caret'></b></a>\n" +
-    "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'>\n" +
-    "            <li>\n" +
-    "              <button type='button' class='btn btn-default toggle-right'>Toggle Sidebar\n" +
-    "                <span class='glyphicon glyphicon-align-right'></span></button>\n" +
-    "            </li>\n" +
-    "          </ul>\n" +
+    "          <ul id='manage-list' class='nav nav-pills nav-stacked' style='display:none'></ul>\n" +
     "        </li>\n" +
     "        <li class='dropdown' id='title-coverage' style='display:none'>\n" +
     "          <a href='#' class='dropdown-toggle' data-toggle='dropdown'>Coverage: <span id='coverage-info'></span></a>\n" +
@@ -101,6 +96,7 @@ const cldrGui = (function () {
     "    </div>\n" +
     "  </div>\n" +
     "</div>\n";
+
   const vhtml3 =
     "<div id='left-sidebar'>\n" +
     "  <div id='content-sidebar'>\n" +
@@ -215,7 +211,7 @@ const cldrGui = (function () {
     "      </div>\n" +
     "    </div>\n" +
     "    <div class='col-md-3'>\n" +
-    "      <div id='itemInfo' class='right-info' data-dojo-type='dijit/layout/ContentPane' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
+    "      <div id='itemInfo' class='right-info' style='overflow-y: auto' data-dojo-type='dijit/layout/ContentPane' data-dojo-props=\"splitter:true, region:'trailing'\" ></div>\n" +
     "    </div>\n" +
     "  </div>\n" +
     "  <div id='ressources' style='display:none'></div>\n" +

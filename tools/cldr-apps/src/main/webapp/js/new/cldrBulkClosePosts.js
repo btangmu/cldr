@@ -25,13 +25,8 @@ const cldrBulkClosePosts = (function () {
     /*
      * Set up the 'right sidebar'; cf. bulk_close_postsGuidance
      */
-    cldrSurvey.showInPop2(
-      cldrText.get(params.name + "Guidance"),
-      null,
-      null,
-      null,
-      true
-    );
+    const message = cldrText.get(params.name + "Guidance");
+    cldrInfo.showMessage(message);
 
     const url = getBulkClosePostsUrl();
     const errorHandler = function (err) {
