@@ -770,12 +770,11 @@ const cldrLoad = (function () {
     }
     menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
   }
+
   function reloadV() {
     if (cldrStatus.isDisconnected()) {
       cldrSurvey.unbust();
     }
-    menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
-    ///  }
 
     document.getElementById("DynamicDataSection").innerHTML = ""; //reset the data
     $("#nav-page").hide();
