@@ -2699,6 +2699,7 @@ public class SurveyAjax extends HttpServlet {
         CLDRConfigImpl.setUrls(request);
         WebContext ctx = new WebContext(request, response);
         ElapsedTimer et = new ElapsedTimer();
+
         String loc = locale.toString();
         ctx.setLocale(locale);
         xpath = WebContext.decodeFieldString(xpath); // TODO: why doesn't processRequest do decodeFieldString? Not needed, all ASCII?

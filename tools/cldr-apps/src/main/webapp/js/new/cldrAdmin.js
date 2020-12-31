@@ -74,10 +74,11 @@ const cldrAdmin = (function () {
 
     // last panel loaded.
     // If it's in the hashtag, use it, otherwise first.
-    // TODO: this doesn't work since we no longer have "#!"; if needed, revise the mechanism
-    if (window.location.hash && window.location.hash.indexOf("#!") == 0) {
-      panelSwitch(window.location.hash.substring(2));
-    }
+    // TODO: this doesn't work since we no longer have "#!";
+    // if needed, revise the mechanism; see panelSwitch
+    // if (window.location.hash && window.location.hash.indexOf("#!") == 0) {
+    //  panelSwitch(window.location.hash.substring(2));
+    // }
     if (!panelLast) {
       // not able to load anything.
       panelSwitch(panelFirst.type);
@@ -396,56 +397,52 @@ const cldrAdmin = (function () {
       }
       // TODO: if(json.threads.dead) frag2.appendChunk(json.threads.dead.toString(),"span","adminDeadThreads");
       if (json.exceptions.entry) {
-        /*
-         * TODO: clarify usage of "var e" here! "e" is used for json.exceptions.entry,
-         * and also in "clicky" below, where it might or might not represent the click "event"???
-         */
-        var e = json.exceptions.entry;
+        const entry = json.exceptions.entry;
         exceptions.push(json.exceptions.entry);
-        var exception = cldrDom.createChunk(null, "div", "adminException");
-        if (e.header && e.header.length < 80) {
+        const exception = cldrDom.createChunk(null, "div", "adminException");
+        if (entry.header && entry.header.length < 80) {
           exception.appendChild(
-            cldrDom.createChunk(e.header, "span", "adminExceptionHeader")
+            cldrDom.createChunk(entry.header, "span", "adminExceptionHeader")
           );
         } else {
-          var t;
-          exception.appendChild(
-            (t = cldrDom.createChunk(
-              e.header.substring(0, 80) + "...",
-              "span",
-              "adminExceptionHeader"
-            ))
+          const t = cldrDom.createChunk(
+            entry.header.substring(0, 80) + "...",
+            "span",
+            "adminExceptionHeader"
           );
-          t.title = e.header;
+          t.title = entry.header;
+          exception.appendChild(t);
         }
         exception.appendChild(
-          cldrDom.createChunk(e.DATE, "span", "adminExceptionDate")
+          cldrDom.createChunk(entry.DATE, "span", "adminExceptionDate")
         );
-        var clicky = (function (e) {
-          // TODO: what is "e" here? entry, or event??
-          return function (ee) {
-            // TODO: "ee"? This is a mess!
+        const clicky = (function (entry) {
+          return function (event) {
             var frag3 = document.createDocumentFragment();
             frag3.appendChild(
-              cldrDom.createChunk(e.header, "span", "adminExceptionHeader")
+              cldrDom.createChunk(entry.header, "span", "adminExceptionHeader")
             );
             frag3.appendChild(
-              cldrDom.createChunk(e.DATE, "span", "adminExceptionDate")
+              cldrDom.createChunk(entry.DATE, "span", "adminExceptionDate")
             );
 
-            if (e.UPTIME) {
+            if (entry.UPTIME) {
               frag3.appendChild(
-                cldrDom.createChunk(e.UPTIME, "span", "adminExceptionUptime")
+                cldrDom.createChunk(
+                  entry.UPTIME,
+                  "span",
+                  "adminExceptionUptime"
+                )
               );
             }
-            if (e.CTX) {
+            if (entry.CTX) {
               frag3.appendChild(
-                cldrDom.createChunk(e.CTX, "span", "adminExceptionUptime")
+                cldrDom.createChunk(entry.CTX, "span", "adminExceptionUptime")
               );
             }
-            for (let q in e.fields) {
-              var f = e.fields[q];
-              var k = Object.keys(f);
+            for (let q in entry.fields) {
+              const f = entry.fields[q];
+              const k = Object.keys(f);
               frag3.appendChild(cldrDom.createChunk(k[0], "h4", "textForTrac"));
               frag3.appendChild(
                 cldrDom.createChunk("\n```", "pre", "textForTrac")
@@ -458,7 +455,7 @@ const cldrAdmin = (function () {
               );
             }
 
-            if (e.LOGSITE) {
+            if (entry.LOGSITE) {
               frag3.appendChild(
                 cldrDom.createChunk("LOGSITE\n", "h4", "textForTrac")
               );
@@ -466,7 +463,11 @@ const cldrAdmin = (function () {
                 cldrDom.createChunk("\n```", "pre", "textForTrac")
               );
               frag3.appendChild(
-                cldrDom.createChunk(e.LOGSITE, "pre", "adminExceptionLogsite")
+                cldrDom.createChunk(
+                  entry.LOGSITE,
+                  "pre",
+                  "adminExceptionLogsite"
+                )
               );
               frag3.appendChild(
                 cldrDom.createChunk("```\n", "pre", "textForTrac")
@@ -474,17 +475,17 @@ const cldrAdmin = (function () {
             }
             cldrDom.removeAllChildNodes(stack);
             stack.appendChild(frag3);
-            cldrEvent.stopPropagation(ee);
+            cldrEvent.stopPropagation(event);
             return false;
           };
-        })(e);
+        })(entry);
         cldrDom.listenFor(exception, "click", clicky);
-        var head = exceptionNames[e.header];
+        const head = exceptionNames[entry.header];
         if (head) {
           if (!head.others) {
             head.others = [];
             head.count = document.createTextNode("");
-            var countSpan = document.createElement("span");
+            const countSpan = document.createElement("span");
             countSpan.appendChild(head.count);
             countSpan.className = "adminExceptionCount";
             cldrDom.listenFor(countSpan, "click", function (e) {
@@ -560,6 +561,8 @@ const cldrAdmin = (function () {
         const thread = cldrDom.createChunk(null, "div", "adminSetting");
         thread.appendChild(cldrDom.createChunk(id, "span", "adminSettingId"));
         if (id === "CLDR_HEADER") {
+          // TODO: simplify -- functions are too deeply nested
+          // TODO: fix the "change" feature or remove it; it was already broken before CLDR-14251
           (function (theHeader, theValue) {
             let setHeader = appendInputBox(thread, "adminSettingsChangeTemp");
             setHeader.value = theValue;
@@ -586,7 +589,7 @@ const cldrAdmin = (function () {
                     onOk(cldrText.get("changed"));
                   }
                 },
-                setHeader.value
+                setHeader.value /* postData = 4th arg to loadOrFail */
               );
               return false;
             };
@@ -641,28 +644,16 @@ const cldrAdmin = (function () {
       "&s=" +
       cldrStatus.getSessionId() +
       cldrSurvey.cacheKill();
-    const errorHandler = function (err) {
-      console.log("adminload " + urlAppend + " Error: " + err);
-      theDiv.className = "ferrbox";
-      theDiv.innerHTML =
-        "Error while loading: <div style='border: 1px solid red;'>" +
-        err +
-        "</div>";
-    };
+
     const xhrArgs = {
       url: ourUrl,
       handleAs: "json",
       load: loadHandler,
-      error: errorHandler,
+      error: loadOrFailErrorHandler,
       postData: postData,
     };
-    if (!loadHandler) {
-      xhrArgs.handleAs = "text";
-      xhrArgs.load = function (text) {
-        theDiv.innerHTML = text;
-      };
-    }
-    if (xhrArgs.postData) {
+
+    if (postData) {
       /*
        * Make a POST request
        */
@@ -679,6 +670,14 @@ const cldrAdmin = (function () {
     cldrAjax.sendXhr(xhrArgs);
   }
 
+  function loadOrFailErrorHandler(err) {
+    theDiv.className = "ferrbox";
+    theDiv.innerHTML =
+      "Error while loading: <div style='border: 1px solid red;'>" +
+      err +
+      "</div>";
+  }
+
   function panelSwitch(name) {
     if (panelLast) {
       panelLast.div.style.display = "none";
@@ -690,6 +689,7 @@ const cldrAdmin = (function () {
       panelLast.listItem.className = "selected";
       panelLast.fn(panelLast.udiv);
       panelLast.div.style.display = "block";
+      // TODO: implement without "#!"; see "#!" in loadAdminPanel
       //// window.location.hash = "#!" + name;
     }
   }
@@ -768,13 +768,13 @@ const cldrAdmin = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    load: load,
+    load,
 
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      getHtml: getHtml,
+      getHtml,
     },
   };
 })();

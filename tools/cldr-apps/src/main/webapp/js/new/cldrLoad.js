@@ -112,9 +112,9 @@ const cldrLoad = (function () {
 
     /*
      * Arrange for getInitialMenusEtc to be called soon after we've gotten the session id.
-     * Add a short timeout to avoid interrupting the code that sets the session id. 
+     * Add a short timeout to avoid interrupting the code that sets the session id.
      */
-    cldrStatus.setSessionIdChangeCallback(function(sessionId) {
+    cldrStatus.setSessionIdChangeCallback(function (sessionId) {
       setTimeout(function () {
         getInitialMenusEtc(sessionId);
       }, 100 /* one tenth of a second */);
@@ -775,7 +775,7 @@ const cldrLoad = (function () {
       cldrSurvey.unbust();
     }
     menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
-  }
+    ///  }
 
     document.getElementById("DynamicDataSection").innerHTML = ""; //reset the data
     $("#nav-page").hide();

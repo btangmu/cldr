@@ -477,13 +477,13 @@ const cldrGui = (function () {
    * Make only these functions accessible from other files:
    */
   return {
-    run: run,
-    updateWithStatus: updateWithStatus,
+    run,
+    updateWithStatus,
     /*
      * The following are meant to be accessible for unit testing only:
      */
     test: {
-      getBodyHtml: getBodyHtml,
+      getBodyHtml,
     },
   };
 })();
