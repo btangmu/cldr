@@ -289,7 +289,8 @@ public class SurveyAjax extends HttpServlet {
     public static final String WHAT_FLAGGED = "flagged"; // cldrLoad.js
     public static final String WHAT_AUTO_IMPORT = "auto_import"; // cldrLoad.js
     public static final String WHAT_ADMIN_PANEL = "admin_panel"; // cldrAdmin.js
-    public static final String WHAT_ABOUT = "about"; // cldrLoad.js, cldrAbout.js
+    public static final String WHAT_ABOUT = "about"; // cldrAbout.js
+    public static final String WHAT_RECENT_ACTIVITY = "recent_activity"; // cldrRecentActivity.js
 
     public static final int oldestVersionForImportingVotes = 25; // Oldest table is cldr_vote_value_25, as of 2018-05-23.
 
@@ -382,7 +383,11 @@ public class SurveyAjax extends HttpServlet {
                 generateReport(request, response, out, sm, sess, l);
             } else if (what.equals(WHAT_ABOUT)) {
                 JSONWriter r = newJSONStatus(request, sm);
-                new AboutST().getJson(r, sm);
+                AboutST.getJson(r, sm);
+                send(r, out);
+            } else if (what.equals(WHAT_RECENT_ACTIVITY)) {
+                JSONWriter r = newJSONStatus(request, sm);
+                RecentActivity.getJson(r, request, response);
                 send(r, out);
             } else if (what.equals(WHAT_STATS_BYLOC)) {
                 JSONWriter r = newJSONStatusQuick(sm);

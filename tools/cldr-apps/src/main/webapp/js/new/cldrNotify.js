@@ -1,17 +1,17 @@
 "use strict";
 
 /**
- * cldrErr: encapsulate error-reporting functions for Survey Tool
+ * cldrNotify: encapsulate notification (errors, etc.) functions for Survey Tool
  * This is the non-dojo version.
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  */
-const cldrErr = (function () {
+const cldrNotify = (function () {
   /**
-   * Show an error message
+   * Show a notification message
    *
-   * @param {string} why - an error message
+   * @param {string} why - a message
    * @param {Object} json - if present, used for json.session_err
    * @param {HTMLElement} p - document.createElement("div")
    * @param {string} what - what we were doing
@@ -21,6 +21,9 @@ const cldrErr = (function () {
    * Called only by cldrSurvey.handleDisconnect
    */
   function show(why, json, p, what) {
+    /*
+     * TODO: make this work!
+     */
     p.parentNode.removeChild(p);
     if (cldrSurvey.getDidUnbust()) {
       why += "\n\n" + cldrText.get("ari_force_reload");
@@ -44,19 +47,25 @@ const cldrErr = (function () {
     // TODO: implement a replacement for dijit/Dialog
     // https://dojotoolkit.org/reference-guide/1.10/dijit/Dialog.html
     // "<div data-dojo-type='dijit/Dialog' data-dojo-id='ariDialog' title=...
-    console.log("cldrErr.show not implemented yet! why=" + why);
+    // console.log("cldrNotify.show not implemented yet! why=" + why);
+    reallyShow();
 
     const oneword = document.getElementById("progress_oneword");
     oneword.onclick = function () {
       if (cldrStatus.isDisconnected()) {
-        // TODO!
-        // ariDialogShow();
+        reallyShow();
       }
     };
   }
 
+  function reallyShow() {
+    const ariContent = document.getElementById("ariContent");
+    if (ariContent) {
+      ariContent.style.display = "block";
+    }
+  }
   // TODO: make this work. ariRetry is referenced only by this hidden button in cldrGui.js:
-  // "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrErr.retry()' ...
+  // "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrNotify.retry()' ...
   // This was formerly known as ariRetry()
   function retry() {
     hide();
@@ -65,7 +74,11 @@ const cldrErr = (function () {
 
   // formerly known as ariDialogHide
   function hide() {
-    console.log("ariDialogHide not implemented yet!");
+    // console.log("ariDialogHide not implemented yet!");
+    const ariContent = document.getElementById("ariContent");
+    if (ariContent) {
+      ariContent.style.display = "none";
+    }
   }
 
   // formerly known as formatErrMsg

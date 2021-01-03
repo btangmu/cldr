@@ -215,12 +215,20 @@ const cldrDom = (function () {
     return obj;
   }
 
+  // replacement for dojo/dom-construct domConstruct.toDom
+  function construct(html) {
+    const renderer = document.createElement("template");
+    renderer.innerHTML = html;
+    return renderer.content;
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
   return {
     addClass,
     clickToSelect,
+    construct,
     createChunk,
     createLinkToFn,
     listenFor,

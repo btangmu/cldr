@@ -373,7 +373,7 @@ const cldrSurvey = (function () {
         subDiv.appendChild(detailsButton);
         oneword.details = detailsButton;
         p.appendChild(subDiv);
-        cldrErr.show(why, json, subDiv, what);
+        cldrNotify.show(why, json, subDiv, what);
       }
     }
   }
@@ -2449,6 +2449,7 @@ const cldrSurvey = (function () {
     showAllItems,
     showHelpFixPanel,
     showLoader,
+    showRecent,
     testsToHtml,
     unbust,
     updateCovFromJson,

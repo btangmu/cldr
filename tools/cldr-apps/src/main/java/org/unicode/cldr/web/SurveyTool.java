@@ -18,7 +18,7 @@ import org.unicode.cldr.util.VettingViewer;
 
 public class SurveyTool extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    public static final boolean USE_DOJO = true;
+    public static final boolean USE_DOJO = false;
 
     @Override
     public final void init(final ServletConfig config) throws ServletException {
@@ -160,8 +160,8 @@ public class SurveyTool extends HttpServlet {
             out.write("          cldrAjax.sendXhr(xhrArgs);\n");
             out.write("        }, 2000); // two seconds\n");
             out.write("      });\n");
-            out.write("    }\n");
             if (USE_DOJO) {
+                out.write("    }\n");
                 out.write("  });\n");
             }
             out.write("}\n");
@@ -320,7 +320,6 @@ public class SurveyTool extends HttpServlet {
         "cldrCsvFromTable.js",
         "cldrDeferHelp.js",
         "cldrDom.js",
-        "cldrErr.js",
         "cldrEvent.js",
         "cldrFlip.js",
         "cldrForum.js",
@@ -331,8 +330,12 @@ public class SurveyTool extends HttpServlet {
         "cldrInfo.js",
         "cldrLoad.js",
         "cldrLocaleMap.js",
+        "cldrMail.js",
+        "cldrNotify.js",
         "cldrOldVotes.js",
         "cldrOtherSpecial.js",
+        "cldrRecentActivity.js",
+        "cldrReport.js",
         "cldrStatus.js",
         "cldrSurvey.js",
         "cldrTable.js",

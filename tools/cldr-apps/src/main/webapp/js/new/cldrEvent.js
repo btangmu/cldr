@@ -496,17 +496,12 @@ const cldrEvent = (function () {
   /**
    * Show the help popup in the center of the screen
    *
-   * @param type
+   * @param type - "warning" or "danger"
    * @param content
-   * @param head
-   * @param aj
-   * @param dur
    */
-  function popupAlert(type, content, head, aj, dur) {
-    var ajax = typeof aj === "undefined" ? "" : aj;
-    var header = typeof aj === "undefined" ? "" : head;
-    var duration = typeof dur === "undefined" ? 4000 /* four seconds */ : dur;
-    var alert = $("#progress").closest(".alert");
+  function popupAlert(type, content) {
+    const duration = 4000; /* four seconds */
+    const alert = $("#progress").closest(".alert");
     alert
       .removeClass("alert-warning")
       .removeClass("alert-info")
@@ -514,13 +509,6 @@ const cldrEvent = (function () {
       .removeClass("alert-success");
     alert.addClass("alert-" + type);
     $("#progress_oneword").html(content);
-    $("#progress_ajax").html(ajax);
-    $("#specialHeader").html(header);
-    if (header != "") {
-      $("#specialHeader").show();
-    } else {
-      $("#specialHeader").hide();
-    }
 
     if (oldTypePopup != type) {
       if (!alert.is(":visible")) {

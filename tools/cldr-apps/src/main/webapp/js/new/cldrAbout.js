@@ -40,6 +40,14 @@ const cldrAbout = (function () {
     // Clear the 'right sidebar'
     cldrInfo.showNothing();
 
+    if (true) {
+      cldrSurvey.handleDisconnect(
+        "while loading the About page (testing)",
+        json
+      );
+      return;
+    }
+
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = getHtml(json);
     cldrSurvey.hideLoader();

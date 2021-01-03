@@ -58,11 +58,12 @@ const cldrGui = (function () {
     "        type='button' onClick='window.location = /cldr-apps/survey;'>\n" +
     "        Back to Locales\n" +
     "    </button>\n" +
-    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrErr.etry()'>\n" +
+    "    <button id='ariRetryBtn' data-dojo-type='dijit/form/Button' type='button' onClick='cldrNotify.retry()'>\n" +
     "      <b>Reload</b>\n" +
     "    </button>\n" +
     "  </div>\n" +
     "</div>\n";
+
   const vhtml2 =
     "<div class='navbar navbar-fixed-top' role='navigation'>\n" +
     "  <div class='container-fluid'>\n" +

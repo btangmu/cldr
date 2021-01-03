@@ -104,7 +104,10 @@ const cldrLoad = (function () {
     );
 
     // click on the title to copy (permalink)
-    cldrDom.clickToSelect(document.getElementById("ariScroller"));
+    const scroller = document.getElementById("ariScroller");
+    if (scroller) {
+      cldrDom.clickToSelect(scroller);
+    }
     cldrDom.updateIf(
       "title-dcontent-link",
       cldrText.get("defaultContent_titleLink")
@@ -435,15 +438,6 @@ const cldrLoad = (function () {
             cldrStatus.setCurrentPage("");
             cldrStatus.setCurrentId("");
           }
-        } else if (curSpec === "about") {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
-        } else if (curSpec === "admin") {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
-        } else if (curSpec === "createLogin") {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
         } else if (curSpec === "forum") {
           cldrStatus.setCurrentPage("");
           if (pieces && pieces.length > 3) {
@@ -462,7 +456,10 @@ const cldrLoad = (function () {
             }
           }
         } else {
-          otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
+          // "about", "admin", "createLogin", ...
+          cldrStatus.setCurrentPage("");
+          cldrStatus.setCurrentId("");
+          /// otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
         }
       }
     } else {
@@ -560,7 +557,7 @@ const cldrLoad = (function () {
       );
       return false;
     } else if (json.err_code) {
-      var msg_fmt = cldrErr.format(json, subkey);
+      var msg_fmt = cldrNotify.format(json, subkey);
       var loadingChunk = cldrDom.createChunk(msg_fmt, "p", "errCodeMsg");
       flipper.flipTo(pages.loading, loadingChunk);
       var retryButton = cldrDom.createChunk(
@@ -689,7 +686,7 @@ const cldrLoad = (function () {
         }
         if (msg) {
           msg = locmap.linkify(msg);
-          var theChunk = cldrDomConstruct(msg);
+          var theChunk = cldrDom.construct(msg);
           var subDiv = document.createElement("div");
           subDiv.appendChild(theChunk);
           subDiv.className = "warnText";
@@ -702,7 +699,7 @@ const cldrLoad = (function () {
           locale: cldrStatus.getCurrentLocale(),
           dcChildName: locmap.getLocaleName(bund.dcChild),
         });
-        var theChunk = cldrDomConstruct(html);
+        var theChunk = cldrDom.construct(html);
         var subDiv = document.createElement("div");
         subDiv.appendChild(theChunk);
         subDiv.className = "warnText";
@@ -715,7 +712,7 @@ const cldrLoad = (function () {
         locale: cldrStatus.getCurrentLocale(),
         msg: msg,
       });
-      const theChunk = cldrDomConstruct(html);
+      const theChunk = cldrDom.construct(html);
       const subDiv = document.createElement("div");
       subDiv.appendChild(theChunk);
       subDiv.className = "warnText";
@@ -794,7 +791,7 @@ const cldrLoad = (function () {
 
     // assume parseHash was already called, if we are taking input from the hash
 
-    cldrErr.ariDialogHide();
+    cldrNotify.hide();
 
     updateHashAndMenus(true);
 
@@ -808,7 +805,7 @@ const cldrLoad = (function () {
           locale: curLocale,
           dcParentName: locmap.getLocaleName(bund.dcParent),
         });
-        var theChunk = cldrDomConstruct(html);
+        var theChunk = cldrDom.construct(html);
         var theDiv = document.createElement("div");
         theDiv.appendChild(theChunk);
         theDiv.className = "ferrbox";
@@ -915,7 +912,7 @@ const cldrLoad = (function () {
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
     } else if (isReport(curSpecial)) {
-      loadReport();
+      cldrReport.load();
     } else if (curSpecial === "about") {
       cldrAbout.load();
     } else if (curSpecial === "admin") {
@@ -927,9 +924,11 @@ const cldrLoad = (function () {
     } else if (curSpecial === "locales") {
       loadLocales();
     } else if (curSpecial === "mail") {
-      loadMail();
+      cldrMail.load();
     } else if (curSpecial === "oldvotes") {
       cldrOldVotes.load();
+    } else if (curSpecial === "recent_activity") {
+      cldrRecentActivity.load();
     } else {
       otherSpecial.show(curSpecial, {
         flipper: flipper,
@@ -1103,219 +1102,6 @@ const cldrLoad = (function () {
     }
   }
 
-  function loadMail() {
-    var url =
-      cldrStatus.getContextPath() +
-      "/SurveyAjax?what=mail&s=" +
-      cldrStatus.getSessionId() +
-      "&fetchAll=true&" +
-      cldrSurvey.cacheKill();
-    myLoad(
-      url,
-      "(loading mail " + cldrStatus.getCurrentLocale() + ")",
-      function (json) {
-        cldrSurvey.hideLoader();
-        isLoading = false;
-        if (!verifyJson(json, "mail")) {
-          return;
-        }
-        if (json.dataLoadTime) {
-          cldrDom.updateIf("dynload", json.dataLoadTime);
-        }
-
-        var theDiv = flipper.flipToEmpty(pages.other); // clean slate, and proceed..
-
-        cldrDom.removeAllChildNodes(theDiv);
-
-        var listDiv = cldrDom.createChunk("", "div", "mailListChunk");
-        var contentDiv = cldrDom.createChunk("", "div", "mailContentChunk");
-
-        theDiv.appendChild(listDiv);
-        theDiv.appendChild(contentDiv);
-
-        cldrDom.setDisplayed(contentDiv, false);
-        var header = json.mail.header;
-        var data = json.mail.data;
-
-        if (data.length == 0) {
-          listDiv.appendChild(
-            cldrDom.createChunk(cldrText.get("mail_noMail"), "p", "helpContent")
-          );
-        } else {
-          for (var ii in data) {
-            var row = data[ii];
-            var li = cldrDom.createChunk(
-              row[header.QUEUE_DATE] + ": " + row[header.SUBJECT],
-              "li",
-              "mailRow"
-            );
-            if (row[header.READ_DATE]) {
-              cldrDom.addClass(li, "readMail");
-            }
-            if (header.USER !== undefined) {
-              li.appendChild(
-                document.createTextNode("(to " + row[header.USER] + ")")
-              );
-            }
-            if (row[header.SENT_DATE] !== false) {
-              li.appendChild(cldrDom.createChunk("(sent)", "span", "winner"));
-            } else if (row[header.TRY_COUNT] >= 3) {
-              li.appendChild(
-                cldrDom.createChunk(
-                  "(try#" + row[header.TRY_COUNT] + ")",
-                  "span",
-                  "loser"
-                )
-              );
-            } else if (row[header.TRY_COUNT] > 0) {
-              li.appendChild(
-                cldrDom.createChunk(
-                  "(try#" + row[header.TRY_COUNT] + ")",
-                  "span",
-                  "warning"
-                )
-              );
-            }
-            listDiv.appendChild(li);
-
-            li.onclick = (function (li, row, header) {
-              return function () {
-                if (!row[header.READ_DATE]) {
-                  myLoad(
-                    cldrStatus.getContextPath() +
-                      "/SurveyAjax?what=mail&s=" +
-                      cldrStatus.getSessionId() +
-                      "&markRead=" +
-                      row[header.ID] +
-                      "&" +
-                      cldrSurvey.cacheKill(),
-                    "Marking mail read",
-                    function (json) {
-                      if (!verifyJson(json, "mail")) {
-                        return;
-                      } else {
-                        cldrDom.addClass(li, "readMail"); // mark as read when server answers
-                        row[header.READ_DATE] = true; // close enough
-                      }
-                    }
-                  );
-                }
-                cldrDom.setDisplayed(contentDiv, false);
-
-                cldrDom.removeAllChildNodes(contentDiv);
-
-                contentDiv.appendChild(
-                  cldrDom.createChunk(
-                    "Date: " + row[header.QUEUE_DATE],
-                    "h2",
-                    "mailHeader"
-                  )
-                );
-                contentDiv.appendChild(
-                  cldrDom.createChunk(
-                    "Subject: " + row[header.SUBJECT],
-                    "h2",
-                    "mailHeader"
-                  )
-                );
-                contentDiv.appendChild(
-                  cldrDom.createChunk(
-                    "Message-ID: " + row[header.ID],
-                    "h2",
-                    "mailHeader"
-                  )
-                );
-                if (header.USER !== undefined) {
-                  contentDiv.appendChild(
-                    cldrDom.createChunk(
-                      "To: " + row[header.USER],
-                      "h2",
-                      "mailHeader"
-                    )
-                  );
-                }
-                contentDiv.appendChild(
-                  cldrDom.createChunk(row[header.TEXT], "p", "mailContent")
-                );
-
-                cldrDom.setDisplayed(contentDiv, true);
-              };
-            })(li, row, header);
-          }
-        }
-      }
-    );
-  }
-
-  function loadReport() {
-    cldrSurvey.showLoader(null);
-    const message = cldrText.get("reportGuidance");
-    cldrInfo.showMessage(message);
-    var url =
-      cldrStatus.getContextPath() +
-      "/SurveyAjax?what=report&x=" +
-      cldrStatus.getCurrentSpecial() +
-      "&_=" +
-      cldrStatus.getCurrentLocale() +
-      "&s=" +
-      cldrStatus.getSessionId() +
-      cldrSurvey.cacheKill();
-    var errFunction = function errFunction(err) {
-      console.log("Error: loading " + url + " -> " + err);
-      cldrSurvey.hideLoader();
-      isLoading = false;
-      const html =
-        "<div style='padding-top: 4em; font-size: x-large !important;' class='ferrorbox warning'>" +
-        "<span class='icon i-stop'>" +
-        " &nbsp; &nbsp;</span>Error: could not load: " +
-        err +
-        "</div>";
-      const frag = cldrDomConstruct(html);
-      flipper.flipTo(pages.other, frag);
-    };
-    if (cldrStatus.isDashboard()) {
-      if (!cldrStatus.isVisitor()) {
-        const loadHandler = function (json) {
-          cldrSurvey.hideLoader();
-          isLoading = false;
-          // further errors are handled in JSON
-          showReviewPage(json, function () {
-            // show function - flip to the 'other' page.
-            flipper.flipTo(pages.other, null);
-          });
-        };
-        const xhrArgs = {
-          url: url,
-          handleAs: "json",
-          load: loadHandler,
-          error: errFunction,
-        };
-        cldrAjax.queueXhr(xhrArgs);
-      } else {
-        alert("Please login to access Dashboard");
-        cldrStatus.setCurrentSpecial("");
-        cldrStatus.setCurrentLocale("");
-        reloadV();
-      }
-    } else {
-      cldrSurvey.hideLoader();
-      const loadHandler = function (html) {
-        cldrSurvey.hideLoader();
-        isLoading = false;
-        const frag = cldrDomConstruct(html);
-        flipper.flipTo(pages.other, frag);
-        cldrEvent.hideRightPanel(); // CLDR-14365
-      };
-      const xhrArgs = {
-        url: url,
-        handleAs: "text", // not "html"!
-        load: loadHandler,
-        error: errFunction,
-      };
-      cldrAjax.queueXhr(xhrArgs);
-    }
-  }
-
   function loadLocales() {
     cldrSurvey.hideLoader();
     isLoading = false;
@@ -1391,12 +1177,10 @@ const cldrLoad = (function () {
       // TODO: make these all like #about -- no url or jsp here
       myAccountSetting: "survey?do=listu",
       disableMyAccount: "lock.jsp",
-      recentActivity: "myvotes.jsp?user=" + userID + "&s=" + sessionId,
       xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
       manageUser: "survey?do=list",
       flag: "tc-flagged.jsp?s=" + sessionId,
       browse: "browse.jsp",
-      // adminPanel: "SurveyAjax?what=admin_panel&s=" + sessionId,
     };
 
     /**
@@ -1408,7 +1192,6 @@ const cldrLoad = (function () {
       {
         title: "Admin Panel",
         special: "admin",
-        // url: surveyUserURL.adminPanel,
         display: surveyUser && surveyUser.userlevelName === "ADMIN",
       },
       {
@@ -1449,9 +1232,8 @@ const cldrLoad = (function () {
         display: surveyUserPerms && surveyUserPerms.userCanImportOldVotes,
       },
       {
-        title: "See My Recent Activity",
+        special: "recent_activity",
         level: 2,
-        url: surveyUserURL.recentActivity,
       },
       {
         title: "Upload XML",
@@ -2011,13 +1793,6 @@ const cldrLoad = (function () {
    */
   function ucFirst(s) {
     return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  // replacement for dojo/dom-construct domConstruct.toDom
-  function cldrDomConstruct(html) {
-    const renderer = document.createElement("template");
-    renderer.innerHTML = html;
-    return renderer.content;
   }
 
   /**

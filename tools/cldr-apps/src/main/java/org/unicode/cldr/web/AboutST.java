@@ -10,7 +10,7 @@ import org.unicode.cldr.web.SurveyAjax.JSONWriter;
 import com.ibm.icu.util.VersionInfo;
 
 public class AboutST {
-    public void getJson(JSONWriter r, SurveyMain sm) {
+    public static void getJson(JSONWriter r, SurveyMain sm) {
         String props[] = {
             "java.version", "java.vendor", "java.vm.version", "java.vm.vendor",
             "java.vm.name", "os.name", "os.arch", "os.version"};
