@@ -74,7 +74,7 @@ const cldrNotify = (function () {
 
   // formerly known as ariDialogHide
   function hide() {
-    // console.log("ariDialogHide not implemented yet!");
+    console.log("cldrNotify.hide not implemented yet!");
     const ariContent = document.getElementById("ariContent");
     if (ariContent) {
       ariContent.style.display = "none";
@@ -103,7 +103,7 @@ const cldrNotify = (function () {
     }
     return cldrText.sub(msg_str, {
       /* Possibilities include: err_what_section, err_what_locmap, err_what_menus,
-			err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
+			   err_what_status, err_what_unknown, err_what_oldvotes, err_what_vote */
       what: cldrText.get("err_what_" + subkey),
       code: theCode,
       message:

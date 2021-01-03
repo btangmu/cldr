@@ -6,11 +6,6 @@
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
- * Ideally this should be a module (in the sense of using import/export),
- * but not all Survey Tool JavaScript code is capable yet of being in modules
- * and running in strict mode.
- *
- * Dependencies: SpecialPage
  */
 const cldrForumParticipation = (function () {
   const tableId = "participationTable";
@@ -29,7 +24,7 @@ const cldrForumParticipation = (function () {
   /**
    * Fetch the Forum Participation data from the server, and "load" it
    *
-   * @param params an object with various properties; see SpecialPage.js
+   * @param params an object with various properties
    */
   function load(params) {
     /*

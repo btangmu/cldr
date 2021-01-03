@@ -13,9 +13,6 @@
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
- * Ideally this should be a module (in the sense of using import/export),
- * but not all Survey Tool JavaScript code is capable yet of being in modules
- * and running in strict mode.
  */
 const cldrTable = (function () {
   const CLDR_TABLE_DEBUG = false;

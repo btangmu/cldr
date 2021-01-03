@@ -6,9 +6,6 @@
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
- * Ideally this should be a module (in the sense of using import/export),
- * but not all Survey Tool JavaScript code is capable yet of being in modules
- * and running in strict mode.
  */
 
 const cldrLoad = (function () {
@@ -484,7 +481,7 @@ const cldrLoad = (function () {
       t = t + ": " + locmap.getLocaleName(curLocale);
     }
     const curSpecial = cldrStatus.getCurrentSpecial();
-    if (curSpecial && curSpecial != "") {
+    if (curSpecial) {
       t = t + ": " + cldrText.get("special_" + curSpecial);
     }
     const curPage = cldrStatus.getCurrentPage();
@@ -922,7 +919,7 @@ const cldrLoad = (function () {
     } else if (curSpecial === "forum") {
       cldrForum.load();
     } else if (curSpecial === "locales") {
-      loadLocales();
+      cldrLocales.load();
     } else if (curSpecial === "mail") {
       cldrMail.load();
     } else if (curSpecial === "oldvotes") {
@@ -1062,7 +1059,7 @@ const cldrLoad = (function () {
     } else if (!json.section.rows) {
       console.log("!json.section.rows");
       cldrSurvey.showLoader(
-        "Error while  loading: <br><div style='border: 1px solid red;'>" +
+        "Error while loading: <br><div style='border: 1px solid red;'>" +
           "no rows" +
           "</div>"
       );
@@ -1100,28 +1097,6 @@ const cldrLoad = (function () {
         $("#nav-page-footer").show(); // make bottom "Prev/Next" buttons visible after building table
       }
     }
-  }
-
-  function loadLocales() {
-    cldrSurvey.hideLoader();
-    isLoading = false;
-    var theDiv = document.createElement("div");
-    theDiv.className = "localeList";
-
-    addTopLocale("root", theDiv);
-    // top locales
-    for (var n in locmap.locmap.topLocales) {
-      var topLoc = locmap.locmap.topLocales[n];
-      addTopLocale(topLoc, theDiv);
-    }
-    flipper.flipTo(pages.other, null);
-    cldrEvent.filterAllLocale(); // filter for init data
-    cldrEvent.forceSidebar();
-    cldrStatus.setCurrentLocale(null);
-    cldrStatus.setCurrentSpecial("locales");
-    const message = cldrText.get("localesInitialGuidance");
-    cldrInfo.showMessage(message);
-    $("#itemInfo").html("");
   }
 
   /**
@@ -2100,6 +2075,7 @@ const cldrLoad = (function () {
    * Make only these functions accessible from other files:
    */
   return {
+    addTopLocale,
     appendLocaleLink,
     dialogIsOpen,
     flipToEmptyOther,
