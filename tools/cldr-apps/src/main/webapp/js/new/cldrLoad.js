@@ -71,8 +71,6 @@ const cldrLoad = (function () {
     },
   };
 
-  let otherSpecial = null;
-
   let flipper = null;
 
   // TODO: implement things like these without using dojo/dijit
@@ -89,8 +87,6 @@ const cldrLoad = (function () {
     // it may be modified below with locmap = new LocaleMap(json.locmap)
 
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
-
-    otherSpecial = new OtherSpecial();
 
     const pucontent = document.getElementById("itemInfo");
     const theDiv = flipper.get(pages.data);
@@ -501,7 +497,7 @@ const cldrLoad = (function () {
       );
       return false;
     } else if (json.err_code) {
-      var msg_fmt = cldrNotify.format(json, subkey);
+      var msg_fmt = cldrRetry.format(json, subkey);
       var loadingChunk = cldrDom.createChunk(msg_fmt, "p", "errCodeMsg");
       flipper.flipTo(pages.loading, loadingChunk);
       var retryButton = cldrDom.createChunk(
@@ -522,7 +518,7 @@ const cldrLoad = (function () {
           json.err +
           "</div>"
       );
-      cldrSurvey.handleDisconnect("while loading " + subkey + "", json);
+      cldrRetry.handleDisconnect("while loading " + subkey + "", json);
       return false;
     } else if (!json[subkey]) {
       console.log("!json." + subkey);
@@ -533,7 +529,7 @@ const cldrLoad = (function () {
           "no data" +
           "</div>"
       );
-      cldrSurvey.handleDisconnect("while loading- no " + subkey + "", json);
+      cldrRetry.handleDisconnect("while loading- no " + subkey + "", json);
       return false;
     } else {
       return true;
@@ -586,11 +582,11 @@ const cldrLoad = (function () {
    */
   function scrollToItem() {
     const curId = cldrStatus.getCurrentId();
-    if (curId != null && curId != "") {
+    if (curId) {
       const xtr = document.getElementById("r@" + curId);
-      if (xtr != null) {
+      if (xtr) {
         console.log("Scrolling to " + curId);
-        xtr.scrollIntoView();
+        xtr.scrollIntoView({ block: "center" });
       }
     }
   }
@@ -737,9 +733,6 @@ const cldrLoad = (function () {
     cldrSurvey.setShower(id, ignoreReloadRequest);
 
     // assume parseHash was already called, if we are taking input from the hash
-
-    cldrNotify.hide();
-
     updateHashAndMenus(true);
 
     const curLocale = cldrStatus.getCurrentLocale();
@@ -881,6 +874,7 @@ const cldrLoad = (function () {
       r_zones: cldrReportZones,
       r_vetting_json: cldrDash,
       recent_activity: cldrRecentActivity,
+      retry: cldrRetry,
     };
     if (str in map) {
       return map[str];
@@ -1018,7 +1012,7 @@ const cldrLoad = (function () {
           "no rows" +
           "</div>"
       );
-      cldrSurvey.handleDisconnect("while loading- no rows", json);
+      cldrRetry.handleDisconnect("while loading- no rows", json);
     } else {
       cldrSurvey.showLoader("loading..");
       if (json.dataLoadTime) {
@@ -1346,7 +1340,7 @@ const cldrLoad = (function () {
       if (menuSection) {
         menuSection.addChild(menuMap.section_general);
       }
-      for (var j in menuMap.sections) {
+      for (let j in menuMap.sections) {
         (function (aSection) {
           aSection.menuItem = newPseudoDijitMenuItem({
             label: aSection.name,
@@ -1786,7 +1780,7 @@ const cldrLoad = (function () {
     console.log("MyLoad: " + url + " for " + message);
     const errorHandler = function (err) {
       console.log("Error: " + err);
-      cldrSurvey.handleDisconnect(
+      cldrRetry.handleDisconnect(
         "Could not fetch " +
           message +
           " - error " +
@@ -1812,7 +1806,7 @@ const cldrLoad = (function () {
         console.log(
           "Error in ajax post [" + message + "]  " + e.message + " / " + e.name
         );
-        cldrSurvey.handleDisconnect(
+        cldrRetry.handleDisconnect(
           "Exception while loading: " +
             message +
             " - " +

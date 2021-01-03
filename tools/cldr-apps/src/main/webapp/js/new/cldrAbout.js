@@ -27,6 +27,7 @@ const cldrAbout = (function () {
   ];
 
   function load() {
+    cldrInfo.showNothing();
     const xhrArgs = {
       url: cldrStatus.getContextPath() + "/SurveyAjax?what=about",
       handleAs: "json",
@@ -36,12 +37,11 @@ const cldrAbout = (function () {
     cldrAjax.sendXhr(xhrArgs);
   }
 
-  function loadHandler(json) {
-    // Clear the 'right sidebar'
-    cldrInfo.showNothing();
+  const testCldrRetry = false;
 
-    if (true) {
-      cldrSurvey.handleDisconnect(
+  function loadHandler(json) {
+    if (testCldrRetry && Math.random() > 0.5) {
+      cldrRetry.handleDisconnect(
         "while loading the About page (testing)",
         json
       );
@@ -57,6 +57,8 @@ const cldrAbout = (function () {
   function errorHandler(err) {
     const ourDiv = document.createElement("div");
     ourDiv.innerHTML = err;
+    cldrSurvey.hideLoader();
+    cldrLoad.flipToOtherDiv(ourDiv);
   }
 
   function getHtml(json) {

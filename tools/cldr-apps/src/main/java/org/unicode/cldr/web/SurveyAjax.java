@@ -378,7 +378,8 @@ public class SurveyAjax extends HttpServlet {
             } else if (what == null) {
                 sendError(out, "Missing parameter: " + REQ_WHAT, ErrorCode.E_INTERNAL);
             } else if (what.equals(WHAT_GETROW)) {
-                getRow(request, response, out, sm, sess, l, xpath);
+                throw new IllegalArgumentException("Nuts");
+                // getRow(request, response, out, sm, sess, l, xpath);
             } else if (what.equals(WHAT_REPORT)) {
                 generateReport(request, response, out, sm, sess, l);
             } else if (what.equals(WHAT_ABOUT)) {

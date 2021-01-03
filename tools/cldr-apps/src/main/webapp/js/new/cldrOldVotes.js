@@ -227,7 +227,7 @@ const cldrOldVotes = (function () {
                     function (json) {
                       cldrSurvey.showLoader(cldrText.get("loading2"));
                       if (!cldrLoad.verifyJson(json, "oldvotes")) {
-                        cldrSurvey.handleDisconnect(
+                        cldrRetry.handleDisconnect(
                           "Error submitting votes!",
                           json,
                           "Error"

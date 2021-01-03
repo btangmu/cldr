@@ -32,8 +32,6 @@ const cldrSurvey = (function () {
   let ajaxWord = null;
   let specialHeader = null; // TODO: supposed to be same as specialHeader in cldrStatus.js, or not?
 
-  let saidDisconnect = false;
-
   let updateParts = null;
 
   let cacheKillStamp = null;
@@ -194,7 +192,6 @@ const cldrSurvey = (function () {
     console.log("Un-busting");
     progressWord = "unbusted";
     cldrStatus.setIsDisconnected(false);
-    saidDisconnect = false;
     cldrDom.removeClass(
       document.getElementsByTagName("body")[0],
       "disconnected"
@@ -202,7 +199,6 @@ const cldrSurvey = (function () {
     wasBusted = false;
     cldrAjax.clearXhr();
     hideLoader();
-    saidDisconnect = false;
     updateStatus(); // will restart regular status updates
   }
 
@@ -303,79 +299,6 @@ const cldrSurvey = (function () {
   }
 
   /**
-   * Handle that ST has disconnected
-   *
-   * @param why
-   * @param json
-   * @param word
-   * @param what - what we were doing
-   */
-  function handleDisconnect(why, json, word, what) {
-    if (json && json.err_code === "E_NOT_LOGGED_IN") {
-      window.location = "login.jsp?operationFailed" + window.location.hash;
-      return;
-    }
-    if (!what) {
-      what = "unknown";
-    }
-    if (!word) {
-      word = "error"; // assume it's an error except for a couple of cases.
-    }
-    updateProgressWord(word);
-    if (!saidDisconnect) {
-      saidDisconnect = true;
-      if (json && json.err) {
-        why = why + "\n The error message was: \n" + json.err;
-        if (json.err.fileName) {
-          why = why + "\nFile: " + json.err.fileName;
-          if (json.err.lineNumber) {
-            why = why + "\nLine: " + json.err.lineNumber;
-          }
-        }
-      }
-      console.log("Disconnect: " + why);
-      var oneword = document.getElementById("progress_oneword");
-      if (oneword) {
-        oneword.title = "Disconnected: " + why;
-        oneword.onclick = function () {
-          var p = document.getElementById("progress");
-          var subDiv = document.createElement("div");
-          var chunk0 = document.createElement("i");
-          chunk0.appendChild(
-            document.createTextNode(cldrText.get("error_restart"))
-          );
-          var chunk = document.createElement("textarea");
-          chunk.className = "errorMessage";
-          chunk.appendChild(document.createTextNode(why));
-          chunk.rows = "10";
-          chunk.cols = "40";
-          subDiv.appendChild(chunk0);
-          subDiv.appendChild(chunk);
-          p.appendChild(subDiv);
-          if (oneword.details) {
-            cldrDom.setDisplayed(oneword.details, false);
-          }
-          oneword.onclick = null;
-          return false;
-        };
-        var p = document.getElementById("progress");
-        var subDiv = document.createElement("div");
-        var detailsButton = document.createElement("button");
-        detailsButton.type = "button";
-        detailsButton.id = "progress-details";
-        detailsButton.appendChild(
-          document.createTextNode(cldrText.get("details"))
-        );
-        detailsButton.onclick = oneword.onclick;
-        subDiv.appendChild(detailsButton);
-        oneword.details = detailsButton;
-        p.appendChild(subDiv);
-        cldrNotify.show(why, json, subDiv, what);
-      }
-    }
-  }
-
-  /**
    * Return a string to be used with a URL to avoid caching. Ignored by the server.
    *
    * @returns {String} the URL fragment, append to the query
@@ -421,32 +344,35 @@ const cldrSurvey = (function () {
   function updateStatusBox(json) {
     if (json.disconnected) {
       json.err_code = "E_DISCONNECTED";
-      handleDisconnect("Misc Disconnect", json, "disconnected"); // unknown
+      cldrRetry.handleDisconnect("Misc Disconnect", json, "disconnected"); // unknown
     } else if (json.err_code) {
       console.log("json.err_code == " + json.err_code);
       if (json.err_code == "E_NOT_STARTED") {
         trySurveyLoad();
       }
-      handleDisconnect(json.err_code, json, "disconnected", "status");
+      cldrRetry.handleDisconnect(json.err_code, json, "disconnected", "status");
     } else if (json.SurveyOK == 0) {
       console.log("json.surveyOK==0");
       trySurveyLoad();
-      handleDisconnect(
+      cldrRetry.handleDisconnect(
         "The SurveyTool server is not ready to accept connections, please retry. ",
         json,
         "disconnected"
       ); // ST has restarted
     } else if (json.status && json.status.isBusted) {
-      handleDisconnect(
+      cldrRetry.handleDisconnect(
         "The SurveyTool server has halted due to an error: " +
           json.status.isBusted,
         json,
         "disconnected"
       ); // Server down- not our fault. Hopefully.
     } else if (!json.status) {
-      handleDisconnect("The SurveyTool server returned a bad status", json);
+      cldrRetry.handleDisconnect(
+        "The SurveyTool server returned a bad status",
+        json
+      );
     } else if (cldrStatus.runningStampChanged(json.status.surveyRunningStamp)) {
-      handleDisconnect(
+      cldrRetry.handleDisconnect(
         "The SurveyTool server restarted since this page was loaded. Please retry.",
         json,
         "disconnected"
@@ -541,7 +467,11 @@ const cldrSurvey = (function () {
         if (!json.session_err) {
           json.session_err = "disconnected";
         }
-        handleDisconnect(kmsg, json, "Your session has been disconnected.");
+        cldrRetry.handleDisconnect(
+          kmsg,
+          json,
+          "Your session has been disconnected."
+        );
       } else if (
         json.status.specialHeader &&
         json.status.specialHeader.length > 0
@@ -1727,7 +1657,7 @@ const cldrSurvey = (function () {
       try {
         if (json.err && json.err.length > 0) {
           tr.className = "tr_err";
-          handleDisconnect("Error submitting a vote", json);
+          cldrRetry.handleDisconnect("Error submitting a vote", json);
           tr.innerHTML =
             "<td colspan='4'>" +
             cldrStatus.stopIcon() +
@@ -1735,7 +1665,7 @@ const cldrSurvey = (function () {
             json.err +
             "</td>";
           myUnDefer();
-          handleDisconnect("Error submitting a vote", json);
+          cldrRetry.handleDisconnect("Error submitting a vote", json);
         } else {
           if (json.submitResultRaw) {
             // if submitted..
@@ -1768,7 +1698,7 @@ const cldrSurvey = (function () {
               },
               function (err) {
                 myUnDefer();
-                handleDisconnect(err, json);
+                cldrRetry.handleDisconnect(err, json);
               }
             ); // end refresh-loaded-fcn
             // end: async
@@ -1804,7 +1734,7 @@ const cldrSurvey = (function () {
           e.message;
         console.log("Error in ajax post [handleWiredClick] ", e.message);
         myUnDefer();
-        handleDisconnect("handleWiredClick:" + e.message, json);
+        cldrRetry.handleDisconnect("handleWiredClick:" + e.message, json);
       }
     };
     var errorHandler = function (err) {
@@ -1814,7 +1744,7 @@ const cldrSurvey = (function () {
        */
       tr.className = originalTrClassName;
       console.log("Error: " + err);
-      handleDisconnect("Error: " + err, null);
+      cldrRetry.handleDisconnect("Error: " + err, null);
       theRow.className = "ferrbox";
       theRow.innerHTML =
         "Error while  loading: <div style='border: 1px solid red;'>" +
@@ -2005,7 +1935,7 @@ const cldrSurvey = (function () {
       let ourUrl =
         cldrStatus.getContextPath() + "/SurveyAjax?what=mylocales&user=" + user;
       var errorHandler = function (err) {
-        handleDisconnect("Error in showrecent: " + err);
+        cldrRetry.handleDisconnect("Error in showrecent: " + err);
       };
       showLoader("Loading recent items");
       var loadHandler = function (json) {
@@ -2068,12 +1998,18 @@ const cldrSurvey = (function () {
             div.appendChild(frag);
             hideLoader();
           } else {
-            handleDisconnect("Failed to load JSON recent items", json);
+            cldrRetry.handleDisconnect(
+              "Failed to load JSON recent items",
+              json
+            );
           }
         } catch (e) {
           console.log("Error in ajax get ", e.message);
           console.log(" response: " + text);
-          handleDisconnect(" exception in getrecent: " + e.message, null);
+          cldrRetry.handleDisconnect(
+            " exception in getrecent: " + e.message,
+            null
+          );
         }
       };
       var xhrArgs = {
@@ -2112,7 +2048,7 @@ const cldrSurvey = (function () {
         "&limit=" +
         15;
       var errorHandler = function (err) {
-        handleDisconnect("Error in showrecent: " + err);
+        cldrRetry.handleDisconnect("Error in showrecent: " + err);
       };
       showLoader("Loading recent items");
       var loadHandler = function (json) {
@@ -2184,12 +2120,18 @@ const cldrSurvey = (function () {
             div.appendChild(frag);
             hideLoader();
           } else {
-            handleDisconnect("Failed to load JSON recent items", json);
+            cldrRetry.handleDisconnect(
+              "Failed to load JSON recent items",
+              json
+            );
           }
         } catch (e) {
           console.log("Error in ajax get ", e.message);
           console.log(" response: " + text);
-          handleDisconnect(" exception in getrecent: " + e.message, null);
+          cldrRetry.handleDisconnect(
+            " exception in getrecent: " + e.message,
+            null
+          );
         }
       };
       var xhrArgs = {
@@ -2437,7 +2379,6 @@ const cldrSurvey = (function () {
     getSurveyUserCov,
     getTagChildren,
     getXpathMap,
-    handleDisconnect,
     handleWiredClick,
     hideLoader,
     isInputBusy,
@@ -2458,6 +2399,7 @@ const cldrSurvey = (function () {
     unbust,
     updateCovFromJson,
     updateCoverage,
+    updateProgressWord,
     updateSpecialHeader,
     updateStatus,
     wireUpButton,

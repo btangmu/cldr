@@ -73,7 +73,7 @@ const cldrForum = (function () {
         name: "forum",
         exports: {
           appendLocaleLink: cldrLoad.appendLocaleLink,
-          handleDisconnect: cldrSurvey.handleDisconnect,
+          handleDisconnect: cldrRetry.handleDisconnect,
           clickToSelect: cldrDom.clickToSelect,
         },
       };

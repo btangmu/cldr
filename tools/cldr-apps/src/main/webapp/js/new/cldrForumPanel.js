@@ -351,10 +351,7 @@ const cldrForumPanel = (function () {
         err +
         "</td>";
       cldrInfo.showWithRow(message, tr);
-      cldrSurvey.handleDisconnect(
-        "Could not load for updatePosts:" + err,
-        null
-      );
+      cldrRetry.handleDisconnect("Could not load for updatePosts:" + err, null);
     };
 
     let loadHandler = function (json) {
