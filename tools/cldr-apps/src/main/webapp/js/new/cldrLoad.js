@@ -543,7 +543,10 @@ const cldrLoad = (function () {
   function showCurrentId() {
     const curSpecial = cldrStatus.getCurrentSpecial();
     if (curSpecial && curSpecial != "" && !cldrStatus.isDashboard()) {
-      otherSpecial.handleIdChanged(curSpecial, showCurrentId);
+      const special = getSpecial(curSpecial);
+      if (special && special.handleIdChanged) {
+        special.handleIdChanged(curSpecial, showCurrentId);
+      }
     } else {
       const curId = cldrStatus.getCurrentId();
       if (curId) {

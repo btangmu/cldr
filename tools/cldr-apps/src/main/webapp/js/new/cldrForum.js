@@ -76,8 +76,6 @@ const cldrForum = (function () {
           handleDisconnect: cldrSurvey.handleDisconnect,
           clickToSelect: cldrDom.clickToSelect,
         },
-        // special = ??,
-        // otherSpecial = ??,
       };
       loadForum(curLocale, userId, forumMessage, params);
     }
@@ -89,7 +87,7 @@ const cldrForum = (function () {
    * @param locale the locale string, like "fr_CA" (cldrStatus.getCurrentLocale())
    * @param userId the id of the current user
    * @param forumMessage the forum message
-   * @param params an object with various properties such as exports, special, flipper, otherSpecial, name, ...
+   * @param params an object with various properties such as exports, special, name, ...
    */
   function loadForum(locale, userId, forumMessage, params) {
     setLocale(locale);
@@ -1464,7 +1462,7 @@ const cldrForum = (function () {
           // e.g., http://localhost:8080/cldr-apps/v#forum/ar//69009
           const idStr = id.toString();
           cldrStatus.setCurrentId(idStr);
-          cldrForum.handleIdChanged(idStr);
+          handleIdChanged(idStr);
         }
       }
       return true;

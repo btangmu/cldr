@@ -16,6 +16,7 @@ const cldrReportZones = (function () {
     cldrSurvey.hideLoader();
     const xhrArgs = {
       url: url,
+      // TODO: get json from server and do the presentation on the front end
       handleAs: "text", // not "html" or "json"!
       load: loadHandler,
       error: errorHandler,
