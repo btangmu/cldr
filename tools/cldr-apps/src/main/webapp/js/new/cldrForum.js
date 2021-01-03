@@ -1451,6 +1451,28 @@ const cldrForum = (function () {
     displayUtc = utc ? true : false;
   }
 
+  function parseHash(pieces) {
+    cldrStatus.setCurrentPage("");
+    if (pieces && pieces.length > 3) {
+      if (!pieces[3] || pieces[3] == "") {
+        cldrStatus.setCurrentId("");
+      } else {
+        const id = new Number(pieces[3]);
+        if (id == NaN) {
+          cldrStatus.setCurrentId("");
+        } else {
+          // e.g., http://localhost:8080/cldr-apps/v#forum/ar//69009
+          const idStr = id.toString();
+          cldrStatus.setCurrentId(idStr);
+          cldrForum.handleIdChanged(idStr);
+        }
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /*
    * Make only these functions accessible from other files:
    */

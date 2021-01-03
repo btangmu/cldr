@@ -67,6 +67,20 @@ const cldrDash = (function () {
     cldrLoad.flipToOtherDiv(frag);
   }
 
+  function parseHash(pieces) {
+    if (pieces.length > 2) {
+      cldrStatus.setCurrentPage(pieces[2]);
+      if (pieces.length > 3) {
+        cldrStatus.setCurrentId(pieces[3]);
+      } else {
+        cldrStatus.setCurrentId("");
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /*
    * Make only these functions accessible from other files:
    */

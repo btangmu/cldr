@@ -364,27 +364,21 @@ const cldrLoad = (function () {
   }
 
   /**
-   * Parse the hash string into surveyCurrent___ variables.
+   * Parse the hash string into setCurrent___ variables.
    * Expected to update document.title also.
    *
    * @param {String} hash
    */
   function parseHashAndUpdate(hash) {
     if (hash) {
-      var pieces = hash.substr(0).split("/");
+      const pieces = hash.substr(0).split("/");
       if (pieces.length > 1) {
         cldrStatus.setCurrentLocale(pieces[1]); // could be null
-        /*
-         * TODO: find a way if possible to fix here when cldrStatus.getCurrentLocale() === "USER".
-         * It may be necessary (and sufficient) to wait for server response, see "USER" elsewhere
-         * in this file. cachedJson.loc and _thePages.loc are generally (always?) undefined here.
-         * Reference: https://unicode.org/cldr/trac/ticket/11161
-         */
       } else {
         cldrStatus.setCurrentLocale("");
       }
       const curLocale = cldrStatus.getCurrentLocale();
-      if (pieces[0].length == 0 && curLocale != "" && curLocale != null) {
+      if (pieces[0].length == 0 && curLocale) {
         if (pieces.length > 2) {
           cldrStatus.setCurrentPage(pieces[2]);
           if (pieces.length > 3) {
@@ -404,59 +398,12 @@ const cldrLoad = (function () {
       } else {
         const curSpec = pieces[0] ? pieces[0] : "locales";
         cldrStatus.setCurrentSpecial(curSpec);
-        if (curSpec == "locales") {
-          // allow locales list to retain ID / Page string for passthrough.
-          cldrStatus.setCurrentLocale("");
-          if (pieces.length > 2) {
-            cldrStatus.setCurrentPage(pieces[2]);
-            if (pieces.length > 3) {
-              let id = pieces[3];
-              if (id.substr(0, 2) == "x@") {
-                id = id.substr(2);
-              }
-              cldrStatus.setCurrentId(id);
-            } else {
-              cldrStatus.setCurrentId("");
-            }
-          } else {
-            cldrStatus.setCurrentPage("");
-            cldrStatus.setCurrentId("");
-          }
-        } else if (isReport(curSpec)) {
-          // allow page and ID to fall through.
-          if (pieces.length > 2) {
-            cldrStatus.setCurrentPage(pieces[2]);
-            if (pieces.length > 3) {
-              cldrStatus.setCurrentId(pieces[3]);
-            } else {
-              cldrStatus.setCurrentId("");
-            }
-          } else {
-            cldrStatus.setCurrentPage("");
-            cldrStatus.setCurrentId("");
-          }
-        } else if (curSpec === "forum") {
-          cldrStatus.setCurrentPage("");
-          if (pieces && pieces.length > 3) {
-            if (!pieces[3] || pieces[3] == "") {
-              cldrStatus.setCurrentId("");
-            } else {
-              var id = new Number(pieces[3]);
-              if (id == NaN) {
-                cldrStatus.setCurrentId("");
-              } else {
-                // e.g., http://localhost:8080/cldr-apps/v#forum/ar//69009
-                const idStr = id.toString();
-                cldrStatus.setCurrentId(idStr);
-                cldrForum.handleIdChanged(idStr);
-              }
-            }
-          }
+        const special = getSpecial(curSpec);
+        if (special && special.parseHash && special.parseHash(pieces)) {
+          // current page and id have been set by special.parseHash
         } else {
-          // "about", "admin", "createLogin", ...
           cldrStatus.setCurrentPage("");
           cldrStatus.setCurrentId("");
-          /// otherSpecial.parseHash(cldrStatus.getCurrentSpecial(), hash, pieces);
         }
       }
     } else {

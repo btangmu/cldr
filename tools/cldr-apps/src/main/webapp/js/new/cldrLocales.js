@@ -32,6 +32,25 @@ const cldrLocales = (function () {
     $("#itemInfo").html("");
   }
 
+  function parseHash(pieces) {
+    cldrStatus.setCurrentLocale("");
+    if (pieces.length > 2) {
+      cldrStatus.setCurrentPage(pieces[2]);
+      if (pieces.length > 3) {
+        let id = pieces[3];
+        if (id.substr(0, 2) === "x@") {
+          id = id.substr(2);
+        }
+        cldrStatus.setCurrentId(id);
+      } else {
+        cldrStatus.setCurrentId("");
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /*
    * Make only these functions accessible from other files:
    */
