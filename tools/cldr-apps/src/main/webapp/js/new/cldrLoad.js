@@ -908,29 +908,34 @@ const cldrLoad = (function () {
       cldrSurvey.hideLoader();
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
-    } else if (isReport(curSpecial)) {
-      cldrReport.load();
-    } else if (curSpecial === "about") {
-      cldrAbout.load();
-    } else if (curSpecial === "admin") {
-      cldrAdmin.load();
-    } else if (curSpecial === "createAndLogin") {
-      cldrCreateLogin.load();
-    } else if (curSpecial === "forum") {
-      cldrForum.load();
-    } else if (curSpecial === "locales") {
-      cldrLocales.load();
-    } else if (curSpecial === "mail") {
-      cldrMail.load();
-    } else if (curSpecial === "oldvotes") {
-      cldrOldVotes.load();
-    } else if (curSpecial === "recent_activity") {
-      cldrRecentActivity.load();
     } else {
-      otherSpecial.show(curSpecial, {
-        flipper: flipper,
-        pages: pages,
-      });
+      const special = getSpecial(curSpecial);
+      if (special) {
+        special.load();
+      } else {
+        console.log("No special js found for " + curSpecial);
+      }
+    }
+  }
+
+  function getSpecial(str) {
+    const map = {
+      about: cldrAbout,
+      createAndLogin: cldrCreateLogin,
+      forum: cldrForum,
+      locales: cldrLocales,
+      mail: cldrMail,
+      oldvotes: cldrOldVotes,
+      r_compact: cldrReportNumbers,
+      r_datetime: cldrReportDate,
+      r_zones: cldrReportZones,
+      r_vetting_json: cldrDash,
+      recent_activity: cldrRecentActivity,
+    };
+    if (str in map) {
+      return map[str];
+    } else {
+      return null;
     }
   }
 

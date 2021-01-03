@@ -9,7 +9,6 @@
  */
 
 const cldrLocales = (function () {
-
   function load() {
     cldrSurvey.hideLoader();
     cldrLoad.setLoading(false);

@@ -2275,11 +2275,15 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 /*
                  * TODO: implement this with strict js, without using java to write js!
                  * ...this function SurveyMain.doList() is over 666 lines long...
-                 * showUserActivity doesn't work if called this way, if !SurveyTool.USE_DOJO
                  */
-                ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\n" +
-                		"showUserActivity(shownUsers, 'userListTable');\n</script>\n");
+                if (SurveyTool.USE_DOJO) {
+                    ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\n" +
+                        "showUserActivity(shownUsers, 'userListTable');\n</script>\n");
 
+                } else {
+                    ctx.println("<script>var shownUsers = " + shownUsers.toString() + ";\n" +
+                        "cldrSurvey.showUserActivity(shownUsers, 'userListTable');\n</script>\n");
+                }
                 if (hideUserList) {
                     ctx.println("</div>");
                 }

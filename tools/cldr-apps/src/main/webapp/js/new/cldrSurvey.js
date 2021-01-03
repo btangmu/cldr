@@ -2211,12 +2211,10 @@ const cldrSurvey = (function () {
    * @returns
    */
 
-  const dojoDom = null;
-  const dojoNumber = null;
-
   // referenced by js written by SurveyMain.doList()
   function showUserActivity(list, tableRef) {
-    var table = dojoDom.byId(tableRef);
+    // var table = dojoDom.byId(tableRef);
+    const table = document.getElementById(tableRef);
 
     var rows = [];
     var theadChildren = getTagChildren(
@@ -2228,7 +2226,8 @@ const cldrSurvey = (function () {
 
     for (var k in list) {
       var user = list[k];
-      var tr = dojoDom.byId("u@" + user.id);
+      // var tr = dojoDom.byId("u@" + user.id);
+      const tr = document.getElementById("u@" + user.id);
 
       rowById[user.id] = parseInt(k); // ?!
 
@@ -2252,112 +2251,119 @@ const cldrSurvey = (function () {
     }
 
     var loc2name = {};
-    request
-      .get(
-        cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
-        {
-          handleAs: "json",
+
+    const actLoadHandler = function (json) {
+      /* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */
+      var stats = json.stats_bydayuserloc;
+      var header = stats.header;
+      for (var k in stats.data) {
+        var row = stats.data[k];
+        var submitter = row[header.SUBMITTER];
+        var submitterRow = rowById[submitter];
+        if (submitterRow !== undefined) {
+          var userRow = rows[submitterRow];
+          userRow.stats.push({
+            day: row[header.DAY],
+            count: row[header.COUNT],
+            locale: row[header.LOCALE],
+          });
+          userRow.total = userRow.total + row[header.COUNT];
+          loc2name[row[header.LOCALE]] = row[header.LOCALE_NAME];
         }
-      )
-      .then(function (json) {
-        /* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */
-        var stats = json.stats_bydayuserloc;
-        var header = stats.header;
-        for (var k in stats.data) {
-          var row = stats.data[k];
-          var submitter = row[header.SUBMITTER];
-          var submitterRow = rowById[submitter];
-          if (submitterRow !== undefined) {
-            var userRow = rows[submitterRow];
-            userRow.stats.push({
-              day: row[header.DAY],
-              count: row[header.COUNT],
-              locale: row[header.LOCALE],
-            });
-            userRow.total = userRow.total + row[header.COUNT];
-            loc2name[row[header.LOCALE]] = row[header.LOCALE_NAME];
-          }
+      }
+
+      function appendMiniChart(userRow, count) {
+        if (count > userRow.stats.length) {
+          count = userRow.stats.length;
         }
+        cldrDom.removeAllChildNodes(userRow.seenSub);
+        for (var k = 0; k < count; k++) {
+          var theStat = userRow.stats[k];
+          var chartRow = cldrDom.createChunk("", "div", "chartRow");
 
-        function appendMiniChart(userRow, count) {
-          if (count > userRow.stats.length) {
-            count = userRow.stats.length;
-          }
-          cldrDom.removeAllChildNodes(userRow.seenSub);
-          for (var k = 0; k < count; k++) {
-            var theStat = userRow.stats[k];
-            var chartRow = cldrDom.createChunk("", "div", "chartRow");
+          var chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
+          var chartLoc = cldrDom.createChunk(
+            theStat.locale,
+            "span",
+            "chartLoc"
+          );
+          chartLoc.title = loc2name[theStat.locale];
+          var chartCount = cldrDom.createChunk(
+            // dojoNumber.format(theStat.count),
+            theStat.count,
+            "span",
+            "chartCount"
+          );
 
-            var chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
-            var chartLoc = cldrDom.createChunk(
-              theStat.locale,
-              "span",
-              "chartLoc"
-            );
-            chartLoc.title = loc2name[theStat.locale];
-            var chartCount = cldrDom.createChunk(
-              dojoNumber.format(theStat.count),
-              "span",
-              "chartCount"
-            );
+          chartRow.appendChild(chartDay);
+          chartRow.appendChild(chartLoc);
+          chartRow.appendChild(chartCount);
 
-            chartRow.appendChild(chartDay);
-            chartRow.appendChild(chartLoc);
-            chartRow.appendChild(chartCount);
-
-            userRow.seenSub.appendChild(chartRow);
-          }
-          if (count < userRow.stats.length) {
-            chartRow.appendChild(document.createTextNode("..."));
-          }
+          userRow.seenSub.appendChild(chartRow);
         }
-
-        for (var k in rows) {
-          var userRow = rows[k];
-          if (userRow.total > 0) {
-            cldrDom.addClass(userRow.tr, "hadActivity");
-            userRow.tr
-              .getElementsByClassName("recentActivity")[0]
-              .appendChild(
-                document.createTextNode(
-                  " (" + dojoNumber.format(userRow.total) + ")"
-                )
-              );
-
-            userRow.seenSub = document.createElement("div");
-            userRow.seenSub.className = "seenSub";
-            userRow.seen.appendChild(userRow.seenSub);
-
-            appendMiniChart(userRow, 3);
-            if (userRow.stats.length > 3) {
-              var chartMore, chartLess;
-              chartMore = cldrDom.createChunk("+", "span", "chartMore");
-              chartLess = cldrDom.createChunk("-", "span", "chartMore");
-              chartMore.onclick = (function (chartMore, chartLess, userRow) {
-                return function () {
-                  cldrDom.setDisplayed(chartMore, false);
-                  cldrDom.setDisplayed(chartLess, true);
-                  appendMiniChart(userRow, userRow.stats.length);
-                  return false;
-                };
-              })(chartMore, chartLess, userRow);
-              chartLess.onclick = (function (chartMore, chartLess, userRow) {
-                return function () {
-                  cldrDom.setDisplayed(chartMore, true);
-                  cldrDom.setDisplayed(chartLess, false);
-                  appendMiniChart(userRow, 3);
-                  return false;
-                };
-              })(chartMore, chartLess, userRow);
-              userRow.seen.appendChild(chartMore);
-              cldrDom.setDisplayed(chartLess, false);
-              userRow.seen.appendChild(chartLess);
-            }
-          } else {
-            cldrDom.addClass(userRow.tr, "noActivity");
-          }
+        if (count < userRow.stats.length) {
+          chartRow.appendChild(document.createTextNode("..."));
         }
-      });
+      }
+
+      for (var k in rows) {
+        var userRow = rows[k];
+        if (userRow.total > 0) {
+          cldrDom.addClass(userRow.tr, "hadActivity");
+          userRow.tr.getElementsByClassName("recentActivity")[0].appendChild(
+            document.createTextNode(
+              // " (" + dojoNumber.format(userRow.total) + ")"
+              " (" + userRow.total + ")"
+            )
+          );
+
+          userRow.seenSub = document.createElement("div");
+          userRow.seenSub.className = "seenSub";
+          userRow.seen.appendChild(userRow.seenSub);
+
+          appendMiniChart(userRow, 3);
+          if (userRow.stats.length > 3) {
+            var chartMore, chartLess;
+            chartMore = cldrDom.createChunk("+", "span", "chartMore");
+            chartLess = cldrDom.createChunk("-", "span", "chartMore");
+            chartMore.onclick = (function (chartMore, chartLess, userRow) {
+              return function () {
+                cldrDom.setDisplayed(chartMore, false);
+                cldrDom.setDisplayed(chartLess, true);
+                appendMiniChart(userRow, userRow.stats.length);
+                return false;
+              };
+            })(chartMore, chartLess, userRow);
+            chartLess.onclick = (function (chartMore, chartLess, userRow) {
+              return function () {
+                cldrDom.setDisplayed(chartMore, true);
+                cldrDom.setDisplayed(chartLess, false);
+                appendMiniChart(userRow, 3);
+                return false;
+              };
+            })(chartMore, chartLess, userRow);
+            userRow.seen.appendChild(chartMore);
+            cldrDom.setDisplayed(chartLess, false);
+            userRow.seen.appendChild(chartLess);
+          }
+        } else {
+          cldrDom.addClass(userRow.tr, "noActivity");
+        }
+      }
+    };
+
+    const xhrArgs = {
+      url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
+      handleAs: "json",
+      load: actLoadHandler,
+      err: actErrHandler,
+    };
+
+    cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function actErrHandler(err) {
+    console.log("Error getting user activity: " + err);
   }
 
   function setShower(id, func) {
@@ -2447,6 +2453,7 @@ const cldrSurvey = (function () {
     showHelpFixPanel,
     showLoader,
     showRecent,
+    showUserActivity,
     testsToHtml,
     unbust,
     updateCovFromJson,
