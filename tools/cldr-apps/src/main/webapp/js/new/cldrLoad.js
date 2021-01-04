@@ -756,14 +756,6 @@ const cldrLoad = (function () {
   }
 
   /**
-   * Uppercase the first letter of a sentence
-   * @return {String} string with first letter uppercase
-   */
-  function ucFirst(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  /**
    * Automatically import old winning votes
    */
   function doAutoImport() {
@@ -1030,6 +1022,7 @@ const cldrLoad = (function () {
     appendLocaleLink,
     coverageUpdate,
     dialogIsOpen,
+    doAutoImport,
     flipToEmptyOther,
     flipToGenericNoLocale,
     flipToOtherDiv,

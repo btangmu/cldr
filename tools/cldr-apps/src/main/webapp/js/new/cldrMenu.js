@@ -177,7 +177,7 @@ const cldrMenu = (function () {
       patternCoverageClick(event, theLocale, $(this));
     });
     if (json.canAutoImport) {
-      doAutoImport();
+      cldrLoad.doAutoImport();
     }
 
     cldrLoad.reloadV();
@@ -237,6 +237,14 @@ const cldrMenu = (function () {
     return false;
   }
 
+  /**
+   * Uppercase the first letter of a sentence
+   * @return {String} string with first letter uppercase
+   */
+  function ucFirst(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
   function addTopLocale(topLoc, theDiv) {
     const locmap = cldrLoad.getTheLocaleMap();
     var topLocInfo = locmap.getLocaleInfo(topLoc);
@@ -275,45 +283,6 @@ const cldrMenu = (function () {
     parLocDiv.appendChild(subLocDiv);
   }
 
-  function getMenusFromServer(specialItems) {
-    console.log("💎 getMenusFromServer");
-    // show the raw IDs while loading.
-    updateMenuTitles(null, specialItems);
-    const curLocale = cldrStatus.getCurrentLocale();
-    if (!curLocale) {
-      console.log("💎💎 getMenusFromServer -- !curLocale, returning");
-      return;
-    }
-    console.log("💎💎💎💎 getMenusFromServer -- got curLocale, continuing");
-    const url =
-      cldrStatus.getContextPath() +
-      "/SurveyAjax?what=menus&_=" +
-      curLocale +
-      "&locmap=" +
-      false +
-      "&s=" +
-      cldrStatus.getSessionId() +
-      cldrSurvey.cacheKill();
-    cldrLoad.myLoad(url, "menus", function (json) {
-      if (!cldrLoad.verifyJson(json, "menus")) {
-        console.log("JSON verification failed for menus in cldrLoad");
-        return; // busted?
-      }
-      if (json.locmap) {
-        // overwrite with real data
-        cldrLoad.setTheLocaleMap(new LocaleMap(json.locmap));
-      }
-      // make this into a hashmap.
-      setupCanModify(json);
-      cldrSurvey.updateCovFromJson(json);
-      updateCoverageMenuTitle();
-      cldrLoad.coverageUpdate();
-      unpackMenus(json);
-      cldrEvent.unpackMenuSideBar(json);
-      updateMenus(_thePages, specialItems);
-    });
-  }
-  
   function updateCoverageMenuTitle() {
     const cov = cldrSurvey.getSurveyUserCov();
     if (cov) {
@@ -744,7 +713,7 @@ const cldrMenu = (function () {
   }
 
   function update() {
-    cldrMenu.updateLocaleMenu();
+    updateLocaleMenu();
 
     const curLocale = cldrStatus.getCurrentLocale();
     if (curLocale == null) {
@@ -760,13 +729,53 @@ const cldrMenu = (function () {
       }
     } else {
       const specialItems = makeMenuArray();
-      if (!_thePages || _thePages.loc != curLocale) {
+      if (_thePages == null || _thePages.loc != curLocale) {
         getMenusFromServer(specialItems);
       } else {
         // go ahead and update
         updateMenus(_thePages, specialItems);
       }
     }
+  }
+
+  function getMenusFromServer(specialItems) {
+    console.log("💎 getMenusFromServer");
+    // show the raw IDs while loading.
+    updateMenuTitles(null, specialItems);
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (!curLocale) {
+      console.log("💎💎 getMenusFromServer -- !curLocale, returning");
+      return;
+    }
+    console.log("💎💎💎💎 getMenusFromServer -- got curLocale, continuing");
+    const url =
+      cldrStatus.getContextPath() +
+      "/SurveyAjax?what=menus&_=" +
+      curLocale +
+      "&locmap=" +
+      false +
+      "&s=" +
+      cldrStatus.getSessionId() +
+      cldrSurvey.cacheKill();
+    cldrLoad.myLoad(url, "menus", function (json) {
+      if (!cldrLoad.verifyJson(json, "menus")) {
+        console.log("JSON verification failed for menus in cldrLoad");
+        return; // busted?
+      }
+      if (false && json.locmap) {
+        // json never has locmap here!
+        // overwrite with real data
+        cldrLoad.setTheLocaleMap(new LocaleMap(json.locmap));
+      }
+      // make this into a hashmap. -- dead code? json never has .canmodify here?
+      setupCanModify(json);
+      cldrSurvey.updateCovFromJson(json);
+      updateCoverageMenuTitle();
+      cldrLoad.coverageUpdate();
+      unpackMenus(json);
+      cldrEvent.unpackMenuSideBar(json);
+      updateMenus(_thePages, specialItems);
+    });
   }
 
   function makeMenuArray() {
@@ -1039,7 +1048,6 @@ const cldrMenu = (function () {
     getInitialMenusEtc,
     getThePages,
     update,
-    updateLocaleMenu,
 
     /*
      * The following are meant to be accessible for unit testing only:
