@@ -1023,6 +1023,7 @@ const cldrLoad = (function () {
     coverageUpdate,
     dialogIsOpen,
     doAutoImport,
+    doHashChange,
     flipToEmptyOther,
     flipToGenericNoLocale,
     flipToOtherDiv,
