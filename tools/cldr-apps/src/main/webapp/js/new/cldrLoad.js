@@ -129,22 +129,7 @@ const cldrLoad = (function () {
       }
       const curLocale = cldrStatus.getCurrentLocale();
       if (pieces[0].length == 0 && curLocale) {
-        if (pieces.length > 2) {
-          cldrStatus.setCurrentPage(pieces[2]);
-          if (pieces.length > 3) {
-            let id = pieces[3];
-            if (id.substr(0, 2) == "x@") {
-              id = id.substr(2);
-            }
-            cldrStatus.setCurrentId(id);
-          } else {
-            cldrStatus.setCurrentId("");
-          }
-        } else {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
-        }
-        cldrStatus.setCurrentSpecial(null);
+        localeParseHash(pieces);
       } else {
         const curSpec = pieces[0] ? pieces[0] : "locales";
         cldrStatus.setCurrentSpecial(curSpec);
@@ -152,8 +137,7 @@ const cldrLoad = (function () {
         if (special && special.parseHash && special.parseHash(pieces)) {
           // current page and id have been set by special.parseHash
         } else {
-          cldrStatus.setCurrentPage("");
-          cldrStatus.setCurrentId("");
+          unspecialParseHash();
         }
       }
     } else {
@@ -169,6 +153,30 @@ const cldrLoad = (function () {
     if (!cldrStatus.getCurrentLocale()) {
       cldrEvent.searchRefresh();
     }
+  }
+
+  function localeParseHash(pieces) {
+    if (pieces.length > 2) {
+      cldrStatus.setCurrentPage(pieces[2]);
+      if (pieces.length > 3) {
+        let id = pieces[3];
+        if (id.substr(0, 2) == "x@") {
+          id = id.substr(2);
+        }
+        cldrStatus.setCurrentId(id);
+      } else {
+        cldrStatus.setCurrentId("");
+      }
+    } else {
+      cldrStatus.setCurrentPage("");
+      cldrStatus.setCurrentId("");
+    }
+    cldrStatus.setCurrentSpecial(null);
+  }
+
+  function unspecialParseHash() {
+    cldrStatus.setCurrentPage("");
+    cldrStatus.setCurrentId("");
   }
 
   function updateWindowTitle() {
@@ -298,35 +306,35 @@ const cldrLoad = (function () {
         special.handleIdChanged(curSpecial, showCurrentId);
       }
     } else {
-      const curId = cldrStatus.getCurrentId();
-      if (curId) {
-        var xtr = document.getElementById("r@" + curId);
-        if (!xtr) {
-          console.log("Warning could not load id " + curId + " does not exist");
-          updateCurrentId(null);
-        } else if (xtr.proposedcell && xtr.proposedcell.showFn) {
-          // TODO: visible? coverage?
-          cldrInfo.showRowObjFunc(
-            xtr,
-            xtr.proposedcell,
-            xtr.proposedcell.showFn
-          );
-          console.log("Changed to " + cldrStatus.getCurrentId());
-          if (!cldrStatus.isDashboard()) {
-            scrollToItem();
-          }
-        } else {
-          console.log(
-            "Warning could not load id " +
-              curId +
-              " - not setup - " +
-              xtr.toString() +
-              " pc=" +
-              xtr.proposedcell +
-              " sf = " +
-              xtr.proposedcell.showFn
-          );
+      unspecialHandleIdChanged();
+    }
+  }
+
+  function unspecialHandleIdChanged() {
+    const curId = cldrStatus.getCurrentId();
+    if (curId) {
+      var xtr = document.getElementById("r@" + curId);
+      if (!xtr) {
+        console.log("Warning could not load id " + curId + " does not exist");
+        updateCurrentId(null);
+      } else if (xtr.proposedcell && xtr.proposedcell.showFn) {
+        // TODO: visible? coverage?
+        cldrInfo.showRowObjFunc(xtr, xtr.proposedcell, xtr.proposedcell.showFn);
+        console.log("Changed to " + cldrStatus.getCurrentId());
+        if (!cldrStatus.isDashboard()) {
+          scrollToItem();
         }
+      } else {
+        console.log(
+          "Warning could not load id " +
+            curId +
+            " - not setup - " +
+            xtr.toString() +
+            " pc=" +
+            xtr.proposedcell +
+            " sf = " +
+            xtr.proposedcell.showFn
+        );
       }
     }
   }
@@ -520,7 +528,16 @@ const cldrLoad = (function () {
       }
     }
     cldrSurvey.showLoader(cldrText.get("loading"));
+    const curSpecial = cldrStatus.getCurrentSpecial();
+    const special = getSpecial(curSpecial);
+    if (special && special.load) {
+      special.load();
+    } else {
+      unspecialLoad();
+    }
+  }
 
+  function unspecialLoad() {
     const curSpecial = cldrStatus.getCurrentSpecial();
     const curLocale = cldrStatus.getCurrentLocale();
     if (curLocale && !curSpecial) {
@@ -529,31 +546,51 @@ const cldrLoad = (function () {
       if (!curPage && !curId) {
         loadGeneral(itemLoadInfo);
       } else if (curId === "!") {
+        // TODO: clarify when and why this would happen
         loadExclamationPoint();
       } else if (!cldrSurvey.isInputBusy()) {
         /*
          * Make “all rows” requests only when !isInputBusy, to avoid wasted requests
          * if the user leaves the input box open for an extended time.
-         * Common case: this is an actual locale data page.
          */
         loadAllRows(itemLoadInfo, theDiv);
       }
     } else if (curSpecial === "none") {
+      // TODO: clarify when and why this would happen
       cldrSurvey.hideLoader();
       isLoading = false;
       window.location = cldrStatus.getSurvUrl(); // redirect home
-    } else {
-      const special = getSpecial(curSpecial);
-      if (special) {
-        special.load();
-      } else {
-        console.log("No special js found for " + curSpecial);
-      }
+    } else if (curSpecial) {
+      console.log("No special js found for " + curSpecial);
     }
   }
 
+  /**
+   * Given a string like "about", return a "special" object like cldrAbout.
+   * These objects share in common that they may define methods:
+   *  - load
+   *  - handleIdChanged
+   *  - parseHash
+   *
+   * called as special.load, etc.
+   *
+   * TODO: replace this mechanism with something object-oriented.
+   * Currently there is "inheritance" only in the crude form of fallback functions:
+   *  - unspecialLoad
+   *  - unspecialHandleIdChanged
+   *  - unspecialParseHash
+   *
+   * Also these, which don't fit the fallback pattern:
+   *  - loadExclamationPoint
+   *  - loadGeneral
+   *  - loadAllRows
+   *  - localeParseHash
+   *
+   * @param {string} str
+   * @return the special object, or null if no such object
+   */
   function getSpecial(str) {
-    const map = {
+    const specials = {
       about: cldrAbout,
       createAndLogin: cldrCreateLogin,
       forum: cldrForum,
@@ -567,8 +604,8 @@ const cldrLoad = (function () {
       recent_activity: cldrRecentActivity,
       retry: cldrRetry,
     };
-    if (str in map) {
-      return map[str];
+    if (str in specials) {
+      return specials[str];
     } else {
       return null;
     }
@@ -843,7 +880,7 @@ const cldrLoad = (function () {
       );
       try {
         handler(json);
-        //resize height
+        // resize height
         $("#main-row").css({
           height: $("#main-row>div").height(),
         });
