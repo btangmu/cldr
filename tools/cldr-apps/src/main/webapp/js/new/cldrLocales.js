@@ -15,12 +15,12 @@ const cldrLocales = (function () {
     const theDiv = document.createElement("div");
     theDiv.className = "localeList";
 
-    cldrLoad.addTopLocale("root", theDiv);
+    cldrMenu.addTopLocale("root", theDiv);
     // top locales
     const locmap = cldrLoad.getTheLocaleMap();
     for (let n in locmap.locmap.topLocales) {
       const topLoc = locmap.locmap.topLocales[n];
-      cldrLoad.addTopLocale(topLoc, theDiv);
+      cldrMenu.addTopLocale(topLoc, theDiv);
     }
     cldrLoad.flipToOtherDiv(null);
     cldrEvent.filterAllLocale(); // filter for init data
@@ -32,6 +32,7 @@ const cldrLocales = (function () {
     $("#itemInfo").html("");
   }
 
+  // called as special.parseHash
   function parseHash(pieces) {
     cldrStatus.setCurrentLocale("");
     if (pieces.length > 2) {
@@ -56,6 +57,7 @@ const cldrLocales = (function () {
    */
   return {
     load,
+    parseHash,
     /*
      * The following are meant to be accessible for unit testing only:
      */

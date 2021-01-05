@@ -1829,7 +1829,7 @@ const cldrSurvey = (function () {
    */
   function chgPage(shift) {
     // no page, or wrong shift
-    const _thePages = cldrLoad.getThePages();
+    const _thePages = cldrMenu.getThePages();
     if (!_thePages || (shift !== -1 && shift !== 1)) {
       return;
     }
@@ -1888,7 +1888,7 @@ const cldrSurvey = (function () {
    * @return {Array} list of all the menus under this coverage
    */
   function getMenusFilteredByCov() {
-    const _thePages = cldrLoad.getThePages();
+    const _thePages = cldrMenu.getThePages();
     if (!_thePages) {
       return;
     }

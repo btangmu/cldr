@@ -67,6 +67,7 @@ const cldrDash = (function () {
     cldrLoad.flipToOtherDiv(frag);
   }
 
+  // called as special.parseHash
   function parseHash(pieces) {
     if (pieces.length > 2) {
       cldrStatus.setCurrentPage(pieces[2]);

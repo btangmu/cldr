@@ -1449,6 +1449,7 @@ const cldrForum = (function () {
     displayUtc = utc ? true : false;
   }
 
+  // called as special.parseHash
   function parseHash(pieces) {
     cldrStatus.setCurrentPage("");
     if (pieces && pieces.length > 3) {

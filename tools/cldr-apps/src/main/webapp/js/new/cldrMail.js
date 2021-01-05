@@ -25,7 +25,7 @@ const cldrMail = (function () {
     // TODO: shorten this function, avoid long deeply nested inner functions
     cldrSurvey.hideLoader();
     cldrLoad.setLoading(false);
-    if (!verifyJson(json, "mail")) {
+    if (!cldrLoad.verifyJson(json, "mail")) {
       return;
     }
     if (json.dataLoadTime) {
@@ -98,7 +98,7 @@ const cldrMail = (function () {
                   cldrSurvey.cacheKill(),
                 "Marking mail read",
                 function (json) {
-                  if (!verifyJson(json, "mail")) {
+                  if (!cldrLoad.verifyJson(json, "mail")) {
                     return;
                   } else {
                     cldrDom.addClass(li, "readMail"); // mark as read when server answers
