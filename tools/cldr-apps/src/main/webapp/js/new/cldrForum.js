@@ -56,6 +56,7 @@ const cldrForum = (function () {
    */
   let displayUtc = false;
 
+  // called as special.load
   function load() {
     const curLocale = cldrStatus.getCurrentLocale();
     if (!curLocale) {
@@ -151,6 +152,7 @@ const cldrForum = (function () {
     cldrAjax.sendXhr(xhrArgs);
   }
 
+  // called as special.handleIdChanged
   function handleIdChanged(strid) {
     if (strid) {
       const id = new Number(strid);
@@ -1481,6 +1483,7 @@ const cldrForum = (function () {
     handleIdChanged,
     load,
     parseContent,
+    parseHash,
     reload,
     setUserCanPost,
 

@@ -14,6 +14,7 @@ const cldrAdmin = (function () {
   let exceptions = [];
   let exceptionNames = {};
 
+  // called as special.load
   function load() {
     cldrInfo.showNothing();
 

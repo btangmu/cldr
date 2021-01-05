@@ -9,6 +9,7 @@
  */
 
 const cldrMail = (function () {
+  // called as special.load
   function load() {
     const url =
       cldrStatus.getContextPath() +
