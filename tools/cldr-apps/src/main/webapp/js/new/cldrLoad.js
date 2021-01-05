@@ -9,6 +9,8 @@
  */
 
 const cldrLoad = (function () {
+  const CLDR_LOAD_DEBUG = false;
+
   /**
    * haveDialog: when true, it means a "dialog" of some kind is displayed.
    * Used for inhibiting $('#left-sidebar').hover in redesign.js.
@@ -38,14 +40,13 @@ const cldrLoad = (function () {
    */
   function showV() {
     locmap = new LocaleMap(null); // TODO: is it really a singleton?
-    // it may be modified below with locmap = new LocaleMap(json.locmap)
+    // locmap will be modified later with locmap = new LocaleMap(json.locmap)
 
     flipper = new Flipper([pages.loading, pages.data, pages.other]);
 
     const pucontent = document.getElementById("itemInfo");
     const theDiv = flipper.get(pages.data);
     theDiv.pucontent = pucontent;
-
     pucontent.appendChild(
       cldrDom.createChunk(cldrText.get("itemInfoBlank"), "i")
     );
@@ -53,7 +54,6 @@ const cldrLoad = (function () {
       "title-dcontent-link",
       cldrText.get("defaultContent_titleLink")
     );
-
     /*
      * Arrange for getInitialMenusEtc to be called soon after we've gotten the session id.
      * Add a short timeout to avoid interrupting the code that sets the session id.
@@ -64,6 +64,15 @@ const cldrLoad = (function () {
         cldrMenu.getInitialMenusEtc(sessionId);
       }, 100 /* one tenth of a second */);
     });
+  }
+
+  function continueInitializing(canAutoImport) {
+    if (canAutoImport) {
+      doAutoImport();
+    }
+    reloadV();
+
+    window.addEventListener("hashchange", doHashChange);
   }
 
   function doHashChange(event) {
@@ -928,40 +937,46 @@ const cldrLoad = (function () {
    * For example, if the current URL is "https:...#bar", return "bar".
    *
    * Typically the first value we return is "locales///"
+   *
+   * References: https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
+   * https://developer.mozilla.org/en-US/docs/Web/API/Window/location
    */
   function getHash() {
-    // https://developer.mozilla.org/en-US/docs/Web/API/URL/hash
-    // https://developer.mozilla.org/en-US/docs/Web/API/Window/location
-    let hash = sliceHash(window.location.hash);
-    console.log("getHash returning " + hash);
+    const hash = sliceHash(window.location.hash);
+    if (CLDR_LOAD_DEBUG) {
+      console.log("getHash returning " + hash);
+    }
     return hash;
   }
 
   /**
    * Set the window location hash
    *
-   * ... TODO: implement setHash with "replace"
+   * TODO: implement setHash with "replace"
+   *
+   * This is a replacement for dojo/hash
+   *
+   * "To manipulate the value of the hash, simply call dojo/hash with the new value.
+   * It will be added to the browser history stack and it will publish a /dojo/hashchange topic,
+   * triggering anything subscribed ...
+   * In order to not to add to the history stack, pass true as the second parameter (replace).
+   * This will update the current browser URL and replace the current history state"
    */
   function setHash(newHash, replace) {
-    // To manipulate the value of the hash, simply call dojo/hash with the new value.
-    // It will be added to the browser history stack and it will publish a /dojo/hashchange topic,
-    // triggering anything subscribed
-
-    // In order to not to add to the history stack, pass true as the second parameter (replace).
-    // This will update the current browser URL and replace the current history state
-
     newHash = sliceHash(newHash);
     if (newHash !== sliceHash(window.location.hash)) {
       const oldUrl = window.location.href;
       const newUrl = oldUrl.split("#")[0] + "#" + newHash;
-      console.log(
-        "setHash going to " +
-          newUrl +
-          " - Called with: " +
-          newHash +
-          " - " +
-          replace
-      );
+      if (CLDR_LOAD_DEBUG) {
+        console.log(
+          "setHash going to " +
+            newUrl +
+            " - Called with: " +
+            newHash +
+            " - " +
+            replace
+        );
+      }
       window.location.href = newUrl;
     }
   }
@@ -977,6 +992,7 @@ const cldrLoad = (function () {
 
   function newProgressDialog(args) {
     // TODO: implement a replacement for dijit/Dialog (or something simpler)
+    // This is used only for doAutoImport
     console.log("newProgressDialog not implemented yet! args = " + args);
     return null;
   }
@@ -1015,15 +1031,15 @@ const cldrLoad = (function () {
       cldrStatus.getCurrentId()
     );
   }
+
   /*
    * Make only these functions accessible from other files:
    */
   return {
     appendLocaleLink,
+    continueInitializing,
     coverageUpdate,
     dialogIsOpen,
-    doAutoImport,
-    doHashChange,
     flipToEmptyOther,
     flipToGenericNoLocale,
     flipToOtherDiv,
