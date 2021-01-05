@@ -10,7 +10,6 @@
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  */
-
 const cldrMenu = (function () {
   /**
    * "_thePages": menu data -- mostly (or exclusively?) for the left sidebar
@@ -24,9 +23,8 @@ const cldrMenu = (function () {
   }
 
   /**
-   * List of buttons/titles to set. This is NOT for the left sidebar; it's for
+   * List of buttons/titles to set. This is not for the left sidebar; it's for
    * headers such as "-/Locale Display Names/Languages (A-D)" in the main window.
-   * TODO: use separate files for left-sidebar code and non-left-sidebar code.
    */
   const menubuttons = {
     locale: "title-locale", // cf. id='title-locale-container'
@@ -42,10 +40,10 @@ const cldrMenu = (function () {
      * @param {string} html - text (html) to show, or undefined to hide
      */
     set: function (id, html) {
-      let cnode = document.getElementById(x + "-container");
+      let cnode = document.getElementById(id + "-container");
       if (!cnode) {
         // for Elements that do their own stunts -- in fact there are none currently (2021-01-04)
-        cnode = document.getElementById(x);
+        cnode = document.getElementById(id);
       }
       if (html && html !== "-") {
         // Here "updateIf" seems to have no effect; if the element with id exists, it already has html for innerHTML.

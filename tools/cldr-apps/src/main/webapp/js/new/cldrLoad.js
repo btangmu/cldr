@@ -459,6 +459,7 @@ const cldrLoad = (function () {
     );
 
     const itemLoadInfo = cldrDom.createChunk("", "div", "itemLoadInfo");
+    itemLoadInfo.setAttribute("id", "itemLoadInfo");
 
     // Create a little spinner to spin "..." so the user knows we are doing something..
     var spinChunk = cldrDom.createChunk("...", "i", "loadingMsgSpin");
@@ -544,7 +545,10 @@ const cldrLoad = (function () {
       const curPage = cldrStatus.getCurrentPage();
       const curId = cldrStatus.getCurrentId();
       if (!curPage && !curId) {
-        loadGeneral(itemLoadInfo);
+        const itemLoadInfo = document.getElementById("itemLoadInfo");
+        if (itemLoadInfo) {
+          loadGeneral(itemLoadInfo);
+        }
       } else if (curId === "!") {
         // TODO: clarify when and why this would happen
         loadExclamationPoint();
@@ -553,7 +557,10 @@ const cldrLoad = (function () {
          * Make “all rows” requests only when !isInputBusy, to avoid wasted requests
          * if the user leaves the input box open for an extended time.
          */
-        loadAllRows(itemLoadInfo, theDiv);
+        const itemLoadInfo = document.getElementById("itemLoadInfo");
+        if (itemLoadInfo) {
+          loadAllRows(itemLoadInfo, theDiv);
+        }
       }
     } else if (curSpecial === "none") {
       // TODO: clarify when and why this would happen
