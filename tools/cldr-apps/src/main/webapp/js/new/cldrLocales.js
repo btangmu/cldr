@@ -1,22 +1,23 @@
 "use strict";
 
 /**
- * cldrLocales: encapsulate functions for choosing locales for Survey Tool
- * This is the non-dojo version. For dojo, see CldrDojoLoad.js
+ * cldrLocales: encapsulate functions concerning locales for Survey Tool
+ * This is the non-dojo version. For dojo, see CldrDojoLoad.js etc.
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
  */
-
 const cldrLocales = (function () {
+  // called as special.load
   function load() {
     cldrSurvey.hideLoader();
     cldrLoad.setLoading(false);
     const theDiv = document.createElement("div");
     theDiv.className = "localeList";
 
+    // TODO: avoid duplication of some of this code here and in cldrMenu.js
+    // Maybe a lot of code in cldrMenu and cldrLoad should be moved into cldrLocales
     cldrMenu.addTopLocale("root", theDiv);
-    // top locales
     const locmap = cldrLoad.getTheLocaleMap();
     for (let n in locmap.locmap.topLocales) {
       const topLoc = locmap.locmap.topLocales[n];

@@ -1,7 +1,10 @@
 "use strict";
 
 /**
- * cldrMenu: encapsulate functions for Survey Tool menus
+ * cldrMenu: encapsulate functions for Survey Tool menus, especially the left sidebar
+ * for choosing locales, reports, specials, data sections; also for the Coverage menu
+ * in the top navigation bar, and other kinds of "menu" -- TODO: separation of concerns!
+ *
  * This is the non-dojo version. For dojo, see CldrDojoLoad.js
  *
  * Use an IIFE pattern to create a namespace for the public functions,
@@ -9,15 +12,21 @@
  */
 
 const cldrMenu = (function () {
-  let canmodify = {};
-
   /**
-   * copy of menu data
+   * "_thePages": menu data -- mostly (or exclusively?) for the left sidebar
+   *
+   * a.k.a. "menuMap" or "menus"; TODO: name consistently
    */
   let _thePages = null;
 
+  function getThePages() {
+    return _thePages;
+  }
+
   /**
-   * List of buttons/titles to set.
+   * List of buttons/titles to set. This is NOT for the left sidebar; it's for
+   * headers such as "-/Locale Display Names/Languages (A-D)" in the main window.
+   * TODO: use separate files for left-sidebar code and non-left-sidebar code.
    */
   const menubuttons = {
     locale: "title-locale", // cf. id='title-locale-container'
@@ -86,6 +95,7 @@ const cldrMenu = (function () {
     const theDiv = document.createElement("div");
     theDiv.className = "localeList";
 
+    // TODO: avoid duplication of some of this code here and in cldrLocales.js
     addTopLocale("root", theDiv);
     for (let n in locmap.locmap.topLocales) {
       const topLoc = locmap.locmap.topLocales[n];
@@ -104,14 +114,6 @@ const cldrMenu = (function () {
     setupCoverageLevels(json);
 
     cldrLoad.continueInitializing(json.canAutoImport);
-  }
-
-  function setupCanModify(json) {
-    if (json.canmodify) {
-      for (let k in json.canmodify) {
-        canmodify[json.canmodify[k]] = true;
-      }
-    }
   }
 
   function setupCoverageLevels(json) {
@@ -288,7 +290,7 @@ const cldrMenu = (function () {
     el.appendChild(img);
   }
 
-   function unpackMenus(json) {
+  function unpackMenus(json) {
     if (_thePages) {
       unpackSections(json);
     } else {
@@ -299,14 +301,13 @@ const cldrMenu = (function () {
   }
 
   function initializeThePages(json) {
-    // set up some hashes
-    const menus = json.menus;
-    // TODO: consider whether to treat json as read-only, and make _thePages a completely
-    // distinct object. We're modifying json here -- for example, creating json.menus.sectionMap
-    // -- and then making _thePages point to json.menus. Maybe this is OK, but study whether it
-    // wastes memory or is otherwise problematic. Does it cause json to persist longer than it
-    // otherwise would? Will the garbage collector free all of json except json.menus?
-    // Could do menus = JSON.parse(JSON.stringify(json.menus)) for deep copy.
+    // Make a deep copy of json rather than directly modifying the json we got from the server.
+    // Treat json as read-only, for modularity, separation of concerns.
+    // Formerly we had menus = json.menus, then effectively modified json itself -- for example,
+    // creating json.menus.sectionMap, which could be problematic, for example, if we ever
+    // cache json as part of a better client-side data model. Maybe also problematic for
+    // garbage collection, and for unit-testing where we wouldn't want json to be modified.
+    const menus = JSON.parse(JSON.stringify(json.menus));
     menus.haveLocs = {};
     menus.sectionMap = {};
     menus.pageToSection = {};
@@ -377,6 +378,7 @@ const cldrMenu = (function () {
 
   function getMenusFromServer(gearMenuItems) {
     // show the raw IDs while loading.
+    // TODO: clarify whether it's necessary -- the code would be cleaner without null here
     updateMenuTitles(null, gearMenuItems);
     const curLocale = cldrStatus.getCurrentLocale();
     if (!curLocale) {
@@ -422,8 +424,8 @@ const cldrMenu = (function () {
   }
 
   // TODO: always called with menuMap = _thePages so don't pass as parameter;
-  // is "menuMap" always a synonym for _thePages in this file? Name it consistently...
-  // BUT caution: elsewhere updateMenuTitles can be called with null instead of menuMap
+  // "menuMap" ALMOST always a synonym for _thePages in this file? Name it consistently...
+  // CAUTION: exception, updateMenuTitles can be called with null instead of menuMap
   function updateMenus(menuMap, gearMenuItems) {
     updateMenuTitles(menuMap, gearMenuItems);
 
@@ -476,6 +478,91 @@ const cldrMenu = (function () {
     updateTitleAndSection(menuMap);
   }
 
+  function updateLocaleMenu() {
+    const curLocale = cldrStatus.getCurrentLocale();
+    if (curLocale != null && curLocale != "" && curLocale != "-") {
+      const locmap = cldrLoad.getTheLocaleMap();
+      cldrStatus.setCurrentLocaleName(locmap.getLocaleName(curLocale));
+      var bund = locmap.getLocaleInfo(curLocale);
+      if (bund) {
+        if (bund.readonly) {
+          cldrDom.addClass(
+            document.getElementById(menubuttons.locale),
+            "locked"
+          );
+        } else {
+          cldrDom.removeClass(
+            document.getElementById(menubuttons.locale),
+            "locked"
+          );
+        }
+
+        if (bund.dcChild) {
+          menubuttons.set(
+            menubuttons.dcontent,
+            cldrText.sub("defaultContent_header_msg", {
+              info: bund,
+              locale: cldrStatus.getCurrentLocale(),
+              dcChild: locmap.getLocaleName(bund.dcChild),
+            })
+          );
+        } else {
+          menubuttons.set(menubuttons.dcontent);
+        }
+      } else {
+        cldrDom.removeClass(
+          document.getElementById(menubuttons.locale),
+          "locked"
+        );
+        menubuttons.set(menubuttons.dcontent);
+      }
+    } else {
+      cldrStatus.setCurrentLocaleName("");
+      cldrDom.removeClass(
+        document.getElementById(menubuttons.locale),
+        "locked"
+      );
+      menubuttons.set(menubuttons.dcontent);
+    }
+    menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
+  }
+
+  /**
+   * Update the header such as "-/Locale Display Names/Languages (A-D)" (Title and Section),
+   * or "-/Datetime" (Report), or "-/Forum Posts", etc.
+   * Note that the hyphen in "-/..." is clickable. But there is no hyphen in "/About Survey Tool".
+   *
+   * @param {*} menuMap
+   */
+  function updateTitleAndSection(menuMap) {
+    const curSpecial = cldrStatus.getCurrentSpecial();
+    const titlePageContainer = document.getElementById("title-page-container");
+
+    if (curSpecial != null && curSpecial != "") {
+      const specialId = "special_" + curSpecial;
+      $("#section-current").html(cldrText.get(specialId));
+      cldrDom.setDisplayed(titlePageContainer, false);
+    } else if (!menuMap) {
+      cldrDom.setDisplayed(titlePageContainer, false);
+    } else {
+      const curPage = cldrStatus.getCurrentPage();
+      if (menuMap.sectionMap[curPage]) {
+        const curSection = curPage; // section = page
+        cldrStatus.setCurrentSection(curSection);
+        $("#section-current").html(menuMap.sectionMap[curSection].name);
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
+      } else if (menuMap.pageToSection[curPage]) {
+        const mySection = menuMap.pageToSection[curPage];
+        cldrStatus.setCurrentSection(mySection.id);
+        $("#section-current").html(mySection.name);
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
+      } else {
+        $("#section-current").html(cldrText.get("section_general"));
+        cldrDom.setDisplayed(titlePageContainer, false);
+      }
+    }
+  }
+
   // TODO: move this and updateGearMenu to a new file cldrGear.js
   function makeGearMenuArray() {
     const aboutMenu = {
@@ -489,8 +576,8 @@ const cldrMenu = (function () {
     }
     const sessionId = cldrStatus.getSessionId();
     const surveyUserPerms = cldrStatus.getPermissions();
+    // TODO: eliminate surveyUserURL, make these all "specials" like #about -- no url or jsp here
     const surveyUserURL = {
-      // TODO: make these all like #about -- no url or jsp here
       myAccountSetting: "survey?do=listu",
       disableMyAccount: "lock.jsp",
       xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
@@ -498,12 +585,6 @@ const cldrMenu = (function () {
       flag: "tc-flagged.jsp?s=" + sessionId,
       browse: "browse.jsp",
     };
-
-    /**
-     * 'name' - the js/special/___.js name
-     * 'hidden' - true to hide the item
-     * 'title' - override of menu name
-     */
     return [
       {
         title: "Admin Panel",
@@ -744,8 +825,22 @@ const cldrMenu = (function () {
         })(item);
       }
     }
-    if (menubuttons.lastspecial) { // TODO: dead code?
+    if (menubuttons.lastspecial) {
+      // TODO: dead code?
       cldrDom.removeClass(menubuttons.lastspecial, "selected");
+    }
+  }
+
+  /**
+   * TODO: document and encapsulate "canmodify"
+   */
+  let canmodify = {};
+
+  function setupCanModify(json) {
+    if (json.canmodify) {
+      for (let k in json.canmodify) {
+        canmodify[json.canmodify[k]] = true;
+      }
     }
   }
 
@@ -755,95 +850,6 @@ const cldrMenu = (function () {
     } else {
       return false;
     }
-  }
-
-  function updateLocaleMenu() {
-    const curLocale = cldrStatus.getCurrentLocale();
-    if (curLocale != null && curLocale != "" && curLocale != "-") {
-      const locmap = cldrLoad.getTheLocaleMap();
-      cldrStatus.setCurrentLocaleName(locmap.getLocaleName(curLocale));
-      var bund = locmap.getLocaleInfo(curLocale);
-      if (bund) {
-        if (bund.readonly) {
-          cldrDom.addClass(
-            document.getElementById(menubuttons.locale),
-            "locked"
-          );
-        } else {
-          cldrDom.removeClass(
-            document.getElementById(menubuttons.locale),
-            "locked"
-          );
-        }
-
-        if (bund.dcChild) {
-          menubuttons.set(
-            menubuttons.dcontent,
-            cldrText.sub("defaultContent_header_msg", {
-              info: bund,
-              locale: cldrStatus.getCurrentLocale(),
-              dcChild: locmap.getLocaleName(bund.dcChild),
-            })
-          );
-        } else {
-          menubuttons.set(menubuttons.dcontent);
-        }
-      } else {
-        cldrDom.removeClass(
-          document.getElementById(menubuttons.locale),
-          "locked"
-        );
-        menubuttons.set(menubuttons.dcontent);
-      }
-    } else {
-      cldrStatus.setCurrentLocaleName("");
-      cldrDom.removeClass(
-        document.getElementById(menubuttons.locale),
-        "locked"
-      );
-      menubuttons.set(menubuttons.dcontent);
-    }
-    menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
-  }
-
-   /**
-   * Update the header such as "-/Locale Display Names/Languages (A-D)" (Title and Section),
-   * or "-/Datetime" (Report), or "-/Forum Posts", etc.
-   * Note that the hyphen in "-/..." is clickable. But there is no hyphen in "/About Survey Tool".
-   *
-   * @param {*} menuMap
-   */
-  function updateTitleAndSection(menuMap) {
-    const curSpecial = cldrStatus.getCurrentSpecial();
-    const titlePageContainer = document.getElementById("title-page-container");
-
-    if (curSpecial != null && curSpecial != "") {
-      const specialId = "special_" + curSpecial;
-      $("#section-current").html(cldrText.get(specialId));
-      cldrDom.setDisplayed(titlePageContainer, false);
-    } else if (!menuMap) {
-      cldrDom.setDisplayed(titlePageContainer, false);
-    } else {
-      const curPage = cldrStatus.getCurrentPage();
-      if (menuMap.sectionMap[curPage]) {
-        const curSection = curPage; // section = page
-        cldrStatus.setCurrentSection(curSection);
-        $("#section-current").html(menuMap.sectionMap[curSection].name);
-        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
-      } else if (menuMap.pageToSection[curPage]) {
-        const mySection = menuMap.pageToSection[curPage];
-        cldrStatus.setCurrentSection(mySection.id);
-        $("#section-current").html(mySection.name);
-        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
-      } else {
-        $("#section-current").html(cldrText.get("section_general"));
-        cldrDom.setDisplayed(titlePageContainer, false);
-      }
-    }
-  }
-
-  function getThePages() {
-    return _thePages;
   }
 
   /*
