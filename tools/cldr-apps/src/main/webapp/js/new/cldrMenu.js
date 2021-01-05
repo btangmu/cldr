@@ -184,8 +184,8 @@ const cldrMenu = (function () {
   function patternCoverageClick(event, theLocale, clickedElement) {
     event.stopPropagation();
     event.preventDefault();
-    var newValue = clickedElement.data("value");
-    var setUserCovTo = null;
+    const newValue = clickedElement.data("value");
+    let setUserCovTo = null;
     if (newValue == "auto") {
       setUserCovTo = null; // auto
     } else {
@@ -242,16 +242,16 @@ const cldrMenu = (function () {
 
   function addTopLocale(topLoc, theDiv) {
     const locmap = cldrLoad.getTheLocaleMap();
-    var topLocInfo = locmap.getLocaleInfo(topLoc);
+    const topLocInfo = locmap.getLocaleInfo(topLoc);
 
-    var topLocRow = document.createElement("div");
+    const topLocRow = document.createElement("div");
     topLocRow.className = "topLocaleRow";
 
-    var topLocDiv = document.createElement("div");
+    const topLocDiv = document.createElement("div");
     topLocDiv.className = "topLocale";
     cldrLoad.appendLocaleLink(topLocDiv, topLoc, topLocInfo);
 
-    var topLocList = document.createElement("div");
+    const topLocList = document.createElement("div");
     topLocList.className = "subLocaleList";
 
     addSubLocales(topLocList, topLocInfo);
@@ -278,125 +278,6 @@ const cldrMenu = (function () {
     parLocDiv.appendChild(subLocDiv);
   }
 
-  function updateCoverageMenuTitle() {
-    const cov = cldrSurvey.getSurveyUserCov();
-    if (cov) {
-      $("#cov-info").text(cldrText.get("coverage_" + cov));
-    } else {
-      $("#coverage-info").text(
-        cldrText.sub("coverage_auto_msg", {
-          surveyOrgCov: cldrText.get(
-            "coverage_" + cldrSurvey.getSurveyOrgCov()
-          ),
-        })
-      );
-    }
-  }
-
-  function updateMenuTitles(menuMap, gearMenuItems) {
-    updateGearMenu(gearMenuItems);
-    updateLocaleMenu(menuMap);
-    updateTitleAndSection(menuMap);
-  }
-
-  function updateGearMenu(gearMenuItems) {
-    if (menubuttons.lastspecial === undefined) {
-      menubuttons.lastspecial = null;
-      const parMenu = document.getElementById("manage-list");
-      for (let k = 0; k < gearMenuItems.length; k++) {
-        const item = gearMenuItems[k];
-        (function (item) {
-          if (item.display != false) {
-            var subLi = document.createElement("li");
-            if (item.special) {
-              // special items so look up in cldrText.js
-              item.title = cldrText.get("special_" + item.special);
-              item.url = "#" + item.special;
-              item.blank = false;
-            }
-            if (item.url) {
-              let subA = document.createElement("a");
-
-              if (item.hasFlag) {
-                addFlagIcon(subA);
-              }
-              subA.appendChild(document.createTextNode(item.title + " "));
-              subA.href = item.url;
-
-              if (item.blank != false) {
-                subA.target = "_blank";
-                subA.appendChild(
-                  cldrDom.createChunk(
-                    "",
-                    "span",
-                    "glyphicon glyphicon-share manage-list-icon"
-                  )
-                );
-              }
-
-              if (item.level) {
-                // append it to appropriate levels
-                const level = item.level;
-                for (let i = 0; i < level - 1; i++) {
-                  /*
-                   * Indent by creating lists within lists, each list containing only one item.
-                   * TODO: indent by a better method. Note that for valid html, ul should contain li;
-                   * ul directly containing element other than li is generally invalid.
-                   */
-                  const ul = document.createElement("ul");
-                  const li = document.createElement("li");
-                  ul.setAttribute("style", "list-style-type:none");
-                  ul.appendChild(li);
-                  li.appendChild(subA);
-                  subA = ul;
-                }
-              }
-              subLi.appendChild(subA);
-            }
-            if (!item.url && !item.divider) {
-              // if it is pure text/html & not a divider
-              if (!item.level) {
-                subLi.appendChild(document.createTextNode(item.title + " "));
-              } else {
-                let subA = null;
-                if (item.bold) {
-                  subA = document.createElement("b");
-                } else if (item.italic) {
-                  subA = document.createElement("i");
-                } else {
-                  subA = document.createElement("span");
-                }
-                subA.appendChild(document.createTextNode(item.title + " "));
-
-                const level = item.level;
-                for (let i = 0; i < level - 1; i++) {
-                  const ul = document.createElement("ul");
-                  const li = document.createElement("li");
-                  ul.setAttribute("style", "list-style-type:none");
-                  ul.appendChild(li);
-                  li.appendChild(subA);
-                  subA = ul;
-                }
-                subLi.appendChild(subA);
-              }
-              if (item.divider) {
-                subLi.className = "nav-divider";
-              }
-              parMenu.appendChild(subLi);
-            }
-            if (item.divider) {
-              subLi.className = "nav-divider";
-            }
-            parMenu.appendChild(subLi);
-          }
-        })(item);
-      }
-    }
-    if (menubuttons.lastspecial) {
-      cldrDom.removeClass(menubuttons.lastspecial, "selected");
-    }
-  }
-
   function addFlagIcon(el) {
     // forum may need images attached to it
     const img = document.createElement("img");
@@ -407,43 +288,7 @@ const cldrMenu = (function () {
     el.appendChild(img);
   }
 
-  /**
-   * Update the header such as "-/Locale Display Names/Languages (A-D)" (Title and Section),
-   * or "-/Datetime" (Report), or "-/Forum Posts", etc.
-   * Note that the hyphen in "-/..." is clickable. But there is no hyphen in "/About Survey Tool".
-   *
-   * @param {*} menuMap
-   */
-  function updateTitleAndSection(menuMap) {
-    const curSpecial = cldrStatus.getCurrentSpecial();
-    const titlePageContainer = document.getElementById("title-page-container");
-
-    if (curSpecial != null && curSpecial != "") {
-      const specialId = "special_" + curSpecial;
-      $("#section-current").html(cldrText.get(specialId));
-      cldrDom.setDisplayed(titlePageContainer, false);
-    } else if (!menuMap) {
-      cldrDom.setDisplayed(titlePageContainer, false);
-    } else {
-      const curPage = cldrStatus.getCurrentPage();
-      if (menuMap.sectionMap[curPage]) {
-        const curSection = curPage; // section = page
-        cldrStatus.setCurrentSection(curSection);
-        $("#section-current").html(menuMap.sectionMap[curSection].name);
-        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
-      } else if (menuMap.pageToSection[curPage]) {
-        const mySection = menuMap.pageToSection[curPage];
-        cldrStatus.setCurrentSection(mySection.id);
-        $("#section-current").html(mySection.name);
-        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
-      } else {
-        $("#section-current").html(cldrText.get("section_general"));
-        cldrDom.setDisplayed(titlePageContainer, false);
-      }
-    }
-  }
-
-  function unpackMenus(json) {
+   function unpackMenus(json) {
     if (_thePages) {
       unpackSections(json);
     } else {
@@ -561,6 +406,24 @@ const cldrMenu = (function () {
     });
   }
 
+  function updateCoverageMenuTitle() {
+    const cov = cldrSurvey.getSurveyUserCov();
+    if (cov) {
+      $("#cov-info").text(cldrText.get("coverage_" + cov));
+    } else {
+      $("#coverage-info").text(
+        cldrText.sub("coverage_auto_msg", {
+          surveyOrgCov: cldrText.get(
+            "coverage_" + cldrSurvey.getSurveyOrgCov()
+          ),
+        })
+      );
+    }
+  }
+
+  // TODO: always called with menuMap = _thePages so don't pass as parameter;
+  // is "menuMap" always a synonym for _thePages in this file? Name it consistently...
+  // BUT caution: elsewhere updateMenuTitles can be called with null instead of menuMap
   function updateMenus(menuMap, gearMenuItems) {
     updateMenuTitles(menuMap, gearMenuItems);
 
@@ -607,6 +470,13 @@ const cldrMenu = (function () {
     cldrEvent.resizeSidebar();
   }
 
+  function updateMenuTitles(menuMap, gearMenuItems) {
+    updateGearMenu(gearMenuItems);
+    updateLocaleMenu();
+    updateTitleAndSection(menuMap);
+  }
+
+  // TODO: move this and updateGearMenu to a new file cldrGear.js
   function makeGearMenuArray() {
     const aboutMenu = {
       title: "About",
@@ -778,6 +648,107 @@ const cldrMenu = (function () {
     ];
   }
 
+  function updateGearMenu(gearMenuItems) {
+    // TODO: menubuttons.lastspecial is never accessed outside this function;
+    // what does it have to do with menubuttons??? And it never has any value
+    // other than undefined or null
+    if (menubuttons.lastspecial === undefined) {
+      menubuttons.lastspecial = null;
+      const parMenu = document.getElementById("manage-list");
+      for (let k = 0; k < gearMenuItems.length; k++) {
+        const item = gearMenuItems[k];
+        (function (item) {
+          if (item.display != false) {
+            var subLi = document.createElement("li");
+            if (item.special) {
+              // special items so look up in cldrText.js
+              item.title = cldrText.get("special_" + item.special);
+              item.url = "#" + item.special;
+              item.blank = false;
+            }
+            if (item.url) {
+              let subA = document.createElement("a");
+
+              if (item.hasFlag) {
+                addFlagIcon(subA);
+              }
+              subA.appendChild(document.createTextNode(item.title + " "));
+              subA.href = item.url;
+
+              if (item.blank != false) {
+                subA.target = "_blank";
+                subA.appendChild(
+                  cldrDom.createChunk(
+                    "",
+                    "span",
+                    "glyphicon glyphicon-share manage-list-icon"
+                  )
+                );
+              }
+
+              if (item.level) {
+                // append it to appropriate levels
+                const level = item.level;
+                for (let i = 0; i < level - 1; i++) {
+                  /*
+                   * Indent by creating lists within lists, each list containing only one item.
+                   * TODO: indent by a better method. Note that for valid html, ul should contain li;
+                   * ul directly containing element other than li is generally invalid.
+                   */
+                  const ul = document.createElement("ul");
+                  const li = document.createElement("li");
+                  ul.setAttribute("style", "list-style-type:none");
+                  ul.appendChild(li);
+                  li.appendChild(subA);
+                  subA = ul;
+                }
+              }
+              subLi.appendChild(subA);
+            }
+            if (!item.url && !item.divider) {
+              // if it is pure text/html & not a divider
+              if (!item.level) {
+                subLi.appendChild(document.createTextNode(item.title + " "));
+              } else {
+                let subA = null;
+                if (item.bold) {
+                  subA = document.createElement("b");
+                } else if (item.italic) {
+                  subA = document.createElement("i");
+                } else {
+                  subA = document.createElement("span");
+                }
+                subA.appendChild(document.createTextNode(item.title + " "));
+
+                const level = item.level;
+                for (let i = 0; i < level - 1; i++) {
+                  const ul = document.createElement("ul");
+                  const li = document.createElement("li");
+                  ul.setAttribute("style", "list-style-type:none");
+                  ul.appendChild(li);
+                  li.appendChild(subA);
+                  subA = ul;
+                }
+                subLi.appendChild(subA);
+              }
+              if (item.divider) {
+                subLi.className = "nav-divider";
+              }
+              parMenu.appendChild(subLi);
+            }
+            if (item.divider) {
+              subLi.className = "nav-divider";
+            }
+            parMenu.appendChild(subLi);
+          }
+        })(item);
+      }
+    }
+    if (menubuttons.lastspecial) { // TODO: dead code?
+      cldrDom.removeClass(menubuttons.lastspecial, "selected");
+    }
+  }
+
   function canModifyLoc(subLoc) {
     if (canmodify && subLoc in canmodify) {
       return true;
@@ -833,6 +804,42 @@ const cldrMenu = (function () {
       menubuttons.set(menubuttons.dcontent);
     }
     menubuttons.set(menubuttons.locale, cldrStatus.getCurrentLocaleName());
+  }
+
+   /**
+   * Update the header such as "-/Locale Display Names/Languages (A-D)" (Title and Section),
+   * or "-/Datetime" (Report), or "-/Forum Posts", etc.
+   * Note that the hyphen in "-/..." is clickable. But there is no hyphen in "/About Survey Tool".
+   *
+   * @param {*} menuMap
+   */
+  function updateTitleAndSection(menuMap) {
+    const curSpecial = cldrStatus.getCurrentSpecial();
+    const titlePageContainer = document.getElementById("title-page-container");
+
+    if (curSpecial != null && curSpecial != "") {
+      const specialId = "special_" + curSpecial;
+      $("#section-current").html(cldrText.get(specialId));
+      cldrDom.setDisplayed(titlePageContainer, false);
+    } else if (!menuMap) {
+      cldrDom.setDisplayed(titlePageContainer, false);
+    } else {
+      const curPage = cldrStatus.getCurrentPage();
+      if (menuMap.sectionMap[curPage]) {
+        const curSection = curPage; // section = page
+        cldrStatus.setCurrentSection(curSection);
+        $("#section-current").html(menuMap.sectionMap[curSection].name);
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
+      } else if (menuMap.pageToSection[curPage]) {
+        const mySection = menuMap.pageToSection[curPage];
+        cldrStatus.setCurrentSection(mySection.id);
+        $("#section-current").html(mySection.name);
+        cldrDom.setDisplayed(titlePageContainer, false); // will fix title later
+      } else {
+        $("#section-current").html(cldrText.get("section_general"));
+        cldrDom.setDisplayed(titlePageContainer, false);
+      }
+    }
   }
 
   function getThePages() {
