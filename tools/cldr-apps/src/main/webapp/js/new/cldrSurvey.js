@@ -1451,22 +1451,6 @@ const cldrSurvey = (function () {
     return e;
   }
 
-  function hideAfter(whom, when) {
-    if (!when) {
-      when = 10000;
-    }
-    setTimeout(function () {
-      whom.style.opacity = "0.8";
-    }, when / 3);
-    setTimeout(function () {
-      whom.style.opacity = "0.5";
-    }, when / 2);
-    setTimeout(function () {
-      cldrDom.setDisplayed(whom, false);
-    }, when);
-    return whom;
-  }
-
   /**
    * @param loc optional
    * @returns locale bundle

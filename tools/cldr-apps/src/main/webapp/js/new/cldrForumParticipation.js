@@ -41,7 +41,12 @@ const cldrForumParticipation = (function () {
 
   function loadHandler(json) {
     if (json.err) {
-      cldrRetry.handleDisconnect(json.err, json, "", "Loading forum participation data");
+      cldrRetry.handleDisconnect(
+        json.err,
+        json,
+        "",
+        "Loading forum participation data"
+      );
       return;
     }
     const html = makeHtmlFromJson(json);
@@ -52,7 +57,12 @@ const cldrForumParticipation = (function () {
   }
 
   function errorHandler(err) {
-    cldrRetry.handleDisconnect(err, json, "", "Loading forum participation data");
+    cldrRetry.handleDisconnect(
+      err,
+      json,
+      "",
+      "Loading forum participation data"
+    );
   }
 
   /**
