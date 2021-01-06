@@ -109,12 +109,12 @@ const cldrMenu = (function () {
 
     cldrEvent.filterAllLocale();
 
-    setupCoverageLevels(json);
+    setupCoverageLevels(json, theLocale);
 
     cldrLoad.continueInitializing(json.canAutoImport);
   }
 
-  function setupCoverageLevels(json) {
+  function setupCoverageLevels(json, theLocale) {
     cldrSurvey.updateCovFromJson(json);
 
     const surveyLevels = json.menus.levels;

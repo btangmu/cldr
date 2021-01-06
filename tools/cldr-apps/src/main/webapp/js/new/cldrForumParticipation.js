@@ -24,9 +24,9 @@ const cldrForumParticipation = (function () {
   /**
    * Fetch the Forum Participation data from the server, and "load" it
    *
-   * @param params an object with various properties
+   * Called as special.load
    */
-  function load(params) {
+  function load() {
     cldrInfo.showMessage(cldrText.get("forum_participationGuidance"));
 
     const url = getForumParticipationUrl();
