@@ -27,7 +27,7 @@ const cldrLocales = (function () {
     cldrEvent.filterAllLocale(); // filter for init data
     cldrEvent.forceSidebar();
     cldrStatus.setCurrentLocale(null);
-    cldrStatus.setCurrentSpecial("locales");
+    cldrStatus.setCurrentSpecial("locales"); // TODO: always redundant? it's already "locales"
     const message = cldrText.get("localesInitialGuidance");
     cldrInfo.showMessage(message);
     $("#itemInfo").html("");

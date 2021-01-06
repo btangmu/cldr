@@ -414,8 +414,7 @@ const cldrLoad = (function () {
     if (cldrStatus.isDisconnected()) {
       cldrSurvey.unbust();
     }
-
-    document.getElementById("DynamicDataSection").innerHTML = ""; //reset the data
+    document.getElementById("DynamicDataSection").innerHTML = "";
     $("#nav-page").hide();
     $("#nav-page-footer").hide();
     isLoading = false;
@@ -458,9 +457,6 @@ const cldrLoad = (function () {
       cldrDom.createChunk(cldrText.get("loading"), "i", "loadingMsg")
     );
 
-    const itemLoadInfo = cldrDom.createChunk("", "div", "itemLoadInfo");
-    itemLoadInfo.setAttribute("id", "itemLoadInfo");
-
     // Create a little spinner to spin "..." so the user knows we are doing something..
     var spinChunk = cldrDom.createChunk("...", "i", "loadingMsgSpin");
     var spin = 0;
@@ -493,6 +489,9 @@ const cldrLoad = (function () {
         window.clearInterval(timerToKill);
       }
     );
+
+    const itemLoadInfo = cldrDom.createChunk("", "div", "itemLoadInfo");
+    itemLoadInfo.setAttribute("id", "itemLoadInfo");
 
     shower(itemLoadInfo); // first load
 
@@ -530,25 +529,29 @@ const cldrLoad = (function () {
     }
     cldrSurvey.showLoader(cldrText.get("loading"));
     const curSpecial = cldrStatus.getCurrentSpecial();
-    const special = getSpecial(curSpecial);
-    if (special && special.load) {
-      special.load();
+    if (curSpecial === "none") {
+      // TODO: clarify when and why this would happen
+      cldrSurvey.hideLoader();
+      isLoading = false;
+      window.location = cldrStatus.getSurvUrl(); // redirect home
     } else {
-      unspecialLoad();
+      const special = getSpecial(curSpecial);
+      if (special && special.load) {
+        special.load();
+      } else {
+        unspecialLoad(itemLoadInfo, theDiv);
+      }
     }
   }
 
-  function unspecialLoad() {
+  function unspecialLoad(itemLoadInfo, theDiv) {
     const curSpecial = cldrStatus.getCurrentSpecial();
     const curLocale = cldrStatus.getCurrentLocale();
     if (curLocale && !curSpecial) {
       const curPage = cldrStatus.getCurrentPage();
       const curId = cldrStatus.getCurrentId();
       if (!curPage && !curId) {
-        const itemLoadInfo = document.getElementById("itemLoadInfo");
-        if (itemLoadInfo) {
-          loadGeneral(itemLoadInfo);
-        }
+        loadGeneral(itemLoadInfo);
       } else if (curId === "!") {
         // TODO: clarify when and why this would happen
         loadExclamationPoint();
@@ -557,16 +560,8 @@ const cldrLoad = (function () {
          * Make “all rows” requests only when !isInputBusy, to avoid wasted requests
          * if the user leaves the input box open for an extended time.
          */
-        const itemLoadInfo = document.getElementById("itemLoadInfo");
-        if (itemLoadInfo) {
-          loadAllRows(itemLoadInfo, theDiv);
-        }
+        loadAllRows(itemLoadInfo, theDiv);
       }
-    } else if (curSpecial === "none") {
-      // TODO: clarify when and why this would happen
-      cldrSurvey.hideLoader();
-      isLoading = false;
-      window.location = cldrStatus.getSurvUrl(); // redirect home
     } else if (curSpecial) {
       console.log("No special js found for " + curSpecial);
     }
@@ -601,6 +596,7 @@ const cldrLoad = (function () {
       about: cldrAbout,
       createAndLogin: cldrCreateLogin,
       forum: cldrForum,
+      forum_participation: cldrForumParticipation,
       locales: cldrLocales,
       mail: cldrMail,
       oldvotes: cldrOldVotes,
