@@ -42,9 +42,6 @@ public class ErrorSubtypes {
         for (final String u : map.getUrls()) {
             Integer checkStatus = HttpStatusCache.check(new URL(u));
             JSONObject urlStatus = new JSONObject();
-            if (!u.trim().equals(u)) {
-                System.out.println("Warning: extra whitespace around [" + u + "]");
-            }
             urlStatus.put("url", u);
             urlStatus.put("status", checkStatus);
             if (HttpStatusCache.isGoodStatus(checkStatus)) {
