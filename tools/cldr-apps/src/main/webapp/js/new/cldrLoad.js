@@ -594,6 +594,7 @@ const cldrLoad = (function () {
   function getSpecial(str) {
     const specials = {
       about: cldrAbout,
+      bulk_close_posts: cldrBulkClosePosts,
       createAndLogin: cldrCreateLogin,
       error_subtypes: cldrErrorSubtypes,
       forum: cldrForum,
