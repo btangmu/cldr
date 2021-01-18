@@ -102,7 +102,7 @@ const cldrGear = (function () {
       },
       {
         title: "List " + cldrStatus.getOrganizationName() + " Users",
-        special: "list_users" /* Cf. special_list_users */,
+        special: "list_users",
         level: 2,
         display:
           surveyUserPerms &&
@@ -188,10 +188,10 @@ const cldrGear = (function () {
         const item = gearMenuItems[k];
         (function (item) {
           if (item.display != false) {
-            var subLi = document.createElement("li");
-            if (item.special) {
-              // special items so look up in cldrText.js
-              item.title = cldrText.get("special_" + item.special);
+            const subLi = document.createElement("li");
+            let title = item.title;
+            if (!title && item.special) {
+              title = cldrText.get("special_" + item.special);
               item.url = "#" + item.special;
               item.blank = false;
             }
@@ -201,7 +201,7 @@ const cldrGear = (function () {
               if (item.hasFlag) {
                 addFlagIcon(subA);
               }
-              subA.appendChild(document.createTextNode(item.title + " "));
+              subA.appendChild(document.createTextNode(title + " "));
               subA.href = item.url;
 
               if (item.blank != false) {
@@ -237,7 +237,7 @@ const cldrGear = (function () {
             if (!item.url && !item.divider) {
               // if it is pure text/html & not a divider
               if (!item.level) {
-                subLi.appendChild(document.createTextNode(item.title + " "));
+                subLi.appendChild(document.createTextNode(title + " "));
               } else {
                 let subA = null;
                 if (item.bold) {
@@ -247,7 +247,7 @@ const cldrGear = (function () {
                 } else {
                   subA = document.createElement("span");
                 }
-                subA.appendChild(document.createTextNode(item.title + " "));
+                subA.appendChild(document.createTextNode(title + " "));
 
                 const level = item.level;
                 for (let i = 0; i < level - 1; i++) {

@@ -36,6 +36,7 @@ const cldrListUsers = (function () {
   }
 
   function getUrl() {
+    // Allow cache (no cacheKill) -- except for development/debugging
     if (false) {
       // allow cache
       return (
@@ -71,20 +72,21 @@ const cldrListUsers = (function () {
   }
 
   function getHtml(json) {
-    let html = "Under construction... here is json:";
-    html += "<pre>" + JSON.stringify(json) + "</pre>\n";
-
+    let html = "";
     html +=
       "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a><br />\n";
     html += "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a><br />\n";
-    html += "<h2>Users for " + json.org + "</h2>\n";
+    const org = json.org ? json.org : "default";
+    html += "<h2>Users for " + org + "</h2>\n";
     html += "<a href='...'>[TODO:] Show locked users: is currently</a><br />\n";
     html +=
       "<div class='fnotebox'>Changing user level or locales while a user is active will result in destruction of their session. Check if they have been working recently.</div>\n";
 
     html += getPager();
-
     html += getTable(json);
+
+    html += "Under construction... here is json:";
+    html += "<pre>" + JSON.stringify(json, null, 2) + "</pre>\n";
 
     return html;
   }
@@ -118,7 +120,7 @@ Set menus:<br><label>all
 
   const tableStart =
     '<table id="userListTable" summary="User List" class="userlist" border="2">\n' +
-    '<thead> <tr><th></th><th style="display: none;">Organization / Level</th><th>Name/Email</th><th>Action</th><th>Locales</th><th>Seen</th></tr></thead>\n' +
+    '<thead><tr><th></th><th style="display: none;">Organization / Level</th><th>Name/Email</th><th>Action</th><th>Locales</th><th>Seen</th></tr></thead>\n' +
     '<tbody><tr class="heading"><th class="partsection" colspan="6"><a name="Breton"><h4>Breton</h4></a></th></tr>\n';
 
   const tableEnd = "</tbody></table>\n";
@@ -144,28 +146,7 @@ Set menus:<br><label>all
     return html;
   }
 
-  // cf. cldrSurvey.showUserActivity
   function getUserHtml(u, json) {
-    /* A typical row will look like this:
-    <tr id="u@2505" class="noActivity user1">
-      <td><a href="/cldr-apps/survey?do=list&amp;justu=manuahuser.vw9b9aarv%40klfx.breton.example.com"><img alt="[zoom]" style="width: 16px; height: 16px; border: 0;" src="/cldr-apps/zoom.png" title="More on this user.."></a></td>
-      <td style="display: none;"></td>
-      <td valign="top"><div class="adminUserUser"><img src="https://www.gravatar.com/avatar/e24f24109689640a291a206ff0994f4d?d=identicon&amp;r=g&amp;s=32" title="gravatar - http://www.gravatar.com"><i class="userlevel_tc">TC</i><span class="adminUserName">ManuaHUser_TESTER_</span><span class="adminOrgName">Office of Breton Lang #2505</span><address class="adminUserAddress">manuahuser.vw9b9aarv@klfx.breton.example.com</address></div></td>
-      <td><select name="2505_manuahuser.vw9b9aarv@klfx.breton.example.com">   <option value="">-</option>
-      <option value="set_userlevel_999">Make 999: (LOCKED)</option>
-     <option disabled="">-</option>
-     <option value="showpassword_">Show password...</option>
-     <option value="sendpassword_">Send password...</option>
-      </select>
-  <br><a href="/cldr-apps/upload.jsp?s=C43F6E4EC4D020208D950F7E9BA1C616&amp;email=manuahuser.vw9b9aarv@klfx.breton.example.com">Upload XML...</a>
-  <br><a class="recentActivity" href="/cldr-apps/myvotes.jsp?user=2505">User Activity</a>
-  </td>
-   <td><i title="null">all locales</i></td> 
-  <td>
-  <b>seen: 32 days ago</b>
-  <br><font size="-2">2020-12-12 19:50:01.0</font></td>
-    </tr>
-    */
     let html = "";
     html += "<tr id='u@" + u.data.id + "'>\n";
     // console.log("Wrote tr for u@" + u.data.id);
@@ -189,7 +170,7 @@ Set menus:<br><label>all
       "</td>" +
       // 6th row: "Seen"
       "<td>" +
-      getUserSeen(u, json) +
+      getUserSeen(u) +
       "</td>\n";
     html += "</tr>\n";
     return html;
@@ -318,63 +299,29 @@ Set menus:<br><label>all
   }
 
   function getUserLocales(u, json) {
-    const UserRegistry_MANAGER = 2; // TODO -- get from json?
+    const UserRegistry_MANAGER = 2; // TODO -- get from json? See UserRegistry.MANAGER in java
     const forLevel = json.userPerms.forLevel;
     const theirLevel = u.data.userlevel;
     if (theirLevel <= UserRegistry_MANAGER) {
       return "<i>all locales</i>";
     } else {
+      // TODO: each locale should have a pop-up (title) showing the full name
       return u.data.locales; // UserRegistry.prettyPrintLocale(theirLocales);
     }
   }
 
   function getUserSeen(u) {
-    let html = "";
-    let when = 0;
-    if (u.data.active) {
-      when = html += "<b>active: " + u.data.active + "</b>";
-    } else {
+    const when = u.data.active ? u.data.active : u.data.seen;
+    if (!when) {
+      return "";
     }
-    html += "<b>seen: " + u.data.lastlogin + "</b>";
-
-    /*
-                      // are they logged in?
-                      if ((theUser != null) && UserRegistry.userCanModifyUsers(ctx.session.user)) {
-                        ctx.println("<td>");
-                        ctx.println("<b>active: " + SurveyMain.timeDiff(theUser.getLastBrowserCallMillisSinceEpoch()) + " ago</b>");
-                        if (UserRegistry.userIsAdmin(ctx.session.user)) {
-                            ctx.print("<br/>");
-                            printLiveUserMenu(ctx, theUser);
-                        }
-                        ctx.println("</td>");
-                    } else if (theirLast != null) {
-                        ctx.println("<td>");
-                        ctx.println("<b>seen: " + SurveyMain.timeDiff(theirLast.getTime()) + " ago</b>");
-                        ctx.print("<br/><font size='-2'>");
-                        ctx.print(theirLast.toString());
-                        ctx.println("</font></td>");
-                    }
-    */
-
+    const what = u.data.active ? "active" : "seen";
+    let html = "<b>" + what + ": " + when + " ago</b>";
+    if (what === "seen") {
+      html += "<br /><font size='-2'>" + u.data.lastlogin + "</font></td>";
+    }
+    // note: for "active", printLiveUserMenu didn't work and was superfluous
     return html;
-  }
-
-  function timeAgo(a) {
-    return timeDiff(a, new Date().getMilliseconds());
-  }
-
-  function timeDiff(a, b) {
-    const ONE_DAY = 86400 * 1000;
-    const A_LONG_TIME = ONE_DAY * 3;
-    if (b - a > A_LONG_TIME) {
-      const days = (b - a) / ONE_DAY;
-      return days + " days";
-    } else {
-      // round to even second
-      a -= a % 1000;
-      b -= b % 1000;
-      return ElapsedTimer.elapsedTime(a, b);
-    }
   }
 
   /***

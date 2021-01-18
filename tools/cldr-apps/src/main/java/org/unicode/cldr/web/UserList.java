@@ -28,48 +28,12 @@ public class UserList {
             return;
         }
         try {
-            Connection conn = null;
-            ResultSet rs = null;
-            PreparedStatement ps = null;
-            JSONArray users = new JSONArray();
             final String forOrg = (UserRegistry.userIsAdmin(mySession.user)) ? null : mySession.user.org;
-            try {
-                conn = DBUtils.getInstance().getDBConnection();
-                ps = sm.reg.list(forOrg, conn);
-                rs = ps.executeQuery();
-                // id,userlevel,name,email,org,locales,intlocs,lastlogin,active
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    UserRegistry.User them = sm.reg.getInfo(id);
-                    CookieSession session = CookieSession.retrieveUserWithoutTouch(them.email);
-                    long active = (session == null) ? 0 : session.getLastBrowserCallMillisSinceEpoch();
-                    users.put(JSONWriter.wrap(them)
-                        .put("locales", rs.getString("locales"))
-                        .put("lastlogin", rs.getTimestamp("lastlogin"))
-                        .put("intlocs", rs.getString("intlocs"))
-                        .put("active",  active));
-                }
-            } finally {
-                DBUtils.close(rs, ps, conn);
-            }
+            JSONArray users = getUsers(mySession, sm, forOrg);
+            JSONObject userPerms = getUserPerms(mySession);
             r.put("what", SurveyAjax.WHAT_USER_LIST);
             r.put("users", users);
             r.put("org", forOrg);
-            JSONObject userPerms = new JSONObject();
-            final boolean userCanCreateUsers = UserRegistry.userCanCreateUsers(mySession.user);
-            userPerms.put("canCreateUsers", userCanCreateUsers);
-            if (userCanCreateUsers) {
-                final org.unicode.cldr.util.VoteResolver.Level myLevel = mySession.user.getLevel();
-                final Organization myOrganization = mySession.user.getOrganization();
-                JSONObject forLevel = new JSONObject();
-                for (VoteResolver.Level v : VoteResolver.Level.values()) {
-                    JSONObject jo = new JSONObject();
-                    jo.put("canCreateOrSetLevelTo", myLevel.canCreateOrSetLevelTo(v));
-                    jo.put("isManagerFor", myLevel.isManagerFor(myOrganization, v, myOrganization));
-                    forLevel.put(v.name(), jo);
-                }
-                userPerms.put("forLevel", forLevel);
-            }
             r.put("userPerms", userPerms);
 
             // TODO: figure out what is really needed to get ctx for doList;
@@ -85,6 +49,55 @@ public class UserList {
             SurveyLog.logException(e, "listing users for " + mySession.user.toString());
             throw new SurveyException(ErrorCode.E_INTERNAL, "Internal error listing users: " + e.toString());
         }
+    }
+
+    private static JSONArray getUsers(CookieSession mySession, SurveyMain sm, final String forOrg) throws SQLException, JSONException {
+        Connection conn = null;
+        ResultSet rs = null;
+        PreparedStatement ps = null;
+        JSONArray users = new JSONArray();
+        try {
+            conn = DBUtils.getInstance().getDBConnection();
+            ps = sm.reg.list(forOrg, conn);
+            rs = ps.executeQuery();
+            // id,userlevel,name,email,org,locales,intlocs,lastlogin,active
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                UserRegistry.User them = sm.reg.getInfo(id);
+                java.sql.Timestamp lastlogin = rs.getTimestamp("lastlogin");
+                CookieSession session = CookieSession.retrieveUserWithoutTouch(them.email);
+                String active = (session == null) ? "" : SurveyMain.timeDiff(session.getLastBrowserCallMillisSinceEpoch());
+                String seen = (lastlogin == null) ? "" : SurveyMain.timeDiff(lastlogin.getTime());
+                users.put(JSONWriter.wrap(them)
+                    .put("intlocs", rs.getString("intlocs"))
+                    .put("locales", rs.getString("locales"))
+                    .put("lastlogin", lastlogin)
+                    .put("active", active)
+                    .put("seen", seen));
+            }
+        } finally {
+            DBUtils.close(rs, ps, conn);
+        }
+        return users;
+    }
+
+    private static JSONObject getUserPerms(CookieSession mySession) throws JSONException {
+        JSONObject userPerms = new JSONObject();
+        final boolean userCanCreateUsers = UserRegistry.userCanCreateUsers(mySession.user);
+        userPerms.put("canCreateUsers", userCanCreateUsers);
+        if (userCanCreateUsers) {
+            final org.unicode.cldr.util.VoteResolver.Level myLevel = mySession.user.getLevel();
+            final Organization myOrganization = mySession.user.getOrganization();
+            JSONObject forLevel = new JSONObject();
+            for (VoteResolver.Level v : VoteResolver.Level.values()) {
+                JSONObject jo = new JSONObject();
+                jo.put("canCreateOrSetLevelTo", myLevel.canCreateOrSetLevelTo(v));
+                jo.put("isManagerFor", myLevel.isManagerFor(myOrganization, v, myOrganization));
+                forLevel.put(v.name(), jo);
+            }
+            userPerms.put("forLevel", forLevel);
+        }
+        return userPerms;
     }
 
     private static final String LIST_ACTION_SETLEVEL = "set_userlevel_";
