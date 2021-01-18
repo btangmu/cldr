@@ -2613,7 +2613,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
      * @throws IOException
      * @throws SurveyException
      *
-     * Called only by doGet. Called when user logs in or logs out, also when choose Settings from gear menu.
+     * Called only by doGet. Called when user logs in or logs out, also when choose some commands
+     * from gear menu, such as "Settings" and "List [org] Users"
      */
     private void doSession(WebContext ctx) throws IOException, SurveyException {
         String which = ctx.field(QUERY_SECTION); // may be empty string ""
@@ -2716,7 +2717,11 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             // these items are only for users.
             if (ctx.session.user != null) {
                 if ((doWhat.equals("list") || doWhat.equals("listu")) && (UserRegistry.userCanDoList(ctx.session.user))) {
-                    doList(ctx);
+                    if (SurveyTool.useDojo(ctx)) {
+                        doList(ctx);
+                    } else {
+                        throw new RuntimeException("doList is obsolete for new code without Dojo; see WHAT_USER_LIST");
+                    }
                     return;
                 } else if (doWhat.equals("new") && (UserRegistry.userCanCreateUsers(ctx.session.user))) {
                     doNew(ctx);
@@ -4116,7 +4121,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                             surveyTimer = null;
                         }
                     } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
                 }

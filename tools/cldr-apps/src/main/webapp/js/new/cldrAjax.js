@@ -8,7 +8,7 @@
  * and to hide everything else, minimizing global scope pollution.
  */
 const cldrAjax = (function () {
-  const ST_AJAX_DEBUG = false;
+  const ST_AJAX_DEBUG = true;
 
   /**
    * xhrQueueTimeout is a constant, 3 milliseconds, used only by
@@ -166,6 +166,16 @@ const cldrAjax = (function () {
       if (request.readyState === XMLHttpRequest.DONE) {
         if (request.status >= 200 && request.status < 400) {
           if (xhrArgs.load) {
+            if (ST_AJAX_DEBUG) {
+              if (!request.response) {
+                console.log(
+                  "Missing response! status = " +
+                    request.status +
+                    "; responseType = " +
+                    request.responseType
+                );
+              }
+            }
             xhrArgs.load(request.response);
           }
         } else {

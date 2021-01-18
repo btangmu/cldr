@@ -6,6 +6,13 @@
  *
  * Use an IIFE pattern to create a namespace for the public functions,
  * and to hide everything else, minimizing global scope pollution.
+ *
+ * TODO: "Avoid dropdown menus": "Usability studies show that dropdown menus are annoying";
+ * "difficult for search engines to crawl" https://www.orbitmedia.com/blog/website-navigation/
+ * Survey Tool's current dropdown gear menu is also problematic in terms of library dependencies,
+ * invalid html, inability to scroll (e.g., when console log is open and screen is small),
+ * and failure to close immediately when some items are clicked on. It would be cleaner to
+ * open a new special page ("#gear"), with a list of items, when the gear menu is clicked on.
  */
 const cldrGear = (function () {
   function getItems() {
@@ -25,7 +32,6 @@ const cldrGear = (function () {
       myAccountSetting: "survey?do=listu",
       disableMyAccount: "lock.jsp",
       xmlUpload: "upload.jsp?a=/cldr-apps/survey&s=" + sessionId,
-      manageUser: "survey?do=list",
       flag: "tc-flagged.jsp?s=" + sessionId,
       browse: "browse.jsp",
     };
@@ -86,7 +92,7 @@ const cldrGear = (function () {
         divider: true,
       },
       {
-        title: "My Organization(" + cldrStatus.getOrganizationName() + ")",
+        title: "My Organization (" + cldrStatus.getOrganizationName() + ")",
       }, // My Organization section
 
       {
@@ -96,8 +102,8 @@ const cldrGear = (function () {
       },
       {
         title: "List " + cldrStatus.getOrganizationName() + " Users",
+        special: "list_users" /* Cf. special_list_users */,
         level: 2,
-        url: surveyUserURL.manageUser,
         display:
           surveyUserPerms &&
           (surveyUserPerms.userIsTC || surveyUserPerms.userIsVetter),
