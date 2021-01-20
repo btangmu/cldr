@@ -217,7 +217,7 @@ Set menus:<br><label>all
       }
       doChangeUserOption(u, forLevel, lev, theirLevel, false);
     }
-    html += " <option disabled>" + LIST_ACTION_NONE + "</option>";
+    html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
     html += " <option ";
     if (
       json.preset_fromint == theirLevel &&
@@ -226,7 +226,7 @@ Set menus:<br><label>all
       html += " SELECTED ";
     }
     html +=
-      " value='" + LIST_ACTION_SHOW_PASSWORD + "'>Show password...</option>";
+      " value='" + LIST_ACTION_SHOW_PASSWORD + "'>Show password...</option>\n";
     html += " <option ";
     if (
       json.preset_fromint == theirLevel &&
@@ -235,44 +235,50 @@ Set menus:<br><label>all
       html += " SELECTED ";
     }
     html +=
-      " value='" + LIST_ACTION_SEND_PASSWORD + "'>Send password...</option>";
+      " value='" + LIST_ACTION_SEND_PASSWORD + "'>Send password...</option>\n";
 
     if (just !== null) {
-      /***
-        if (havePermToChange) {
-            ctx.println(" <option ");
-            ctx.println(" value='" + LIST_ACTION_SETLOCALES + "'>Set locales...</option>");
+      if (u.data.havePermToChange) {
+        html +=
+          " <option value='" +
+          LIST_ACTION_SETLOCALES +
+          "'>Set locales...</option>\n";
+      }
+      if (u.data.userCanDeleteUser) {
+        html += " <option>" + LIST_ACTION_NONE + "</option>\n";
+        if (action != null && action.equals(LIST_ACTION_DELETE0)) {
+          html +=
+            "   <option value='" +
+            LIST_ACTION_DELETE1 +
+            "' SELECTED>Confirm delete</option>\n";
+        } else {
+          html += " <option ";
+          if (
+            json.preset_fromint == theirLevel &&
+            json.preset_do.equals(LIST_ACTION_DELETE0)
+          ) {
+            html += " SELECTED ";
+          }
+          html +=
+            " value='" + LIST_ACTION_DELETE0 + "'>Delete user..</option>\n";
         }
-        if (UserRegistry.userCanDeleteUser(ctx.session.user, theirId, theirLevel)) {
-            ctx.println(" <option>" + LIST_ACTION_NONE + "</option>");
-            if ((action != null) && action.equals(LIST_ACTION_DELETE0)) {
-                ctx.println("   <option value='" + LIST_ACTION_DELETE1
-                    + "' SELECTED>Confirm delete</option>");
-            } else {
-                ctx.println(" <option ");
-                if ((json.preset_fromint == theirLevel) && preset_do.equals(LIST_ACTION_DELETE0)) {
-                    // ctx.println(" SELECTED ");
-                }
-                ctx.println(" value='" + LIST_ACTION_DELETE0 + "'>Delete user..</option>");
-            }
-        }
-        if (just != null) { // only do these in 'zoomin'
-            // view.
-            ctx.println(" <option disabled>" + LIST_ACTION_NONE + "</option>");
-
+      }
+      if (just != null) {
+        html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
+        /*** TODO:
             InfoType current = InfoType.fromAction(action);
             for (InfoType info : InfoType.values()) {
                 if (info == InfoType.INFO_ORG && !(ctx.session.user.userlevel == UserRegistry.ADMIN)) {
                     continue;
                 }
-                ctx.print(" <option ");
+                html += " <option ";
                 if (info == current) {
-                    ctx.print(" SELECTED ");
+                  html += " SELECTED ";
                 }
-                ctx.println(" value='" + info.toAction() + "'>Change " + info.toString() + "...</option>");
+                html += " value='" + info.toAction() + "'>Change " + info.toString() + "...</option>\n";
             }
-        }
-        ***/
+            ***/
+      }
     }
     html += "  </select>";
     return html;
@@ -302,12 +308,41 @@ Set menus:<br><label>all
     const UserRegistry_MANAGER = 2; // TODO -- get from json? See UserRegistry.MANAGER in java
     const forLevel = json.userPerms.forLevel;
     const theirLevel = u.data.userlevel;
-    if (theirLevel <= UserRegistry_MANAGER) {
+    if (
+      theirLevel <= UserRegistry_MANAGER ||
+      u.data.locales === "*" ||
+      u.data.locales === "all" ||
+      u.data.locales === "all locales"
+    ) {
       return "<i>all locales</i>";
+    } else if (u.data.locales === "no locales") {
+      return "<i>no locales</i>";
     } else {
-      // TODO: each locale should have a pop-up (title) showing the full name
-      return u.data.locales; // UserRegistry.prettyPrintLocale(theirLocales);
+      return prettyLocaleList(u.data.locales);
     }
+  }
+
+  function prettyLocaleList(locales) {
+    const map = cldrLoad.getTheLocaleMap();
+    let html = "";
+    locales.split(" ").forEach((loc) => {
+      const info = map.getLocaleInfo(loc);
+      let name = "";
+      if (info && info.name) {
+        name = info.name;
+      } else {
+        name = "unknown";
+        console.log(
+          "prettyLocaleList: unrecognized loc = [" +
+            loc +
+            "]; locales = [" +
+            locales +
+            "]"
+        );
+      }
+      html += " <tt class='codebox' title='" + name + "'>" + loc + "</tt> ";
+    });
+    return html;
   }
 
   function getUserSeen(u) {
@@ -320,7 +355,6 @@ Set menus:<br><label>all
     if (what === "seen") {
       html += "<br /><font size='-2'>" + u.data.lastlogin + "</font></td>";
     }
-    // note: for "active", printLiveUserMenu didn't work and was superfluous
     return html;
   }
 

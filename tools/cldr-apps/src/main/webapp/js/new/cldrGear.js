@@ -190,8 +190,10 @@ const cldrGear = (function () {
           if (item.display != false) {
             const subLi = document.createElement("li");
             let title = item.title;
-            if (!title && item.special) {
-              title = cldrText.get("special_" + item.special);
+            if (item.special) {
+              if (!title) {
+                title = cldrText.get("special_" + item.special);
+              }
               item.url = "#" + item.special;
               item.blank = false;
             }

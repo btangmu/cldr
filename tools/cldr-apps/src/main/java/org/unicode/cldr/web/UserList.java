@@ -68,12 +68,17 @@ public class UserList {
                 CookieSession session = CookieSession.retrieveUserWithoutTouch(them.email);
                 String active = (session == null) ? "" : SurveyMain.timeDiff(session.getLastBrowserCallMillisSinceEpoch());
                 String seen = (lastlogin == null) ? "" : SurveyMain.timeDiff(lastlogin.getTime());
+                boolean havePermToChange = mySession.user.isAdminFor(them);
+                boolean userCanDeleteUser = UserRegistry.userCanDeleteUser(mySession.user, them.id, them.userlevel);
                 users.put(JSONWriter.wrap(them)
-                    .put("intlocs", rs.getString("intlocs"))
-                    .put("locales", rs.getString("locales"))
-                    .put("lastlogin", lastlogin)
                     .put("active", active)
-                    .put("seen", seen));
+                    .put("havePermToChange", havePermToChange)
+                    .put("intlocs", rs.getString("intlocs"))
+                    .put("lastlogin", lastlogin)
+                    .put("locales", rs.getString("locales"))
+                    .put("seen", seen)
+                    .put("userCanDeleteUser", userCanDeleteUser)
+                    );
             }
         } finally {
             DBUtils.close(rs, ps, conn);

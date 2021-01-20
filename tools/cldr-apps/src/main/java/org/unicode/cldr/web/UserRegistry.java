@@ -2035,11 +2035,9 @@ public class UserRegistry {
         if (isAllLocales(localeList)) {
             return ("* (<i title='" + localeList + "'>all locales</i>)");
         }
-        // System.err.println("TKL: ppl - " + localeList);
         Set<CLDRLocale> localeArray = tokenizeValidCLDRLocale(localeList);
         String ret = "";
         if ((localeList == null) || (localeList.isEmpty())) {
-            // System.err.println("TKL: null output");
             ret = ("<i title='" + localeList + "'>all locales</i>");
         } else if (localeArray.isEmpty()) {
             if (localeList.equals("all")) {
@@ -2052,7 +2050,6 @@ public class UserRegistry {
                 ret = ret + " <tt class='codebox' title='" + l.getDisplayName() + "'>" + l.getBaseName() + "</tt> ";
             }
         }
-        // return ret + " [" + localeList + "]";
         return ret;
     }
 
