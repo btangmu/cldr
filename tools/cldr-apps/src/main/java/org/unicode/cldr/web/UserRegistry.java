@@ -748,24 +748,15 @@ public class UserRegistry {
         if (id < 0) {
             return null;
         }
-        // System.err.println("Fetching info for id " + id);
         synchronized (infoArray) {
             User ret = null;
             try {
-                // System.err.println("attempting array lookup for id " + id);
-                // ret = (User)infoArray.get(id);
                 ret = infoArray[id];
             } catch (IndexOutOfBoundsException ioob) {
-                // System.err.println("Index out of bounds for id " + id + " - "
-                // + ioob);
                 ret = null; // not found
             }
 
             if (ret == null) { // synchronized(conn) {
-                // System.err.println("go fish for id " + id);
-                // queryIdStmt =
-                // conn.prepareStatement("SELECT name,org,email from "
-                // + CLDR_USERS +" where id=?");
                 ResultSet rs = null;
                 PreparedStatement pstmt = null;
                 Connection conn = DBUtils.getInstance().getDBConnection();
@@ -775,12 +766,11 @@ public class UserRegistry {
                     // First, try to query it back from the DB.
                     rs = pstmt.executeQuery();
                     if (!rs.next()) {
-                        // System.err.println("Unknown user#:" + id);
                         return null;
                     }
                     User u = new UserRegistry.User(id);
                     // from params:
-                    u.name = DBUtils.getStringUTF8(rs, 1);// rs.getString(1);
+                    u.name = DBUtils.getStringUTF8(rs, 1);
                     u.org = rs.getString(2);
                     u.getOrganization(); // verify
 
@@ -790,18 +780,10 @@ public class UserRegistry {
                     u.locales = normalizeLocaleList(rs.getString(6));
                     u.last_connect = rs.getTimestamp(7);
                     u.password = rs.getString(8);
-                    // queryIdStmt =
-                    // conn.prepareStatement("SELECT name,org,email,userlevel,intlocs,lastlogin,password from "
-                    // + CLDR_USERS +" where id=?",
-
-                    // System.err.println("SQL Loaded info for U#"+u.id +
-                    // " - "+u.name +"/"+u.org+"/"+u.email);
                     ret = u; // let it finish..
 
                     if (id >= arraySize) {
                         int newchunk = (((id + 1) / CHUNKSIZE) + 1) * CHUNKSIZE;
-                        // System.err.println("UR: userInfo resize from " +
-                        // infoArray.length + " to " + newchunk);
                         infoArray = new UserRegistry.User[newchunk];
                         arraySize = newchunk;
                     }
@@ -826,10 +808,6 @@ public class UserRegistry {
                     DBUtils.close(rs, pstmt, conn);
                 } // end try
             }
-            // /*srl*/ if(ret==null) { System.err.println("returning NULL for "
-            // + id); } else { User u = ret;
-            // System.err.println("Returned info for U#"+u.id + " - "+u.name
-            // +"/"+u.org+"/"+u.email); }
             return ret;
         } // end synch array
     }
@@ -2057,11 +2035,9 @@ public class UserRegistry {
         if (isAllLocales(localeList)) {
             return ("* (<i title='" + localeList + "'>all locales</i>)");
         }
-        // System.err.println("TKL: ppl - " + localeList);
         Set<CLDRLocale> localeArray = tokenizeValidCLDRLocale(localeList);
         String ret = "";
         if ((localeList == null) || (localeList.isEmpty())) {
-            // System.err.println("TKL: null output");
             ret = ("<i title='" + localeList + "'>all locales</i>");
         } else if (localeArray.isEmpty()) {
             if (localeList.equals("all")) {
@@ -2074,7 +2050,6 @@ public class UserRegistry {
                 ret = ret + " <tt class='codebox' title='" + l.getDisplayName() + "'>" + l.getBaseName() + "</tt> ";
             }
         }
-        // return ret + " [" + localeList + "]";
         return ret;
     }
 
