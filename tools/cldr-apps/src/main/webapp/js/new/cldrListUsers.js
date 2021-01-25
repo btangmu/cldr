@@ -121,7 +121,7 @@ const cldrListUsers = (function () {
     return (
       "<input type='checkbox' id='showLocked' onclick='cldrListUsers.toggleShowLocked();'" +
       ch +
-      "><label for='showLocked'>Show locked users</label><br />"
+      "> <label for='showLocked'>Show locked users</label><br />\n"
     );
   }
 
@@ -454,9 +454,9 @@ Set menus:<br><label>all
       showOneUserActivity(user, rows);
     }
 
-    const actLoadHandler = function (json) {
+    function actLoadHandler(json) {
       realActLoadHandler(json, rowById, rows);
-    };
+    }
 
     const xhrArgs = {
       url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
@@ -496,9 +496,53 @@ Set menus:<br><label>all
   }
 
   function realActLoadHandler(json, rowById, rows) {
-    let loc2name = {};
+    const loc2name = setupLoc2Name(json, rowById, rows);
+    for (let k in rows) {
+      const userRow = rows[k];
+      if (userRow.total > 0) {
+        cldrDom.addClass(userRow.tr, "hadActivity");
+        userRow.tr
+          .getElementsByClassName("recentActivity")[0]
+          .appendChild(document.createTextNode(" (" + userRow.total + ")"));
+        userRow.seenSub = document.createElement("div");
+        userRow.seenSub.className = "seenSub";
+        userRow.seen.appendChild(userRow.seenSub);
+        appendMiniChart(loc2name, userRow, 3);
+        if (userRow.stats.length > 3) {
+          makeUserCharts(loc2name, userRow);
+        }
+      } else {
+        cldrDom.addClass(userRow.tr, "noActivity");
+      }
+    }
+  }
 
-    /* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */
+  function makeUserCharts(loc2name, userRow) {
+    const chartMore = cldrDom.createChunk("+", "span", "chartMore");
+    const chartLess = cldrDom.createChunk("-", "span", "chartMore");
+    chartMore.onclick = (function (chartMore, chartLess, userRow) {
+      return function () {
+        cldrDom.setDisplayed(chartMore, false);
+        cldrDom.setDisplayed(chartLess, true);
+        appendMiniChart(loc2name, userRow, userRow.stats.length);
+        return false;
+      };
+    })(chartMore, chartLess, userRow);
+    chartLess.onclick = (function (chartMore, chartLess, userRow) {
+      return function () {
+        cldrDom.setDisplayed(chartMore, true);
+        cldrDom.setDisplayed(chartLess, false);
+        appendMiniChart(loc2name, userRow, 3);
+        return false;
+      };
+    })(chartMore, chartLess, userRow);
+    userRow.seen.appendChild(chartMore);
+    cldrDom.setDisplayed(chartLess, false);
+    userRow.seen.appendChild(chartLess);
+  }
+
+  function setupLoc2Name(json, rowById, rows) {
+    const loc2name = {};
     const stats = json.stats_bydayuserloc;
     const header = stats.header;
     for (let k in stats.data) {
@@ -516,84 +560,35 @@ Set menus:<br><label>all
         loc2name[row[header.LOCALE]] = row[header.LOCALE_NAME];
       }
     }
+    return loc2name;
+  }
 
-    for (let k in rows) {
-      const userRow = rows[k];
-      if (userRow.total > 0) {
-        cldrDom.addClass(userRow.tr, "hadActivity");
-        userRow.tr.getElementsByClassName("recentActivity")[0].appendChild(
-          document.createTextNode(
-            // " (" + dojoNumber.format(userRow.total) + ")"
-            " (" + userRow.total + ")"
-          )
-        );
-
-        userRow.seenSub = document.createElement("div");
-        userRow.seenSub.className = "seenSub";
-        userRow.seen.appendChild(userRow.seenSub);
-
-        appendMiniChart(userRow, 3);
-        if (userRow.stats.length > 3) {
-          var chartMore, chartLess;
-          chartMore = cldrDom.createChunk("+", "span", "chartMore");
-          chartLess = cldrDom.createChunk("-", "span", "chartMore");
-          chartMore.onclick = (function (chartMore, chartLess, userRow) {
-            return function () {
-              cldrDom.setDisplayed(chartMore, false);
-              cldrDom.setDisplayed(chartLess, true);
-              appendMiniChart(userRow, userRow.stats.length);
-              return false;
-            };
-          })(chartMore, chartLess, userRow);
-          chartLess.onclick = (function (chartMore, chartLess, userRow) {
-            return function () {
-              cldrDom.setDisplayed(chartMore, true);
-              cldrDom.setDisplayed(chartLess, false);
-              appendMiniChart(userRow, 3);
-              return false;
-            };
-          })(chartMore, chartLess, userRow);
-          userRow.seen.appendChild(chartMore);
-          cldrDom.setDisplayed(chartLess, false);
-          userRow.seen.appendChild(chartLess);
-        }
-      } else {
-        cldrDom.addClass(userRow.tr, "noActivity");
-      }
+  function appendMiniChart(loc2name, userRow, count) {
+    if (count > userRow.stats.length) {
+      count = userRow.stats.length;
     }
+    cldrDom.removeAllChildNodes(userRow.seenSub);
+    let chartRow = null;
+    for (let k = 0; k < count; k++) {
+      const theStat = userRow.stats[k];
+      chartRow = cldrDom.createChunk("", "div", "chartRow");
+      const chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
+      const chartLoc = cldrDom.createChunk(theStat.locale, "span", "chartLoc");
+      chartLoc.title = loc2name[theStat.locale];
+      const chartCount = cldrDom.createChunk(
+        theStat.count,
+        "span",
+        "chartCount"
+      );
 
-    // closure vars: loc2name
-    function appendMiniChart(userRow, count) {
-      if (count > userRow.stats.length) {
-        count = userRow.stats.length;
-      }
-      cldrDom.removeAllChildNodes(userRow.seenSub);
-      let chartRow = null;
-      for (let k = 0; k < count; k++) {
-        const theStat = userRow.stats[k];
-        chartRow = cldrDom.createChunk("", "div", "chartRow");
-        const chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
-        const chartLoc = cldrDom.createChunk(
-          theStat.locale,
-          "span",
-          "chartLoc"
-        );
-        chartLoc.title = loc2name[theStat.locale];
-        const chartCount = cldrDom.createChunk(
-          theStat.count,
-          "span",
-          "chartCount"
-        );
+      chartRow.appendChild(chartDay);
+      chartRow.appendChild(chartLoc);
+      chartRow.appendChild(chartCount);
 
-        chartRow.appendChild(chartDay);
-        chartRow.appendChild(chartLoc);
-        chartRow.appendChild(chartCount);
-
-        userRow.seenSub.appendChild(chartRow);
-      }
-      if (chartRow && count < userRow.stats.length) {
-        chartRow.appendChild(document.createTextNode("..."));
-      }
+      userRow.seenSub.appendChild(chartRow);
+    }
+    if (chartRow && count < userRow.stats.length) {
+      chartRow.appendChild(document.createTextNode("..."));
     }
   }
 

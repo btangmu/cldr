@@ -844,7 +844,7 @@ public class UserList {
         if (locales == null) {
             return "";
         } else {
-            return locales.replace("[,/s]+", " ");
+            return locales.replaceAll("[,\\s]+", " ");
         }
     }
 }
