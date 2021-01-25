@@ -533,6 +533,7 @@ public class UserRegistry {
                 .put("userCanImportOldVotes", canImportOldVotes())
                 .put("userCanUseVettingSummary", userCanUseVettingSummary(this))
                 .put("userCanMonitorForum", userCanMonitorForum(this))
+                .put("userIsAdmin", userIsAdmin(this))
                 .put("userIsTC", userIsTC(this))
                 .put("userIsVetter", userIsVetter(this) && !userIsTC(this))
                 .put("userIsLocked", userIsLocked(this));
@@ -2191,14 +2192,21 @@ public class UserRegistry {
     private Map<Integer, VoterInfo> voterInfo = null;
 
     /**
-     * Not yet implemented.
+     * The list of organizations
      *
-     * TODO: get rid of this code, or document its purpose, referencing a ticket.
-     *
-     * @return
+     * It is necessary to call setOrgList (or resetOrgList) to initialize this list
      */
     private static String[] orgList = new String[0];
 
+    /**
+     * Get the list of organization names
+     *
+     * @return the String array
+     *
+     * It is necessary first to call setOrgList (or resetOrgList) to initialize the list
+     * This is called for the "List ... Users" command, if the user is Admin, for choosing
+     * which organization's users should be listed
+     */
     public static String[] getOrgList() {
         return orgList;
     }

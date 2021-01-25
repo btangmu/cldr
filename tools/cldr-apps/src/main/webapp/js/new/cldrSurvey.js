@@ -264,15 +264,23 @@ const cldrSurvey = (function () {
   /**
    * Return a string to be used with a URL to avoid caching. Ignored by the server.
    *
-   * @returns {String} the URL fragment, append to the query
+   * @returns {String} the URL fragment like "&cacheKill=12345", for appending to a query
    */
   function cacheKill() {
+    return "&cacheKill=" + cacheBuster();
+  }
+
+  /**
+   * Return a string to be used with a URL to avoid caching. Ignored by the server.
+   *
+   * @returns {String} the string like "12345"
+   */
+  function cacheBuster() {
     if (!cacheKillStamp || cacheKillStamp < cldrStatus.getRunningStamp()) {
       cacheKillStamp = cldrStatus.getRunningStamp();
     }
     cacheKillStamp++;
-
-    return "&cacheKill=" + cacheKillStamp;
+    return "" + cacheKillStamp;
   }
 
   /**
@@ -2157,6 +2165,7 @@ const cldrSurvey = (function () {
     appendExtraAttributes,
     appendIcon,
     appendItem,
+    cacheBuster,
     cacheKill,
     chgPage,
     cloneAnon,

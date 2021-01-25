@@ -8,7 +8,7 @@
  * and to hide everything else, minimizing global scope pollution.
  */
 const cldrListUsers = (function () {
-  // cf. UserList.java for these constants
+  // cf. UserList.java and SurveyMain.java for these constants
   const LIST_ACTION_SETLEVEL = "set_userlevel_";
   const LIST_ACTION_NONE = "-";
   const LIST_ACTION_SHOW_PASSWORD = "showpassword_";
@@ -22,6 +22,17 @@ const cldrListUsers = (function () {
   const LIST_MAILUSER_CONFIRM = "mailthem_c";
   const LIST_MAILUSER_CONFIRM_CODE = "confirm";
   const PREF_SHOWLOCKED = "p_showlocked";
+  const PREF_JUSTORG = "p_justorg";
+  const GET_ORGS = "get_orgs";
+
+  const cautionSessionDestruction =
+    "<div class='fnotebox'>Changing user level or locales while a user is active will " +
+    "result in destruction of their session. Check if they have been working recently.</div>\n";
+
+  let showLockedUsers = false;
+  let orgList = null;
+  let justOrg = null;
+  let byEmail = {};
 
   // called as special.load
   function load() {
@@ -37,27 +48,29 @@ const cldrListUsers = (function () {
 
   function getUrl() {
     // Allow cache (no cacheKill) -- except for development/debugging
-    if (false) {
-      // allow cache
-      return (
-        cldrStatus.getContextPath() +
-        "/SurveyAjax?what=user_list&s=" +
-        cldrStatus.getSessionId()
-      );
-    } else {
-      // bust/disallow/kill cache
-      return (
-        cldrStatus.getContextPath() +
-        "/SurveyAjax?what=user_list&s=" +
-        cldrStatus.getSessionId() +
-        "&" +
-        cldrSurvey.cacheKill()
-      );
+    const allowCache = false;
+    const perm = cldrStatus.getPermissions();
+    const getOrgs = perm && perm.userIsAdmin && !orgList;
+
+    const p = new URLSearchParams();
+    p.append("what", "user_list");
+    p.append(GET_ORGS, getOrgs);
+    p.append(PREF_SHOWLOCKED, showLockedUsers);
+    if (justOrg) {
+      p.append(PREF_JUSTORG, justOrg);
     }
+    p.append("s", cldrStatus.getSessionId());
+    if (!allowCache) {
+      p.append("cacheKill", cldrSurvey.cacheBuster());
+    }
+    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
   }
 
   function loadHandler(json) {
     const ourDiv = document.createElement("div");
+    if (json.orgList) {
+      orgList = json.orgList;
+    }
     ourDiv.innerHTML = getHtml(json);
     cldrSurvey.hideLoader();
     cldrLoad.flipToOtherDiv(ourDiv);
@@ -72,23 +85,73 @@ const cldrListUsers = (function () {
   }
 
   function getHtml(json) {
-    let html = "";
-    html +=
-      "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a><br />\n";
-    html += "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a><br />\n";
-    const org = json.org ? json.org : "default";
+    const just = null; // TODO: just
+    const org = json.org ? json.org : "ALL";
+    let html = getParticipatingUsersLink();
+    html += getAddUserLink();
+    if (orgList && !just) {
+      html += getOrgFilterMenu();
+    }
     html += "<h2>Users for " + org + "</h2>\n";
-    html += "<a href='...'>[TODO:] Show locked users: is currently</a><br />\n";
-    html +=
-      "<div class='fnotebox'>Changing user level or locales while a user is active will result in destruction of their session. Check if they have been working recently.</div>\n";
-
+    html += getLockedUsersControl();
+    html += cautionSessionDestruction;
     html += getPager();
     html += getTable(json);
-
-    html += "Under construction... here is json:";
-    html += "<pre>" + JSON.stringify(json, null, 2) + "</pre>\n";
-
+    html +=
+      "<div style='font-size: 70%'>Number of users shown: " +
+      json.shownUsers.length +
+      "</div><br />";
+    /// html += "Under construction. Json:";
+    /// html += "<pre>" + JSON.stringify(json, null, 2) + "</pre>\n";
     return html;
+  }
+
+  function getParticipatingUsersLink() {
+    // TODO: "Users Who Participated": see https://unicode-org.atlassian.net/browse/CLDR-14432
+    return "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a><br />\n";
+  }
+
+  function getAddUserLink() {
+    // TODO: "Add User": see https://unicode-org.atlassian.net/browse/CLDR-14433
+    return "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a><br />\n";
+  }
+
+  function getLockedUsersControl() {
+    const ch = showLockedUsers ? " checked='checked'" : "";
+    return (
+      "<input type='checkbox' id='showLocked' onclick='cldrListUsers.toggleShowLocked();'" +
+      ch +
+      "><label for='showLocked'>Show locked users</label><br />"
+    );
+  }
+
+  function toggleShowLocked() {
+    showLockedUsers = !showLockedUsers;
+    load();
+  }
+
+  function getOrgFilterMenu() {
+    if (!justOrg) {
+      justOrg = "all";
+    }
+    let html =
+      "<label class='menutop-active'>Filter Organization " +
+      "<select class='menutop-other' onchange='cldrListUsers.filterOrg(this.value);'>\n" +
+      "<option value='all'>Show All</option>\n";
+    orgList.forEach(function (org) {
+      const sel = org === justOrg ? " selected='selected'" : "";
+      html += "<option value='" + org + "'" + sel + ">" + org + "</option>\n";
+    });
+    html += "</select>\n";
+    html += "</label>\n";
+    return html;
+  }
+
+  function filterOrg(org) {
+    if (org !== justOrg) {
+      justOrg = org;
+      load();
+    }
   }
 
   function getPager() {
@@ -121,24 +184,27 @@ Set menus:<br><label>all
   const tableStart =
     '<table id="userListTable" summary="User List" class="userlist" border="2">\n' +
     '<thead><tr><th></th><th style="display: none;">Organization / Level</th><th>Name/Email</th><th>Action</th><th>Locales</th><th>Seen</th></tr></thead>\n' +
-    '<tbody><tr class="heading"><th class="partsection" colspan="6"><a name="Breton"><h4>Breton</h4></a></th></tr>\n';
+    "<tbody>\n";
 
   const tableEnd = "</tbody></table>\n";
-
-  let byEmail = {};
 
   function getTable(json) {
     byEmail = {};
     let html = tableStart;
-    let lastHead = "";
+    let oldOrg = "";
     for (let k in json.shownUsers) {
       const u = {
-        data: json.users[k],
+        data: json.shownUsers[k],
       };
       byEmail[u.data.email] = u;
-      if (lastHead !== u.data.org) {
-        html += "<h1>" + u.data.org + "</h1>\n";
-        lastHead = u.data.org;
+      if (oldOrg !== u.data.org) {
+        html +=
+          "<tr class='heading'><th class='partsection' colspan='6'><a name='" +
+          u.data.org +
+          "'><h4>" +
+          u.data.org +
+          "</h4>";
+        oldOrg = u.data.org;
       }
       html += getUserHtml(u, json);
     }
@@ -147,43 +213,44 @@ Set menus:<br><label>all
   }
 
   function getUserHtml(u, json) {
-    let html = "";
-    html += "<tr id='u@" + u.data.id + "'>\n";
-    // console.log("Wrote tr for u@" + u.data.id);
-    // 1st row (no header): "zoom" icon
-    html +=
+    const zoomImage =
+      "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'>";
+    return (
+      "<tr id='u@" +
+      u.data.id +
+      "'>\n" +
+      // 1st column (no header): "zoom" icon
       "<td><a href='" +
       getJustuUrl(u.data.email) +
       "'>" +
-      "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'></a></td>" +
-      // 2nd row is hidden -- what's it for? Maybe "org", per showUserActivity?
+      zoomImage +
+      "</a></td>" +
+      // 2nd column is hidden -- what's it for? Maybe "org", per showUserActivity?
       "<td style='display: none;'></td>" +
-      // 3rd row: "Name/Email"; has gravatar icon, etc., filled in by showUserActivity
+      // 3rd column: "Name/Email"; has gravatar icon, etc., filled in by showUserActivity
       "<td valign='top'></td>" +
-      // 4th row: "Action"; menu, links to Upload XMl and User Activity
+      // 4th column: "Action"; menu, links to Upload XMl and User Activity
       "<td>" +
       getUserActions(u, json) +
       "</td>" +
-      // 5th row: "Locales"
+      // 5th column: "Locales"
       "<td>" +
       getUserLocales(u, json) +
       "</td>" +
-      // 6th row: "Seen"
+      // 6th column: "Seen"
       "<td>" +
       getUserSeen(u) +
-      "</td>\n";
-    html += "</tr>\n";
-    return html;
+      "</td>\n" +
+      "</tr>\n"
+    );
   }
 
   function getJustuUrl(email) {
-    return (
-      cldrStatus.getContextPath() +
-      "/SurveyAjax?what=user_list&justu=" +
-      email +
-      "&s=" +
-      cldrStatus.getSessionId()
-    );
+    const p = new URLSearchParams();
+    p.append("what", "user_list");
+    p.append("justu", email);
+    p.append("s", cldrStatus.getSessionId());
+    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
   }
 
   function getUserActions(u, json) {
@@ -197,8 +264,6 @@ Set menus:<br><label>all
   }
 
   function getUserActionMenu(u, json) {
-    const forLevel = json.userPerms.forLevel;
-    const theirLevel = u.data.userlevel;
     const theirTag = u.data.id + "_" + u.data.email;
     const just = null; // TODO: "just"
 
@@ -210,6 +275,8 @@ Set menus:<br><label>all
 
     html += "  <option value=''>" + LIST_ACTION_NONE + "</option>\n";
 
+    const forLevel = json.userPerms.forLevel;
+    const theirLevel = u.data.userlevel;
     for (let i in forLevel) {
       const lev = forLevel[i];
       if (just === null && lev !== "locked") {
@@ -315,7 +382,7 @@ Set menus:<br><label>all
       u.data.locales === "all locales"
     ) {
       return "<i>all locales</i>";
-    } else if (u.data.locales === "no locales") {
+    } else if (!u.data.locales || u.data.locales === "no locales") {
       return "<i>no locales</i>";
     } else {
       return prettyLocaleList(u.data.locales);
@@ -358,7 +425,221 @@ Set menus:<br><label>all
     return html;
   }
 
-  /***
+  function doChangeUserOption(u, forLevel, newLevel, theirLevel, selected) {
+    let html = "";
+    if (forLevel[u.data.level].canCreateOrSetLevelTo) {
+      html +=
+        "  <option value='" +
+        LIST_ACTION_SETLEVEL +
+        newLevel +
+        "'>Make " +
+        newLevel +
+        "</option>";
+    } else {
+      html += "  <option disabled>Make " + newLevel + "</option>";
+    }
+  }
+
+  function showUserActivity(shownUsers, tableRef) {
+    const table = document.getElementById(tableRef);
+    const rows = [];
+    const theadChildren = cldrSurvey.getTagChildren(
+      table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0]
+    );
+    cldrDom.setDisplayed(theadChildren[1], false);
+    const rowById = [];
+    for (let k in shownUsers) {
+      const user = shownUsers[k];
+      rowById[user.id] = parseInt(k);
+      showOneUserActivity(user, rows);
+    }
+
+    const actLoadHandler = function (json) {
+      realActLoadHandler(json, rowById, rows);
+    };
+
+    const xhrArgs = {
+      url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
+      handleAs: "json",
+      load: actLoadHandler,
+      err: actErrHandler,
+    };
+
+    cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function showOneUserActivity(user, rows) {
+    const tr = document.getElementById("u@" + user.id);
+    if (!tr) {
+      console.log("Missing tr for id " + user.id);
+      return;
+    }
+    const rowChildren = cldrSurvey.getTagChildren(tr);
+    cldrDom.removeAllChildNodes(rowChildren[1]); // org
+    cldrDom.removeAllChildNodes(rowChildren[2]); // name
+    if (!rowChildren[1]) {
+      console.log("Missing rowChildren[1] for id " + user.id);
+      return;
+    }
+    cldrDom.setDisplayed(rowChildren[1], false);
+    const theUser = createUser(user);
+    rowChildren[2].appendChild(theUser);
+
+    rows.push({
+      user: user,
+      tr: tr,
+      userDiv: theUser,
+      seen: rowChildren[5],
+      stats: [],
+      total: 0,
+    });
+  }
+
+  function realActLoadHandler(json, rowById, rows) {
+    let loc2name = {};
+
+    /* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */
+    const stats = json.stats_bydayuserloc;
+    const header = stats.header;
+    for (let k in stats.data) {
+      const row = stats.data[k];
+      const submitter = row[header.SUBMITTER];
+      const submitterRow = rowById[submitter];
+      if (submitterRow !== undefined) {
+        const userRow = rows[submitterRow];
+        userRow.stats.push({
+          day: row[header.DAY],
+          count: row[header.COUNT],
+          locale: row[header.LOCALE],
+        });
+        userRow.total = userRow.total + row[header.COUNT];
+        loc2name[row[header.LOCALE]] = row[header.LOCALE_NAME];
+      }
+    }
+
+    for (let k in rows) {
+      const userRow = rows[k];
+      if (userRow.total > 0) {
+        cldrDom.addClass(userRow.tr, "hadActivity");
+        userRow.tr.getElementsByClassName("recentActivity")[0].appendChild(
+          document.createTextNode(
+            // " (" + dojoNumber.format(userRow.total) + ")"
+            " (" + userRow.total + ")"
+          )
+        );
+
+        userRow.seenSub = document.createElement("div");
+        userRow.seenSub.className = "seenSub";
+        userRow.seen.appendChild(userRow.seenSub);
+
+        appendMiniChart(userRow, 3);
+        if (userRow.stats.length > 3) {
+          var chartMore, chartLess;
+          chartMore = cldrDom.createChunk("+", "span", "chartMore");
+          chartLess = cldrDom.createChunk("-", "span", "chartMore");
+          chartMore.onclick = (function (chartMore, chartLess, userRow) {
+            return function () {
+              cldrDom.setDisplayed(chartMore, false);
+              cldrDom.setDisplayed(chartLess, true);
+              appendMiniChart(userRow, userRow.stats.length);
+              return false;
+            };
+          })(chartMore, chartLess, userRow);
+          chartLess.onclick = (function (chartMore, chartLess, userRow) {
+            return function () {
+              cldrDom.setDisplayed(chartMore, true);
+              cldrDom.setDisplayed(chartLess, false);
+              appendMiniChart(userRow, 3);
+              return false;
+            };
+          })(chartMore, chartLess, userRow);
+          userRow.seen.appendChild(chartMore);
+          cldrDom.setDisplayed(chartLess, false);
+          userRow.seen.appendChild(chartLess);
+        }
+      } else {
+        cldrDom.addClass(userRow.tr, "noActivity");
+      }
+    }
+
+    // closure vars: loc2name
+    function appendMiniChart(userRow, count) {
+      if (count > userRow.stats.length) {
+        count = userRow.stats.length;
+      }
+      cldrDom.removeAllChildNodes(userRow.seenSub);
+      let chartRow = null;
+      for (let k = 0; k < count; k++) {
+        const theStat = userRow.stats[k];
+        chartRow = cldrDom.createChunk("", "div", "chartRow");
+        const chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
+        const chartLoc = cldrDom.createChunk(
+          theStat.locale,
+          "span",
+          "chartLoc"
+        );
+        chartLoc.title = loc2name[theStat.locale];
+        const chartCount = cldrDom.createChunk(
+          theStat.count,
+          "span",
+          "chartCount"
+        );
+
+        chartRow.appendChild(chartDay);
+        chartRow.appendChild(chartLoc);
+        chartRow.appendChild(chartCount);
+
+        userRow.seenSub.appendChild(chartRow);
+      }
+      if (chartRow && count < userRow.stats.length) {
+        chartRow.appendChild(document.createTextNode("..."));
+      }
+    }
+  }
+
+  function actErrHandler(err) {
+    console.log("Error getting user activity: " + err);
+  }
+
+  /**
+   * Create a DOM object referring to a user.
+   *
+   * @param {JSON} user - user struct
+   * @return {Object} new DOM object
+   */
+  function createUser(user) {
+    const userLevelLc = user.userlevelName.toLowerCase();
+    const userLevelClass = "userlevel_" + userLevelLc;
+    const userLevelStr = cldrText.get(userLevelClass);
+    const div = cldrDom.createChunk(null, "div", "adminUserUser");
+    div.appendChild(cldrSurvey.createGravatar(user));
+    div.userLevel = cldrDom.createChunk(userLevelStr, "i", userLevelClass);
+    div.appendChild(div.userLevel);
+    div.appendChild(
+      (div.userName = cldrDom.createChunk(user.name, "span", "adminUserName"))
+    );
+    if (!user.orgName) {
+      user.orgName = user.org;
+    }
+    div.appendChild(
+      (div.userOrg = cldrDom.createChunk(
+        user.orgName + " #" + user.id,
+        "span",
+        "adminOrgName"
+      ))
+    );
+    div.appendChild(
+      (div.userEmail = cldrDom.createChunk(
+        user.email,
+        "address",
+        "adminUserAddress"
+      ))
+    );
+    return div;
+  }
+
+  /*** from old specials/users.js:
+
     const label = $("<label />");
     const showLocked = $("<input />", {
       type: "checkbox",
@@ -589,223 +870,14 @@ Set menus:<br><label>all
 })
 ***/
 
-  function doChangeUserOption(u, forLevel, newLevel, theirLevel, selected) {
-    let html = "";
-    if (forLevel[u.data.level].canCreateOrSetLevelTo) {
-      html +=
-        "  <option value='" +
-        LIST_ACTION_SETLEVEL +
-        newLevel +
-        "'>Make " +
-        newLevel +
-        "</option>";
-    } else {
-      html += "  <option disabled>Make " + newLevel + "</option>";
-    }
-  }
-
-  function showUserActivity(list, tableRef) {
-    const table = document.getElementById(tableRef);
-
-    const rows = [];
-    const theadChildren = cldrSurvey.getTagChildren(
-      table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0]
-    );
-
-    cldrDom.setDisplayed(theadChildren[1], false);
-    const rowById = [];
-
-    for (let k in list) {
-      const user = list[k];
-      const tr = document.getElementById("u@" + user.id);
-      if (!tr) {
-        console.log("Missing tr for id " + user.id);
-        continue;
-      }
-      rowById[user.id] = parseInt(k); // ?!
-
-      let rowChildren = cldrSurvey.getTagChildren(tr);
-
-      cldrDom.removeAllChildNodes(rowChildren[1]); // org
-      cldrDom.removeAllChildNodes(rowChildren[2]); // name
-
-      let theUser;
-      if (!rowChildren[1]) {
-        console.log("Missing rowChildren[1] for id " + user.id);
-      } else {
-        cldrDom.setDisplayed(rowChildren[1], false);
-        rowChildren[2].appendChild((theUser = createUser(user)));
-      }
-
-      rows.push({
-        user: user,
-        tr: tr,
-        userDiv: theUser,
-        seen: rowChildren[5],
-        stats: [],
-        total: 0,
-      });
-    }
-
-    let loc2name = {};
-
-    const actLoadHandler = function (json) {
-      /* COUNT: 1120,  DAY: 2013-04-30, LOCALE: km, LOCALE_NAME: khmer, SUBMITTER: 2 */
-      var stats = json.stats_bydayuserloc;
-      var header = stats.header;
-      for (var k in stats.data) {
-        var row = stats.data[k];
-        var submitter = row[header.SUBMITTER];
-        var submitterRow = rowById[submitter];
-        if (submitterRow !== undefined) {
-          var userRow = rows[submitterRow];
-          userRow.stats.push({
-            day: row[header.DAY],
-            count: row[header.COUNT],
-            locale: row[header.LOCALE],
-          });
-          userRow.total = userRow.total + row[header.COUNT];
-          loc2name[row[header.LOCALE]] = row[header.LOCALE_NAME];
-        }
-      }
-
-      function appendMiniChart(userRow, count) {
-        if (count > userRow.stats.length) {
-          count = userRow.stats.length;
-        }
-        cldrDom.removeAllChildNodes(userRow.seenSub);
-        for (var k = 0; k < count; k++) {
-          var theStat = userRow.stats[k];
-          var chartRow = cldrDom.createChunk("", "div", "chartRow");
-
-          var chartDay = cldrDom.createChunk(theStat.day, "span", "chartDay");
-          var chartLoc = cldrDom.createChunk(
-            theStat.locale,
-            "span",
-            "chartLoc"
-          );
-          chartLoc.title = loc2name[theStat.locale];
-          var chartCount = cldrDom.createChunk(
-            // dojoNumber.format(theStat.count),
-            theStat.count,
-            "span",
-            "chartCount"
-          );
-
-          chartRow.appendChild(chartDay);
-          chartRow.appendChild(chartLoc);
-          chartRow.appendChild(chartCount);
-
-          userRow.seenSub.appendChild(chartRow);
-        }
-        if (count < userRow.stats.length) {
-          chartRow.appendChild(document.createTextNode("..."));
-        }
-      }
-
-      for (var k in rows) {
-        var userRow = rows[k];
-        if (userRow.total > 0) {
-          cldrDom.addClass(userRow.tr, "hadActivity");
-          userRow.tr.getElementsByClassName("recentActivity")[0].appendChild(
-            document.createTextNode(
-              // " (" + dojoNumber.format(userRow.total) + ")"
-              " (" + userRow.total + ")"
-            )
-          );
-
-          userRow.seenSub = document.createElement("div");
-          userRow.seenSub.className = "seenSub";
-          userRow.seen.appendChild(userRow.seenSub);
-
-          appendMiniChart(userRow, 3);
-          if (userRow.stats.length > 3) {
-            var chartMore, chartLess;
-            chartMore = cldrDom.createChunk("+", "span", "chartMore");
-            chartLess = cldrDom.createChunk("-", "span", "chartMore");
-            chartMore.onclick = (function (chartMore, chartLess, userRow) {
-              return function () {
-                cldrDom.setDisplayed(chartMore, false);
-                cldrDom.setDisplayed(chartLess, true);
-                appendMiniChart(userRow, userRow.stats.length);
-                return false;
-              };
-            })(chartMore, chartLess, userRow);
-            chartLess.onclick = (function (chartMore, chartLess, userRow) {
-              return function () {
-                cldrDom.setDisplayed(chartMore, true);
-                cldrDom.setDisplayed(chartLess, false);
-                appendMiniChart(userRow, 3);
-                return false;
-              };
-            })(chartMore, chartLess, userRow);
-            userRow.seen.appendChild(chartMore);
-            cldrDom.setDisplayed(chartLess, false);
-            userRow.seen.appendChild(chartLess);
-          }
-        } else {
-          cldrDom.addClass(userRow.tr, "noActivity");
-        }
-      }
-    };
-
-    const xhrArgs = {
-      url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
-      handleAs: "json",
-      load: actLoadHandler,
-      err: actErrHandler,
-    };
-
-    cldrAjax.sendXhr(xhrArgs);
-  }
-
-  function actErrHandler(err) {
-    console.log("Error getting user activity: " + err);
-  }
-
-  /**
-   * Create a DOM object referring to a user.
-   *
-   * @param {JSON} user - user struct
-   * @return {Object} new DOM object
-   */
-  function createUser(user) {
-    var userLevelLc = user.userlevelName.toLowerCase();
-    var userLevelClass = "userlevel_" + userLevelLc;
-    var userLevelStr = cldrText.get(userLevelClass);
-    var div = cldrDom.createChunk(null, "div", "adminUserUser");
-    div.appendChild(cldrSurvey.createGravatar(user));
-    div.userLevel = cldrDom.createChunk(userLevelStr, "i", userLevelClass);
-    div.appendChild(div.userLevel);
-    div.appendChild(
-      (div.userName = cldrDom.createChunk(user.name, "span", "adminUserName"))
-    );
-    if (!user.orgName) {
-      user.orgName = user.org;
-    }
-    div.appendChild(
-      (div.userOrg = cldrDom.createChunk(
-        user.orgName + " #" + user.id,
-        "span",
-        "adminOrgName"
-      ))
-    );
-    div.appendChild(
-      (div.userEmail = cldrDom.createChunk(
-        user.email,
-        "address",
-        "adminUserAddress"
-      ))
-    );
-    return div;
-  }
-
   /*
    * Make only these functions accessible from other files
    */
   return {
     createUser,
+    filterOrg,
     load,
+    toggleShowLocked,
     /*
      * The following are meant to be accessible for unit testing only:
      */

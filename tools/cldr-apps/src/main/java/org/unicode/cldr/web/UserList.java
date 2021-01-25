@@ -3,8 +3,8 @@ package org.unicode.cldr.web;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,98 +12,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.unicode.cldr.util.CLDRConfigImpl;
 import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.web.SurveyAjax.JSONWriter;
-import org.unicode.cldr.web.SurveyException.ErrorCode;
 import org.unicode.cldr.web.UserRegistry.InfoType;
+import org.unicode.cldr.web.UserRegistry.User;
 
 public class UserList {
-
-    public static void getJson(JSONWriter r, HttpServletRequest request,
-            HttpServletResponse response, CookieSession mySession, SurveyMain sm) throws JSONException, SurveyException, IOException {
-        if (!mySession.user.isAdminForOrg(mySession.user.org)) {
-            r.put("err", "You do not have permission to list users.");
-            return;
-        }
-        try {
-            final String forOrg = (UserRegistry.userIsAdmin(mySession.user)) ? null : mySession.user.org;
-            JSONArray users = getUsers(mySession, sm, forOrg);
-            JSONObject userPerms = getUserPerms(mySession);
-            r.put("what", SurveyAjax.WHAT_USER_LIST);
-            r.put("users", users);
-            r.put("org", forOrg);
-            r.put("userPerms", userPerms);
-
-            // TODO: figure out what is really needed to get ctx for doList;
-            // some of this may be pointless
-            CLDRConfigImpl.setUrls(request);
-            WebContext ctx = new WebContext(request, response);
-            request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
-            ctx.session = mySession;
-            ctx.sm = sm;
-            // Call doList to get json.shownUsers
-            doList(r, ctx, sm);
-        } catch (SQLException e) {
-            SurveyLog.logException(e, "listing users for " + mySession.user.toString());
-            throw new SurveyException(ErrorCode.E_INTERNAL, "Internal error listing users: " + e.toString());
-        }
-    }
-
-    private static JSONArray getUsers(CookieSession mySession, SurveyMain sm, final String forOrg) throws SQLException, JSONException {
-        Connection conn = null;
-        ResultSet rs = null;
-        PreparedStatement ps = null;
-        JSONArray users = new JSONArray();
-        try {
-            conn = DBUtils.getInstance().getDBConnection();
-            ps = sm.reg.list(forOrg, conn);
-            rs = ps.executeQuery();
-            // id,userlevel,name,email,org,locales,intlocs,lastlogin,active
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                UserRegistry.User them = sm.reg.getInfo(id);
-                java.sql.Timestamp lastlogin = rs.getTimestamp("lastlogin");
-                CookieSession session = CookieSession.retrieveUserWithoutTouch(them.email);
-                String active = (session == null) ? "" : SurveyMain.timeDiff(session.getLastBrowserCallMillisSinceEpoch());
-                String seen = (lastlogin == null) ? "" : SurveyMain.timeDiff(lastlogin.getTime());
-                boolean havePermToChange = mySession.user.isAdminFor(them);
-                boolean userCanDeleteUser = UserRegistry.userCanDeleteUser(mySession.user, them.id, them.userlevel);
-                users.put(JSONWriter.wrap(them)
-                    .put("active", active)
-                    .put("havePermToChange", havePermToChange)
-                    .put("intlocs", rs.getString("intlocs"))
-                    .put("lastlogin", lastlogin)
-                    .put("locales", rs.getString("locales"))
-                    .put("seen", seen)
-                    .put("userCanDeleteUser", userCanDeleteUser)
-                    );
-            }
-        } finally {
-            DBUtils.close(rs, ps, conn);
-        }
-        return users;
-    }
-
-    private static JSONObject getUserPerms(CookieSession mySession) throws JSONException {
-        JSONObject userPerms = new JSONObject();
-        final boolean userCanCreateUsers = UserRegistry.userCanCreateUsers(mySession.user);
-        userPerms.put("canCreateUsers", userCanCreateUsers);
-        if (userCanCreateUsers) {
-            final org.unicode.cldr.util.VoteResolver.Level myLevel = mySession.user.getLevel();
-            final Organization myOrganization = mySession.user.getOrganization();
-            JSONObject forLevel = new JSONObject();
-            for (VoteResolver.Level v : VoteResolver.Level.values()) {
-                JSONObject jo = new JSONObject();
-                jo.put("canCreateOrSetLevelTo", myLevel.canCreateOrSetLevelTo(v));
-                jo.put("isManagerFor", myLevel.isManagerFor(myOrganization, v, myOrganization));
-                forLevel.put(v.name(), jo);
-            }
-            userPerms.put("forLevel", forLevel);
-        }
-        return userPerms;
-    }
 
     private static final String LIST_ACTION_SETLEVEL = "set_userlevel_";
     private static final String LIST_ACTION_NONE = "-";
@@ -119,8 +34,58 @@ public class UserList {
     private static final String LIST_MAILUSER_CONFIRM_CODE = "confirm";
 
     private static final String PREF_SHOWLOCKED = "p_showlocked";
+    private static final String PREF_JUSTORG = "p_justorg";
 
-    private static void doList(JSONWriter r, WebContext ctx, SurveyMain sm) {
+    private static final String GET_ORGS = "get_orgs";
+
+    public static void getJson(JSONWriter r, HttpServletRequest request,
+            HttpServletResponse response, CookieSession mySession, SurveyMain sm) throws JSONException, SurveyException, IOException {
+        if (!mySession.user.isAdminForOrg(mySession.user.org)) {
+            r.put("err", "You do not have permission to list users.");
+            return;
+        }
+        final String justOrg = request.getParameter(PREF_JUSTORG);
+        final String forOrg = (UserRegistry.userIsAdmin(mySession.user)) ? justOrg : mySession.user.org;
+        final JSONObject userPerms = getUserPerms(mySession.user);
+        r.put("what", SurveyAjax.WHAT_USER_LIST);
+        r.put("org", forOrg);
+        r.put("userPerms", userPerms);
+        if ("true".equals(request.getParameter(GET_ORGS))) {
+            sm.reg.setOrgList();
+            r.put("orgList", UserRegistry.getOrgList());
+        }
+
+        // TODO: figure out what is really needed to get ctx for doList;
+        // some of this may be pointless
+        // CLDRConfigImpl.setUrls(request);
+        final WebContext ctx = new WebContext(request, response);
+        request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx);
+        ctx.session = mySession;
+        ctx.sm = sm;
+        // Call doList to get json.shownUsers, json.preset_fromint, etc.
+        doList(r, ctx, sm, justOrg);
+    }
+
+    private static JSONObject getUserPerms(User me) throws JSONException {
+        JSONObject userPerms = new JSONObject();
+        final boolean canCreateUsers = UserRegistry.userCanCreateUsers(me);
+        userPerms.put("canCreateUsers", canCreateUsers);
+        if (canCreateUsers) {
+            final org.unicode.cldr.util.VoteResolver.Level myLevel = me.getLevel();
+            final Organization myOrganization = me.getOrganization();
+            JSONObject forLevel = new JSONObject();
+            for (VoteResolver.Level v : VoteResolver.Level.values()) {
+                JSONObject jo = new JSONObject();
+                jo.put("canCreateOrSetLevelTo", myLevel.canCreateOrSetLevelTo(v));
+                jo.put("isManagerFor", myLevel.isManagerFor(myOrganization, v, myOrganization));
+                forLevel.put(v.name(), jo);
+            }
+            userPerms.put("forLevel", forLevel);
+        }
+        return userPerms;
+    }
+
+    private static void doList(JSONWriter r, WebContext ctx, SurveyMain sm, String justOrg) throws JSONException {
         int n = 0;
         String just = ctx.field(LIST_JUST);
         String doWhat = ctx.field(SurveyMain.QUERY_DO);
@@ -163,17 +128,8 @@ public class UserList {
             // ctx.println("<a href='" + ctx.url() + ctx.urlConnector() + "do=list&p_justorg='>\u22d6 Show all users</a><br>");
         }
         if (UserRegistry.userIsAdmin(ctx.session.user)) {
-            if (just == null) { // show a filter
-                String list0[] = UserRegistry.getOrgList();
-                String list1[] = new String[list0.length + 1];
-                System.arraycopy(list0, 0, list1, 1, list0.length);
-                list1[0] = "Show All";
-                /*** TODO
-                org = showListSetting(subCtx, "p_justorg", "Filter Organization", list1, true);
-                if (org.equals(list1[0])) {
-                    org = null;
-                }
-                ***/
+            if (justOrg != null && !justOrg.equals("all")) {
+                org = justOrg;
             } else {
                 org = null; // all
             }
@@ -323,6 +279,7 @@ public class UserList {
                 int locked = 0;
                 JSONArray shownUsers = new JSONArray();
                 while (rs.next()) {
+                    // SELECT id,userlevel,name,email,org,locales,intlocs,lastlogin
                     int theirId = rs.getInt(1);
                     int theirLevel = rs.getInt(2);
                     /*
@@ -344,6 +301,7 @@ public class UserList {
                     String theirEmail = rs.getString(4);
                     String theirOrg = rs.getString(5);
                     String theirLocales = rs.getString(6);
+                    String theirIntLocs = rs.getString(7);
                     java.sql.Timestamp theirLast = rs.getTimestamp(8);
                     UserRegistry.User theirInfo = reg.getInfo(theirId);
                     boolean havePermToChange = ctx.session.user.isAdminFor(theirInfo);
@@ -365,7 +323,7 @@ public class UserList {
                     }
                     n++;
 
-                    shownUsers.put(theirInfo);
+                    putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast);
 
                     if ((just == null) && (!justme) && (!theirOrg.equals(oldOrg))) {
                         /***
@@ -843,5 +801,50 @@ public class UserList {
             /// ctx.println("<a href='" + ctx.url() + ctx.urlConnector() + "do=list'>\u22d6 Show all users</a><br>");
         }
         /// printFooter(ctx);
+    }
+
+    private static void putShownUser(JSONArray shownUsers, User me, User them,
+            CookieSession theirSession, String theirLocales, String theirIntLocs, Timestamp theirLast) throws JSONException {
+        String active = (theirSession == null) ? "" : SurveyMain.timeDiff(theirSession.getLastBrowserCallMillisSinceEpoch());
+        String seen = (theirLast == null) ? "" : SurveyMain.timeDiff(theirLast.getTime());
+        boolean havePermToChange = me.isAdminFor(them);
+        boolean userCanDeleteUser = UserRegistry.userCanDeleteUser(me, them.id, them.userlevel);
+        VoteResolver.Level level = them.getLevel();
+        shownUsers.put(new JSONObject()
+            .put("active", active)
+            .put("email", them.email)
+            .put("emailHash", them.getEmailHash())
+            .put("havePermToChange", havePermToChange)
+            .put("id", them.id)
+            .put("intlocs", theirIntLocs)
+            .put("lastlogin", theirLast)
+            .put("locales", normalizeLocales(theirLocales))
+            .put("name", them.name)
+            .put("org", them.org)
+            .put("seen", seen)
+            .put("userCanDeleteUser", userCanDeleteUser)
+            .put("userlevel", them.userlevel)
+            .put("userlevelName", level)
+            .put("votecount", level.getVotes())
+            .put("voteCountMenu", level.getVoteCountMenu())
+        );
+    }
+
+    /**
+     * Normalize to be non-null and to use only spaces to separate multiple locales
+     *
+     * The users table in the db is inconsistent in how lists of locales are formatted;
+     * some have spaces, some have commas, some have commas and spaces. The front end
+     * expects them to be separated only by single space characters.
+     *
+     * @param locales a string representing a set of locales
+     * @return the normalized string
+     */
+    private static String normalizeLocales(String locales) {
+        if (locales == null) {
+            return "";
+        } else {
+            return locales.replace("[,/s]+", " ");
+        }
     }
 }
