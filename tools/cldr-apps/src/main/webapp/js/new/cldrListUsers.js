@@ -87,8 +87,8 @@ const cldrListUsers = (function () {
   function getHtml(json) {
     const just = null; // TODO: just
     const org = json.org ? json.org : "ALL";
-    let html = getParticipatingUsersLink();
-    html += getAddUserLink();
+    let html =
+      getParticipatingUsersLink() + "<br />\n" + getAddUserLink() + "<br />\n";
     if (orgList && !just) {
       html += getOrgFilterMenu();
     }
@@ -108,12 +108,12 @@ const cldrListUsers = (function () {
 
   function getParticipatingUsersLink() {
     // TODO: "Users Who Participated": see https://unicode-org.atlassian.net/browse/CLDR-14432
-    return "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a><br />\n";
+    return "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a>";
   }
 
   function getAddUserLink() {
     // TODO: "Add User": see https://unicode-org.atlassian.net/browse/CLDR-14433
-    return "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a><br />\n";
+    return "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a>";
   }
 
   function getLockedUsersControl() {
