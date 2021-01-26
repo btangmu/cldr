@@ -600,6 +600,7 @@ const cldrLoad = (function () {
       error_subtypes: cldrErrorSubtypes,
       forum: cldrForum,
       forum_participation: cldrForumParticipation,
+      list_users: cldrListUsers,
       locales: cldrLocales,
       mail: cldrMail,
       oldvotes: cldrOldVotes,

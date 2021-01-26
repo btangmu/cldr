@@ -282,7 +282,7 @@ public class SurveyAjax extends HttpServlet {
     public static final String WHAT_REVIEW_HIDE = "review_hide";
     public static final String WHAT_PARTICIPATING_USERS = "participating_users"; // tc-emaillist.js
     public static final String WHAT_USER_INFO = "user_info"; // usermap.js
-    public static final String WHAT_USER_LIST = "user_list"; // users.js
+    public static final String WHAT_USER_LIST = "user_list"; // (old) users.js; (new) cldrListUsers.js
     public static final String WHAT_USER_OLDVOTES = "user_oldvotes"; // users.js
     public static final String WHAT_USER_XFEROLDVOTES = "user_xferoldvotes"; // users.js
     public static final String WHAT_OLDVOTES = "oldvotes"; // cldrLoad.js
@@ -1003,7 +1003,11 @@ public class SurveyAjax extends HttpServlet {
                         }
                             break;
                         case WHAT_USER_LIST: {
-                            if (mySession.user.isAdminForOrg(mySession.user.org)) { // for now- only admin can do these
+                            if (!SurveyTool.useDojo(request)) {
+                                final JSONWriter r = newJSONStatusQuick(sm);
+                                UserList.getJson(r, request, response, mySession, sm);
+                                send(r, out);
+                            } else if (mySession.user.isAdminForOrg(mySession.user.org)) { // for now- only admin can do these
                                 try {
                                     Connection conn = null;
                                     ResultSet rs = null;
@@ -2861,6 +2865,9 @@ public class SurveyAjax extends HttpServlet {
                 }
 
                 try {
+                    /*
+                     * TODO: why use org.json.JSONWriter here but SurveyAjax.JSONWriter elsewhere?
+                     */
                     org.json.JSONWriter r = new org.json.JSONWriter(out).object()
                         .key("stro").value(STFactory.isReadOnlyLocale(locale))
                         .key("baseXpath").value(baseXp)
