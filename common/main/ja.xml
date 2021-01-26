@@ -4847,6 +4847,9 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			<zone type="America/Santa_Isabel">
 				<exemplarCity>サンタイサベル</exemplarCity>
 			</zone>
+			<zone type="Australia/Currie">
+				<exemplarCity>カリー</exemplarCity>
+			</zone>
 			<zone type="Pacific/Honolulu">
 				<exemplarCity>ホノルル</exemplarCity>
 			</zone>
@@ -4968,9 +4971,6 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</zone>
 			<zone type="Australia/Broken_Hill">
 				<exemplarCity>ブロークンヒル</exemplarCity>
-			</zone>
-			<zone type="Australia/Currie">
-				<exemplarCity>カリー</exemplarCity>
 			</zone>
 			<zone type="Australia/Melbourne">
 				<exemplarCity>メルボルン</exemplarCity>
@@ -7125,7 +7125,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			<percentSign>%</percentSign>
 			<plusSign draft="contributed">+</plusSign>
 			<minusSign draft="contributed">-</minusSign>
-			<approximatelySign>約 </approximatelySign>
+			<approximatelySign>約</approximatelySign>
 			<exponential>E</exponential>
 			<superscriptingExponent>×</superscriptingExponent>
 			<perMille>‰</perMille>
