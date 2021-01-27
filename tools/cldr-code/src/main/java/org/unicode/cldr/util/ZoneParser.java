@@ -618,11 +618,6 @@ public class ZoneParser {
 
     private static Map<String, String> FIX_UNSTABLE_TZIDS;
 
-    private static Set<String> SKIP_LINKS = new HashSet<>(Arrays.asList(
-        new String[] {
-            "America/Montreal", "America/Toronto",
-            "America/Santa_Isabel", "America/Tijuana" }));
-
     private static Set<String> PREFERRED_BASES = new HashSet<>(Arrays.asList(new String[] { "Europe/London" }));
 
     private static String[][] ADD_ZONE_ALIASES_DATA = {
@@ -840,16 +835,7 @@ public class ZoneParser {
                     } else if (items[0].equals("Link")) {
                         String old = items[2];
                         String newOne = items[1];
-                        if (!(SKIP_LINKS.contains(old) && SKIP_LINKS.contains(newOne))) {
-                            //System.out.println("Original " + old + "\t=>\t" + newOne);
-                            linkedItems.add(old, newOne);
-                        }
-                        /*
-                         * String conflict = (String) linkold_new.get(old); if (conflict !=
-                         * null) { System.out.println("Conflict with old: " + old + " => " +
-                         * conflict + ", " + newOne); } System.out.println(old + "\t=>\t" +
-                         * newOne); linkold_new.put(old, newOne);
-                         */
+                        linkedItems.add(old, newOne);
                     } else {
                         if (DEBUG)
                             System.out.println("Unknown zone line: " + line);
