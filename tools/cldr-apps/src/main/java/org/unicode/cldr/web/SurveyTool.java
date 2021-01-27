@@ -20,7 +20,7 @@ import org.unicode.cldr.util.VettingViewer;
 public class SurveyTool extends HttpServlet {
     private static final String USE_DOJO_VAR = "USE_DOJO";
     private static final long serialVersionUID = 1L;
-    private static final boolean USE_DOJO_DEFAULT = true;
+    private static final boolean USE_DOJO_DEFAULT = false;
 
     /**
      * Is dojo enabled by default?
@@ -374,6 +374,7 @@ public class SurveyTool extends HttpServlet {
 
     private static final String[] newJsFiles = {
         "cldrAbout.js",
+        "cldrAccount.js",
         "cldrAdmin.js",
         "cldrAjax.js",
         "cldrBulkClosePosts.js",
@@ -392,6 +393,7 @@ public class SurveyTool extends HttpServlet {
         "cldrGear.js",
         "cldrGui.js",
         "cldrInfo.js",
+        "cldrListUsers.js",
         "cldrLoad.js",
         "cldrLocaleMap.js",
         "cldrLocales.js",
