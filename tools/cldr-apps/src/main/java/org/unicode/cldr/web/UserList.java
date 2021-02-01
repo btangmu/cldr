@@ -5,6 +5,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONString;
 import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.util.VoteResolver;
 import org.unicode.cldr.web.SurveyAjax.JSONWriter;
@@ -38,7 +42,7 @@ public class UserList {
 
     private static final String GET_ORGS = "get_orgs";
 
-    public static void getJson(JSONWriter r, HttpServletRequest request,
+    public void getJson(JSONWriter r, HttpServletRequest request,
             HttpServletResponse response, CookieSession mySession, SurveyMain sm) throws JSONException, SurveyException, IOException {
         if (!mySession.user.isAdminForOrg(mySession.user.org)) {
             r.put("err", "You do not have permission to list users.");
@@ -54,6 +58,33 @@ public class UserList {
             sm.reg.setOrgList();
             r.put("orgList", UserRegistry.getOrgList());
         }
+
+        java.util.Map m = request.getParameterMap();
+        Set s = m.entrySet();
+
+        Iterator it = s.iterator();
+
+
+            while(it.hasNext()){
+
+                Map.Entry<String,String[]> entry = (Map.Entry<String,String[]>)it.next();
+
+
+                String key             = entry.getKey();
+                String[] value         = entry.getValue();
+
+                System.out.println("Key is "+key+"<br>");
+
+                    if(value.length>1){
+                        for (int i = 0; i < value.length; i++) {
+                            System.out.println("<li>" + value[i].toString() + "</li><br>");
+                        }
+                    }else
+                        System.out.println("Value is "+value[0].toString()+"<br>");
+
+                    System.out.println("-------------------<br>");
+            }
+
 
         // TODO: figure out what is really needed to get ctx for doList;
         // some of this may be pointless
@@ -85,48 +116,17 @@ public class UserList {
         return userPerms;
     }
 
-    private static void doList(JSONWriter r, WebContext ctx, SurveyMain sm, String justOrg) throws JSONException {
-        int n = 0;
-        String just = ctx.field(LIST_JUST);
-        String doWhat = ctx.field(SurveyMain.QUERY_DO);
+    private void doList(JSONWriter r, WebContext ctx, SurveyMain sm, String justOrg) throws JSONException {
         boolean justme = false; // "my account" mode
-        String listName = "list";
-        if (just.length() == 0) {
-            just = null;
-        } else {
-            justme = ctx.session.user.email.equals(just);
-        }
-        if (doWhat.equals("listu")) {
-            listName = "listu";
-            just = ctx.session.user.email;
-            justme = true;
-        }
-        WebContext subCtx = new WebContext(ctx);
-        subCtx.setQuery(SurveyMain.QUERY_DO, doWhat);
-
-        /***
-        if (justme) {
-            printHeader(ctx, "My Account");
-        } else {
-            printHeader(ctx, "List Users" + ((just == null) ? "" : (" - " + just)));
-        }
-        printUserTableWithHelp(ctx, "/AddModifyUser");
-        // see usermenu.jsp
-
-        if (UserRegistry.userIsTC(ctx.session.user)) {
-            ctx.println("| <a class='notselected' href='v#tc-emaillist'>Email Address of Users Who Participated</a>");
-            ctx.print(" | ");
-        }
-        if (UserRegistry.userCanCreateUsers(ctx.session.user)) {
-            showAddUser(ctx);
-        }
-        ctx.print("<br>");
-        ctx.println("<a href='" + ctx.url() + "'><b>SurveyTool main</b></a><hr>");
-        ***/
-        String org = ctx.session.user.org;
+        String just = ctx.field(LIST_JUST);
         if (just != null) {
-            // ctx.println("<a href='" + ctx.url() + ctx.urlConnector() + "do=list&p_justorg='>\u22d6 Show all users</a><br>");
+            if (just.isEmpty()) {
+                just = null;
+            } else if (ctx.session.user.email.equals(just)) {
+                justme = true;
+            }
         }
+        String org = ctx.session.user.org;
         if (UserRegistry.userIsAdmin(ctx.session.user)) {
             if (justOrg != null && !justOrg.equals("all")) {
                 org = justOrg;
@@ -154,10 +154,7 @@ public class UserList {
                     areSendingMail = true; // we are ready to go ahead and mail..
                 }
             } else if (ctx.hasField(LIST_MAILUSER_CONFIRM)) {
-                /***
-                ctx.println("<h1 class='ferrbox'>" + ctx.iconHtml("stop", "emails did not match")
-                    + " not sending mail - you did not confirm the email address. See form at bottom of page." + "</h1>");
-                    ***/
+                r.put("email_mismatch", true);
             }
 
             if (!areSendingMail && !areSendingDisp && ctx.hasField(LIST_MAILUSER)) {
@@ -170,37 +167,18 @@ public class UserList {
 
         UserRegistry reg = sm.reg;
 
+        int n = 0;
+
         try {
             conn = sm.dbUtils.getDBConnection();
             synchronized (reg) {
                 ps = reg.list(org, conn);
                 rs = ps.executeQuery();
                 if (rs == null) {
-                    /***
-                    ctx.println("<i>No results...</i>");
-                    ***/
                     return;
                 }
                 if (org == null) {
                     org = "ALL"; // all
-                }
-                if (justme) {
-                    /// ctx.println("<h2>My Account</h2>");
-                } else {
-                    /// ctx.println("<h2>Users for " + org + "</h2>");
-                    if (UserRegistry.userIsTC(ctx.session.user)) {
-                        /*** TODO
-                        showTogglePref(subCtx, PREF_SHOWLOCKED, "Show locked users:");
-                        ***/
-                    }
-                    /// ctx.println("<br>");
-                    /***
-                    if (UserRegistry.userCanModifyUsers(ctx.session.user)) {
-                        ctx.println("<div class='fnotebox'>"
-                            + "Changing user level or locales while a user is active will result in  "
-                            + " destruction of their session. Check if they have been working recently.</div>");
-                    }
-                    ***/
                 }
                 // Preset box
                 boolean preFormed = false;
@@ -316,6 +294,9 @@ public class UserList {
                     // the rows
                     // change..)
                     String action = ctx.field(theirTag);
+                    if (action != null && !action.isEmpty()) {
+                        System.out.println("Got action = " + action + " for user " + theirTag);
+                    }
                     CookieSession theUser = CookieSession.retrieveUserWithoutTouch(theirEmail);
 
                     if (just != null && !just.equals(theirEmail)) {
@@ -323,7 +304,8 @@ public class UserList {
                     }
                     n++;
 
-                    putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast);
+                    // putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast);
+                    UserActions uai = new UserActions();
 
                     if ((just == null) && (!justme) && (!theirOrg.equals(oldOrg))) {
                         /***
@@ -392,16 +374,13 @@ public class UserList {
                             if (action.equals(LIST_ACTION_SHOW_PASSWORD)) {
                                 String pass = reg.getPassword(ctx, theirId);
                                 if (pass != null) {
-                                    UserRegistry.printPasswordLink(ctx, theirEmail, pass);
-                                    /// ctx.println(" <tt class='winner'>" + pass + "</tt>");
+                                    uai.setPassword(pass);
                                 }
                             } else if (action.equals(LIST_ACTION_SEND_PASSWORD)) {
                                 String pass = reg.getPassword(ctx, theirId);
                                 if (pass != null && theirLevel < UserRegistry.LOCKED) {
-                                    UserRegistry.printPasswordLink(ctx, theirEmail, pass);
-                                    /*** TODO
-                                    notifyUser(ctx, theirEmail, pass);
-                                    ***/
+                                    uai.setPassword(pass);
+                                    sm.notifyUser(ctx, theirEmail, pass);
                                 }
                             } else if (action.equals(LIST_ACTION_DELETE0)) {
                                 /// ctx.println("Ensure that 'confirm delete' is chosen at right and click Do Action to delete..");
@@ -634,6 +613,8 @@ public class UserList {
 
                     ctx.println("  </tr>");
                     ***/
+
+                    putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast, uai);
                 }
                 /// ctx.println("</tbody></table>");
 
@@ -797,20 +778,18 @@ public class UserList {
         } finally {
             DBUtils.close(conn, ps, rs);
         }
-        if (just != null) {
-            /// ctx.println("<a href='" + ctx.url() + ctx.urlConnector() + "do=list'>\u22d6 Show all users</a><br>");
-        }
-        /// printFooter(ctx);
     }
 
     private static void putShownUser(JSONArray shownUsers, User me, User them,
-            CookieSession theirSession, String theirLocales, String theirIntLocs, Timestamp theirLast) throws JSONException {
+            CookieSession theirSession, String theirLocales, String theirIntLocs,
+            Timestamp theirLast, UserActions uai) throws JSONException {
         String active = (theirSession == null) ? "" : SurveyMain.timeDiff(theirSession.getLastBrowserCallMillisSinceEpoch());
         String seen = (theirLast == null) ? "" : SurveyMain.timeDiff(theirLast.getTime());
         boolean havePermToChange = me.isAdminFor(them);
         boolean userCanDeleteUser = UserRegistry.userCanDeleteUser(me, them.id, them.userlevel);
         VoteResolver.Level level = them.getLevel();
         shownUsers.put(new JSONObject()
+            .put("actions", uai)
             .put("active", active)
             .put("email", them.email)
             .put("emailHash", them.getEmailHash())
@@ -845,6 +824,23 @@ public class UserList {
             return "";
         } else {
             return locales.replaceAll("[,\\s]+", " ");
+        }
+    }
+
+    public class UserActions implements JSONString {
+        String password = null;
+
+        @Override
+        public String toJSONString() throws JSONException {
+            JSONObject j = new JSONObject();
+            if (password != null) {
+                j.put("password", password);
+            }
+            return j.toString();
+        }
+
+        public void setPassword(String pass) {
+            this.password = pass;
         }
     }
 }

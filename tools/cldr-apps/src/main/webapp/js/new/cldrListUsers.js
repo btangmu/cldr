@@ -8,6 +8,11 @@
  * and to hide everything else, minimizing global scope pollution.
  */
 const cldrListUsers = (function () {
+  const SHOW_GRAVATAR = false; // for debugging; TODO: restore to true for production
+
+  const WHAT_USER_LIST = "user_list"; // cf. org.unicode.cldr.web.SurveyAjax.WHAT_USER_LIST
+  const LIST_JUST = "justu"; // public cldrListUsers.LIST_JUST; cf. org.unicode.cldr.web.UserList.LIST_JUST
+
   // cf. UserList.java and SurveyMain.java for these constants
   const LIST_ACTION_SETLEVEL = "set_userlevel_";
   const LIST_ACTION_NONE = "-";
@@ -16,7 +21,6 @@ const cldrListUsers = (function () {
   const LIST_ACTION_SETLOCALES = "set_locales_";
   const LIST_ACTION_DELETE0 = "delete0_";
   const LIST_ACTION_DELETE1 = "delete_";
-  const LIST_JUST = "justu";
   const LIST_MAILUSER = "mailthem";
   const LIST_MAILUSER_WHAT = "mailthem_t";
   const LIST_MAILUSER_CONFIRM = "mailthem_c";
@@ -32,11 +36,13 @@ const cldrListUsers = (function () {
   let showLockedUsers = false;
   let orgList = null;
   let justOrg = null;
+  let justUser = null;
   let byEmail = {};
 
   // called as special.load
   function load() {
-    cldrInfo.showMessage(cldrText.get("users_guidance"));
+    cldrEvent.hideRightPanel();
+    cldrInfo.showNothing();
     const xhrArgs = {
       url: getUrl(),
       handleAs: "json",
@@ -53,11 +59,14 @@ const cldrListUsers = (function () {
     const getOrgs = perm && perm.userIsAdmin && !orgList;
 
     const p = new URLSearchParams();
-    p.append("what", "user_list");
+    p.append("what", WHAT_USER_LIST);
     p.append(GET_ORGS, getOrgs);
     p.append(PREF_SHOWLOCKED, showLockedUsers);
     if (justOrg) {
       p.append(PREF_JUSTORG, justOrg);
+    }
+    if (justUser) {
+      p.append(LIST_JUST, justUser);
     }
     p.append("s", cldrStatus.getSessionId());
     if (!allowCache) {
@@ -85,25 +94,46 @@ const cldrListUsers = (function () {
   }
 
   function getHtml(json) {
-    const just = null; // TODO: just
     const org = json.org ? json.org : "ALL";
-    let html =
+    let html = "";
+    html += emailMismatchWarning(json);
+    html +=
       getParticipatingUsersLink() + "<br />\n" + getAddUserLink() + "<br />\n";
-    if (orgList && !just) {
+    if (orgList && !justUser) {
       html += getOrgFilterMenu();
     }
     html += "<h2>Users for " + org + "</h2>\n";
     html += getLockedUsersControl();
     html += cautionSessionDestruction;
     html += getPager();
-    html += getTable(json);
-    html +=
-      "<div style='font-size: 70%'>Number of users shown: " +
-      json.shownUsers.length +
-      "</div><br />";
-    /// html += "Under construction. Json:";
-    /// html += "<pre>" + JSON.stringify(json, null, 2) + "</pre>\n";
+    html += getTable(json, cldrListUsers);
+    if (justUser) {
+      html +=
+        "<button type='button' onclick='cldrListUsers.showAll()'>Show all users</button>\n";
+    } else {
+      html +=
+        "<div style='font-size: 70%'>Number of users shown: " +
+        json.shownUsers.length +
+        "</div>\n";
+    }
     return html;
+  }
+
+  function emailMismatchWarning(json) {
+    if (json.email_mismatch) {
+      return (
+        "<h1 class='ferrbox'>" +
+        cldrStatus.stopIcon() +
+        " not sending mail - you did not confirm the email address. See form at bottom of page.</h1>\n"
+      );
+    } else {
+      return "";
+    }
+  }
+
+  function showAll() {
+    justUser = null;
+    load();
   }
 
   function getParticipatingUsersLink() {
@@ -175,22 +205,12 @@ Set menus:<br><label>all
    <option value="sendpassword_">Resend password...</option>
 </select></label> <br>
 <input type="submit" name="do" value="list"></form>
-</div>
-<form method="POST" action="/cldr-apps/survey">
-<input type="hidden" name="do" value="list">
-<input type="submit" name="doBtn" value="Do Action">`;
+</div>`;
   }
 
-  const tableStart =
-    '<table id="userListTable" summary="User List" class="userlist" border="2">\n' +
-    '<thead><tr><th></th><th style="display: none;">Organization / Level</th><th>Name/Email</th><th>Action</th><th>Locales</th><th>Seen</th></tr></thead>\n' +
-    "<tbody>\n";
-
-  const tableEnd = "</tbody></table>\n";
-
-  function getTable(json) {
+  function getTable(json, special) {
     byEmail = {};
-    let html = tableStart;
+    let html = getTableStart();
     let oldOrg = "";
     for (let k in json.shownUsers) {
       const u = {
@@ -206,25 +226,75 @@ Set menus:<br><label>all
           "</h4>";
         oldOrg = u.data.org;
       }
-      html += getUserHtml(u, json);
+      html += getUserHtml(u, json, special);
     }
-    html += tableEnd;
+    html += getTableEnd();
     return html;
   }
 
-  function getUserHtml(u, json) {
-    const zoomImage =
-      "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'>";
+  const doActionButton =
+    "<input type='submit' name='doBtn' value='Do Action'>\n";
+
+  function getTableStart() {
+    return (
+      /*
+      "<form method='POST' action='" +
+      getTablePostAction() +
+      "'>\n" +
+      */
+      "<form id='tableForm' method='POST' onsubmit='cldrListUsers.submitForm(event)'>\n" +
+      doActionButton +
+      "<table id='userListTable' summary='User List' class='userlist' border='2'>\n" +
+      "<thead><tr><th></th><th style='display: none;'>Organization / Level</th><th>Name/Email</th>" +
+      "<th>Action</th><th>Locales</th><th>Seen</th></tr></thead>\n" +
+      "<tbody>\n"
+    );
+  }
+
+  function submitForm(event) {
+    event.preventDefault();
+    const id = document.getElementById("tableForm");
+    if (!id) {
+      return;
+    }
+    const data = new FormData(id);
+
+    // Even though this is for a POST request, include a query string for the "?what=...&s=..." part,
+    // as with similar GET requests
+    const p = new URLSearchParams();
+    p.append("what", WHAT_USER_LIST);
+    p.append(PREF_SHOWLOCKED, showLockedUsers);
+    if (justOrg) {
+      p.append(PREF_JUSTORG, justOrg);
+    }
+    if (justUser) {
+      p.append(LIST_JUST, justUser);
+    }
+    p.append("s", cldrStatus.getSessionId());
+    const url = cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+    const xhrArgs = {
+      url: url,
+      postData: data,
+      handleAs: "json",
+      load: loadHandler,
+      error: errorHandler,
+    };
+    cldrAjax.sendXhr(xhrArgs);
+  }
+
+  function getTableEnd() {
+    return "</tbody></table>" + "<br />\n" + doActionButton + "</form>\n";
+  }
+
+  function getUserHtml(u, json, special) {
     return (
       "<tr id='u@" +
       u.data.id +
       "'>\n" +
-      // 1st column (no header): "zoom" icon
-      "<td><a href='" +
-      getJustuUrl(u.data.email) +
-      "'>" +
-      zoomImage +
-      "</a></td>" +
+      // 1st column (no header): "zoom" icon, or empty for justme
+      "<td>" +
+      getFirstCol(u, json, special) +
+      "</td>" +
       // 2nd column is hidden -- what's it for? Maybe "org", per showUserActivity?
       "<td style='display: none;'></td>" +
       // 3rd column: "Name/Email"; has gravatar icon, etc., filled in by showUserActivity
@@ -245,12 +315,45 @@ Set menus:<br><label>all
     );
   }
 
-  function getJustuUrl(email) {
-    const p = new URLSearchParams();
-    p.append("what", "user_list");
-    p.append("justu", email);
-    p.append("s", cldrStatus.getSessionId());
-    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+  function getFirstCol(u, json, special) {
+    if (special === cldrAccount || justUser) {
+      return "";
+    }
+    const zoomImage =
+      "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'>";
+
+    let html = "";
+    if (u.data.actions && u.data.actions.password) {
+      html += getPasswordLink(u.data.email, u.data.actions.password);
+    }
+    html +=
+      "<a onclick='cldrListUsers.zoomUser(\"" +
+      u.data.email +
+      "\")'>" +
+      zoomImage +
+      "</a>";
+    return html;
+  }
+
+  function getPasswordLink(email, password) {
+    return (
+      "<a href='" +
+      cldrStatus.getContextPath() +
+      "/survey?email=" +
+      email +
+      "&uid=" +
+      password +
+      "'>Login for " +
+      email +
+      "</a> <tt class='winner'>" +
+      password +
+      "</tt> "
+    );
+  }
+
+  function zoomUser(email) {
+    justUser = email;
+    load();
   }
 
   function getUserActions(u, json) {
@@ -608,7 +711,9 @@ Set menus:<br><label>all
     const userLevelClass = "userlevel_" + userLevelLc;
     const userLevelStr = cldrText.get(userLevelClass);
     const div = cldrDom.createChunk(null, "div", "adminUserUser");
-    div.appendChild(cldrSurvey.createGravatar(user));
+    if (SHOW_GRAVATAR) {
+      div.appendChild(cldrSurvey.createGravatar(user));
+    }
     div.userLevel = cldrDom.createChunk(userLevelStr, "i", userLevelClass);
     div.appendChild(div.userLevel);
     div.appendChild(
@@ -870,12 +975,17 @@ Set menus:<br><label>all
    * Make only these functions accessible from other files
    */
   return {
+    LIST_JUST,
+    WHAT_USER_LIST,
     createUser,
     filterOrg,
     getTable,
     load,
+    showAll,
     showUserActivity,
+    submitForm,
     toggleShowLocked,
+    zoomUser,
     /*
      * The following are meant to be accessible for unit testing only:
      */

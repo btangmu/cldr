@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.MultipartConfig;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -83,7 +85,11 @@ import com.ibm.icu.util.Output;
  * also use a POST instead of the _v parameter ) Note, add the preference to the
  * settablePrefsList
  *
+ * The @MultipartConfig annotation enables getting request parameters from a POST request
+ * that has "multipart/form-data" as its content-type, as needed for WHAT_USER_LIST.
  */
+@WebServlet
+@MultipartConfig
 public class SurveyAjax extends HttpServlet {
     final boolean DEBUG = false; //  || SurveyLog.isDebug();
     public final static String WHAT_MY_LOCALES = "mylocales";
@@ -318,6 +324,14 @@ public class SurveyAjax extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         setup(request, response);
+        if (!SurveyTool.useDojo(request)) {
+            String what = request.getParameter("what");
+            if (WHAT_USER_LIST.equals(what)) {
+                // bypass the "value", "request.getReader" stuff below
+                processRequest(request, response, null);
+                return;
+            }
+        }
         final String qs = request.getQueryString();
         String value;
         if (qs != null && !qs.isEmpty()) {
@@ -1005,7 +1019,7 @@ public class SurveyAjax extends HttpServlet {
                         case WHAT_USER_LIST: {
                             if (!SurveyTool.useDojo(request)) {
                                 final JSONWriter r = newJSONStatusQuick(sm);
-                                UserList.getJson(r, request, response, mySession, sm);
+                                new UserList().getJson(r, request, response, mySession, sm);
                                 send(r, out);
                             } else if (mySession.user.isAdminForOrg(mySession.user.org)) { // for now- only admin can do these
                                 try {

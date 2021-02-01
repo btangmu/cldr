@@ -8,8 +8,6 @@
  * and to hide everything else, minimizing global scope pollution.
  */
 const cldrAccount = (function () {
-  const LIST_JUST = "justu"; // cf. org.unicode.cldr.web.UserList.LIST_JUST
-
   let me = null;
 
   // called as special.load
@@ -38,10 +36,10 @@ const cldrAccount = (function () {
 
   function getUrl() {
     const p = new URLSearchParams();
-    p.append("what", "user_list");
-    p.append(LIST_JUST, me.email);
+    p.append("what", cldrListUsers.WHAT_USER_LIST);
+    p.append(cldrListUsers.LIST_JUST, me.email);
     p.append("s", cldrStatus.getSessionId());
-   return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
   }
 
   function loadHandler(json) {
@@ -63,8 +61,8 @@ const cldrAccount = (function () {
   }
 
   function getHtml(json) {
-    // TODO: hide first column of table, not applicable for single-user table
-    let html = "<h2>My Account</h2>\n" + cldrListUsers.getTable(json);
+    let html =
+      "<h2>My Account</h2>\n" + cldrListUsers.getTable(json, cldrAccount);
     html += "<hr />Under construction. Json:";
     html += "<pre>" + JSON.stringify(json, null, 2) + "</pre>\n";
     return html;
