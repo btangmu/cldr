@@ -324,14 +324,15 @@ public class SurveyAjax extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         setup(request, response);
-        if (!SurveyTool.useDojo(request)) {
-            String what = request.getParameter("what");
-            if (WHAT_USER_LIST.equals(what)) {
-                // bypass the "value", "request.getReader" stuff below
-                processRequest(request, response, null);
-                return;
-            }
+        if (!SurveyTool.useDojo(request) && WHAT_USER_LIST.equals(request.getParameter("what"))) {
+            // Bypass the "value", "request.getReader" code below, otherwise calling
+            // getParameter later fails for our FormData "multipart/form-data"
+            processRequest(request, response, null);
+            return;
         }
+        // TODO: explain/remove this qs/value business; shouldn't be necessary?
+        // Modern code can use request.getParameter without worrying whether
+        // the params are in the query string or the post body or both
         final String qs = request.getQueryString();
         String value;
         if (qs != null && !qs.isEmpty()) {

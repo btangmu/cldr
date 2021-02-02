@@ -105,7 +105,7 @@ const cldrListUsers = (function () {
     html += "<h2>Users for " + org + "</h2>\n";
     html += getLockedUsersControl();
     html += cautionSessionDestruction;
-    html += getPager();
+    html += getPager(json);
     html += getTable(json, cldrListUsers);
     if (justUser) {
       html +=
@@ -184,28 +184,37 @@ const cldrListUsers = (function () {
     }
   }
 
-  function getPager() {
-    return `<div class="pager" style="align: right; float: right; margin-left: 4px;">
-<form method="POST" action="/cldr-apps/survey">
-Set menus:<br><label>all 
-<select name="preset_from">
-   <option>-</option>
-<option class="user0" value="0">0: (ADMIN)</option>
-<option class="user1" value="1">1: (TC)</option>
-<option class="user2" value="2">2: (MANAGER)</option>
-<option class="user3" value="3">3: (EXPERT)</option>
-<option class="user5" value="5">5: (VETTER)</option>
-<option class="user10" value="10">10: (STREET)</option>
-<option class="user999" value="999">999: (LOCKED)</option>
-</select></label> <br>
- <label>to
-<select name="preset_do">
-   <option>-</option>
-   <option value="showpassword_">Show password URL...</option>
-   <option value="sendpassword_">Resend password...</option>
-</select></label> <br>
-<input type="submit" name="do" value="list"></form>
-</div>`;
+  function getPager(json) {
+    let html =
+      "<div class='pager' style='align: right; float: right; margin-left: 4px;'>\n";
+    html +=
+      "<form method='POST' action='/cldr-apps/survey????!!!'>" + // TODO: action
+      "Set menus:<br><label>all <select name='preset_from'>\n";
+    html += "<option>-</option>";
+    // Example: <option class='user999' value='999'>999: (LOCKED)</option>
+    const levels = json.userPerms.levels;
+    for (let number in levels) {
+      const string = levels[number].string;
+      html +=
+        "<option class='user" +
+        number +
+        "' value='" +
+        number +
+        "'>" +
+        string +
+        "</option>\n";
+    }
+    html += "</select></label> </br>\n";
+    html += "<label>to";
+    html +=
+      "<select name='preset_do'>\n" +
+      "<option>-</option>\n" +
+      "<option value='showpassword_'>Show password URL...</option>\n" +
+      "<option value='sendpassword_'>Resend password...</option>\n" +
+      "</select></label> <br>\n" +
+      "<input type='submit' name='do' value='list'></form>\n" +
+      "</div>\n";
+    return html;
   }
 
   function getTable(json, special) {
@@ -237,11 +246,6 @@ Set menus:<br><label>all
 
   function getTableStart() {
     return (
-      /*
-      "<form method='POST' action='" +
-      getTablePostAction() +
-      "'>\n" +
-      */
       "<form id='tableForm' method='POST' onsubmit='cldrListUsers.submitForm(event)'>\n" +
       doActionButton +
       "<table id='userListTable' summary='User List' class='userlist' border='2'>\n" +
@@ -323,8 +327,11 @@ Set menus:<br><label>all
       "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'>";
 
     let html = "";
-    if (u.data.actions && u.data.actions.password) {
-      html += getPasswordLink(u.data.email, u.data.actions.password);
+    if (u.data.actions && u.data.actions.LIST_ACTION_SHOW_PASSWORD) {
+      html += getPasswordLink(
+        u.data.email,
+        u.data.actions.LIST_ACTION_SHOW_PASSWORD
+      );
     }
     html +=
       "<a onclick='cldrListUsers.zoomUser(\"" +
@@ -368,24 +375,22 @@ Set menus:<br><label>all
 
   function getUserActionMenu(u, json) {
     const theirTag = u.data.id + "_" + u.data.email;
-    const just = null; // TODO: "just"
 
     let html = "<select name='" + theirTag + "'  ";
-    if (just) {
-      html += " onchange='this.form.submit()' ";
+    if (justUser) {
+      html += " onchange='cldrListUsers.submitForm(event)'";
     }
     html += ">\n";
 
     html += "  <option value=''>" + LIST_ACTION_NONE + "</option>\n";
 
-    const forLevel = json.userPerms.forLevel;
     const theirLevel = u.data.userlevel;
-    for (let i in forLevel) {
-      const lev = forLevel[i];
-      if (just === null && lev !== "locked") {
-        continue; // only allow mass LOCK (for now)
+    const levels = json.userPerms.levels;
+    for (let number in levels) {
+       // only allow mass LOCK
+      if (justUser || levels[number].name === "locked") {
+        html += doChangeUserOption(levels, number, theirLevel, false);
       }
-      doChangeUserOption(u, forLevel, lev, theirLevel, false);
     }
     html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
     html += " <option ";
@@ -407,7 +412,7 @@ Set menus:<br><label>all
     html +=
       " value='" + LIST_ACTION_SEND_PASSWORD + "'>Send password...</option>\n";
 
-    if (just !== null) {
+    if (justUser) {
       if (u.data.havePermToChange) {
         html +=
           " <option value='" +
@@ -416,7 +421,7 @@ Set menus:<br><label>all
       }
       if (u.data.userCanDeleteUser) {
         html += " <option>" + LIST_ACTION_NONE + "</option>\n";
-        if (action != null && action.equals(LIST_ACTION_DELETE0)) {
+        if (u.data.actions.LIST_ACTION_DELETE0) {
           html +=
             "   <option value='" +
             LIST_ACTION_DELETE1 +
@@ -433,7 +438,7 @@ Set menus:<br><label>all
             " value='" + LIST_ACTION_DELETE0 + "'>Delete user..</option>\n";
         }
       }
-      if (just != null) {
+      if (justUser) {
         html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
         /*** TODO:
             InfoType current = InfoType.fromAction(action);
@@ -476,7 +481,7 @@ Set menus:<br><label>all
 
   function getUserLocales(u, json) {
     const UserRegistry_MANAGER = 2; // TODO -- get from json? See UserRegistry.MANAGER in java
-    const forLevel = json.userPerms.forLevel;
+    // const levels = json.userPerms.levels;
     const theirLevel = u.data.userlevel;
     if (
       theirLevel <= UserRegistry_MANAGER ||
@@ -528,18 +533,19 @@ Set menus:<br><label>all
     return html;
   }
 
-  function doChangeUserOption(u, forLevel, newLevel, theirLevel, selected) {
-    let html = "";
-    if (forLevel[u.data.level].canCreateOrSetLevelTo) {
-      html +=
+  function doChangeUserOption(levels, newNumber, oldNumber, selected) {
+    const s = levels[newNumber].string; // e.g., "999: (LOCKED)"
+    if (levels[oldNumber].canCreateOrSetLevelTo) {
+      return (
         "  <option value='" +
         LIST_ACTION_SETLEVEL +
-        newLevel +
+        newNumber +
         "'>Make " +
-        newLevel +
-        "</option>";
+        s +
+        "</option>\n"
+      );
     } else {
-      html += "  <option disabled>Make " + newLevel + "</option>";
+      return "  <option disabled>Make " + s + "</option>\n";
     }
   }
 
@@ -558,18 +564,18 @@ Set menus:<br><label>all
       showOneUserActivity(user, rows);
     }
 
-    function actLoadHandler(json) {
-      realActLoadHandler(json, rowById, rows);
-    }
-
     const xhrArgs = {
       url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
       handleAs: "json",
-      load: actLoadHandler,
+      load: actLoadHandlerClosure,
       err: actErrHandler,
     };
 
     cldrAjax.sendXhr(xhrArgs);
+
+    function actLoadHandlerClosure(json) {
+      actLoadHandler(json, rowById, rows);
+    }
   }
 
   function showOneUserActivity(user, rows) {
@@ -588,7 +594,6 @@ Set menus:<br><label>all
     cldrDom.setDisplayed(rowChildren[1], false);
     const theUser = createUser(user);
     rowChildren[2].appendChild(theUser);
-
     rows.push({
       user: user,
       tr: tr,
@@ -599,7 +604,7 @@ Set menus:<br><label>all
     });
   }
 
-  function realActLoadHandler(json, rowById, rows) {
+  function actLoadHandler(json, rowById, rows) {
     const loc2name = setupLoc2Name(json, rowById, rows);
     for (let k in rows) {
       const userRow = rows[k];

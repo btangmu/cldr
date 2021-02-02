@@ -198,7 +198,7 @@ public class UserRegistry {
     /**
      * get a level as a string - presentation form
      **/
-    public static String levelToStr(WebContext ctx, int level) {
+    public static String levelToStr(int level) {
         return level + ": (" + levelAsStr(level) + ")";
     }
 

@@ -5,8 +5,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -59,32 +61,18 @@ public class UserList {
             r.put("orgList", UserRegistry.getOrgList());
         }
 
-        java.util.Map m = request.getParameterMap();
-        Set s = m.entrySet();
-
-        Iterator it = s.iterator();
-
-
-            while(it.hasNext()){
-
-                Map.Entry<String,String[]> entry = (Map.Entry<String,String[]>)it.next();
-
-
-                String key             = entry.getKey();
-                String[] value         = entry.getValue();
-
-                System.out.println("Key is "+key+"<br>");
-
-                    if(value.length>1){
-                        for (int i = 0; i < value.length; i++) {
-                            System.out.println("<li>" + value[i].toString() + "</li><br>");
-                        }
-                    }else
-                        System.out.println("Value is "+value[0].toString()+"<br>");
-
-                    System.out.println("-------------------<br>");
-            }
-
+        // DEBUGGING print all the parameters (query string and post body):
+        Map<String, String[]> m = request.getParameterMap();
+        Set<Entry<String, String[]>> s = m.entrySet();
+        Iterator<Entry<String, String[]>> it = s.iterator();
+        while (it.hasNext()) {
+            Map.Entry<String, String[]> entry = it.next();
+            String key = entry.getKey();
+            String[] value = entry.getValue();
+            System.out.println("Key: " + key);
+            System.out.println("Value: " + value[0].toString());
+            System.out.println("-------------------");
+        }
 
         // TODO: figure out what is really needed to get ctx for doList;
         // some of this may be pointless
@@ -104,14 +92,17 @@ public class UserList {
         if (canCreateUsers) {
             final org.unicode.cldr.util.VoteResolver.Level myLevel = me.getLevel();
             final Organization myOrganization = me.getOrganization();
-            JSONObject forLevel = new JSONObject();
+            JSONObject levels = new JSONObject();
             for (VoteResolver.Level v : VoteResolver.Level.values()) {
+                int number = v.getSTLevel(); // like 999
                 JSONObject jo = new JSONObject();
+                jo.put("name", v.name()); // like "locked"
+                jo.put("string", UserRegistry.levelToStr(number)); // like "999: (LOCKED)"
                 jo.put("canCreateOrSetLevelTo", myLevel.canCreateOrSetLevelTo(v));
                 jo.put("isManagerFor", myLevel.isManagerFor(myOrganization, v, myOrganization));
-                forLevel.put(v.name(), jo);
+                levels.put(String.valueOf(number), jo);
             }
-            userPerms.put("forLevel", forLevel);
+            userPerms.put("levels", levels);
         }
         return userPerms;
     }
@@ -303,97 +294,46 @@ public class UserList {
                         continue;
                     }
                     n++;
-
-                    // putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast);
-                    UserActions uai = new UserActions();
+                    UserActions ua = new UserActions();
 
                     if ((just == null) && (!justme) && (!theirOrg.equals(oldOrg))) {
-                        /***
-                        ctx.println("<tr class='heading' ><th class='partsection' colspan='6'><a name='" + theirOrg + "'><h4>"
-                            + theirOrg + "</h4></a></th></tr>");
-                            ***/
                         oldOrg = theirOrg;
                     }
-
-                    /// ctx.println("  <tr id='u@" + theirId + "' class='user" + theirLevel + "'>");
-
                     if (areSendingMail && (theirLevel < UserRegistry.LOCKED)) {
+                        // TODO: queued
                         /// ctx.print("<td class='framecell'>");
                         MailSender.getInstance().queue(ctx.userId(), theirId, mailSubj, mailBody);
                         /// ctx.println("(queued)</td>");
                     }
-                    // first: DO.
-
-                    if (havePermToChange) { // do stuff
-
-                        String msg = null;
+                    if (havePermToChange) {
                         if (ctx.field(LIST_ACTION_SETLOCALES + theirTag).length() > 0) {
-                            /// ctx.println("<td class='framecell' >");
-                            String newLocales = ctx.field(LIST_ACTION_SETLOCALES + theirTag);
-                            msg = reg.setLocales(ctx, theirId, theirEmail, newLocales);
-                            /// ctx.println(msg);
-                            theirLocales = newLocales; // MODIFY
-                            if (theUser != null) {
-                                /***
-                                ctx.println("<br/><i>Logging out user session " + theUser.id
-                                    + " and deleting all unsaved changes</i>");
-                                    ***/
-                                theUser.remove();
+                            theirLocales = setLocales(ctx, theirTag, theUser, theirId, theirEmail, reg, ua);
+                        } else if ((action != null) && (action.length() > 0) && (!action.equals(LIST_ACTION_NONE))) {
+                            if (action.startsWith(LIST_ACTION_SETLEVEL)) {
+                                theirLevel = setLevel(action, ctx, theUser, theirLevel, theirId, theirEmail, just, reg, ua);
+                                theirInfo.userlevel = theirLevel;
                             }
-                            UserRegistry.User newThem = reg.getInfo(theirId);
-                            if (newThem != null) {
-                                theirLocales = newThem.locales; // update
-                            }
-                            /// ctx.println("</td>");
-                        } else if ((action != null) && (action.length() > 0) && (!action.equals(LIST_ACTION_NONE))) { // other
-                            // actions
-                            /// ctx.println("<td class='framecell'>");
-
-                            // check an explicit list. Don't allow random levels
-                            // to be set.
-                            for (int i = 0; i < UserRegistry.ALL_LEVELS.length; i++) {
-                                if (action.equals(LIST_ACTION_SETLEVEL + UserRegistry.ALL_LEVELS[i])) {
-                                    if ((just == null) && (UserRegistry.ALL_LEVELS[i] <= UserRegistry.TC)) {
-                                        /// ctx.println("<b>Must be zoomed in on a user to promote them to TC</b>");
-                                    } else {
-                                        msg = reg.setUserLevel(ctx, theirId, theirEmail, UserRegistry.ALL_LEVELS[i]);
-                                        /***
-                                        ctx.println("Set user level to "
-                                            + UserRegistry.levelToStr(ctx, UserRegistry.ALL_LEVELS[i]));
-                                        ctx.println(": " + msg);
-                                        ***/
-                                        theirLevel = UserRegistry.ALL_LEVELS[i];
-                                        if (theUser != null) {
-                                            /// ctx.println("<br/><i>Logging out user session " + theUser.id + "</i>");
-                                            theUser.remove();
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (action.equals(LIST_ACTION_SHOW_PASSWORD)) {
-                                String pass = reg.getPassword(ctx, theirId);
-                                if (pass != null) {
-                                    uai.setPassword(pass);
-                                }
+                            else if (action.equals(LIST_ACTION_SHOW_PASSWORD)) {
+                                showPassword(ctx, theirId, reg, ua);
                             } else if (action.equals(LIST_ACTION_SEND_PASSWORD)) {
                                 String pass = reg.getPassword(ctx, theirId);
                                 if (pass != null && theirLevel < UserRegistry.LOCKED) {
-                                    uai.setPassword(pass);
+                                    ua.put (action, pass);
                                     sm.notifyUser(ctx, theirEmail, pass);
                                 }
                             } else if (action.equals(LIST_ACTION_DELETE0)) {
-                                /// ctx.println("Ensure that 'confirm delete' is chosen at right and click Do Action to delete..");
+                                ua.put(action, "Ensure that 'confirm delete' is chosen at right and click Do Action to delete");
                             } else if ((UserRegistry.userCanDeleteUser(ctx.session.user, theirId, theirLevel))
                                 && (action.equals(LIST_ACTION_DELETE1))) {
-                                msg = reg.delete(ctx, theirId, theirEmail);
-                                /// ctx.println("<strong style='font-color: red'>Deleting...</strong><br>");
-                                /// ctx.println(msg);
+                                String s = reg.delete(ctx, theirId, theirEmail);
+                                s += "<strong style='font-color: red'>Deleting...</strong><br>";
+                                ua.put(action, s);
                             } else if ((UserRegistry.userCanModifyUser(ctx.session.user, theirId, theirLevel))
                                 && (action.equals(LIST_ACTION_SETLOCALES))) {
                                 if (theirLocales == null) {
                                     theirLocales = "";
                                 }
+                                // TODO: LIST_ACTION_SETLOCALES -- compare above "LIST_ACTION_SETLOCALES + theirTag"???
                                 /***
                                 ctx.println("<label>Locales: (space separated) <input id='" + LIST_ACTION_SETLOCALES + theirTag + "' name='"
                                     + LIST_ACTION_SETLOCALES + theirTag
@@ -411,13 +351,11 @@ public class UserList {
                                     String s0 = ctx.field("string0" + what);
                                     String s1 = ctx.field("string1" + what);
                                     if (s0.equals(s1) && s0.length() > 0) {
-                                        /// ctx.println("<h4>Change " + what + " to <tt class='codebox'>" + s0 + "</tt></h4>");
-                                        action = ""; // don't popup the menu
-                                        // again.
-
-                                        msg = reg.updateInfo(ctx, theirId, theirEmail, type, s0);
-                                        /// ctx.println("<div class='fnotebox'>" + msg + "</div>");
-                                        /// ctx.println("<i>click Change again to see changes</i>");
+                                        String s = "<h4>Change " + what + " to <tt class='codebox'>" + s0 + "</tt></h4>";
+                                        s += "<div class='fnotebox'>" + reg.updateInfo(ctx, theirId, theirEmail, type, s0) + "</div>";
+                                        s += "<i>click Change again to see changes</i>";
+                                        ua.put(action, s);
+                                        action = ""; // don't popup the menu again. (???)
                                     } else {
                                         /// ctx.println("<h4>Change " + what + "</h4>");
                                         if (s0.length() > 0) {
@@ -444,18 +382,17 @@ public class UserList {
                                     if (type == InfoType.INFO_ORG)
                                         s1 = s0; /* ignore */
                                     if (s0.equals(s1) && s0.length() > 0) {
-                                        /// ctx.println("<h4>Change " + what + " to <tt class='codebox'>" + s0 + "</tt></h4>");
-                                        action = ""; // don't popup the menu
-                                        // again.
-
-                                        msg = reg.updateInfo(ctx, theirId, theirEmail, type, s0);
-                                        /// ctx.println("<div class='fnotebox'>" + msg + "</div>");
-                                        /// ctx.println("<i>click Change again to see changes</i>");
+                                        String s = "<h4>Change " + what + " to <tt class='codebox'>" + s0 + "</tt></h4>";
+                                        s += "<div class='fnotebox'>" + reg.updateInfo(ctx, theirId, theirEmail, type, s0) + "</div>";
+                                        s += "<i>click Change again to see changes</i>";
+                                        ua.put(action, s);
+                                        action = ""; // don't popup the menu again. (?)
                                     } else {
-                                        /// ctx.println("<h4>Change " + what + "</h4>");
+                                        String s = "<h4>Change " + what + "</h4>";
                                         if (s0.length() > 0) {
-                                            /// ctx.println("<p class='ferrbox'>Both fields must match.</p>");
+                                            s += "<p class='ferrbox'>Both fields must match.</p>";
                                         }
+                                        // TODO: menu (on front end, not back end!!!)
                                         /***
                                         if (type == InfoType.INFO_ORG) {
                                             ctx.println("<select name='string0" + what + "'>");
@@ -483,17 +420,7 @@ public class UserList {
                                 /// ctx.println("<i>No changes can be made to this user.</i>");
                             }
                             // ctx.println("Change to " + action);
-                        } else {
-                            /// ctx.print("<td>");
                         }
-                    } else {
-                        /// ctx.print("<td>");
-                    }
-
-                    if (just == null) {
-                        /*** TODO
-                        printUserZoomLink(ctx, theirEmail, "");
-                        ***/
                     }
                     /***
                     ctx.println("</td>");
@@ -614,7 +541,7 @@ public class UserList {
                     ctx.println("  </tr>");
                     ***/
 
-                    putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast, uai);
+                    putShownUser(shownUsers, ctx.session.user, theirInfo, theUser, theirLocales, theirIntLocs, theirLast, ua);
                 }
                 /// ctx.println("</tbody></table>");
 
@@ -780,16 +707,66 @@ public class UserList {
         }
     }
 
+    private void showPassword(WebContext ctx, int theirId, UserRegistry reg, UserActions ua) {
+        String pass = reg.getPassword(ctx, theirId);
+        if (pass != null) {
+            ua.put(LIST_ACTION_SHOW_PASSWORD, pass);
+        }
+    }
+
+    private String setLocales(WebContext ctx, String theirTag, CookieSession theUser, int theirId, String theirEmail, UserRegistry reg, UserActions ua) {
+        String newLocales = ctx.field(LIST_ACTION_SETLOCALES + theirTag);
+        String s = reg.setLocales(ctx, theirId, theirEmail, newLocales);
+        String theirLocales = newLocales; // MODIFY
+        if (theUser != null) {
+            s += "<br/><i>Logging out user session " + theUser.id
+                + " and deleting all unsaved changes</i>";
+            theUser.remove();
+        }
+        UserRegistry.User newThem = reg.getInfo(theirId);
+        if (newThem != null) {
+            theirLocales = newThem.locales; // update
+        }
+        ua.put(LIST_ACTION_SETLOCALES + theirTag,  s);
+        return theirLocales;
+    }
+
+    private int setLevel(String action, WebContext ctx, CookieSession theUser, int theirLevel, int theirId, String theirEmail,
+            String just, UserRegistry reg, UserActions ua) {
+        // check an explicit list. Don't allow random levels to be set.
+        for (int i = 0; i < UserRegistry.ALL_LEVELS.length; i++) {
+            int level = UserRegistry.ALL_LEVELS[i];
+            if (action.equals(LIST_ACTION_SETLEVEL + level)) {
+                String s = "";
+                if ((just == null) && (level <= UserRegistry.TC)) {
+                    s += "<b>Must be zoomed in on a user to promote them to TC</b>";
+                } else {
+                    theirLevel = level;
+                    s += "Set user level to "
+                        + UserRegistry.levelToStr(level) + ": "
+                        + reg.setUserLevel(ctx, theirId, theirEmail, level);
+                    if (theUser != null) {
+                        s += "<br/><i>Logging out user session " + theUser.id + "</i>";
+                        theUser.remove();
+                    }
+                }
+                ua.put(action, s);
+                break;
+            }
+        }
+        return theirLevel;
+    }
+
     private static void putShownUser(JSONArray shownUsers, User me, User them,
             CookieSession theirSession, String theirLocales, String theirIntLocs,
-            Timestamp theirLast, UserActions uai) throws JSONException {
+            Timestamp theirLast, UserActions ua) throws JSONException {
         String active = (theirSession == null) ? "" : SurveyMain.timeDiff(theirSession.getLastBrowserCallMillisSinceEpoch());
         String seen = (theirLast == null) ? "" : SurveyMain.timeDiff(theirLast.getTime());
         boolean havePermToChange = me.isAdminFor(them);
         boolean userCanDeleteUser = UserRegistry.userCanDeleteUser(me, them.id, them.userlevel);
-        VoteResolver.Level level = them.getLevel();
+        VoteResolver.Level level = VoteResolver.Level.fromSTLevel(them.userlevel);
         shownUsers.put(new JSONObject()
-            .put("actions", uai)
+            .put("actions", ua)
             .put("active", active)
             .put("email", them.email)
             .put("emailHash", them.getEmailHash())
@@ -828,19 +805,26 @@ public class UserList {
     }
 
     public class UserActions implements JSONString {
-        String password = null;
+        HashMap<String, String> map = null;
 
         @Override
         public String toJSONString() throws JSONException {
             JSONObject j = new JSONObject();
-            if (password != null) {
-                j.put("password", password);
+            if (map != null) {
+                for (Map.Entry<String, String> entry : map.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue();
+                    j.put(key,  value);
+                }
             }
             return j.toString();
         }
 
-        public void setPassword(String pass) {
-            this.password = pass;
+        public void put(String key, String value) {
+            if (map == null) {
+                map = new HashMap<>();
+            }
+            map.put(key, value);
         }
     }
 }
