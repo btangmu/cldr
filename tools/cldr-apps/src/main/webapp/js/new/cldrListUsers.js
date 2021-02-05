@@ -29,18 +29,75 @@ const cldrListUsers = (function () {
   const PREF_JUSTORG = "p_justorg";
   const GET_ORGS = "get_orgs";
 
+  const infoType = {
+    // this MUST agree with org.unicode.cldr.web.UserRegistry.InfoType
+    INFO_EMAIL: "E-mail",
+    INFO_NAME: "Name",
+    INFO_PASSWORD: "Password",
+    INFO_ORG: "Organization",
+  };
+
   const cautionSessionDestruction =
     "<div class='fnotebox'>Changing user level or locales while a user is active will " +
     "result in destruction of their session. Check if they have been working recently.</div>\n";
 
+  const showAllUsersButton =
+    "<button type='button' onclick='cldrListUsers.showAllUsers()'>⋖ Show all users</button>\n";
+
+  const doActionButton =
+    "<input type='submit' name='doBtn' value='Do Action' />\n";
+
+  const zoomImage =
+    "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...' />";
+
+  const passwordActions = {
+    LIST_ACTION_SHOW_PASSWORD: "Show password...",
+    LIST_ACTION_SEND_PASSWORD: "Send password...",
+  };
+
+  const bulkActions = {
+    LIST_ACTION_NONE: LIST_ACTION_NONE,
+    LIST_ACTION_SHOW_PASSWORD: "Show password URL...",
+    LIST_ACTION_SEND_PASSWORD: "Resend password...",
+  };
+
+  const bulkActionListButton =
+    "<button type='button' onclick='cldrListUsers.submitBulkAction(event)'>list</button>\n";
+
+  const bulkActionChangeButtonDiv =
+    "<div id='changeButton' style='display: none;'>" +
+    "<hr /><i><b>Menus have been pre-filled.<br />" +
+    "Confirm your choices and click Change.</b></i><br />" +
+    "<button type='button' onclick='cldrListUsers.submitForm(event)'>Change</button>\n" +
+    "</div>\n";
+
+  /**
+   * Is the table displaying only information about the current user?
+   * This module is used both for "My Account" (through cldrAccount.js), with
+   * isJustMe = true, and "List Users", with isJustMe = false.
+   */
+  let isJustMe = false;
+
+  /**
+   * The email address of the "zoomed" or "My Acccount" user, or null if neither zoomed nor My Account.
+   * The "List Users" table may be "zoomed" to display only a single user. In general,
+   * zooming a user in the "List Users" page is not the same as a user's "My Account" view.
+   * Still, zooming in on ones own account is essentially the same as choosing My Account, Settings.
+   */
+  let justUser = null;
+
   let showLockedUsers = false;
   let orgList = null;
+  let shownUsers = null;
   let justOrg = null;
-  let justUser = null;
   let byEmail = {};
 
-  // called as special.load
+  /**
+   * Load the "List Users" page
+   * -- called as special.load
+   */
   function load() {
+    isJustMe = false;
     cldrEvent.hideRightPanel();
     cldrInfo.showNothing();
     const xhrArgs = {
@@ -52,27 +109,15 @@ const cldrListUsers = (function () {
     cldrAjax.sendXhr(xhrArgs);
   }
 
-  function getUrl() {
-    // Allow cache (no cacheKill) -- except for development/debugging
-    const allowCache = false;
-    const perm = cldrStatus.getPermissions();
-    const getOrgs = perm && perm.userIsAdmin && !orgList;
-
-    const p = new URLSearchParams();
-    p.append("what", WHAT_USER_LIST);
-    p.append(GET_ORGS, getOrgs);
-    p.append(PREF_SHOWLOCKED, showLockedUsers);
-    if (justOrg) {
-      p.append(PREF_JUSTORG, justOrg);
-    }
-    if (justUser) {
-      p.append(LIST_JUST, justUser);
-    }
-    p.append("s", cldrStatus.getSessionId());
-    if (!allowCache) {
-      p.append("cacheKill", cldrSurvey.cacheBuster());
-    }
-    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+  /**
+   * Load the "My Accounts, Settings" page on behalf of cldrAccount
+   *
+   * @param myEmail - the email address of the current user
+   */
+  function loadJustMe(myEmail) {
+    isJustMe = true;
+    justUser = myEmail;
+    load();
   }
 
   function loadHandler(json) {
@@ -94,136 +139,41 @@ const cldrListUsers = (function () {
   }
 
   function getHtml(json) {
+    shownUsers = json.shownUsers;
     const org = json.org ? json.org : "ALL";
     let html = "";
     html += emailMismatchWarning(json);
-    html +=
-      getParticipatingUsersLink() + "<br />\n" + getAddUserLink() + "<br />\n";
-    if (orgList && !justUser) {
-      html += getOrgFilterMenu();
+    if (!isJustMe) {
+      html += getParticipatingUsersLink() + "<br />\n";
+      html += getAddUserLink() + "<br />\n";
+      if (orgList && !justUser) {
+        html += getOrgFilterMenu();
+      }
     }
-    html += "<h2>Users for " + org + "</h2>\n";
-    html += getLockedUsersControl();
-    html += cautionSessionDestruction;
-    html += getPager(json);
-    html += getTable(json, cldrListUsers);
     if (justUser) {
-      html +=
-        "<button type='button' onclick='cldrListUsers.showAll()'>Show all users</button>\n";
+      html += showAllUsersButton;
+    }
+    if (isJustMe) {
+      html += "<h2>My Account</h2>\n";
     } else {
-      html +=
-        "<div style='font-size: 70%'>Number of users shown: " +
-        json.shownUsers.length +
-        "</div>\n";
+      html += "<h2>Users for " + org + "</h2>\n";
+      html += getLockedUsersControl();
+      html += cautionSessionDestruction;
+      html += getBulkActionMenu(json);
     }
+    html += getTable(json, cldrListUsers);
+    html += getDownloadCsvForm(json);
     return html;
   }
 
-  function emailMismatchWarning(json) {
-    if (json.email_mismatch) {
-      return (
-        "<h1 class='ferrbox'>" +
-        cldrStatus.stopIcon() +
-        " not sending mail - you did not confirm the email address. See form at bottom of page.</h1>\n"
-      );
-    } else {
-      return "";
-    }
-  }
-
-  function showAll() {
-    justUser = null;
-    load();
-  }
-
-  function getParticipatingUsersLink() {
-    // TODO: "Users Who Participated": see https://unicode-org.atlassian.net/browse/CLDR-14432
-    return "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a>";
-  }
-
-  function getAddUserLink() {
-    // TODO: "Add User": see https://unicode-org.atlassian.net/browse/CLDR-14433
-    return "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a>";
-  }
-
-  function getLockedUsersControl() {
-    const ch = showLockedUsers ? " checked='checked'" : "";
-    return (
-      "<input type='checkbox' id='showLocked' onclick='cldrListUsers.toggleShowLocked();'" +
-      ch +
-      "> <label for='showLocked'>Show locked users</label><br />\n"
-    );
-  }
-
-  function toggleShowLocked() {
-    showLockedUsers = !showLockedUsers;
-    load();
-  }
-
-  function getOrgFilterMenu() {
-    if (!justOrg) {
-      justOrg = "all";
-    }
-    let html =
-      "<label class='menutop-active'>Filter Organization " +
-      "<select class='menutop-other' onchange='cldrListUsers.filterOrg(this.value);'>\n" +
-      "<option value='all'>Show All</option>\n";
-    orgList.forEach(function (org) {
-      const sel = org === justOrg ? " selected='selected'" : "";
-      html += "<option value='" + org + "'" + sel + ">" + org + "</option>\n";
-    });
-    html += "</select>\n";
-    html += "</label>\n";
-    return html;
-  }
-
-  function filterOrg(org) {
-    if (org !== justOrg) {
-      justOrg = org;
-      load();
-    }
-  }
-
-  function getPager(json) {
-    let html =
-      "<div class='pager' style='align: right; float: right; margin-left: 4px;'>\n";
-    html +=
-      "<form method='POST' action='/cldr-apps/survey????!!!'>" + // TODO: action
-      "Set menus:<br><label>all <select name='preset_from'>\n";
-    html += "<option>-</option>";
-    // Example: <option class='user999' value='999'>999: (LOCKED)</option>
-    const levels = json.userPerms.levels;
-    for (let number in levels) {
-      const string = levels[number].string;
-      html +=
-        "<option class='user" +
-        number +
-        "' value='" +
-        number +
-        "'>" +
-        string +
-        "</option>\n";
-    }
-    html += "</select></label> </br>\n";
-    html += "<label>to";
-    html +=
-      "<select name='preset_do'>\n" +
-      "<option>-</option>\n" +
-      "<option value='showpassword_'>Show password URL...</option>\n" +
-      "<option value='sendpassword_'>Resend password...</option>\n" +
-      "</select></label> <br>\n" +
-      "<input type='submit' name='do' value='list'></form>\n" +
-      "</div>\n";
-    return html;
-  }
-
-  function getTable(json, special) {
+  function getTable(json) {
+    shownUsers = json.shownUsers;
     byEmail = {};
     let html = getTableStart();
     let oldOrg = "";
-    for (let k in json.shownUsers) {
+    for (let k in shownUsers) {
       const u = {
-        data: json.shownUsers[k],
+        data: shownUsers[k],
       };
       byEmail[u.data.email] = u;
       if (oldOrg !== u.data.org) {
@@ -232,17 +182,14 @@ const cldrListUsers = (function () {
           u.data.org +
           "'><h4>" +
           u.data.org +
-          "</h4>";
+          "</h4></a></th></tr>\n";
         oldOrg = u.data.org;
       }
-      html += getUserHtml(u, json, special);
+      html += getUserTableRow(u, json);
     }
     html += getTableEnd();
     return html;
   }
-
-  const doActionButton =
-    "<input type='submit' name='doBtn' value='Do Action'>\n";
 
   function getTableStart() {
     return (
@@ -255,29 +202,31 @@ const cldrListUsers = (function () {
     );
   }
 
+  function getTableEnd() {
+    let html = "</tbody></table>" + "<br />\n";
+    if (justUser) {
+      html += showAllUsersButton;
+    } else if (!isJustMe) {
+      html += numberOfUsersShown(shownUsers.length);
+    }
+    html += doActionButton + "</form>\n";
+    return html;
+  }
+
+  function numberOfUsersShown(number) {
+    return (
+      "<div style='font-size: 70%'>Number of users shown: " +
+      number +
+      "</div>\n"
+    );
+  }
+
   function submitForm(event) {
     event.preventDefault();
-    const id = document.getElementById("tableForm");
-    if (!id) {
-      return;
-    }
-    const data = new FormData(id);
-
-    // Even though this is for a POST request, include a query string for the "?what=...&s=..." part,
-    // as with similar GET requests
-    const p = new URLSearchParams();
-    p.append("what", WHAT_USER_LIST);
-    p.append(PREF_SHOWLOCKED, showLockedUsers);
-    if (justOrg) {
-      p.append(PREF_JUSTORG, justOrg);
-    }
-    if (justUser) {
-      p.append(LIST_JUST, justUser);
-    }
-    p.append("s", cldrStatus.getSessionId());
-    const url = cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+    const formEl = document.getElementById("tableForm"); // Possibly != event.target
+    const data = new FormData(formEl);
     const xhrArgs = {
-      url: url,
+      url: getUrl(),
       postData: data,
       handleAs: "json",
       load: loadHandler,
@@ -286,18 +235,14 @@ const cldrListUsers = (function () {
     cldrAjax.sendXhr(xhrArgs);
   }
 
-  function getTableEnd() {
-    return "</tbody></table>" + "<br />\n" + doActionButton + "</form>\n";
-  }
-
-  function getUserHtml(u, json, special) {
+  function getUserTableRow(u, json) {
     return (
       "<tr id='u@" +
       u.data.id +
       "'>\n" +
-      // 1st column (no header): "zoom" icon, or empty for justme
+      // 1st column (no header): "zoom" icon, or empty for justUser/isJustme
       "<td>" +
-      getFirstCol(u, json, special) +
+      getFirstCol(u, json) +
       "</td>" +
       // 2nd column is hidden -- what's it for? Maybe "org", per showUserActivity?
       "<td style='display: none;'></td>" +
@@ -319,18 +264,16 @@ const cldrListUsers = (function () {
     );
   }
 
-  function getFirstCol(u, json, special) {
-    if (special === cldrAccount || justUser) {
+  function getFirstCol(u, json) {
+    if (justUser) {
+      // this includes isJustMe
       return "";
     }
-    const zoomImage =
-      "<img alt='[zoom]' style='width: 16px; height: 16px; border: 0;' src='/cldr-apps/zoom.png' title='More on this user...'>";
-
     let html = "";
-    if (u.data.actions && u.data.actions.LIST_ACTION_SHOW_PASSWORD) {
+    if (u.data.actions && u.data.actions[LIST_ACTION_SHOW_PASSWORD]) {
       html += getPasswordLink(
         u.data.email,
-        u.data.actions.LIST_ACTION_SHOW_PASSWORD
+        u.data.actions[LIST_ACTION_SHOW_PASSWORD]
       );
     }
     html +=
@@ -345,11 +288,7 @@ const cldrListUsers = (function () {
   function getPasswordLink(email, password) {
     return (
       "<a href='" +
-      cldrStatus.getContextPath() +
-      "/survey?email=" +
-      email +
-      "&uid=" +
-      password +
+      getLoginUrl(email, password) +
       "'>Login for " +
       email +
       "</a> <tt class='winner'>" +
@@ -358,8 +297,25 @@ const cldrListUsers = (function () {
     );
   }
 
+  /**
+   * In response to a "zoom" button, show only the info for this user in the table
+   * -- omit all other users
+   *
+   * @param {string} email
+   */
   function zoomUser(email) {
     justUser = email;
+    isJustMe = email === cldrStatus.getSurveyUser().email;
+    load();
+  }
+
+  /**
+   * In response to a "Show all users" button, unzoom
+   * -- the reverse of zoomUser
+   */
+  function showAllUsers() {
+    justUser = null;
+    isJustMe = false;
     load();
   }
 
@@ -375,113 +331,117 @@ const cldrListUsers = (function () {
 
   function getUserActionMenu(u, json) {
     const theirTag = u.data.id + "_" + u.data.email;
-
-    let html = "<select name='" + theirTag + "'  ";
+    let html = "<select name='" + theirTag + "'";
     if (justUser) {
+      // this includes isJustMe
+      // submit immediately on change; don't wait for user to press "Do Action" button
       html += " onchange='cldrListUsers.submitForm(event)'";
     }
     html += ">\n";
-
-    html += "  <option value=''>" + LIST_ACTION_NONE + "</option>\n";
-
     const theirLevel = u.data.userlevel;
-    const levels = json.userPerms.levels;
-    for (let number in levels) {
-       // only allow mass LOCK
-      if (justUser || levels[number].name === "locked") {
-        html += doChangeUserOption(levels, number, theirLevel, false);
-      }
+    html += "<option value=''>" + LIST_ACTION_NONE + "</option>\n";
+    html += getChangeLevelOptions(theirLevel, json.userPerms.levels);
+    html += "<option disabled='disabled'>" + LIST_ACTION_NONE + "</option>\n";
+    for (const [action, text] of Object.entries(passwordActions)) {
+      html += getPasswordOption(theirLevel, json, action, text);
     }
-    html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
-    html += " <option ";
-    if (
-      json.preset_fromint == theirLevel &&
-      json.preset_do.equals(LIST_ACTION_SHOW_PASSWORD)
-    ) {
-      html += " SELECTED ";
-    }
-    html +=
-      " value='" + LIST_ACTION_SHOW_PASSWORD + "'>Show password...</option>\n";
-    html += " <option ";
-    if (
-      json.preset_fromint == theirLevel &&
-      json.preset_do.equals(LIST_ACTION_SEND_PASSWORD)
-    ) {
-      html += " SELECTED ";
-    }
-    html +=
-      " value='" + LIST_ACTION_SEND_PASSWORD + "'>Send password...</option>\n";
-
     if (justUser) {
-      if (u.data.havePermToChange) {
-        html +=
-          " <option value='" +
-          LIST_ACTION_SETLOCALES +
-          "'>Set locales...</option>\n";
-      }
-      if (u.data.userCanDeleteUser) {
-        html += " <option>" + LIST_ACTION_NONE + "</option>\n";
-        if (u.data.actions.LIST_ACTION_DELETE0) {
-          html +=
-            "   <option value='" +
-            LIST_ACTION_DELETE1 +
-            "' SELECTED>Confirm delete</option>\n";
-        } else {
-          html += " <option ";
-          if (
-            json.preset_fromint == theirLevel &&
-            json.preset_do.equals(LIST_ACTION_DELETE0)
-          ) {
-            html += " SELECTED ";
-          }
-          html +=
-            " value='" + LIST_ACTION_DELETE0 + "'>Delete user..</option>\n";
-        }
-      }
-      if (justUser) {
-        html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n";
-        /*** TODO:
-            InfoType current = InfoType.fromAction(action);
-            for (InfoType info : InfoType.values()) {
-                if (info == InfoType.INFO_ORG && !(ctx.session.user.userlevel == UserRegistry.ADMIN)) {
-                    continue;
-                }
-                html += " <option ";
-                if (info == current) {
-                  html += " SELECTED ";
-                }
-                html += " value='" + info.toAction() + "'>Change " + info.toString() + "...</option>\n";
-            }
-            ***/
-      }
+      html += getJustUserActionMenuOptions(u, json);
     }
-    html += "  </select>";
+    html += "</select>";
     return html;
   }
 
-  function getXmlUploadLink(u) {
+  function getChangeLevelOptions(theirLevel, levels) {
+    let html = "";
+    for (let number in levels) {
+      // only allow mass LOCK
+      if (justUser || levels[number].name === "locked") {
+        html += doChangeUserOption(levels, number, theirLevel);
+      }
+    }
+    return html;
+  }
+
+  function doChangeUserOption(levels, newNumber, oldNumber) {
+    const s = levels[newNumber].string; // e.g., "999: (LOCKED)"
+    if (levels[oldNumber].canCreateOrSetLevelTo) {
+      return (
+        "<option value='" +
+        LIST_ACTION_SETLEVEL +
+        newNumber +
+        "'>Make " +
+        s +
+        "</option>\n"
+      );
+    } else {
+      return "<option disabled='disabled'>Make " + s + "</option>\n";
+    }
+  }
+
+  function getPasswordOption(theirLevel, json, action, text) {
+    let html = "<option";
+    if (json.preset_fromint == theirLevel && json.preset_do.equals(action)) {
+      html += " selected='selected'";
+    }
+    html += " value='" + action + "'>" + text + "</option>\n";
+    return html;
+  }
+
+  function getJustUserActionMenuOptions(u, json) {
+    let html = "";
+    if (u.data.havePermToChange) {
+      html += getSetLocalesOption();
+    }
+    if (u.data.userCanDeleteUser) {
+      html += "<option disabled>" + LIST_ACTION_NONE + "</option>\n"; // separator
+      html += getDeleteUserOptions(u, json);
+    }
+    html += " <option disabled>" + LIST_ACTION_NONE + "</option>\n"; // separator
+
+    const current = 0; // ?? InfoType.fromAction(action); -- json.preset_do?
+    for (const [info, title] of Object.entries(infoType)) {
+      if (info === "INFO_ORG" && !cldrStatus.getPermissions().userIsAdmin) {
+        continue;
+      }
+      html += " <option";
+      if (info === current) {
+        html += " selected='selected'";
+      }
+      // INFO_EMAIL makes CHANGE_INFO_EMAIL, etc.
+      html += " value='CHANGE_" + info + "'>Change " + title + "...</option>\n";
+    }
+    return html;
+  }
+
+  function getSetLocalesOption() {
     return (
-      // TODO: not jsp
-      "<a href='/cldr-apps/upload.jsp?s=" +
-      cldrStatus.getSessionId() +
-      "&email=" +
-      u.data.email +
-      "'>Upload XML...</a>"
+      "<option value='" + LIST_ACTION_SETLOCALES + "'>Set locales...</option>\n"
     );
   }
 
-  function getUserActivityLink(u) {
-    return (
-      // TODO: not jsp
-      "<a class='recentActivity' href='/cldr-apps/myvotes.jsp?user=" +
-      u.data.id +
-      "'>User Activity</a>"
-    );
+  function getDeleteUserOptions(u, json) {
+    let html = "";
+    if (u.data.actions.LIST_ACTION_DELETE0) {
+      html +=
+        "<option value='" +
+        LIST_ACTION_DELETE1 +
+        "' selected='selected'>Confirm delete</option>\n";
+    } else {
+      html += "<option";
+      if (
+        json.preset_fromint == u.data.userlevel &&
+        json.preset_do.equals(LIST_ACTION_DELETE0)
+      ) {
+        html += " selected='selected'";
+      }
+      html += " value='" + LIST_ACTION_DELETE0 + "'>Delete user..</option>\n";
+    }
+    return html;
   }
 
   function getUserLocales(u, json) {
-    const UserRegistry_MANAGER = 2; // TODO -- get from json? See UserRegistry.MANAGER in java
-    // const levels = json.userPerms.levels;
+    const UserRegistry_MANAGER = 2; // TODO -- get from json.userPerms.levels? See UserRegistry.MANAGER in java
     const theirLevel = u.data.userlevel;
     if (
       theirLevel <= UserRegistry_MANAGER ||
@@ -533,22 +493,6 @@ const cldrListUsers = (function () {
     return html;
   }
 
-  function doChangeUserOption(levels, newNumber, oldNumber, selected) {
-    const s = levels[newNumber].string; // e.g., "999: (LOCKED)"
-    if (levels[oldNumber].canCreateOrSetLevelTo) {
-      return (
-        "  <option value='" +
-        LIST_ACTION_SETLEVEL +
-        newNumber +
-        "'>Make " +
-        s +
-        "</option>\n"
-      );
-    } else {
-      return "  <option disabled>Make " + s + "</option>\n";
-    }
-  }
-
   function showUserActivity(json) {
     const shownUsers = json.shownUsers;
     const table = document.getElementById("userListTable");
@@ -565,7 +509,7 @@ const cldrListUsers = (function () {
     }
 
     const xhrArgs = {
-      url: cldrStatus.getContextPath() + "/SurveyAjax?what=stats_bydayuserloc",
+      url: getUserActivityUrl(),
       handleAs: "json",
       load: actLoadHandlerClosure,
       err: actErrHandler,
@@ -744,237 +688,241 @@ const cldrListUsers = (function () {
     return div;
   }
 
-  /*** from old specials/users.js:
-
-    const label = $("<label />");
-    const showLocked = $("<input />", {
-      type: "checkbox",
-      checked: true,
-    });
-    label.text("Hide locked");
-    showLocked.prependTo(label);
-    label.appendTo(addto);
-
-  let locked = [];
-  let byEmail = {}; // email -> u:{}
-  let byId = {}; // id -> u:{}
-
-  showLocked.on("change", function () {
-    for (let k in locked) {
-      if (showLocked.is(":checked")) {
-        locked[k].hide();
-      } else {
-        locked[k].show();
-      }
+  function emailMismatchWarning(json) {
+    if (json.email_mismatch) {
+      return (
+        "<h1 class='ferrbox'>" +
+        cldrStatus.stopIcon() +
+        " not sending mail - you did not confirm the email address. See form at bottom of page.</h1>\n"
+      );
+    } else {
+      return "";
     }
-  });
+  }
 
-  let lastHead;
-
-  for (let k in data.users) {
-    const u = {
-      data: data.users[k],
-    };
-    byEmail[u.data.email] = u;
-    byId[u.data.id] = u;
-    if (!lastHead || lastHead !== u.data.org) {
-      $("<h1>", { text: u.data.org }).appendTo(this);
-      lastHead = u.data.org;
-    }
-
-    u.div = createUser(u.data);
-    u.obj = $(u.div);
-    if (u.data.userlevelName === "locked") {
-      u.obj.hide();
-      locked.push(u.obj);
-    }
-    $(this).append(u.obj);
-
-    u.infoSpan = $("<span />");
-    u.infoSpan.appendTo(u.obj);
-
-    u.infoButton = $("<button />", {
-      text: cldrText.get("users_infoVotesButton"),
-    });
-    u.infoButton.appendTo(u.obj);
-
-    u.infoButton.on(
-      "click",
-      {
-        u: u, // break closure
-      },
-      function (event) {
-        var u = event.data.u;
-        var xurl2 =
-          cldrStatus.getContextPath() +
-          "/SurveyAjax?&s=" +
-          cldrStatus.getSessionId() +
-          "&what=user_oldvotes&old_user_id=" +
-          u.data.id;
-        console.log(xurl2);
-        $(u.infoSpan).removeClass("ferrbox");
-        u.infoSpan.text("loading..");
-        $.ajax({
-          context: u.infoSpan,
-          url: xurl2,
-        })
-          .done(function (data2) {
-            if (
-              !data2.user_oldvotes.data ||
-              data2.user_oldvotes.data.length == 0
-            ) {
-              $(u.infoSpan).text("no old votes.");
-            } else {
-              // Crudely display the data. For now, just simplify slightly to make more legible.
-              $(u.infoSpan).text(
-                "old votes: " +
-                  JSON.stringify(data2.user_oldvotes.data).replace(
-                    /[\\\"]/g,
-                    ""
-                  )
-              );
-            }
-          })
-          .fail(function (err) {
-            $(u.infoSpan).addClass("ferrbox");
-            $(u.infoSpan).text(
-              "Error loading users: Status " + JSON.stringify(err.status)
-            );
-          });
-      }
-    );
-
-    u.loadOldVotes = $("<button />", {
-      text: cldrText.get("users_loadVotesButton"),
-    });
-    u.loadOldVotes.appendTo(u.obj);
-
-    u.loadOldVotes.on(
-      "click",
-      {
-        u: u, // break closure
-      },
-      function (event) {
-        var u = event.data.u;
-        var oldUserEmail = prompt(
-          "First, pardon the modality.\nNext, do you want to import votes to '#" +
-            u.data.id +
-            " " +
-            u.data.email +
-            "' FROM another user's old votes? Enter their email address below:"
-        );
-        if (!oldUserEmail) {
-          return;
-        }
-
-        var oldUser = byEmail[oldUserEmail];
-
-        if (!oldUser) {
-          alert(
-            "Could not find user " +
-              oldUserEmail +
-              " - double check the address."
-          );
-          return;
-        }
-
-        var oldLocale = prompt(
-          "Enter the locale id to import FROM " +
-            oldUser.data.name +
-            " <" +
-            oldUser.data.email +
-            "> #" +
-            oldUser.data.id
-        );
-        if (!oldLocale) {
-          alert("Cancelled.");
-          return;
-        }
-        if (!locmap.getLocaleInfo(oldLocale)) {
-          alert("Not a valid locale id: " + oldLocale);
-          return;
-        }
-
-        var newLocale = prompt(
-          "Enter the locale id to import TO " + u.data.email,
-          oldLocale
-        );
-        if (!newLocale) {
-          alert("Cancelled.");
-          return;
-        }
-
-        if (!locmap.getLocaleInfo(newLocale)) {
-          alert("Not a valid locale id: " + newLocale);
-          return;
-        }
-
-        if (
-          !confirm(
-            "Sure? Import FROM " +
-              locmap.getLocaleName(oldLocale) +
-              " @ " +
-              oldUser.data.email +
-              " TO " +
-              locmap.getLocaleName(newLocale) +
-              " @ " +
-              u.data.email
-          )
-        ) {
-          return;
-        }
-
-        var xurl3 =
-          cldrStatus.getContextPath() +
-          "/SurveyAjax?&s=" +
-          cldrStatus.getSessionId() +
-          "&what=user_xferoldvotes&from_user_id=" +
-          oldUser.data.id +
-          "&from_locale=" +
-          oldLocale +
-          "&to_user_id=" +
-          u.data.id +
-          "&to_locale=" +
-          newLocale;
-        console.log(xurl3);
-        $(u.infoSpan).removeClass("ferrbox");
-        u.infoSpan.text(
-          "TRANSFER FROM " +
-            locmap.getLocaleName(oldLocale) +
-            " @ " +
-            oldUser.data.email +
-            " TO " +
-            locmap.getLocaleName(newLocale) +
-            " @ " +
-            u.data.email
-        );
-        $.ajax({
-          context: u.infoSpan,
-          url: xurl3,
-        })
-          .done(function (data3) {
-            if (data3.user_xferoldvotes) {
-              $(u.infoSpan).text(JSON.stringify(data3.user_xferoldvotes));
-            } else if (data3.err) {
-              $(u.infoSpan).addClass("ferrbox");
-              $(u.infoSpan).text("Error : " + data3.err);
-            } else {
-              $(u.infoSpan).addClass("ferrbox");
-              $(u.infoSpan).text("Error : " + JSON.stringify(data3));
-            }
-          })
-          .fail(function (err) {
-            $(u.infoSpan).addClass("ferrbox");
-            $(u.infoSpan).text(
-              "Error transferring data: Status " +
-                JSON.stringify(err.status)
-            );
-          });
-      }
+  function getLockedUsersControl() {
+    const ch = showLockedUsers ? " checked='checked'" : "";
+    return (
+      "<input type='checkbox' id='showLocked' onclick='cldrListUsers.toggleShowLocked();'" +
+      ch +
+      " /> <label for='showLocked'>Show locked users</label><br />\n"
     );
   }
-})
-***/
+
+  function toggleShowLocked() {
+    showLockedUsers = !showLockedUsers;
+    load();
+  }
+
+  function getOrgFilterMenu() {
+    if (!justOrg) {
+      justOrg = "all";
+    }
+    let html =
+      "<label class='menutop-active'>Filter Organization " +
+      "<select class='menutop-other' onchange='cldrListUsers.filterOrg(this.value);'>\n" +
+      "<option value='all'>Show All</option>\n";
+    orgList.forEach(function (org) {
+      const sel = org === justOrg ? " selected='selected'" : "";
+      html += "<option value='" + org + "'" + sel + ">" + org + "</option>\n";
+    });
+    html += "</select>\n";
+    html += "</label>\n";
+    return html;
+  }
+
+  function filterOrg(org) {
+    if (org !== justOrg) {
+      justOrg = org;
+      load();
+    }
+  }
+
+  /*
+   * BULK ACTION menu-related functions
+   */
+
+  /**
+   * Provide a menu enabling the user to select an action for all the users of a chosen level
+   */
+  function getBulkActionMenu(json) {
+    if (justUser || !json.userPerms.canModifyUsers) {
+      return "";
+    }
+    let html =
+      "<div class='pager' style='align: right; float: right; margin-left: 4px;'>\n" +
+      "<form method='POST'>Set menus:<br />\n";
+    html += getBulkActionMenuLevels(json.userPerms.levels);
+    html += getBulkActionMenuActions();
+    html += bulkActionListButton;
+    html += bulkActionChangeButtonDiv;
+    html += "</form></div>\n";
+    return html;
+  }
+
+  function getBulkActionMenuLevels(levels) {
+    let html = "<label>all <select name='preset_from'>\n";
+    html += "<option>" + LIST_ACTION_NONE + "</option>";
+    // Example: <option class='user999' value='999'>999: (LOCKED)</option>
+    for (let n in levels) {
+      if (levels[n].name !== "anonymous") {
+        html +=
+          "<option class='user" +
+          n +
+          "' value='" +
+          n +
+          "'>" +
+          levels[n].string +
+          "</option>\n";
+      }
+    }
+    html += "</select></label><br />\n";
+    return html;
+  }
+
+  function getBulkActionMenuActions() {
+    let html = "<label>to <select name='preset_do'>\n";
+    for (const [action, text] of Object.entries(bulkActions)) {
+      html += "<option value='" + action + "'>" + text + "</option>\n";
+    }
+    html += "</select></label><br />\n";
+    return html;
+  }
+
+  function submitBulkAction(event) {
+    event.preventDefault();
+    const data = new FormData(event.target.parentNode);
+    const userlevel = data.get("preset_from");
+    const action = data.get("preset_do");
+    if (
+      (userlevel || userlevel === "0") &&
+      userlevel !== LIST_ACTION_NONE &&
+      action &&
+      action !== LIST_ACTION_NONE
+    ) {
+      bulkSelectAction(userlevel, action);
+      document.getElementById("changeButton").style.display = "block";
+    }
+  }
+
+  function bulkSelectAction(userlevel, action) {
+    for (let k in shownUsers) {
+      const user = shownUsers[k];
+      if (user.userlevel.toString() === userlevel) {
+        const selects = document.getElementsByName(user.id + "_" + user.email);
+        if (selects) {
+          selectOneUserAction(selects[0], action);
+        }
+      }
+    }
+  }
+
+  function selectOneUserAction(sel, action) {
+    for (let i = 0; i < sel.children.length; i++) {
+      const c = sel.children[i];
+      for (let j = 0; j < c.attributes.length; j++) {
+        const a = c.attributes[j];
+        if (a.name === "value" && a.value === action) {
+          c.selected = "selected";
+          return;
+        }
+      }
+    }
+  }
+
+  /*
+   * URL-related functions
+   */
+
+  /**
+   * Get the main URL for ajax requests, both GET (e.g., for initial load)
+   * and PUT (e.g., for submitForm)
+   *
+   * @return the URL string
+   */
+  function getUrl() {
+    // Allow cache (no cacheKill) -- except for development/debugging
+    const allowCache = false;
+    const p = new URLSearchParams();
+    p.append("what", WHAT_USER_LIST);
+    if (needOrgList()) {
+      p.append(GET_ORGS, true);
+    }
+    p.append(PREF_SHOWLOCKED, showLockedUsers);
+    if (justOrg) {
+      p.append(PREF_JUSTORG, justOrg);
+    }
+    if (justUser) {
+      p.append(LIST_JUST, justUser);
+    }
+    p.append("s", cldrStatus.getSessionId());
+    if (!allowCache) {
+      p.append("cacheKill", cldrSurvey.cacheBuster());
+    }
+    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+  }
+
+  function needOrgList() {
+    if (orgList) {
+      return false; // already got orgList
+    }
+    // Only Admin needs orgList
+    const perm = cldrStatus.getPermissions();
+    return perm && perm.userIsAdmin;
+  }
+
+  function getLoginUrl(email, password) {
+    const p = new URLSearchParams();
+    p.append("email", email);
+    p.append("uid", password);
+    return cldrStatus.getContextPath() + "/survey?" + p.toString();
+  }
+
+  function getUserActivityUrl() {
+    const p = new URLSearchParams();
+    p.append("what", "stats_bydayuserloc");
+    return cldrStatus.getContextPath() + "/SurveyAjax?" + p.toString();
+  }
+
+  function getParticipatingUsersLink() {
+    // TODO: "Users Who Participated": see https://unicode-org.atlassian.net/browse/CLDR-14432
+    return "<a class='notselected' href='v#tc-emaillist'>[TODO:] Email Address of Users Who Participated</a>";
+  }
+
+  function getAddUserLink() {
+    // TODO: "Add User"; not jsp: see https://unicode-org.atlassian.net/browse/CLDR-14433
+    return "<a href='/cldr-apps/adduser.jsp'>[TODO:] Add User</a>";
+  }
+
+  function getXmlUploadLink(u) {
+    return (
+      // TODO: not jsp
+      // /cldr-apps/upload.jsp?s=" + cldrStatus.getSessionId() + "&email=" + u.data.email
+      "<a href='?'>[TODO:] Upload XML...</a>"
+    );
+  }
+
+  function getUserActivityLink(u) {
+    return (
+      // TODO: not jsp
+      // "<a class='recentActivity' href='/cldr-apps/myvotes.jsp?user=" +
+      // u.data.id +
+      // "'>User Activity</a>"
+      "<a class='recentActivity' href='?'>[TODO:] User Activity</a>"
+    );
+  }
+
+  function getDownloadCsvForm(json) {
+    if (!json.userPerms.canModifyUsers) {
+      return "";
+    }
+    // TODO: not jsp; also, DataExport.jsp is broken, see https://unicode-org.atlassian.net/browse/CLDR-14475
+    return (
+      "<hr /><form method='POST' action='.../DataExport.jsp'>\n" +
+      "<input type='submit' class='csvDownload' value='Download .csv (including LOCKED)' />\n" +
+      "</form>"
+    );
+  }
 
   /*
    * Make only these functions accessible from other files
@@ -986,8 +934,10 @@ const cldrListUsers = (function () {
     filterOrg,
     getTable,
     load,
-    showAll,
+    loadJustMe,
+    showAllUsers,
     showUserActivity,
+    submitBulkAction,
     submitForm,
     toggleShowLocked,
     zoomUser,
