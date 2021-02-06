@@ -255,14 +255,14 @@ public class UserList {
                                 if (theirLocales == null) {
                                     theirLocales = "";
                                 }
-                                // TODO: LIST_ACTION_SETLOCALES -- compare above "LIST_ACTION_SETLOCALES + theirTag"???
-                                /***
-                                ctx.println("<label>Locales: (space separated) <input id='" + LIST_ACTION_SETLOCALES + theirTag + "' name='"
+                                String s = "<label>Locales: (space separated) <input id='"
+                                    + LIST_ACTION_SETLOCALES + theirTag + "' name='"
                                     + LIST_ACTION_SETLOCALES + theirTag
-                                    + "' value='" + theirLocales + "'></label>");
-                                ctx.println("<button onclick=\"{document.getElementById('" + LIST_ACTION_SETLOCALES + theirTag
-                                    + "').value='*'; return false;}\" >All Locales</button>");
-                                    ***/
+                                    + "' value='" + theirLocales + "'></label>"
+                                    + "<button onclick=\"{document.getElementById('"
+                                    + LIST_ACTION_SETLOCALES + theirTag
+                                    + "').value='*'; return false;}\" >All Locales</button>";
+                                ua.put(action, s);
                             } else if (UserRegistry.userCanDeleteUser(ctx.session.user, theirId, theirLevel)) {
                                 // change of other stuff.
                                 UserRegistry.InfoType type = UserRegistry.InfoType.fromAction(action);
@@ -337,9 +337,11 @@ public class UserList {
                                     }
                                 }
                             } else if (theirId == ctx.session.user.id) {
-                                /// ctx.println("<i>You can't change that setting on your own account.</i>");
+                                String s = "<i>You can't change that setting on your own account.</i>";
+                                ua.put(action, s);
                             } else {
-                                /// ctx.println("<i>No changes can be made to this user.</i>");
+                                String s = "<i>No changes can be made to this user.</i>";
+                                ua.put(action, s);
                             }
                             // ctx.println("Change to " + action);
                         }
