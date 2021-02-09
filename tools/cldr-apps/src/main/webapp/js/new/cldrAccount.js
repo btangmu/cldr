@@ -218,7 +218,8 @@ const cldrAccount = (function () {
       html += cautionSessionDestruction;
       html += getBulkActionMenu(json);
     }
-    if (json.hideUserList) { // TODO
+    if (json.hideUserList) {
+      // TODO
       /***
        String warnHash = "userlist";
       ctx.println("<div id='h_" + warnHash + "'><a href='javascript:show(\"" + warnHash + "\")'>"
@@ -229,6 +230,9 @@ const cldrAccount = (function () {
     }
     html += getTable(json);
     html += getDownloadCsvForm(json);
+    if (json.exception) {
+      html += "<p><i>Failure: " + json.exception + "</i></p>\n";
+    }
     return html;
   }
 
@@ -310,7 +314,7 @@ const cldrAccount = (function () {
         LIST_MAILUSER +
         "'>Check this box to compose a message to these " +
         json.emailUserCount +
-        " users (excluding LOCKED users).</label>";
+        " users (excluding LOCKED users).</label><br />\n";
     } else if (json.emailStatus === "continue") {
       html += detailedEmailControls(json);
     }
@@ -347,7 +351,7 @@ const cldrAccount = (function () {
   }
 
   function emailPleaseConfirm(json) {
-    html =
+    let html =
       "<input type='hidden' name='" +
       LIST_MAILUSER_WHAT +
       "' value='" +
@@ -966,6 +970,7 @@ const cldrAccount = (function () {
     const allowCache = false;
     const p = new URLSearchParams();
     p.append("what", WHAT_USER_LIST);
+    p.append("行", "好");
     if (needOrgList()) {
       p.append(GET_ORGS, true);
     }

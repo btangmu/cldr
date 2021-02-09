@@ -853,7 +853,7 @@ public class SurveyAjax extends HttpServlet {
                         case WHAT_USER_LIST: {
                             if (!SurveyTool.useDojo(request)) {
                                 final SurveyJSONWrapper r = newJSONStatusQuick(sm);
-                                new UserList().getJson(r, request, response, mySession, sm);
+                                new UserList(request, response, mySession, sm).getJson(r);
                                 send(r, out);
                             } else if (mySession.user.isAdminForOrg(mySession.user.org)) { // for now- only admin can do these
                                 try {
