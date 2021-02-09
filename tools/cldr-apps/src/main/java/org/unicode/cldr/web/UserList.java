@@ -44,17 +44,17 @@ public class UserList {
 
     private boolean isValid;
     private HttpServletRequest request;
-    private HttpServletResponse response;
     private CookieSession mySession;
     private SurveyMain sm;
     private WebContext ctx;
+
     /**
      * Is the info only about me (the current user)?
      * true for My Account; false for List Users or zoomed on other user
      */
     private boolean isJustMe;
 
-    /*
+    /**
      * email address of the single user (me or zoomed); null for list of users
      */
     private String just;
@@ -62,21 +62,19 @@ public class UserList {
     private String justOrg;
     private String org;
 
+    private boolean canShowLocked;
     private boolean showLocked;
 
     public UserList(HttpServletRequest request, HttpServletResponse response, CookieSession mySession, SurveyMain sm) throws IOException {
         this.request = request;
-        this.response = response;
         this.mySession = mySession;
         this.sm = sm;
 
-        // TODO: figure out what is really needed to get ctx
-        // might not need ctx at all, could use request/response directly instead?
-        // CLDRConfigImpl.setUrls(request);
+        // Note: we might not need ctx, could use request/response directly instead?
         ctx = new WebContext(request, response);
-        request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx); // is this needed?
         ctx.session = mySession;
         ctx.sm = sm;
+        request.setAttribute(WebContext.CLDR_WEBCONTEXT, ctx); // is this needed?
         justOrg = getParam(PREF_JUSTORG);
         just = getParam(LIST_JUST);
         if (just != null && just.isEmpty()) {
@@ -91,7 +89,8 @@ public class UserList {
                 org = null; // all
             }
         }
-        showLocked = getPrefBool(PREF_SHOWLOCKED);
+        canShowLocked = UserRegistry.userIsExactlyManager(mySession.user) || UserRegistry.userIsTC(mySession.user);
+        showLocked = canShowLocked && getPrefBool(PREF_SHOWLOCKED);
         isValid = (mySession.user != null && (isJustMe || mySession.user.isAdminForOrg(mySession.user.org)));
         if (DEBUG) {
             debugEncoding();
@@ -100,15 +99,15 @@ public class UserList {
 
     private void debugEncoding() {
         /*
-         * I get
+         * Locally, I get
          *   request.getCharacterEncoding = UTF-8
-         *   request.getParameter(行) = 好
-         * If that hold true on production, etc., then we might not need the decoding done
+         *   request.getParameter(乒 pīng) = 乓 pāng
+         * If that holds true on production, etc., then we might not need the decoding done
          * by ctx.field(), though there may be issues of URL-encoding of some ASCII characters?
          */
         String enc = request.getCharacterEncoding();
         System.out.println("request.getCharacterEncoding = " + enc);
-        System.out.println("request.getParameter(行) = " + request.getParameter("行"));
+        System.out.println("request.getParameter(乒 pīng) = " + request.getParameter("乒 pīng"));
     }
 
     public void getJson(SurveyJSONWrapper r) throws JSONException, SurveyException, IOException {
@@ -121,6 +120,7 @@ public class UserList {
         r.put("what", SurveyAjax.WHAT_USER_LIST);
         r.put("org", forOrg);
         r.put("userPerms", userPerms);
+        r.put("canShowLocked", canShowLocked);
         if ("true".equals(request.getParameter(GET_ORGS))) {
             sm.reg.setOrgList();
             r.put("orgList", UserRegistry.getOrgList());
@@ -217,10 +217,9 @@ public class UserList {
                         oldOrg = theirOrg;
                     }
                     if (emailInfo.areSendingMail && (theirLevel < UserRegistry.LOCKED)) {
-                        // TODO: queued
                         MailSender.getInstance().queue(mySession.user.id, theirId, emailInfo.mailSubj, emailInfo.mailBody);
-                        r.put("emailQueued", true);
-                        /// ctx.println("(queued)</td>");
+                        action = "emailQueued";
+                        ua.put(action, "(queued)");
                     }
                     if (havePermToChange) {
                         if (getParam(LIST_ACTION_SETLOCALES + theirTag).length() > 0) {
@@ -393,10 +392,6 @@ public class UserList {
                 }
                 if (isJustMe || UserRegistry.userCanModifyUsers(mySession.user)) {
                     /***
-                    ctx.println("<br>");
-                    ctx.println("<input type='submit' name='doBtn' value='Do Action'>");
-                    ctx.println("</form>");
-
                     if (!isJustMe && UserRegistry.userCanModifyUsers(mySession.user)) {
                         WebContext subsubCtx = new WebContext(ctx);
                         subsubCtx.addQuery("s", mySession.id);
@@ -418,31 +413,6 @@ public class UserList {
             r.put("exception", DBUtils.unchainSqlException(se));
         } finally {
             DBUtils.close(conn, ps, rs);
-        }
-    }
-
-    private void putEmailStatus(SurveyJSONWrapper r, WebContext ctx, int n, boolean didConfirmMail, boolean areSendingDisp, String sendWhat) {
-        if (ctx.field(LIST_MAILUSER).length() == 0) {
-            r.put("emailStatus", "start");
-        } else {
-            String sendWhatTranslit = "";
-            boolean mismatch = false;
-            if (sendWhat.length() > 0) {
-                sendWhatTranslit = TransliteratorUtilities.toHTML.transliterate(sendWhat).replaceAll("\n", "<br>");
-                if (!didConfirmMail) {
-                    if (!ctx.field(LIST_MAILUSER_CONFIRM).equals(LIST_MAILUSER_CONFIRM_CODE)
-                        && (ctx.field(LIST_MAILUSER_CONFIRM).length() > 0)) {
-                        mismatch = true;
-                    }
-                }
-            }
-            r.put("emailStatus", "continue");
-            r.put("emailUserCount", n);
-            r.put("emailDidConfirm", didConfirmMail);
-            r.put("emailSendingDisp", areSendingDisp);
-            r.put("emailSendWhat", sendWhat);
-            r.put("emailSendWhatTranslit", sendWhatTranslit);
-            r.put("emailConfirmationMismatch", mismatch);
         }
     }
 
@@ -568,8 +538,18 @@ public class UserList {
         }
 
         public void put(String key, String value) {
+            if (key == null || key.isEmpty()) {
+                System.out.println("Warning: invalid input to UserActions.put; value = " + value);
+                return;
+            }
             if (map == null) {
                 map = new HashMap<>();
+            }
+            if (DEBUG) {
+                if (map.containsKey(key)) {
+                    System.out.println("Warning: UserActions.put changed value for " +
+                        key + " from " + map.get(key) + " to " + value);
+                }
             }
             map.put(key, value);
         }
