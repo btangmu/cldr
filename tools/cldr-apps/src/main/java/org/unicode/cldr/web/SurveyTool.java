@@ -20,7 +20,7 @@ import org.unicode.cldr.util.VettingViewer;
 public class SurveyTool extends HttpServlet {
     private static final String USE_DOJO_VAR = "USE_DOJO";
     private static final long serialVersionUID = 1L;
-    private static final boolean USE_DOJO_DEFAULT = true;
+    private static final boolean USE_DOJO_DEFAULT = false;
 
     /**
      * Is dojo enabled by default?
@@ -421,7 +421,7 @@ public class SurveyTool extends HttpServlet {
         out.write(prefix + "jquery.autosize.min.js" + tail); // exceptional
 
         final Boolean doUseDojo = useDojo(request);
-        out.write(String.format("<script>const %s=%s;</script>\n", USE_DOJO_VAR, doUseDojo.toString()));
+        // out.write(String.format("<script>const %s=%s;</script>\n", USE_DOJO_VAR, doUseDojo.toString()));
         if (doUseDojo) {
             out.write(prefix + "new/cldrText" + js); // new/cldrText.js
             out.write(prefix + "new/cldrStatus" + js); // new/cldrStatus.js

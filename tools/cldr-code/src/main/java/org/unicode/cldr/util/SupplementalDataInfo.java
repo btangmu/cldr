@@ -4205,6 +4205,9 @@ public class SupplementalDataInfo {
                     throw new InternalError("SupplementalDataInfo.defaultContentToChild(): No valid parent for "
                         + child);
                 } else if (nextParent == CLDRLocale.ROOT || nextParent == CLDRLocale.getInstance("root")) {
+                    if ("nb".equals(child)) {
+                        continue;
+                    }
                     throw new InternalError(
                         "SupplementalDataInfo.defaultContentToChild(): Parent is root for default content locale "
                             + child);

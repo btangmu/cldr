@@ -3801,18 +3801,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             }
             progress.update("Setup supplemental..");
             getSupplementalDataInfo();
-
-            try {
-                // spin up the gears
-                /*
-                 * TODO: delete this unless it has required side-effects. Formerly assigned to unused variable dcParent.
-                 */
-                getSupplementalDataInfo().getBaseFromDefaultContent(CLDRLocale.getInstance("mt_MT"));
-            } catch (InternalError ie) {
-                SurveyLog.logger.warning("can't do SupplementalData.defaultContentToParent() - " + ie);
-                ie.printStackTrace();
-                busted("can't do SupplementalData.defaultContentToParent() - " + ie, ie);
-            }
             progress.update("Checking if startup completed..");
 
             if (isBusted != null) {
