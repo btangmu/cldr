@@ -16,8 +16,8 @@
   <br />
   <label for="dec">XPath decimal id: </label
   ><input id="dec" v-model="dec" v-on:change="lookupPath" size="8" />
-  <div id="xpathAnswer">
-    {{ xpathAnswer }}
+  <div id="xpathStatus">
+    {{ xpathStatus }}
   </div>
 
   <h2>What Is...</h2>
@@ -45,7 +45,7 @@ export default {
       str: "",
       whatis: "",
       whatisAnswer: "",
-      xpathAnswer: "",
+      xpathStatus: "",
     };
   },
 
@@ -55,18 +55,18 @@ export default {
      */
     lookupPath(event) {
       const el = event.target;
-      const from = el.id;
+      const from = el.id; // str, hex, or dec
       const v = el.value;
       if (v.length == 0) {
         return;
       }
-      this.xpathAnswer = "Looking up " + from + " " + v + "...";
+      this.xpathStatus = "Looking up " + from + " " + v + "...";
       const xhrArgs = {
         url: this.getLookupPathAjaxUrl(from, v),
         postData: from === "str" ? { str: v } : null,
         handleAs: "json",
         load: this.pathLoadHandler,
-        error: (err) => (this.xpathAnswer = "❌  " + err),
+        error: (err) => (this.xpathStatus = "❌  " + err),
       };
       cldrAjax.sendXhr(xhrArgs);
     },
@@ -75,14 +75,14 @@ export default {
       if (json.err) {
         // TODO: given "12345678", don't report "Status 500 Internal Server Error; URL: api/xpath/dec/12345678"!
         // Caused by: java.lang.InternalError: Exceeded max 768000 @ 12345678
-        // at org.unicode.cldr.web.IntHash.get(IntHash.java:61)
+	      // at org.unicode.cldr.web.IntHash.get(IntHash.java:61)
         // The server should be more robust, and catch such exceptions, or not throw them in the first place
-        this.xpathAnswer = "❌  " + json.message;
+        this.xpathStatus = "❌  " + json.message;
       } else {
         this.str = json.xpath;
         this.hex = json.hexId;
         this.dec = json.decimalId;
-        this.xpathAnswer = "✅";
+        this.xpathStatus = "✅";
       }
     },
 
@@ -119,7 +119,7 @@ export default {
       const p = new URLSearchParams();
       p.append("loc", this.baseLocale);
       p.append("q", this.whatis);
-      // TODO: not jsp!
+      // TODO: not jsp! Maybe api/whatis
       return "browse_results.jsp?" + p.toString();
     },
   },

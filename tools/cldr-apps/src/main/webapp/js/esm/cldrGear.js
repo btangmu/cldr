@@ -161,7 +161,6 @@ function getItems() {
 
     {
       special: "lookup",
-      title: "Look up a code or xpath",
       level: 2,
     },
     {
