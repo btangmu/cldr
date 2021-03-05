@@ -160,8 +160,8 @@ function getItems() {
     aboutMenu,
 
     {
-      special: "lookup_path",
-      title: "Lookup a code or xpath",
+      special: "lookup",
+      title: "Look up a code or xpath",
       level: 2,
     },
     {

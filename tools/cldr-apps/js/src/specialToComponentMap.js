@@ -1,5 +1,5 @@
 import AboutPanel from "./views/AboutPanel.vue";
-import LookupPath from "./views/LookupPath.vue";
+import LookUp from "./views/LookUp.vue";
 import UnknownPanel from "./views/UnknownPanel.vue";
 import VettingSummary from "./views/VettingSummary.vue";
 import WaitingPanel from "./views/WaitingPanel.vue";
@@ -9,7 +9,7 @@ import WaitingPanel from "./views/WaitingPanel.vue";
  */
 const specialToComponentMap = {
   about: AboutPanel,
-  lookup_path: LookupPath,
+  lookup: LookUp,
   retry: WaitingPanel,
   vsummary: VettingSummary,
   // If no match, end up here
