@@ -1,62 +1,36 @@
 <template>
+  <h2>XPath Calculator</h2>
+  <p class="helpHtml">
+    <em>Instructions:</em> Enter an XPath, such as
+    <kbd>//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator</kbd>
+    into the "XPath string" field, or, enter a hex or decimal XPath id, such as
+    <kbd>1d142c4be7841aa7</kbd> or <kbd>15305</kbd> into the corresponding
+    field. Then press the <kbd>Tab</kbd> key. The other fields will be filled
+    in.
+  </p>
+  <label for="str">XPath string: </label
+  ><input id="str" v-model="str" v-on:change="lookupPath" size="160" />
+  <br />
+  <label for="hex">XPath hex id: </label
+  ><input id="hex" v-model="hex" v-on:change="lookupPath" size="32" />
+  <br />
+  <label for="dec">XPath decimal id: </label
+  ><input id="dec" v-model="dec" v-on:change="lookupPath" size="8" />
+  <div id="xpathAnswer">
+    {{ xpathAnswer }}
+  </div>
+
+  <h2>What Is...</h2>
+  <p class="helpHtml">
+    <em>Instructions:</em> Enter a code or a portion of a name in the "What is"
+    field, such as <kbd>jgo</kbd> or <kbd>English</kbd>, and press the
+    <kbd>Tab</kbd> key. A list of matching codes will be shown.
+  </p>
+  <label for="whatis">What is: </label>
+  <input id="whatis" v-model="whatis" v-on:change="lookupWhatis" />
   <label for="loc">Base Locale: </label>
   <input id="loc" name="loc" v-model="baseLocale" />
-  <hr />
-  <table>
-    <tbody>
-      <tr>
-        <td class="whatis_cell">
-          What is...
-          <input id="whatis" v-model="whatis" v-on:change="lookup_whatis()" />
-        </td>
-        <td>
-          <b>xpath calculator - </b><br />
-          <label for="xpath">XPath: </label
-          ><input
-            id="xpath"
-            v-model="xpath"
-            v-on:change="lookup_xpath('xpath')"
-            size="160"
-          />
-          <br />
-          <label for="hex">XPath hex id: </label
-          ><input
-            id="hex"
-            v-model="hex"
-            v-on:change="lookup_xpath('hex')"
-            size="32"
-          />
-          <label for="dec">XPath decimal id: </label
-          ><input
-            id="dec"
-            v-model="dec"
-            v-on:change="lookup_xpath('dec')"
-            size="8"
-          />
-          <div id="xpath_answer">
-            {{ xpathAnswer }}
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <div id="whatis_answer">{{ whatisAnswer }}</div>
-  <hr />
-  <div class="helpHtml">
-    <h4>Instructions:</h4>
-    <p>
-      <b>What Is...</b>: Enter a code or a portion of a name in the "What Is"
-      field, such as "jgo" or "English", and press the Tab key. A list of
-      matching codes will be shown.
-    </p>
-    <p>
-      <b>XPath Calculator</b>: Enter an XPath, such as
-      <kbd>//ldml/localeDisplayNames/localeDisplayPattern/localeSeparator</kbd>
-      into the XPath field, and press the Tab key. Or, enter an XPath strid,
-      such as <kbd>1d142c4be7841aa7</kbd> into the XPath strid field and press
-      the Tab key. The other fields (if applicable) will be filled in.
-    </p>
-  </div>
+  <div id="whatisAnswer">{{ whatisAnswer }}</div>
 </template>
 
 <script>
@@ -66,88 +40,90 @@ export default {
   data() {
     return {
       baseLocale: "en_US",
+      dec: "",
+      hex: "",
+      str: "",
       whatis: "",
       whatisAnswer: "",
-      xpath: "",
-      hex: "",
-      dec: "",
-      xpathAnswer: "To begin, enter a value and press the tab key",
+      xpathAnswer: "",
     };
   },
 
   methods: {
     /**
-     * Look up the entered string
-     */
-    lookup_whatis() {
-      if (!this.whatis) {
-        this.whatisAnswer = "";
-        return;
-      }
-      this.whatisAnswer = "Looking up " + this.whatis + "...";
-      cldrAjax.sendXhr({
-        url:
-          "/cldr-apps/browse_results.jsp?loc=" +
-          this.baseLocale +
-          "&q=" +
-          this.whatis,
-        load: function (h) {
-          this.whatisAnswer = h;
-        },
-        error: function (err) {
-          this.whatisAnswer = "Error: " + err;
-        },
-      });
-    },
-
-    /**
      * Look up the entered xpath string, hex code, or decimal code
-     *
-     * @param from - "xpath", "hex" or "dec"
      */
-    lookup_xpath(from) {
-      console.log("lookup_xpath, this.baseLocale = " + this.baseLocale);
-      console.log("lookup_xpath, this.xpath = " + this.xpath);
-      console.log("lookup_xpath, this.hex = " + this.hex);
-      console.log("lookup_xpath, this.dec = " + this.dec);
-      let v = "";
-      if (from === "xpath") {
-        v = this.xpath;
-      } else if (from === "hex") {
-        v = this.hex;
-      } else if (from === "dec") {
-        v = this.dec;
-      } else {
-        console.log("lookup_xpath, invalid from = " + from);
-      }
+    lookupPath(event) {
+      const el = event.target;
+      const from = el.id;
+      const v = el.value;
       if (v.length == 0) {
         return;
       }
       this.xpathAnswer = "Looking up " + from + " " + v + "...";
       const xhrArgs = {
-        url: "api/xpath/" + from + "/" + v,
+        url: this.getLookupPathAjaxUrl(from, v),
+        postData: from === "str" ? { str: v } : null,
         handleAs: "json",
-        load: this.loadHandler,
-        error: this.errorHandler,
+        load: this.pathLoadHandler,
+        error: (err) => (this.xpathAnswer = "❌  " + err),
       };
       cldrAjax.sendXhr(xhrArgs);
     },
 
-    loadHandler(json) {
+    pathLoadHandler(json) {
       if (json.err) {
-        this.xpathAnswer = json.message;
+        // TODO: given "12345678", don't report "Status 500 Internal Server Error; URL: api/xpath/dec/12345678"!
+        // Caused by: java.lang.InternalError: Exceeded max 768000 @ 12345678
+        // at org.unicode.cldr.web.IntHash.get(IntHash.java:61)
+        // The server should be more robust, and catch such exceptions, or not throw them in the first place
+        this.xpathAnswer = "❌  " + json.message;
       } else {
-        this.xpath = json.xpath;
+        this.str = json.xpath;
         this.hex = json.hexId;
         this.dec = json.decimalId;
-        this.xpathAnswer = "OK";
+        this.xpathAnswer = "✅";
       }
     },
 
-    errorHandler(err) {
-      this.xpathAnswer = "Error: " + err;
+    /**
+     * Look up the entered "What is" string
+     */
+    lookupWhatis() {
+      if (!this.whatis) {
+        this.whatisAnswer = "";
+        return;
+      }
+      this.whatisAnswer = "Looking up " + this.whatis + "...";
+      const xhrArgs = {
+        url: this.getWhatisAjaxUrl(),
+        // TODO: the back end should return json, not text (html)
+        handleAs: "text",
+        load: (answer) => (this.whatisAnswer = answer),
+        error: (err) => (this.whatisAnswer = "Error: " + err),
+      };
+      cldrAjax.sendXhr(xhrArgs);
+    },
+
+    getLookupPathAjaxUrl(from, v) {
+      if (from === "str") {
+        // request will be post; v will be in body
+        return "api/xpath/str";
+      } else {
+        // request will be get
+        return "api/xpath/" + from + "/" + v;
+      }
+    },
+
+    getWhatisAjaxUrl() {
+      const p = new URLSearchParams();
+      p.append("loc", this.baseLocale);
+      p.append("q", this.whatis);
+      // TODO: not jsp!
+      return "browse_results.jsp?" + p.toString();
     },
   },
+
   computed: {
     console: () => console,
   },
@@ -155,19 +131,10 @@ export default {
 </script>
 
 <style scoped>
-.whatis_cell {
-  border-right: 4px solid gray;
-}
 #whatis {
   font-size: x-large;
 }
-#xpath_answer {
-  font-style: italic;
-}
-#whatis_answer {
-  font-style: italic;
-}
 .helpHtml {
-  margin: 2em;
+  margin: 1em;
 }
 </style>
