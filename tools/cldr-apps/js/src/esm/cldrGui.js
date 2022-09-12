@@ -4,6 +4,7 @@
 import * as cldrDrag from "./cldrDrag.js";
 import * as cldrEvent from "./cldrEvent.js";
 import * as cldrForum from "./cldrForum.js";
+import * as cldrInfo from "./cldrInfo.js";
 import * as cldrLoad from "./cldrLoad.js";
 import * as cldrMenu from "./cldrMenu.js";
 import * as cldrProgress from "./cldrProgress.js";
@@ -56,6 +57,8 @@ function run() {
     setOnClicks();
     window.addEventListener("resize", handleResize);
     cldrProgress.insertWidget("CompletionSpan");
+    cldrInfo.insertWidget("ItemInfoContainer");
+    showOrHideRightPanelButton();
   } catch (e) {
     return Promise.reject(e);
   }
@@ -174,9 +177,9 @@ function setOnClicks() {
   for (let i = 0; i < els.length; i++) {
     els[i].onclick = () => insertDashboard();
   }
-  els = document.getElementsByClassName("toggle-right");
+  els = document.getElementsByClassName("open-right");
   for (let i = 0; i < els.length; i++) {
-    els[i].onclick = () => toggleRightPanel();
+    els[i].onclick = () => showRightPanel();
   }
 }
 
@@ -270,7 +273,7 @@ const topTitle =
       <span id="CompletionSpan"></span>
       <span>
         <button class="cldr-nav-btn btn-primary open-dash" type="button">Open Dashboard</button>
-        <button class="cldr-nav-btn btn-primary toggle-right" type="button">Toggle Info Panel</button>
+        <button class="cldr-nav-btn btn-primary open-right" type="button">Open Info Panel</button>
       </span>
     </nav>
   </header>
@@ -290,8 +293,8 @@ const sideBySide = `
       <section id="DashboardSection"></section>
     </div>
     <div id="ItemInfoContainer" class="sidebyside-column sidebyside-narrow">
-      <section id="itemInfo" class="sidebyside-scrollable"></section>
     </div>
+  </div>
   </main>
 `;
 
@@ -415,13 +418,6 @@ function updateWithStatus() {
 }
 
 /**
- * Show or hide the right panel
- */
-function toggleRightPanel() {
-  rightPanelVisible ? hideRightPanel() : showRightPanel();
-}
-
-/**
  * Show the right panel
  */
 function showRightPanel() {
@@ -436,12 +432,13 @@ function showRightPanel() {
     info.style.display = "flex";
     rightPanelVisible = true;
   }
+  showOrHideRightPanelButton();
 }
 
 /**
  * Hide the right panel
  *
- * Called by toggleRightPanel, and also for Reports.
+ * Called by InfoPanel.vue, and also for Reports.
  * Otherwise, for the Date/Time, Zones, Numbers reports (especially Zones), the panel may invisibly prevent
  * clicking on the "view" buttons.
  */
@@ -455,6 +452,14 @@ function hideRightPanel() {
     main.style.width = "100%";
     info.style.display = "none";
     rightPanelVisible = false;
+    showOrHideRightPanelButton();
+  }
+}
+
+function showOrHideRightPanelButton() {
+  const els = document.getElementsByClassName("open-right");
+  for (let i = 0; i < els.length; i++) {
+    els[i].style.display = rightPanelVisible ? "none" : "inline";
   }
 }
 

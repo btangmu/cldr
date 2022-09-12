@@ -12,8 +12,41 @@ import * as cldrTable from "./cldrTable.js";
 import * as cldrText from "./cldrText.js";
 import * as cldrVote from "./cldrVote.js";
 
+import InfoPanel from "../views/InfoPanel.vue";
+
+import { createCldrApp } from "../cldrVueRouter";
+
 let unShow = null;
 let lastShown = null;
+
+let infoPanelWrapper = null;
+
+/**
+ * Create the InfoPanel component
+ *
+ * @param containerId the id of the element whose new child will contain the new component
+ */
+function insertWidget(containerId) {
+  try {
+    const fragment = document.createDocumentFragment();
+    infoPanelWrapper = createCldrApp(InfoPanel).mount(fragment);
+    const containerEl = document.getElementById(containerId);
+    const vueEl = document.createElement("section");
+    containerEl.appendChild(vueEl);
+    vueEl.replaceWith(fragment);
+    const nonVueEl = document.createElement("section");
+    nonVueEl.className = "sidebyside-scrollable";
+    nonVueEl.id = "itemInfo";
+    containerEl.appendChild(nonVueEl);
+  } catch (e) {
+    console.error("Error loading InfoPanel vue " + e.message + " / " + e.name);
+    notification.error({
+      message: `${e.name} while loading InfoPanel.vue`,
+      description: `${e.message}`,
+      duration: 0,
+    });
+  }
+}
 
 /**
  * Make the object "theObj" cause the info window to show when clicked.
@@ -696,6 +729,7 @@ function addJumpToOriginal(theRow, el) {
 }
 
 export {
+  insertWidget,
   listen,
   reset,
   showItemInfoFn,

@@ -1121,3 +1121,10 @@ html {
 	flex-direction: column;
 	overflow: hidden;
 }
+
+#InfoPanelSection {
+	display: flex;
+	flex-direction: row;
+	flex: none;
+	overflow: hidden;
+}
