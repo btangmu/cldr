@@ -617,6 +617,7 @@ function specialLoad(itemLoadInfo, curSpecial, theDiv) {
     if (curSpecial !== "general") {
       cldrGui.hideDashboard();
     }
+    cldrInfo.closePanel();
     special.load(curSpecial); // pass the special name to the loader
   } else if (curSpecial !== "general") {
     // Avoid recursion.
@@ -845,16 +846,7 @@ function loadAllRowsFromJson(json, theDiv) {
     cldrStatus.setCurrentSection("");
     cldrStatus.setCurrentPage(json.pageId);
     updateHashAndMenus(); // now that we have a pageid
-    if (!cldrStatus.getSurveyUser()) {
-      const message = cldrText.get("loginGuidance");
-      cldrInfo.showMessage(message);
-    } else if (!json.canModify) {
-      const message = cldrText.get("readonlyGuidance");
-      cldrInfo.showMessage(message);
-    } else {
-      const message = cldrText.get("dataPageInitialGuidance");
-      cldrInfo.showMessage(message);
-    }
+    cldrInfo.showMessage(getGuidanceMessage(json.canModify));
     if (!cldrSurvey.isInputBusy()) {
       cldrSurvey.showLoader(cldrText.get("loading3"));
       cldrTable.insertRows(
@@ -869,6 +861,16 @@ function loadAllRowsFromJson(json, theDiv) {
       cldrGui.refreshCounterVetting();
       $("#nav-page-footer").show(); // make bottom "Prev/Next" buttons visible after building table
     }
+  }
+}
+
+function getGuidanceMessage(canModify) {
+  if (!cldrStatus.getSurveyUser()) {
+    return cldrText.get("loginGuidance");
+  } else if (!canModify) {
+    return cldrText.get("readonlyGuidance");
+  } else {
+    return cldrText.get("dataPageInitialGuidance");
   }
 }
 

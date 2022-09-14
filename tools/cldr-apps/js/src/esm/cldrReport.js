@@ -33,7 +33,6 @@ function reportLoadHandler(html, report) {
     lastrr.unmount();
   }
   lastrr = rr;
-  cldrGui.hideRightPanel();
 }
 
 function reportName(report) {

@@ -14,12 +14,12 @@
 </template>
 
 <script>
-import * as cldrGui from "../esm/cldrGui.js";
+import * as cldrInfo from "../esm/cldrInfo.js";
 
 export default {
   methods: {
     closeInfoPanel() {
-      cldrGui.hideRightPanel();
+      cldrInfo.closePanel();
     },
   },
 };

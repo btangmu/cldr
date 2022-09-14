@@ -25,7 +25,6 @@ const runGuiId = "st-run-gui";
 let mainHeaderWrapper = null;
 let dashboardWidgetWrapper = null;
 
-let rightPanelVisible = true;
 let dashboardVisible = false;
 
 /**
@@ -58,7 +57,7 @@ function run() {
     window.addEventListener("resize", handleResize);
     cldrProgress.insertWidget("CompletionSpan");
     cldrInfo.insertWidget("ItemInfoContainer");
-    showOrHideRightPanelButton();
+    cldrInfo.showOrHideOpenPanelButton();
   } catch (e) {
     return Promise.reject(e);
   }
@@ -179,7 +178,7 @@ function setOnClicks() {
   }
   els = document.getElementsByClassName("open-right");
   for (let i = 0; i < els.length; i++) {
-    els[i].onclick = () => showRightPanel();
+    els[i].onclick = () => cldrInfo.openPanel();
   }
 }
 
@@ -294,7 +293,6 @@ const sideBySide = `
     </div>
     <div id="ItemInfoContainer" class="sidebyside-column sidebyside-narrow">
     </div>
-  </div>
   </main>
 `;
 
@@ -418,52 +416,6 @@ function updateWithStatus() {
 }
 
 /**
- * Show the right panel
- */
-function showRightPanel() {
-  if (rightPanelVisible) {
-    return;
-  }
-  const main = document.getElementById("MainContentPane");
-  const info = document.getElementById("ItemInfoContainer");
-  if (main && info) {
-    main.style.width = "75%";
-    info.style.width = "25%";
-    info.style.display = "flex";
-    rightPanelVisible = true;
-  }
-  showOrHideRightPanelButton();
-}
-
-/**
- * Hide the right panel
- *
- * Called by InfoPanel.vue, and also for Reports.
- * Otherwise, for the Date/Time, Zones, Numbers reports (especially Zones), the panel may invisibly prevent
- * clicking on the "view" buttons.
- */
-function hideRightPanel() {
-  if (!rightPanelVisible) {
-    return;
-  }
-  const main = document.getElementById("MainContentPane");
-  const info = document.getElementById("ItemInfoContainer");
-  if (main && info) {
-    main.style.width = "100%";
-    info.style.display = "none";
-    rightPanelVisible = false;
-    showOrHideRightPanelButton();
-  }
-}
-
-function showOrHideRightPanelButton() {
-  const els = document.getElementsByClassName("open-right");
-  for (let i = 0; i < els.length; i++) {
-    els[i].style.display = rightPanelVisible ? "none" : "inline";
-  }
-}
-
-/**
  * The user's coverage level has changed. Inform all widgets we know about that need
  * updating to reflect the change.
  *
@@ -578,13 +530,11 @@ function refreshCounterVetting() {
 export {
   dashboardIsVisible,
   hideDashboard,
-  hideRightPanel,
   insertDashboard,
   refreshCounterVetting,
   run,
   setToptitleVisibility,
   showDashboard,
-  showRightPanel,
   updateDashboardRow,
   updateWidgetsWithCoverage,
   updateWithStatus,

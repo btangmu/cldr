@@ -16,10 +16,11 @@ import InfoPanel from "../views/InfoPanel.vue";
 
 import { createCldrApp } from "../cldrVueRouter";
 
+let panelVisible = true;
+let panelVisibleForPageView = panelVisible;
+
 let unShow = null;
 let lastShown = null;
-
-let infoPanelWrapper = null;
 
 /**
  * Create the InfoPanel component
@@ -29,7 +30,7 @@ let infoPanelWrapper = null;
 function insertWidget(containerId) {
   try {
     const fragment = document.createDocumentFragment();
-    infoPanelWrapper = createCldrApp(InfoPanel).mount(fragment);
+    createCldrApp(InfoPanel).mount(fragment); // returns App object "wrapper", currently not saved
     const containerEl = document.getElementById(containerId);
     const vueEl = document.createElement("section");
     containerEl.appendChild(vueEl);
@@ -49,6 +50,69 @@ function insertWidget(containerId) {
 }
 
 /**
+ * Make the Info Panel visible
+ */
+function openPanel() {
+  if (!panelVisible) {
+    panelVisible = true;
+    openOrClosePanel();
+  }
+}
+
+/**
+ * Hide the Info Panel
+ */
+function closePanel() {
+  if (panelVisible) {
+    panelVisible = false;
+    openOrClosePanel();
+  }
+}
+
+function openOrClosePanel() {
+  const main = document.getElementById("MainContentPane");
+  const info = document.getElementById("ItemInfoContainer");
+  if (main && info) {
+    if (panelVisible) {
+      main.style.width = "75%";
+      info.style.width = "25%";
+      info.style.display = "flex";
+    } else {
+      main.style.width = "100%";
+      info.style.display = "none";
+    }
+  }
+  rememberPanelVisibilityIfPageView();
+  showOrHideOpenPanelButton();
+}
+
+/**
+ * Remember whether the Info Panel should be visible when the
+ * Page table is displayed (rather than a "special").
+ *
+ * If there is no current "special", the main Page table view is visible,
+ * and the Info Panel visibility state corresponds to the Page table view.
+ *
+ * Call this after setting panelVisible to true/false.
+ */
+function rememberPanelVisibilityIfPageView() {
+  if (!cldrStatus.getCurrentSpecial()) {
+    panelVisibleForPageView = panelVisible;
+  }
+}
+
+/**
+ * Show or hide the "Open Info Panel" button(s). Such buttons
+ * should only be displayed when the panel is not already visible.
+ */
+function showOrHideOpenPanelButton() {
+  const els = document.getElementsByClassName("open-right");
+  Array.from(els).forEach((element) => {
+    element.style.display = panelVisible ? "none" : "inline";
+  });
+}
+
+/**
  * Make the object "theObj" cause the info window to show when clicked.
  *
  * @param {String} str
@@ -58,30 +122,38 @@ function insertWidget(containerId) {
  */
 function listen(str, tr, theObj, fn) {
   cldrDom.listenFor(theObj, "click", function (e) {
-    show(str, tr, theObj /* hideIfLast */, fn);
+    if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
+      console.log("cldrInfo -- calling show from listenFor");
+      show(str, tr, theObj /* hideIfLast */, fn);
+    }
     cldrEvent.stopPropagation(e);
     return false;
   });
 }
 
-function showNothing() {
-  show(null, null, null, null);
-}
-
 function showMessage(str) {
-  show(str, null, null, null);
+  if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
+    console.log("cldrInfo -- calling show from showMessage");
+    show(str, null, null, null);
+  }
 }
 
 function showWithRow(str, tr) {
-  show(str, tr, null, null);
+  if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
+    console.log("cldrInfo -- calling show from showWithRow");
+    show(str, tr, null, null);
+  }
 }
 
 function showRowObjFunc(tr, hideIfLast, fn) {
-  show(null, tr, hideIfLast, fn);
+  if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
+    console.log("cldrInfo -- calling show from showRowObjFunc");
+    show(null, tr, hideIfLast, fn);
+  }
 }
 
 /**
- * Display the right-hand "info" panel.
+ * Display the given information in the Info Panel
  *
  * @param {String} str the string to show at the top
  * @param {Node} tr the <TR> of the row
@@ -89,6 +161,7 @@ function showRowObjFunc(tr, hideIfLast, fn) {
  * @param {Function} fn
  */
 function show(str, tr, hideIfLast, fn) {
+  openPanel();
   if (unShow) {
     unShow();
     unShow = null;
@@ -729,12 +802,14 @@ function addJumpToOriginal(theRow, el) {
 }
 
 export {
+  closePanel,
   insertWidget,
   listen,
+  openPanel,
   reset,
   showItemInfoFn,
   showMessage,
-  showNothing,
+  showOrHideOpenPanelButton,
   showRowObjFunc,
   showWithRow,
   updateRowVoteInfo,
