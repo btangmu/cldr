@@ -600,18 +600,11 @@ function shower(itemLoadInfo) {
   cldrSurvey.showLoader(cldrText.get("loading"));
   const curSpecial = cldrStatus.getCurrentSpecial();
   cldrGui.setToptitleVisibility(curSpecial !== "menu");
-  if (curSpecial === "none") {
-    // TODO: clarify when and why this would happen
-    cldrSurvey.hideLoader();
-    isLoading = false;
-    window.location = cldrStatus.getSurvUrl(); // redirect home
-  } else {
-    specialLoad(itemLoadInfo, curSpecial, theDiv);
-  }
+  specialLoad(itemLoadInfo, curSpecial, theDiv);
 }
 
 function specialLoad(itemLoadInfo, curSpecial, theDiv) {
-  const special = getSpecial(curSpecial);
+  const special = getSpecial(curSpecial); // special is an object; curSpecial is a string
   if (special && special.load) {
     cldrEvent.hideOverlayAndSidebar();
     if (curSpecial !== "general") {
@@ -635,7 +628,8 @@ function unspecialLoad(itemLoadInfo, theDiv) {
     const curPage = cldrStatus.getCurrentPage();
     const curId = cldrStatus.getCurrentId();
     if (!curPage && !curId) {
-      specialLoad(itemLoadInfo, "general", theDiv); //formerly: loadGeneral(itemLoadInfo);
+      cldrStatus.setCurrentSpecial("general");
+      specialLoad(itemLoadInfo, "general", theDiv);
     } else if (curId === "!") {
       // TODO: clarify when and why this would happen
       loadExclamationPoint();

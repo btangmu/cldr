@@ -178,7 +178,9 @@ const strings = {
   generalPageInitialGuidance:
     "This area will show details of items as you work with the Survey Tool.",
   localesInitialGuidance:
-    "Choose a locale to get started.  <ul><li><span class='locked'>locked</span> locales may not be modified by anyone,</li><li><span class='canmodify'>hand icon</span> indicates editing allowed by you</li><li><span class='name_var'>Locales with (Variants)</span> may have specific differences to note.</li></ul><p>Don't see your locale? See: <a href='http://cldr.unicode.org/index/bug-reports#New_Locales'>Adding New Locales</a></p>",
+    "Choose a locale to get started.  <ul><li><span class='locked'>locked</span> locales may not be modified by anyone,</li><li><span class='canmodify'>hand icon</span> indicates editing allowed by you</li><li><span class='name_var'>Locales with (Variants)</span> may have specific differences to note.</li></ul><p>Don't see your locale? See: <a href='https://github.com/unicode-org/cldr/blob/main/docs/requesting_changes.md'>Adding New Locales</a></p>",
+  generalSpecialGuidance:
+    "Please hover over the sidebar to choose a section to begin entering data. If you have not already done so, please read the <a target='_blank' href='http://www.unicode.org/cldr/survey_tool.html'>Instructions</a>, particularly the Guide and the Walkthrough. You can also use the Dashboard to see all the errors, warnings, and missing items in one place.",
 
   loginGuidance: "You may not make any changes, you are not logged in.",
   readonlyGuidance: "You may not make changes to this locale.",
@@ -276,8 +278,8 @@ const strings = {
     "${count} old winning votes were automatically imported",
   "v-title_desc":
     "This area shows the date before which votes are considered “old”.",
+
   section_forum: "Forum",
-  section_general: "General Info",
   section_subpages: "Subpages",
 
   searchNoResults: "No results found.",
@@ -452,8 +454,7 @@ const strings = {
   special_flagged: "Flagged Items",
   special_forum: "Forum Posts",
   special_forum_participation: "Forum Participation",
-  special_general:
-    "Please hover over the sidebar to choose a section to begin entering data. If you have not already done so, please read the <a target='_blank' href='http://www.unicode.org/cldr/survey_tool.html'>Instructions</a>, particularly the Guide and the Walkthrough. You can also use the Dashboard to see all the errors, warnings, and missing items in one place.",
+  special_general: "General Info",
   special_list_emails: "List Email Addresses",
   special_list_users: "List Users",
   special_locales: "Locale List",

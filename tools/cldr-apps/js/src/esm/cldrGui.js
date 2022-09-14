@@ -57,6 +57,7 @@ function run() {
     window.addEventListener("resize", handleResize);
     cldrProgress.insertWidget("CompletionSpan");
     cldrInfo.insertWidget("ItemInfoContainer");
+    cldrInfo.closePanel();
     cldrInfo.showOrHideOpenPanelButton();
   } catch (e) {
     return Promise.reject(e);

@@ -16,11 +16,13 @@ import InfoPanel from "../views/InfoPanel.vue";
 
 import { createCldrApp } from "../cldrVueRouter";
 
-let panelVisible = true;
-let panelVisibleForPageView = panelVisible;
+let panelVisible = false;
+let panelVisibleForPageView = true;
 
 let unShow = null;
 let lastShown = null;
+
+const INFO_PANEL_DEBUG = false;
 
 /**
  * Create the InfoPanel component
@@ -98,6 +100,12 @@ function openOrClosePanel() {
 function rememberPanelVisibilityIfPageView() {
   if (!cldrStatus.getCurrentSpecial()) {
     panelVisibleForPageView = panelVisible;
+    if (INFO_PANEL_DEBUG) {
+      console.log(
+        "rememberPanelVisibilityIfPageView: set panelVisibleForPageView = " +
+          panelVisibleForPageView
+      );
+    }
   }
 }
 
@@ -123,7 +131,9 @@ function showOrHideOpenPanelButton() {
 function listen(str, tr, theObj, fn) {
   cldrDom.listenFor(theObj, "click", function (e) {
     if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
-      console.log("cldrInfo -- calling show from listenFor");
+      if (INFO_PANEL_DEBUG) {
+        console.log("cldrInfo -- calling show from listenFor");
+      }
       show(str, tr, theObj /* hideIfLast */, fn);
     }
     cldrEvent.stopPropagation(e);
@@ -133,22 +143,60 @@ function listen(str, tr, theObj, fn) {
 
 function showMessage(str) {
   if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
-    console.log("cldrInfo -- calling show from showMessage");
+    if (INFO_PANEL_DEBUG) {
+      console.log(
+        "cldrInfo -- calling show from showMessage; panelVisibleForPageView = " +
+          panelVisibleForPageView +
+          "; special = " +
+          cldrStatus.getCurrentSpecial()
+      );
+    }
     show(str, null, null, null);
+  } else {
+    if (INFO_PANEL_DEBUG) {
+      console.log(
+        "cldrInfo -- skipping show from showMessage; panelVisibleForPageView = " +
+          panelVisibleForPageView +
+          "; special = " +
+          cldrStatus.getCurrentSpecial()
+      );
+    }
   }
 }
 
 function showWithRow(str, tr) {
   if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
-    console.log("cldrInfo -- calling show from showWithRow");
+    if (INFO_PANEL_DEBUG) {
+      console.log("cldrInfo -- calling show from showWithRow");
+    }
     show(str, tr, null, null);
+  } else {
+    if (INFO_PANEL_DEBUG) {
+      console.log(
+        "cldrInfo -- skipping show from showWithRow; panelVisibleForPageView = " +
+          panelVisibleForPageView +
+          "; special = " +
+          cldrStatus.getCurrentSpecial()
+      );
+    }
   }
 }
 
 function showRowObjFunc(tr, hideIfLast, fn) {
   if (panelVisibleForPageView || cldrStatus.getCurrentSpecial()) {
-    console.log("cldrInfo -- calling show from showRowObjFunc");
+    if (INFO_PANEL_DEBUG) {
+      console.log("cldrInfo -- calling show from showRowObjFunc");
+    }
     show(null, tr, hideIfLast, fn);
+  } else {
+    if (INFO_PANEL_DEBUG) {
+      console.log(
+        "cldrInfo -- skipping show from showRowObjFunc; panelVisibleForPageView = " +
+          panelVisibleForPageView +
+          "; special = " +
+          cldrStatus.getCurrentSpecial()
+      );
+    }
   }
 }
 
@@ -551,7 +599,6 @@ function updateRowVoteInfo(tr, theRow) {
 function updateRowVoteInfoForAllOrgs(theRow, vr, value, item, vdiv) {
   for (let org in vr.orgs) {
     var theOrg = vr.orgs[org];
-    var vrRaw = {};
     var orgVoteValue = theOrg.votes[value];
     /*
      * We should display something under "Org." and "User" even when orgVoteValue is zero (not undefined),
@@ -705,7 +752,7 @@ function showItemInfoFn(theRow, item) {
       displayValue = theRow.inheritedValue;
     }
 
-    var span = cldrVote.appendItem(h3, displayValue, item.pClass);
+    cldrVote.appendItem(h3, displayValue, item.pClass);
     h3.className = "span";
     td.appendChild(h3);
 

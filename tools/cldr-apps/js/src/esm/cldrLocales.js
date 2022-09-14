@@ -28,10 +28,20 @@ function load() {
   cldrEvent.filterAllLocale(); // filter for init data
   cldrEvent.forceSidebar();
   cldrStatus.setCurrentLocale(null);
-  cldrStatus.setCurrentSpecial("locales"); // TODO: always redundant? it's already "locales"
-  const message = cldrText.get("localesInitialGuidance");
-  cldrInfo.showMessage(message);
-  $("#itemInfo").html("");
+
+  // TODO: this message contains a help link, but the user can't click on it since
+  // the main part of the window is grayed out and the user is only allowed to click
+  // on the left sidebar to choose a locale! Also, it might be better to show localesInitialGuidance
+  // in the main part of the window instead of the Info Panel...
+  // Reference: https://unicode-org.atlassian.net/browse/CLDR-14734
+  cldrInfo.showMessage(cldrText.get("localesInitialGuidance"));
+
+  // When clicking on the locale name in the header of the main Page view,
+  // the OtherSection div may be non-empty and needs to be hidden here
+  const otherSection = document.getElementById("OtherSection");
+  if (otherSection) {
+    otherSection.style.display = "none";
+  }
 }
 
 // called as special.parseHash
