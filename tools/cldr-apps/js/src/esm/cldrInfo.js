@@ -39,7 +39,7 @@ function initialize(cid, nid, bclass) {
   neighborId = nid;
   buttonClass = bclass;
   insertWidget();
-  setMainAndPanelWidthAndDisplay();
+  setPanelAndNeighborStyles();
   updateOpenPanelButtons();
 }
 
@@ -93,12 +93,12 @@ function closePanel() {
 }
 
 function openOrClosePanel() {
-  setMainAndPanelWidthAndDisplay();
+  setPanelAndNeighborStyles();
   rememberPanelVisibilityIfPageView();
   updateOpenPanelButtons();
 }
 
-function setMainAndPanelWidthAndDisplay() {
+function setPanelAndNeighborStyles() {
   const main = document.getElementById(neighborId);
   const info = document.getElementById(containerId);
   if (main && info) {
