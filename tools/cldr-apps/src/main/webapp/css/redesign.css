@@ -448,7 +448,7 @@ h3.collapse-review > span:first-child {position: relative; top: -220px;display: 
 }
 
 
-.sidebar-chooser, #review-link  {
+.sidebar-chooser  {
 	cursor:pointer;
 }
 
@@ -1119,5 +1119,12 @@ html {
 	height: 50%;
 	display: none;
 	flex-direction: column;
+	overflow: hidden;
+}
+
+#InfoPanelSection {
+	display: flex;
+	flex-direction: row;
+	flex: none;
 	overflow: hidden;
 }
