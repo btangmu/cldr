@@ -52,8 +52,6 @@ const strings = {
   "i-override_desc":
     "You have voted on this item with a lower vote count (shown in parenthesis).",
 
-  itemInfoBlank: "This area shows further details about the selected item.",
-
   draftStatus: "Status: ${0}",
   confirmed: "Confirmed",
   approved: "Approved",
@@ -177,8 +175,6 @@ const strings = {
     "Please consult the <a target='_blank' href='http://cldr.unicode.org/translation/getting-started/guide'>Instructions <span class='glyphicon glyphicon-share'></span></a> page.<br/><br/>Briefly, for each row:<br/><ol><li>Click on a cell in the 'Code' column.</li><li>Read the details that appear in the right panel (widen your window to see it).</li><li> Hover over the English and the Winning value to see examples.</li><li>To vote:<ol><li>for an existing item in the Winning or Others column, click on the <input type='radio'/> for that item.</li><li>for a new value, click on the button in the \"Add\" column. A new editing box will open. Enter the new value and hit RETURN.</li><li>for no value (abstain, or retract a vote), click on the  <input type='radio'/> in the Abstain column.</li></ol></li></ol>",
   generalPageInitialGuidance:
     "This area will show details of items as you work with the Survey Tool.",
-  localesInitialGuidance:
-    "Choose a locale to get started.  <ul><li><span class='locked'>locked</span> locales may not be modified by anyone,</li><li><span class='canmodify'>hand icon</span> indicates editing allowed by you</li><li><span class='name_var'>Locales with (Variants)</span> may have specific differences to note.</li></ul><p>Don't see your locale? See: <a href='https://github.com/unicode-org/cldr/blob/main/docs/requesting_changes.md'>Adding New Locales</a></p>",
   generalSpecialGuidance:
     "Please hover over the sidebar to choose a section to begin entering data. If you have not already done so, please read the <a target='_blank' href='http://www.unicode.org/cldr/survey_tool.html'>Instructions</a>, particularly the Guide and the Walkthrough. You can also use the Dashboard to see all the errors, warnings, and missing items in one place.",
 

@@ -56,9 +56,7 @@ function run() {
     setOnClicks();
     window.addEventListener("resize", handleResize);
     cldrProgress.insertWidget("CompletionSpan");
-    cldrInfo.insertWidget("ItemInfoContainer");
-    cldrInfo.closePanel();
-    cldrInfo.showOrHideOpenPanelButton();
+    cldrInfo.initialize("ItemInfoContainer", "MainContentPane", "open-right");
   } catch (e) {
     return Promise.reject(e);
   }
@@ -176,10 +174,6 @@ function setOnClicks() {
   let els = document.getElementsByClassName("open-dash");
   for (let i = 0; i < els.length; i++) {
     els[i].onclick = () => insertDashboard();
-  }
-  els = document.getElementsByClassName("open-right");
-  for (let i = 0; i < els.length; i++) {
-    els[i].onclick = () => cldrInfo.openPanel();
   }
 }
 

@@ -63,13 +63,6 @@ let flipper = null;
  */
 function showV() {
   flipper = new Flipper([pages.loading, pages.data, pages.other]);
-
-  const pucontent = document.getElementById("itemInfo");
-  const theDiv = flipper.get(pages.data);
-  theDiv.pucontent = pucontent;
-  pucontent.appendChild(
-    cldrDom.createChunk(cldrText.get("itemInfoBlank"), "i")
-  );
   cldrDom.updateIf(
     "title-dcontent-link",
     cldrText.get("defaultContent_titleLink")
@@ -611,7 +604,9 @@ function specialLoad(itemLoadInfo, curSpecial, theDiv) {
       cldrGui.hideDashboard();
     }
     cldrInfo.closePanel();
-    special.load(curSpecial); // pass the special name to the loader
+    // Most special.load() functions do not use a parameter; an exception is
+    // cldrGenericVue.load() which expects the special name as a parameter
+    special.load(curSpecial);
   } else if (curSpecial !== "general") {
     // Avoid recursion.
     unspecialLoad(itemLoadInfo, theDiv);
