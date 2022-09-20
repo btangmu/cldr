@@ -3087,8 +3087,6 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 				<displayName>ቀን</displayName>
 				<relative type="-2">ከትናንት ወዲያ</relative>
 				<relative type="-1">ትናንት</relative>
-				<relative type="0">ዛሬ</relative>
-				<relative type="1">ነገ</relative>
 				<relative type="2">ከነገ ወዲያ</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">በ{0} ቀን ውስጥ</relativeTimePattern>
