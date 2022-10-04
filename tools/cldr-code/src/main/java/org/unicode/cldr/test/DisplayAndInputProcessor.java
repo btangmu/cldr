@@ -357,16 +357,15 @@ public class DisplayAndInputProcessor {
      *
      * @param path
      * @param value
-     * @param internalException
-     * @return
+     * @param internalException to be filled in if RuntimeException occurs
+     * @return the possibly modified value
      */
     public synchronized String processInput(String path, String value, Exception[] internalException) {
-        String original = value;
+        final String original = value;
+        value = stripProblematicControlCharacters(value);
+        value = Normalizer.compose(value, false); // Always normalize all input to NFC.
+        value = value.replace('\u00B5', '\u03BC'); // use the right Greek mu character
         try {
-            value = stripProblematicControlCharacters(value);
-            value = Normalizer.compose(value, false); // Always normalize all input to NFC.
-            value = value.replace('\u00B5', '\u03BC'); // use the right Greek mu character
-
             if (internalException != null) {
                 internalException[0] = null;
             }
@@ -379,7 +378,6 @@ public class DisplayAndInputProcessor {
                 return value; // Reference: https://unicode.org/cldr/trac/ticket/11261
             }
             value = processInputMore(path, value);
-            value = replaceInheritanceMarker(path, value);
         } catch (RuntimeException e) {
             if (internalException != null) {
                 internalException[0] = e;
@@ -500,6 +498,7 @@ public class DisplayAndInputProcessor {
         }
         value = processAnnotations(path, value);
         value = normalizeZeroWidthSpace(value);
+        value = replaceBaileyWithInheritanceMarker(path, value);
         return value;
     }
 
@@ -528,30 +527,6 @@ public class DisplayAndInputProcessor {
             value = replaceChars(path, value, URDU_PLUS_CONVERSIONS, true);
         } else if (locale.childOf(FF_ADLAM) && !isUnicodeSet) {
             value = fixAdlamNasalization(value);
-        }
-        return value;
-    }
-
-    /**
-     * If appropriate, if the value matches the Bailey (inherited) value, replace the
-     * value with CldrUtility.INHERITANCE_MARKER
-     *
-     * This is only appropriate if cldrFileForBailey != null, meaning that
-     * enableInheritanceReplacement has been called -- some cost may be
-     * involved in getting cldrFileForBailey and calling getBaileyValue,
-     * and some callers of DAIP may not want the replacement, so the default,
-     * when enableInheritanceReplacement has not been called, is no replacement
-     *
-     * @param path
-     * @param value
-     * @return the value or CldrUtility.INHERITANCE_MARKER
-     */
-    private String replaceInheritanceMarker(String path, String value) {
-        if (cldrFileForBailey != null) {
-            String baileyValue = cldrFileForBailey.getBaileyValue(path, null, null);
-            if (value.equals(baileyValue)) {
-                return CldrUtility.INHERITANCE_MARKER;
-            }
         }
         return value;
     }
@@ -1261,6 +1236,30 @@ public class DisplayAndInputProcessor {
             final String localeId = locale.getBaseName();
             if (LOCALES_NOT_ALLOWING_ZWS.contains(localeId)) {
                 value = ZERO_WIDTH_SPACES.matcher(value).replaceAll("");
+            }
+        }
+        return value;
+    }
+
+    /**
+     * If inheritance replacement is enabled and the value matches the Bailey (inherited) value,
+     * replace the value with CldrUtility.INHERITANCE_MARKER
+     *
+     * This is only appropriate if cldrFileForBailey != null, meaning that
+     * enableInheritanceReplacement has been called -- some cost may be
+     * involved in getting cldrFileForBailey and calling getBaileyValue,
+     * and some callers of DAIP may not want the replacement, so the default,
+     * when enableInheritanceReplacement has not been called, is no replacement
+     *
+     * @param path
+     * @param value
+     * @return the value or CldrUtility.INHERITANCE_MARKER
+     */
+    private String replaceBaileyWithInheritanceMarker(String path, String value) {
+        if (cldrFileForBailey != null) {
+            String baileyValue = cldrFileForBailey.getBaileyValue(path, null, null);
+            if (value.equals(baileyValue)) {
+                return CldrUtility.INHERITANCE_MARKER;
             }
         }
         return value;
