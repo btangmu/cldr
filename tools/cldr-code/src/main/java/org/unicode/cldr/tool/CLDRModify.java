@@ -1237,7 +1237,14 @@ public class CLDRModify {
             @Override
             public void handlePath(String xpath) {
                 String value = cldrFileToFilter.getStringValue(xpath);
+                if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
+                    return;
+                }
                 String newValue = inputProcessor.processInput(xpath, value, null);
+                String baileyValue = getResolved().getBaileyValue(xpath, null, null);
+                if (newValue.equals(baileyValue)) {
+                    newValue = CldrUtility.INHERITANCE_MARKER;
+                }
                 if (value.equals(newValue)) {
                     return;
                 }
