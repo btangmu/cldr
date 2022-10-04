@@ -365,19 +365,19 @@ public class DisplayAndInputProcessor {
         value = stripProblematicControlCharacters(value);
         value = Normalizer.compose(value, false); // Always normalize all input to NFC.
         value = value.replace('\u00B5', '\u03BC'); // use the right Greek mu character
+        if (internalException != null) {
+            internalException[0] = null;
+        }
+        // skip processing for inheritance marker
+        if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
+            return value;
+        }
+        // for root annotations
+        if (CLDRLocale.ROOT.equals(locale) && path.contains("/annotations")) {
+            return value;
+        }
         try {
-            if (internalException != null) {
-                internalException[0] = null;
-            }
-            // skip processing for inheritance marker
-            if (CldrUtility.INHERITANCE_MARKER.equals(value)) {
-                return value; // Reference: https://unicode.org/cldr/trac/ticket/11261
-            }
-            // for root annotations
-            if (CLDRLocale.ROOT.equals(locale) && path.contains("/annotations")) {
-                return value; // Reference: https://unicode.org/cldr/trac/ticket/11261
-            }
-            value = processInputMore(path, value);
+             value = processInputMore(path, value);
         } catch (RuntimeException e) {
             if (internalException != null) {
                 internalException[0] = e;
@@ -388,7 +388,7 @@ public class DisplayAndInputProcessor {
     }
 
     private String processInputMore(String path, String value) {
-        boolean isUnicodeSet = hasUnicodeSetValue(path);
+        final boolean isUnicodeSet = hasUnicodeSetValue(path);
 
         value = processLocaleSpecificInput(path, value, isUnicodeSet);
 
