@@ -1227,6 +1227,7 @@ public class CLDRModify {
             @Override
             public void handleStart() {
                 inputProcessor = new DisplayAndInputProcessor(cldrFileToFilter, true);
+                inputProcessor.enableInheritanceReplacement(getResolved());
             }
 
             @Override
@@ -2164,10 +2165,6 @@ public class CLDRModify {
     /**
      * Perform various fixes
      * TODO add options to pick which one.
-     *
-     * @param options
-     * @param config
-     * @param cldrFactory
      */
     private static void fix(CLDRFile k, String inputOptions, String config, Factory cldrFactory) {
 
