@@ -729,14 +729,8 @@ public class SimpleFactory extends Factory {
                 if (result == null) {
                     result = ImmutableList.<File> builder();
                 }
-                System.out.println("getSourceDirectoriesForLocale: [" + localeName + "] adding " + dir);
                 result.add(dir);
-            } else {
-                System.out.println("getSourceDirectoriesForLocale: [" + localeName + "] skipping cant read " + dir);
             }
-        }
-        if (result == null) {
-            System.out.println("getSourceDirectoriesForLocale FAILURE: [" + localeName + "] result is null");
         }
         return result == null ? null : result.build();
     }
