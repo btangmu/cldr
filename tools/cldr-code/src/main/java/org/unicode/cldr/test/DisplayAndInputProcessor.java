@@ -1256,7 +1256,7 @@ public class DisplayAndInputProcessor {
      * @return the value or CldrUtility.INHERITANCE_MARKER
      */
     private String replaceBaileyWithInheritanceMarker(String path, String value) {
-        if (cldrFileForBailey != null) {
+        if (cldrFileForBailey != null && !value.isEmpty()) {
             String baileyValue = cldrFileForBailey.getBaileyValue(path, null, null);
             if (value.equals(baileyValue)) {
                 return CldrUtility.INHERITANCE_MARKER;

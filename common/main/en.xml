@@ -17,9 +17,9 @@ annotations.
 	</identity>
 	<localeDisplayNames>
 		<localeDisplayPattern>
-			<localePattern>{0} ({1})</localePattern>
-			<localeSeparator>{0}, {1}</localeSeparator>
-			<localeKeyTypePattern>{0}: {1}</localeKeyTypePattern>
+			<localePattern>↑↑↑</localePattern>
+			<localeSeparator>↑↑↑</localeSeparator>
+			<localeKeyTypePattern>↑↑↑</localeKeyTypePattern>
 		</localeDisplayPattern>
 		<languages>
 			<language type="aa">Afar</language>
@@ -259,7 +259,7 @@ annotations.
 			<language type="hdn">Northern Haida</language>
 			<language type="he">Hebrew</language>
 			<language type="hi">Hindi</language>
-			<language type="hi_Latn">Hindi (Latin)</language>
+			<language type="hi_Latn">↑↑↑</language>
 			<language type="hi_Latn" alt="variant">Hinglish</language>
 			<language type="hif">Fiji Hindi</language>
 			<language type="hil">Hiligaynon</language>
@@ -708,7 +708,7 @@ annotations.
 			<script type="Adlm">Adlam</script>
 			<script type="Afak">Afaka</script>
 			<script type="Aghb">Caucasian Albanian</script>
-			<script type="Ahom">Ahom</script>
+			<script type="Ahom">↑↑↑</script>
 			<script type="Arab">Arabic</script>
 			<script type="Arab" alt="variant">Perso-Arabic</script>
 			<script type="Aran">Nastaliq</script>
@@ -731,7 +731,7 @@ annotations.
 			<script type="Cans">Unified Canadian Aboriginal Syllabics</script>
 			<script type="Cans" alt="short">UCAS</script>
 			<script type="Cari">Carian</script>
-			<script type="Cham">Cham</script>
+			<script type="Cham">↑↑↑</script>
 			<script type="Cher">Cherokee</script>
 			<script type="Chrs">Chorasmian</script>
 			<script type="Cirt">Cirth</script>
@@ -779,13 +779,13 @@ annotations.
 			<script type="Hung">Old Hungarian</script>
 			<script type="Inds">Indus</script>
 			<script type="Ital">Old Italic</script>
-			<script type="Jamo">Jamo</script>
+			<script type="Jamo">↑↑↑</script>
 			<script type="Java">Javanese</script>
 			<script type="Jpan">Japanese</script>
 			<script type="Jurc">Jurchen</script>
 			<script type="Kali">Kayah Li</script>
 			<script type="Kana">Katakana</script>
-			<script type="Kawi">Kawi</script>
+			<script type="Kawi">↑↑↑</script>
 			<script type="Khar">Kharoshthi</script>
 			<script type="Khmr">Khmer</script>
 			<script type="Khoj">Khojki</script>
@@ -818,7 +818,7 @@ annotations.
 			<script type="Merc">Meroitic Cursive</script>
 			<script type="Mero">Meroitic</script>
 			<script type="Mlym">Malayalam</script>
-			<script type="Modi">Modi</script>
+			<script type="Modi">↑↑↑</script>
 			<script type="Mong">Mongolian</script>
 			<script type="Moon">Moon</script>
 			<script type="Mroo">Mro</script>
@@ -829,7 +829,7 @@ annotations.
 			<script type="Nand">Nandinagari</script>
 			<script type="Narb">Old North Arabian</script>
 			<script type="Nbat">Nabataean</script>
-			<script type="Newa">Newa</script>
+			<script type="Newa">↑↑↑</script>
 			<script type="Nkgb">Naxi Geba</script>
 			<script type="Nkoo">N’Ko</script>
 			<script type="Nshu">Nüshu</script>
@@ -888,11 +888,11 @@ annotations.
 			<script type="Tfng">Tifinagh</script>
 			<script type="Tglg">Tagalog</script>
 			<script type="Thaa">Thaana</script>
-			<script type="Thai">Thai</script>
+			<script type="Thai">↑↑↑</script>
 			<script type="Tibt">Tibetan</script>
 			<script type="Tirh">Tirhuta</script>
 			<script type="Tnsa">Tangsa</script>
-			<script type="Toto">Toto</script>
+			<script type="Toto">↑↑↑</script>
 			<script type="Ugar">Ugaritic</script>
 			<script type="Vaii">Vai</script>
 			<script type="Visp">Visible Speech</script>
@@ -1616,9 +1616,9 @@ annotations.
 			<type key="va" type="posix">POSIX Compliant Locale</type>
 		</types>
 		<measurementSystemNames>
-			<measurementSystemName type="metric">Metric</measurementSystemName>
-			<measurementSystemName type="UK">UK</measurementSystemName>
-			<measurementSystemName type="US">US</measurementSystemName>
+			<measurementSystemName type="metric">↑↑↑</measurementSystemName>
+			<measurementSystemName type="UK">↑↑↑</measurementSystemName>
+			<measurementSystemName type="US">↑↑↑</measurementSystemName>
 		</measurementSystemNames>
 		<codePatterns>
 			<codePattern type="language">Language: {0}</codePattern>
@@ -1652,21 +1652,21 @@ annotations.
 		<exemplarCharacters>[a b c d e f g h i j k l m n o p q r s t u v w x y z]</exemplarCharacters>
 		<exemplarCharacters type="auxiliary">[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]</exemplarCharacters>
 		<exemplarCharacters type="index">[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]</exemplarCharacters>
-		<exemplarCharacters type="numbers">[\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]</exemplarCharacters>
+		<exemplarCharacters type="numbers">↑↑↑</exemplarCharacters>
 		<exemplarCharacters type="punctuation">[\- ‐ ‑ – — , ; \: ! ? . … ' ‘ ’ &quot; “ ” ( ) \[ \] § @ * / \&amp; # † ‡ ′ ″]</exemplarCharacters>
 	</characters>
 	<delimiters>
-		<quotationStart>“</quotationStart>
-		<quotationEnd>”</quotationEnd>
-		<alternateQuotationStart>‘</alternateQuotationStart>
-		<alternateQuotationEnd>’</alternateQuotationEnd>
+		<quotationStart>↑↑↑</quotationStart>
+		<quotationEnd>↑↑↑</quotationEnd>
+		<alternateQuotationStart>↑↑↑</alternateQuotationStart>
+		<alternateQuotationEnd>↑↑↑</alternateQuotationEnd>
 	</delimiters>
 	<dates>
 		<calendars>
 			<calendar type="buddhist">
 				<eras>
 					<eraAbbr>
-						<era type="0">BE</era>
+						<era type="0">↑↑↑</era>
 					</eraAbbr>
 				</eras>
 			</calendar>
@@ -1727,19 +1727,19 @@ annotations.
 					<dateFormatLength type="full">
 						<dateFormat>
 							<pattern>EEEE, MMMM d, r(U)</pattern>
-							<datetimeSkeleton>rMMMMEEEEd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="long">
 						<dateFormat>
 							<pattern>MMMM d, r(U)</pattern>
-							<datetimeSkeleton>rMMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="medium">
 						<dateFormat>
 							<pattern>MMM d, r</pattern>
-							<datetimeSkeleton>rMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="short">
@@ -1777,13 +1777,13 @@ annotations.
 						</dateTimeFormat>
 					</dateTimeFormatLength>
 					<availableFormats>
-						<dateFormatItem id="Bh">h B</dateFormatItem>
-						<dateFormatItem id="Bhm">h:mm B</dateFormatItem>
-						<dateFormatItem id="Bhms">h:mm:ss B</dateFormatItem>
-						<dateFormatItem id="d">d</dateFormatItem>
-						<dateFormatItem id="E">ccc</dateFormatItem>
-						<dateFormatItem id="EBhm">E h:mm B</dateFormatItem>
-						<dateFormatItem id="EBhms">E h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="Bh">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="d">↑↑↑</dateFormatItem>
+						<dateFormatItem id="E">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Ed">d E</dateFormatItem>
 						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
 						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
@@ -1797,25 +1797,25 @@ annotations.
 						<dateFormatItem id="GyMMMMd">MMMM d, r(U)</dateFormatItem>
 						<dateFormatItem id="GyMMMMEd">E, MMMM d, r(U)</dateFormatItem>
 						<dateFormatItem id="h">h a</dateFormatItem>
-						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="H">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hm">h:mm a</dateFormatItem>
-						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hm">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
-						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
-						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Hms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="M">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Md">M/d</dateFormatItem>
 						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
-						<dateFormatItem id="MMM">LLL</dateFormatItem>
-						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMM">↑↑↑</dateFormatItem>
+						<dateFormatItem id="MMMd">↑↑↑</dateFormatItem>
 						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
-						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
-						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="MMMMd">↑↑↑</dateFormatItem>
+						<dateFormatItem id="ms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="UM">M/U</dateFormatItem>
 						<dateFormatItem id="UMd">M/d/U</dateFormatItem>
 						<dateFormatItem id="UMMM">MMM U</dateFormatItem>
 						<dateFormatItem id="UMMMd">MMM d, U</dateFormatItem>
-						<dateFormatItem id="y">r(U)</dateFormatItem>
-						<dateFormatItem id="yyyy">r(U)</dateFormatItem>
+						<dateFormatItem id="y">↑↑↑</dateFormatItem>
+						<dateFormatItem id="yyyy">↑↑↑</dateFormatItem>
 						<dateFormatItem id="yyyyM">M/r</dateFormatItem>
 						<dateFormatItem id="yyyyMd">M/d/r</dateFormatItem>
 						<dateFormatItem id="yyyyMEd">E, M/d/r</dateFormatItem>
@@ -1829,7 +1829,7 @@ annotations.
 						<dateFormatItem id="yyyyQQQQ">QQQQ r(U)</dateFormatItem>
 					</availableFormats>
 					<intervalFormats>
-						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatFallback>↑↑↑</intervalFormatFallback>
 						<intervalFormatItem id="Bh">
 							<greatestDifference id="B">h B – h B</greatestDifference>
 							<greatestDifference id="h">h – h B</greatestDifference>
@@ -1939,19 +1939,19 @@ annotations.
 					<dateFormatLength type="full">
 						<dateFormat>
 							<pattern>EEEE, MMMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMMEEEEd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="long">
 						<dateFormat>
 							<pattern>MMMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="medium">
 						<dateFormat>
 							<pattern>MMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="short">
@@ -1989,37 +1989,37 @@ annotations.
 						</dateTimeFormat>
 					</dateTimeFormatLength>
 					<availableFormats>
-						<dateFormatItem id="Bh">h B</dateFormatItem>
-						<dateFormatItem id="Bhm">h:mm B</dateFormatItem>
-						<dateFormatItem id="Bhms">h:mm:ss B</dateFormatItem>
-						<dateFormatItem id="d">d</dateFormatItem>
-						<dateFormatItem id="E">ccc</dateFormatItem>
-						<dateFormatItem id="EBhm">E h:mm B</dateFormatItem>
-						<dateFormatItem id="EBhms">E h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="Bh">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="d">↑↑↑</dateFormatItem>
+						<dateFormatItem id="E">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Ed">d E</dateFormatItem>
 						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
-						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="EHm">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
-						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="EHms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Gy">y G</dateFormatItem>
 						<dateFormatItem id="GyMd">M/d/y GGGGG</dateFormatItem>
 						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
 						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
 						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
 						<dateFormatItem id="h">h a</dateFormatItem>
-						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="H">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hm">h:mm a</dateFormatItem>
-						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hm">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
-						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
-						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Hms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="M">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Md">M/d</dateFormatItem>
 						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
-						<dateFormatItem id="MMM">LLL</dateFormatItem>
-						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMM">↑↑↑</dateFormatItem>
+						<dateFormatItem id="MMMd">↑↑↑</dateFormatItem>
 						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
-						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
-						<dateFormatItem id="ms">mm:ss</dateFormatItem>
+						<dateFormatItem id="MMMMd">↑↑↑</dateFormatItem>
+						<dateFormatItem id="ms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="y">y G</dateFormatItem>
 						<dateFormatItem id="yyyy">y G</dateFormatItem>
 						<dateFormatItem id="yyyyM">M/y GGGGG</dateFormatItem>
@@ -2033,20 +2033,20 @@ annotations.
 						<dateFormatItem id="yyyyQQQQ">QQQQ y G</dateFormatItem>
 					</availableFormats>
 					<appendItems>
-						<appendItem request="Day">{0} ({2}: {1})</appendItem>
-						<appendItem request="Day-Of-Week">{0} {1}</appendItem>
+						<appendItem request="Day">↑↑↑</appendItem>
+						<appendItem request="Day-Of-Week">↑↑↑</appendItem>
 						<appendItem request="Era">{0} {1}</appendItem>
-						<appendItem request="Hour">{0} ({2}: {1})</appendItem>
-						<appendItem request="Minute">{0} ({2}: {1})</appendItem>
-						<appendItem request="Month">{0} ({2}: {1})</appendItem>
-						<appendItem request="Quarter">{0} ({2}: {1})</appendItem>
-						<appendItem request="Second">{0} ({2}: {1})</appendItem>
-						<appendItem request="Timezone">{0} {1}</appendItem>
-						<appendItem request="Week">{0} ({2}: {1})</appendItem>
+						<appendItem request="Hour">↑↑↑</appendItem>
+						<appendItem request="Minute">↑↑↑</appendItem>
+						<appendItem request="Month">↑↑↑</appendItem>
+						<appendItem request="Quarter">↑↑↑</appendItem>
+						<appendItem request="Second">↑↑↑</appendItem>
+						<appendItem request="Timezone">↑↑↑</appendItem>
+						<appendItem request="Week">↑↑↑</appendItem>
 						<appendItem request="Year">{0} {1}</appendItem>
 					</appendItems>
 					<intervalFormats>
-						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatFallback>↑↑↑</intervalFormatFallback>
 						<intervalFormatItem id="Bh">
 							<greatestDifference id="B">h B – h B</greatestDifference>
 							<greatestDifference id="h">h – h B</greatestDifference>
@@ -2197,7 +2197,7 @@ annotations.
 							<month type="2">Feb</month>
 							<month type="3">Mar</month>
 							<month type="4">Apr</month>
-							<month type="5">May</month>
+							<month type="5">↑↑↑</month>
 							<month type="6">Jun</month>
 							<month type="7">Jul</month>
 							<month type="8">Aug</month>
@@ -2270,13 +2270,13 @@ annotations.
 					</dayContext>
 					<dayContext type="stand-alone">
 						<dayWidth type="narrow">
-							<day type="sun">S</day>
-							<day type="mon">M</day>
-							<day type="tue">T</day>
-							<day type="wed">W</day>
-							<day type="thu">T</day>
-							<day type="fri">F</day>
-							<day type="sat">S</day>
+							<day type="sun">↑↑↑</day>
+							<day type="mon">↑↑↑</day>
+							<day type="tue">↑↑↑</day>
+							<day type="wed">↑↑↑</day>
+							<day type="thu">↑↑↑</day>
+							<day type="fri">↑↑↑</day>
+							<day type="sat">↑↑↑</day>
 						</dayWidth>
 					</dayContext>
 				</days>
@@ -2297,10 +2297,10 @@ annotations.
 					</quarterContext>
 					<quarterContext type="stand-alone">
 						<quarterWidth type="narrow">
-							<quarter type="1">1</quarter>
-							<quarter type="2">2</quarter>
-							<quarter type="3">3</quarter>
-							<quarter type="4">4</quarter>
+							<quarter type="1">↑↑↑</quarter>
+							<quarter type="2">↑↑↑</quarter>
+							<quarter type="3">↑↑↑</quarter>
+							<quarter type="4">↑↑↑</quarter>
 						</quarterWidth>
 					</quarterContext>
 				</quarters>
@@ -2308,10 +2308,10 @@ annotations.
 					<dayPeriodContext type="format">
 						<dayPeriodWidth type="abbreviated">
 							<dayPeriod type="midnight">midnight</dayPeriod>
-							<dayPeriod type="am">AM</dayPeriod>
+							<dayPeriod type="am">↑↑↑</dayPeriod>
 							<dayPeriod type="am" alt="variant">am</dayPeriod>
 							<dayPeriod type="noon">noon</dayPeriod>
-							<dayPeriod type="pm">PM</dayPeriod>
+							<dayPeriod type="pm">↑↑↑</dayPeriod>
 							<dayPeriod type="pm" alt="variant">pm</dayPeriod>
 							<dayPeriod type="morning1">in the morning</dayPeriod>
 							<dayPeriod type="afternoon1">in the afternoon</dayPeriod>
@@ -2323,44 +2323,44 @@ annotations.
 							<dayPeriod type="am">a</dayPeriod>
 							<dayPeriod type="noon">n</dayPeriod>
 							<dayPeriod type="pm">p</dayPeriod>
-							<dayPeriod type="morning1">in the morning</dayPeriod>
-							<dayPeriod type="afternoon1">in the afternoon</dayPeriod>
-							<dayPeriod type="evening1">in the evening</dayPeriod>
-							<dayPeriod type="night1">at night</dayPeriod>
+							<dayPeriod type="morning1">↑↑↑</dayPeriod>
+							<dayPeriod type="afternoon1">↑↑↑</dayPeriod>
+							<dayPeriod type="evening1">↑↑↑</dayPeriod>
+							<dayPeriod type="night1">↑↑↑</dayPeriod>
 						</dayPeriodWidth>
 						<dayPeriodWidth type="wide">
-							<dayPeriod type="midnight">midnight</dayPeriod>
-							<dayPeriod type="am">AM</dayPeriod>
-							<dayPeriod type="am" alt="variant">am</dayPeriod>
-							<dayPeriod type="noon">noon</dayPeriod>
-							<dayPeriod type="pm">PM</dayPeriod>
-							<dayPeriod type="pm" alt="variant">pm</dayPeriod>
-							<dayPeriod type="morning1">in the morning</dayPeriod>
-							<dayPeriod type="afternoon1">in the afternoon</dayPeriod>
-							<dayPeriod type="evening1">in the evening</dayPeriod>
-							<dayPeriod type="night1">at night</dayPeriod>
+							<dayPeriod type="midnight">↑↑↑</dayPeriod>
+							<dayPeriod type="am">↑↑↑</dayPeriod>
+							<dayPeriod type="am" alt="variant">↑↑↑</dayPeriod>
+							<dayPeriod type="noon">↑↑↑</dayPeriod>
+							<dayPeriod type="pm">↑↑↑</dayPeriod>
+							<dayPeriod type="pm" alt="variant">↑↑↑</dayPeriod>
+							<dayPeriod type="morning1">↑↑↑</dayPeriod>
+							<dayPeriod type="afternoon1">↑↑↑</dayPeriod>
+							<dayPeriod type="evening1">↑↑↑</dayPeriod>
+							<dayPeriod type="night1">↑↑↑</dayPeriod>
 						</dayPeriodWidth>
 					</dayPeriodContext>
 					<dayPeriodContext type="stand-alone">
 						<dayPeriodWidth type="abbreviated">
-							<dayPeriod type="midnight">midnight</dayPeriod>
-							<dayPeriod type="am">AM</dayPeriod>
-							<dayPeriod type="noon">noon</dayPeriod>
-							<dayPeriod type="pm">PM</dayPeriod>
+							<dayPeriod type="midnight">↑↑↑</dayPeriod>
+							<dayPeriod type="am">↑↑↑</dayPeriod>
+							<dayPeriod type="noon">↑↑↑</dayPeriod>
+							<dayPeriod type="pm">↑↑↑</dayPeriod>
 							<dayPeriod type="morning1">morning</dayPeriod>
 							<dayPeriod type="afternoon1">afternoon</dayPeriod>
 							<dayPeriod type="evening1">evening</dayPeriod>
 							<dayPeriod type="night1">night</dayPeriod>
 						</dayPeriodWidth>
 						<dayPeriodWidth type="wide">
-							<dayPeriod type="midnight">midnight</dayPeriod>
-							<dayPeriod type="am">AM</dayPeriod>
-							<dayPeriod type="noon">noon</dayPeriod>
-							<dayPeriod type="pm">PM</dayPeriod>
-							<dayPeriod type="morning1">morning</dayPeriod>
-							<dayPeriod type="afternoon1">afternoon</dayPeriod>
-							<dayPeriod type="evening1">evening</dayPeriod>
-							<dayPeriod type="night1">night</dayPeriod>
+							<dayPeriod type="midnight">↑↑↑</dayPeriod>
+							<dayPeriod type="am">↑↑↑</dayPeriod>
+							<dayPeriod type="noon">↑↑↑</dayPeriod>
+							<dayPeriod type="pm">↑↑↑</dayPeriod>
+							<dayPeriod type="morning1">↑↑↑</dayPeriod>
+							<dayPeriod type="afternoon1">↑↑↑</dayPeriod>
+							<dayPeriod type="evening1">↑↑↑</dayPeriod>
+							<dayPeriod type="night1">↑↑↑</dayPeriod>
 						</dayPeriodWidth>
 					</dayPeriodContext>
 				</dayPeriods>
@@ -2386,19 +2386,19 @@ annotations.
 					<dateFormatLength type="full">
 						<dateFormat>
 							<pattern>EEEE, MMMM d, y</pattern>
-							<datetimeSkeleton>yMMMMEEEEd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="long">
 						<dateFormat>
 							<pattern>MMMM d, y</pattern>
-							<datetimeSkeleton>yMMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="medium">
 						<dateFormat>
 							<pattern>MMM d, y</pattern>
-							<datetimeSkeleton>yMMMd</datetimeSkeleton>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="short">
@@ -2462,44 +2462,44 @@ annotations.
 						</dateTimeFormat>
 					</dateTimeFormatLength>
 					<availableFormats>
-						<dateFormatItem id="Bh">h B</dateFormatItem>
-						<dateFormatItem id="Bhm">h:mm B</dateFormatItem>
-						<dateFormatItem id="Bhms">h:mm:ss B</dateFormatItem>
-						<dateFormatItem id="d">d</dateFormatItem>
-						<dateFormatItem id="E">ccc</dateFormatItem>
-						<dateFormatItem id="EBhm">E h:mm B</dateFormatItem>
-						<dateFormatItem id="EBhms">E h:mm:ss B</dateFormatItem>
+						<dateFormatItem id="Bh">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="Bhms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="d">↑↑↑</dateFormatItem>
+						<dateFormatItem id="E">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhm">↑↑↑</dateFormatItem>
+						<dateFormatItem id="EBhms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Ed">d E</dateFormatItem>
 						<dateFormatItem id="Ehm">E h:mm a</dateFormatItem>
-						<dateFormatItem id="EHm">E HH:mm</dateFormatItem>
+						<dateFormatItem id="EHm">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Ehms">E h:mm:ss a</dateFormatItem>
-						<dateFormatItem id="EHms">E HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="EHms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Gy">y G</dateFormatItem>
 						<dateFormatItem id="GyMd">M/d/y G</dateFormatItem>
 						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
 						<dateFormatItem id="GyMMMd">MMM d, y G</dateFormatItem>
 						<dateFormatItem id="GyMMMEd">E, MMM d, y G</dateFormatItem>
 						<dateFormatItem id="h">h a</dateFormatItem>
-						<dateFormatItem id="H">HH</dateFormatItem>
+						<dateFormatItem id="H">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hm">h:mm a</dateFormatItem>
-						<dateFormatItem id="Hm">HH:mm</dateFormatItem>
+						<dateFormatItem id="Hm">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hms">h:mm:ss a</dateFormatItem>
-						<dateFormatItem id="Hms">HH:mm:ss</dateFormatItem>
+						<dateFormatItem id="Hms">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hmsv">h:mm:ss a v</dateFormatItem>
-						<dateFormatItem id="Hmsv">HH:mm:ss v</dateFormatItem>
+						<dateFormatItem id="Hmsv">↑↑↑</dateFormatItem>
 						<dateFormatItem id="hmv">h:mm a v</dateFormatItem>
-						<dateFormatItem id="Hmv">HH:mm v</dateFormatItem>
-						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="Hmv">↑↑↑</dateFormatItem>
+						<dateFormatItem id="M">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Md">M/d</dateFormatItem>
 						<dateFormatItem id="MEd">E, M/d</dateFormatItem>
-						<dateFormatItem id="MMM">LLL</dateFormatItem>
-						<dateFormatItem id="MMMd">MMM d</dateFormatItem>
+						<dateFormatItem id="MMM">↑↑↑</dateFormatItem>
+						<dateFormatItem id="MMMd">↑↑↑</dateFormatItem>
 						<dateFormatItem id="MMMEd">E, MMM d</dateFormatItem>
-						<dateFormatItem id="MMMMd">MMMM d</dateFormatItem>
-						<dateFormatItem id="MMMMW" count="one">'week' W 'of' MMMM</dateFormatItem>
-						<dateFormatItem id="MMMMW" count="other">'week' W 'of' MMMM</dateFormatItem>
-						<dateFormatItem id="ms">mm:ss</dateFormatItem>
-						<dateFormatItem id="y">y</dateFormatItem>
+						<dateFormatItem id="MMMMd">↑↑↑</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="one">↑↑↑</dateFormatItem>
+						<dateFormatItem id="MMMMW" count="other">↑↑↑</dateFormatItem>
+						<dateFormatItem id="ms">↑↑↑</dateFormatItem>
+						<dateFormatItem id="y">↑↑↑</dateFormatItem>
 						<dateFormatItem id="yM">M/y</dateFormatItem>
 						<dateFormatItem id="yMd">M/d/y</dateFormatItem>
 						<dateFormatItem id="yMEd">E, M/d/y</dateFormatItem>
@@ -2509,24 +2509,24 @@ annotations.
 						<dateFormatItem id="yMMMM">MMMM y</dateFormatItem>
 						<dateFormatItem id="yQQQ">QQQ y</dateFormatItem>
 						<dateFormatItem id="yQQQQ">QQQQ y</dateFormatItem>
-						<dateFormatItem id="yw" count="one">'week' w 'of' Y</dateFormatItem>
-						<dateFormatItem id="yw" count="other">'week' w 'of' Y</dateFormatItem>
+						<dateFormatItem id="yw" count="one">↑↑↑</dateFormatItem>
+						<dateFormatItem id="yw" count="other">↑↑↑</dateFormatItem>
 					</availableFormats>
 					<appendItems>
-						<appendItem request="Day">{0} ({2}: {1})</appendItem>
-						<appendItem request="Day-Of-Week">{0} {1}</appendItem>
+						<appendItem request="Day">↑↑↑</appendItem>
+						<appendItem request="Day-Of-Week">↑↑↑</appendItem>
 						<appendItem request="Era">{0} {1}</appendItem>
-						<appendItem request="Hour">{0} ({2}: {1})</appendItem>
-						<appendItem request="Minute">{0} ({2}: {1})</appendItem>
-						<appendItem request="Month">{0} ({2}: {1})</appendItem>
-						<appendItem request="Quarter">{0} ({2}: {1})</appendItem>
-						<appendItem request="Second">{0} ({2}: {1})</appendItem>
-						<appendItem request="Timezone">{0} {1}</appendItem>
-						<appendItem request="Week">{0} ({2}: {1})</appendItem>
+						<appendItem request="Hour">↑↑↑</appendItem>
+						<appendItem request="Minute">↑↑↑</appendItem>
+						<appendItem request="Month">↑↑↑</appendItem>
+						<appendItem request="Quarter">↑↑↑</appendItem>
+						<appendItem request="Second">↑↑↑</appendItem>
+						<appendItem request="Timezone">↑↑↑</appendItem>
+						<appendItem request="Week">↑↑↑</appendItem>
 						<appendItem request="Year">{0} {1}</appendItem>
 					</appendItems>
 					<intervalFormats>
-						<intervalFormatFallback>{0} – {1}</intervalFormatFallback>
+						<intervalFormatFallback>↑↑↑</intervalFormatFallback>
 						<intervalFormatItem id="Bh">
 							<greatestDifference id="B">h B – h B</greatestDifference>
 							<greatestDifference id="h">h – h B</greatestDifference>
@@ -2672,7 +2672,7 @@ annotations.
 			<calendar type="hebrew">
 				<eras>
 					<eraAbbr>
-						<era type="0">AM</era>
+						<era type="0">↑↑↑</era>
 					</eraAbbr>
 				</eras>
 				<dateFormats>
@@ -2703,15 +2703,15 @@ annotations.
 				</dateFormats>
 				<dateTimeFormats>
 					<availableFormats>
-						<dateFormatItem id="Gy">y G</dateFormatItem>
+						<dateFormatItem id="Gy">↑↑↑</dateFormatItem>
 						<dateFormatItem id="GyMd">d MMM y G</dateFormatItem>
-						<dateFormatItem id="GyMMM">MMM y G</dateFormatItem>
+						<dateFormatItem id="GyMMM">↑↑↑</dateFormatItem>
 						<dateFormatItem id="GyMMMd">d MMM y G</dateFormatItem>
 						<dateFormatItem id="GyMMMEd">E, d MMM y G</dateFormatItem>
-						<dateFormatItem id="M">L</dateFormatItem>
+						<dateFormatItem id="M">↑↑↑</dateFormatItem>
 						<dateFormatItem id="Md">d MMM</dateFormatItem>
 						<dateFormatItem id="MEd">E, d MMM</dateFormatItem>
-						<dateFormatItem id="MMM">LLL</dateFormatItem>
+						<dateFormatItem id="MMM">↑↑↑</dateFormatItem>
 						<dateFormatItem id="MMMd">d MMM</dateFormatItem>
 						<dateFormatItem id="MMMEd">E, d MMM</dateFormatItem>
 						<dateFormatItem id="MMMMd">d MMMM</dateFormatItem>
@@ -2739,7 +2739,7 @@ annotations.
 							<greatestDifference id="M">E, d MMM – E, d MMM</greatestDifference>
 						</intervalFormatItem>
 						<intervalFormatItem id="MMM">
-							<greatestDifference id="M">MMM – MMM</greatestDifference>
+							<greatestDifference id="M">↑↑↑</greatestDifference>
 						</intervalFormatItem>
 						<intervalFormatItem id="MMMd">
 							<greatestDifference id="d">d – d MMM</greatestDifference>
@@ -2750,7 +2750,7 @@ annotations.
 							<greatestDifference id="M">E, d MMM – E, d MMM</greatestDifference>
 						</intervalFormatItem>
 						<intervalFormatItem id="y">
-							<greatestDifference id="y">y – y G</greatestDifference>
+							<greatestDifference id="y">↑↑↑</greatestDifference>
 						</intervalFormatItem>
 						<intervalFormatItem id="yM">
 							<greatestDifference id="M">MMM – MMM y</greatestDifference>
@@ -2790,7 +2790,7 @@ annotations.
 			<calendar type="islamic">
 				<eras>
 					<eraAbbr>
-						<era type="0">AH</era>
+						<era type="0">↑↑↑</era>
 					</eraAbbr>
 				</eras>
 			</calendar>
@@ -2798,26 +2798,26 @@ annotations.
 				<dateFormats>
 					<dateFormatLength type="full">
 						<dateFormat>
-							<pattern>EEEE, MMMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMMEEEEd</datetimeSkeleton>
+							<pattern>↑↑↑</pattern>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="long">
 						<dateFormat>
-							<pattern>MMMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMMd</datetimeSkeleton>
+							<pattern>↑↑↑</pattern>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="medium">
 						<dateFormat>
-							<pattern>MMM d, y G</pattern>
-							<datetimeSkeleton>GyMMMd</datetimeSkeleton>
+							<pattern>↑↑↑</pattern>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 					<dateFormatLength type="short">
 						<dateFormat>
-							<pattern>M/d/y GGGGG</pattern>
-							<datetimeSkeleton>GGGGGyMd</datetimeSkeleton>
+							<pattern>↑↑↑</pattern>
+							<datetimeSkeleton>↑↑↑</datetimeSkeleton>
 						</dateFormat>
 					</dateFormatLength>
 				</dateFormats>
@@ -2836,13 +2836,13 @@ annotations.
 				<displayName>era</displayName>
 			</field>
 			<field type="era-short">
-				<displayName>era</displayName>
+				<displayName>↑↑↑</displayName>
 			</field>
 			<field type="year">
 				<displayName>year</displayName>
-				<relative type="-1">last year</relative>
-				<relative type="0">this year</relative>
-				<relative type="1">next year</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} year</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} years</relativeTimePattern>
@@ -2879,9 +2879,9 @@ annotations.
 			</field>
 			<field type="quarter">
 				<displayName>quarter</displayName>
-				<relative type="-1">last quarter</relative>
-				<relative type="0">this quarter</relative>
-				<relative type="1">next quarter</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} quarter</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} quarters</relativeTimePattern>
@@ -2918,9 +2918,9 @@ annotations.
 			</field>
 			<field type="month">
 				<displayName>month</displayName>
-				<relative type="-1">last month</relative>
-				<relative type="0">this month</relative>
-				<relative type="1">next month</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} month</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} months</relativeTimePattern>
@@ -2957,9 +2957,9 @@ annotations.
 			</field>
 			<field type="week">
 				<displayName>week</displayName>
-				<relative type="-1">last week</relative>
-				<relative type="0">this week</relative>
-				<relative type="1">next week</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} week</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} weeks</relativeTimePattern>
@@ -2968,7 +2968,7 @@ annotations.
 					<relativeTimePattern count="one">{0} week ago</relativeTimePattern>
 					<relativeTimePattern count="other">{0} weeks ago</relativeTimePattern>
 				</relativeTime>
-				<relativePeriod>the week of {0}</relativePeriod>
+				<relativePeriod>↑↑↑</relativePeriod>
 			</field>
 			<field type="week-short">
 				<displayName>wk.</displayName>
@@ -3003,9 +3003,9 @@ annotations.
 			</field>
 			<field type="day">
 				<displayName>day</displayName>
-				<relative type="-1">yesterday</relative>
-				<relative type="0">today</relative>
-				<relative type="1">tomorrow</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} day</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} days</relativeTimePattern>
@@ -3016,18 +3016,18 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="day-short">
-				<displayName>day</displayName>
+				<displayName>↑↑↑</displayName>
 				<relativeTime type="future">
-					<relativeTimePattern count="one">in {0} day</relativeTimePattern>
-					<relativeTimePattern count="other">in {0} days</relativeTimePattern>
+					<relativeTimePattern count="one">↑↑↑</relativeTimePattern>
+					<relativeTimePattern count="other">↑↑↑</relativeTimePattern>
 				</relativeTime>
 				<relativeTime type="past">
-					<relativeTimePattern count="one">{0} day ago</relativeTimePattern>
-					<relativeTimePattern count="other">{0} days ago</relativeTimePattern>
+					<relativeTimePattern count="one">↑↑↑</relativeTimePattern>
+					<relativeTimePattern count="other">↑↑↑</relativeTimePattern>
 				</relativeTime>
 			</field>
 			<field type="day-narrow">
-				<displayName>day</displayName>
+				<displayName>↑↑↑</displayName>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0}d</relativeTimePattern>
 					<relativeTimePattern count="other">in {0}d</relativeTimePattern>
@@ -3056,9 +3056,9 @@ annotations.
 				<displayName>wkday. of mo.</displayName>
 			</field>
 			<field type="sun">
-				<relative type="-1">last Sunday</relative>
-				<relative type="0">this Sunday</relative>
-				<relative type="1">next Sunday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Sunday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Sundays</relativeTimePattern>
@@ -3095,9 +3095,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="mon">
-				<relative type="-1">last Monday</relative>
-				<relative type="0">this Monday</relative>
-				<relative type="1">next Monday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Monday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Mondays</relativeTimePattern>
@@ -3134,9 +3134,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="tue">
-				<relative type="-1">last Tuesday</relative>
-				<relative type="0">this Tuesday</relative>
-				<relative type="1">next Tuesday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Tuesday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Tuesdays</relativeTimePattern>
@@ -3173,9 +3173,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="wed">
-				<relative type="-1">last Wednesday</relative>
-				<relative type="0">this Wednesday</relative>
-				<relative type="1">next Wednesday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Wednesday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Wednesdays</relativeTimePattern>
@@ -3212,9 +3212,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="thu">
-				<relative type="-1">last Thursday</relative>
-				<relative type="0">this Thursday</relative>
-				<relative type="1">next Thursday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Thursday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Thursdays</relativeTimePattern>
@@ -3251,9 +3251,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="fri">
-				<relative type="-1">last Friday</relative>
-				<relative type="0">this Friday</relative>
-				<relative type="1">next Friday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Friday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Fridays</relativeTimePattern>
@@ -3290,9 +3290,9 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="sat">
-				<relative type="-1">last Saturday</relative>
-				<relative type="0">this Saturday</relative>
-				<relative type="1">next Saturday</relative>
+				<relative type="-1">↑↑↑</relative>
+				<relative type="0">↑↑↑</relative>
+				<relative type="1">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} Saturday</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} Saturdays</relativeTimePattern>
@@ -3329,8 +3329,8 @@ annotations.
 				</relativeTime>
 			</field>
 			<field type="dayperiod-short">
-				<displayName>AM/PM</displayName>
-				<displayName alt="variant">am/pm</displayName>
+				<displayName>↑↑↑</displayName>
+				<displayName alt="variant">↑↑↑</displayName>
 			</field>
 			<field type="dayperiod">
 				<displayName>AM/PM</displayName>
@@ -3338,7 +3338,7 @@ annotations.
 			</field>
 			<field type="hour">
 				<displayName>hour</displayName>
-				<relative type="0">this hour</relative>
+				<relative type="0">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} hour</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} hours</relativeTimePattern>
@@ -3372,7 +3372,7 @@ annotations.
 			</field>
 			<field type="minute">
 				<displayName>minute</displayName>
-				<relative type="0">this minute</relative>
+				<relative type="0">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} minute</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} minutes</relativeTimePattern>
@@ -3406,7 +3406,7 @@ annotations.
 			</field>
 			<field type="second">
 				<displayName>second</displayName>
-				<relative type="0">now</relative>
+				<relative type="0">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} second</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} seconds</relativeTimePattern>
@@ -3418,7 +3418,7 @@ annotations.
 			</field>
 			<field type="second-short">
 				<displayName>sec.</displayName>
-				<relative type="0">now</relative>
+				<relative type="0">↑↑↑</relative>
 				<relativeTime type="future">
 					<relativeTimePattern count="one">in {0} sec.</relativeTimePattern>
 					<relativeTimePattern count="other">in {0} sec.</relativeTimePattern>
@@ -3447,12 +3447,12 @@ annotations.
 			</field>
 		</fields>
 		<timeZoneNames>
-			<hourFormat>+HH:mm;-HH:mm</hourFormat>
-			<gmtFormat>GMT{0}</gmtFormat>
+			<hourFormat>↑↑↑</hourFormat>
+			<gmtFormat>↑↑↑</gmtFormat>
 			<regionFormat>{0} Time</regionFormat>
 			<regionFormat type="daylight">{0} Daylight Time</regionFormat>
 			<regionFormat type="standard">{0} Standard Time</regionFormat>
-			<fallbackFormat>{1} ({0})</fallbackFormat>
+			<fallbackFormat>↑↑↑</fallbackFormat>
 			<zone type="Etc/UTC">
 				<long>
 					<standard>Coordinated Universal Time</standard>
@@ -3462,7 +3462,7 @@ annotations.
 				<exemplarCity>Unknown City</exemplarCity>
 			</zone>
 			<zone type="Antarctica/DumontDUrville">
-				<exemplarCity>Dumont d’Urville</exemplarCity>
+				<exemplarCity>↑↑↑</exemplarCity>
 			</zone>
 			<zone type="America/St_Barthelemy">
 				<exemplarCity>St. Barthélemy</exemplarCity>
@@ -3496,7 +3496,7 @@ annotations.
 				<exemplarCity>Uzhhorod</exemplarCity>
 			</zone>
 			<zone type="Europe/Kiev">
-				<exemplarCity>Kyiv</exemplarCity>
+				<exemplarCity>↑↑↑</exemplarCity>
 			</zone>
 			<zone type="Pacific/Honolulu">
 				<short>
@@ -4519,22 +4519,22 @@ annotations.
 	</dates>
 	<numbers>
 		<symbols numberSystem="latn">
-			<decimal>.</decimal>
-			<group>,</group>
-			<list>;</list>
-			<percentSign>%</percentSign>
-			<plusSign>+</plusSign>
-			<minusSign>-</minusSign>
-			<exponential>E</exponential>
-			<superscriptingExponent>×</superscriptingExponent>
-			<perMille>‰</perMille>
-			<infinity>∞</infinity>
-			<nan>NaN</nan>
+			<decimal>↑↑↑</decimal>
+			<group>↑↑↑</group>
+			<list>↑↑↑</list>
+			<percentSign>↑↑↑</percentSign>
+			<plusSign>↑↑↑</plusSign>
+			<minusSign>↑↑↑</minusSign>
+			<exponential>↑↑↑</exponential>
+			<superscriptingExponent>↑↑↑</superscriptingExponent>
+			<perMille>↑↑↑</perMille>
+			<infinity>↑↑↑</infinity>
+			<nan>↑↑↑</nan>
 		</symbols>
 		<decimalFormats numberSystem="latn">
 			<decimalFormatLength>
 				<decimalFormat>
-					<pattern>#,##0.###</pattern>
+					<pattern>↑↑↑</pattern>
 				</decimalFormat>
 			</decimalFormatLength>
 			<decimalFormatLength type="long">
@@ -4567,44 +4567,44 @@ annotations.
 			</decimalFormatLength>
 			<decimalFormatLength type="short">
 				<decimalFormat>
-					<pattern type="1000" count="one">0K</pattern>
-					<pattern type="1000" count="other">0K</pattern>
-					<pattern type="10000" count="one">00K</pattern>
-					<pattern type="10000" count="other">00K</pattern>
-					<pattern type="100000" count="one">000K</pattern>
-					<pattern type="100000" count="other">000K</pattern>
-					<pattern type="1000000" count="one">0M</pattern>
-					<pattern type="1000000" count="other">0M</pattern>
-					<pattern type="10000000" count="one">00M</pattern>
-					<pattern type="10000000" count="other">00M</pattern>
-					<pattern type="100000000" count="one">000M</pattern>
-					<pattern type="100000000" count="other">000M</pattern>
-					<pattern type="1000000000" count="one">0B</pattern>
+					<pattern type="1000" count="one">↑↑↑</pattern>
+					<pattern type="1000" count="other">↑↑↑</pattern>
+					<pattern type="10000" count="one">↑↑↑</pattern>
+					<pattern type="10000" count="other">↑↑↑</pattern>
+					<pattern type="100000" count="one">↑↑↑</pattern>
+					<pattern type="100000" count="other">↑↑↑</pattern>
+					<pattern type="1000000" count="one">↑↑↑</pattern>
+					<pattern type="1000000" count="other">↑↑↑</pattern>
+					<pattern type="10000000" count="one">↑↑↑</pattern>
+					<pattern type="10000000" count="other">↑↑↑</pattern>
+					<pattern type="100000000" count="one">↑↑↑</pattern>
+					<pattern type="100000000" count="other">↑↑↑</pattern>
+					<pattern type="1000000000" count="one">↑↑↑</pattern>
 					<pattern type="1000000000" count="other">0B</pattern>
-					<pattern type="10000000000" count="one">00B</pattern>
+					<pattern type="10000000000" count="one">↑↑↑</pattern>
 					<pattern type="10000000000" count="other">00B</pattern>
-					<pattern type="100000000000" count="one">000B</pattern>
+					<pattern type="100000000000" count="one">↑↑↑</pattern>
 					<pattern type="100000000000" count="other">000B</pattern>
-					<pattern type="1000000000000" count="one">0T</pattern>
-					<pattern type="1000000000000" count="other">0T</pattern>
-					<pattern type="10000000000000" count="one">00T</pattern>
-					<pattern type="10000000000000" count="other">00T</pattern>
-					<pattern type="100000000000000" count="one">000T</pattern>
-					<pattern type="100000000000000" count="other">000T</pattern>
+					<pattern type="1000000000000" count="one">↑↑↑</pattern>
+					<pattern type="1000000000000" count="other">↑↑↑</pattern>
+					<pattern type="10000000000000" count="one">↑↑↑</pattern>
+					<pattern type="10000000000000" count="other">↑↑↑</pattern>
+					<pattern type="100000000000000" count="one">↑↑↑</pattern>
+					<pattern type="100000000000000" count="other">↑↑↑</pattern>
 				</decimalFormat>
 			</decimalFormatLength>
 		</decimalFormats>
 		<scientificFormats numberSystem="latn">
 			<scientificFormatLength>
 				<scientificFormat>
-					<pattern>#E0</pattern>
+					<pattern>↑↑↑</pattern>
 				</scientificFormat>
 			</scientificFormatLength>
 		</scientificFormats>
 		<percentFormats numberSystem="latn">
 			<percentFormatLength>
 				<percentFormat>
-					<pattern>#,##0%</pattern>
+					<pattern>↑↑↑</pattern>
 				</percentFormat>
 			</percentFormatLength>
 		</percentFormats>
@@ -4613,7 +4613,7 @@ annotations.
 				<currencyFormat type="standard">
 					<pattern>¤#,##0.00</pattern>
 					<pattern alt="alphaNextToNumber">¤ #,##0.00</pattern>
-					<pattern alt="noCurrency">#,##0.00</pattern>
+					<pattern alt="noCurrency">↑↑↑</pattern>
 				</currencyFormat>
 				<currencyFormat type="accounting">
 					<pattern>¤#,##0.00;(¤#,##0.00)</pattern>
@@ -4623,58 +4623,58 @@ annotations.
 			</currencyFormatLength>
 			<currencyFormatLength type="short">
 				<currencyFormat type="standard">
-					<pattern type="1000" count="one">¤0K</pattern>
+					<pattern type="1000" count="one">↑↑↑</pattern>
 					<pattern type="1000" count="one" alt="alphaNextToNumber">¤ 0K</pattern>
 					<pattern type="1000" count="other">¤0K</pattern>
 					<pattern type="1000" count="other" alt="alphaNextToNumber">¤ 0K</pattern>
-					<pattern type="10000" count="one">¤00K</pattern>
+					<pattern type="10000" count="one">↑↑↑</pattern>
 					<pattern type="10000" count="one" alt="alphaNextToNumber">¤ 00K</pattern>
 					<pattern type="10000" count="other">¤00K</pattern>
 					<pattern type="10000" count="other" alt="alphaNextToNumber">¤ 00K</pattern>
-					<pattern type="100000" count="one">¤000K</pattern>
+					<pattern type="100000" count="one">↑↑↑</pattern>
 					<pattern type="100000" count="one" alt="alphaNextToNumber">¤ 000K</pattern>
 					<pattern type="100000" count="other">¤000K</pattern>
 					<pattern type="100000" count="other" alt="alphaNextToNumber">¤ 000K</pattern>
-					<pattern type="1000000" count="one">¤0M</pattern>
+					<pattern type="1000000" count="one">↑↑↑</pattern>
 					<pattern type="1000000" count="one" alt="alphaNextToNumber">¤ 0M</pattern>
 					<pattern type="1000000" count="other">¤0M</pattern>
 					<pattern type="1000000" count="other" alt="alphaNextToNumber">¤ 0M</pattern>
-					<pattern type="10000000" count="one">¤00M</pattern>
+					<pattern type="10000000" count="one">↑↑↑</pattern>
 					<pattern type="10000000" count="one" alt="alphaNextToNumber">¤ 00M</pattern>
 					<pattern type="10000000" count="other">¤00M</pattern>
 					<pattern type="10000000" count="other" alt="alphaNextToNumber">¤ 00M</pattern>
-					<pattern type="100000000" count="one">¤000M</pattern>
+					<pattern type="100000000" count="one">↑↑↑</pattern>
 					<pattern type="100000000" count="one" alt="alphaNextToNumber">¤ 000M</pattern>
 					<pattern type="100000000" count="other">¤000M</pattern>
 					<pattern type="100000000" count="other" alt="alphaNextToNumber">¤ 000M</pattern>
-					<pattern type="1000000000" count="one">¤0B</pattern>
+					<pattern type="1000000000" count="one">↑↑↑</pattern>
 					<pattern type="1000000000" count="one" alt="alphaNextToNumber">¤ 0B</pattern>
 					<pattern type="1000000000" count="other">¤0B</pattern>
 					<pattern type="1000000000" count="other" alt="alphaNextToNumber">¤ 0B</pattern>
-					<pattern type="10000000000" count="one">¤00B</pattern>
+					<pattern type="10000000000" count="one">↑↑↑</pattern>
 					<pattern type="10000000000" count="one" alt="alphaNextToNumber">¤ 00B</pattern>
 					<pattern type="10000000000" count="other">¤00B</pattern>
 					<pattern type="10000000000" count="other" alt="alphaNextToNumber">¤ 00B</pattern>
-					<pattern type="100000000000" count="one">¤000B</pattern>
+					<pattern type="100000000000" count="one">↑↑↑</pattern>
 					<pattern type="100000000000" count="one" alt="alphaNextToNumber">¤ 000B</pattern>
 					<pattern type="100000000000" count="other">¤000B</pattern>
 					<pattern type="100000000000" count="other" alt="alphaNextToNumber">¤ 000B</pattern>
-					<pattern type="1000000000000" count="one">¤0T</pattern>
+					<pattern type="1000000000000" count="one">↑↑↑</pattern>
 					<pattern type="1000000000000" count="one" alt="alphaNextToNumber">¤ 0T</pattern>
 					<pattern type="1000000000000" count="other">¤0T</pattern>
 					<pattern type="1000000000000" count="other" alt="alphaNextToNumber">¤ 0T</pattern>
-					<pattern type="10000000000000" count="one">¤00T</pattern>
+					<pattern type="10000000000000" count="one">↑↑↑</pattern>
 					<pattern type="10000000000000" count="one" alt="alphaNextToNumber">¤ 00T</pattern>
 					<pattern type="10000000000000" count="other">¤00T</pattern>
 					<pattern type="10000000000000" count="other" alt="alphaNextToNumber">¤ 00T</pattern>
-					<pattern type="100000000000000" count="one">¤000T</pattern>
+					<pattern type="100000000000000" count="one">↑↑↑</pattern>
 					<pattern type="100000000000000" count="one" alt="alphaNextToNumber">¤ 000T</pattern>
 					<pattern type="100000000000000" count="other">¤000T</pattern>
 					<pattern type="100000000000000" count="other" alt="alphaNextToNumber">¤ 000T</pattern>
 				</currencyFormat>
 			</currencyFormatLength>
-			<unitPattern count="one">{0} {1}</unitPattern>
-			<unitPattern count="other">{0} {1}</unitPattern>
+			<unitPattern count="one">↑↑↑</unitPattern>
+			<unitPattern count="other">↑↑↑</unitPattern>
 		</currencyFormats>
 		<currencies>
 			<currency type="ADP">
@@ -4774,7 +4774,7 @@ annotations.
 			</currency>
 			<currency type="AWG">
 				<displayName>Aruban Florin</displayName>
-				<displayName count="one">Aruban florin</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Aruban florin</displayName>
 			</currency>
 			<currency type="AZM">
@@ -5004,7 +5004,7 @@ annotations.
 			</currency>
 			<currency type="CNH">
 				<displayName>Chinese Yuan (offshore)</displayName>
-				<displayName count="one">Chinese yuan (offshore)</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Chinese yuan (offshore)</displayName>
 			</currency>
 			<currency type="CNX">
@@ -5014,7 +5014,7 @@ annotations.
 			</currency>
 			<currency type="CNY">
 				<displayName>Chinese Yuan</displayName>
-				<displayName count="one">Chinese yuan</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Chinese yuan</displayName>
 			</currency>
 			<currency type="COP">
@@ -5214,7 +5214,7 @@ annotations.
 			</currency>
 			<currency type="GQE">
 				<displayName>Equatorial Guinean Ekwele</displayName>
-				<displayName count="one">Equatorial Guinean ekwele</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Equatorial Guinean ekwele</displayName>
 			</currency>
 			<currency type="GRD">
@@ -5339,7 +5339,7 @@ annotations.
 			</currency>
 			<currency type="JPY">
 				<displayName>Japanese Yen</displayName>
-				<displayName count="one">Japanese yen</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Japanese yen</displayName>
 				<symbol>¥</symbol>
 			</currency>
@@ -5365,22 +5365,22 @@ annotations.
 			</currency>
 			<currency type="KPW">
 				<displayName>North Korean Won</displayName>
-				<displayName count="one">North Korean won</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">North Korean won</displayName>
 			</currency>
 			<currency type="KRH">
 				<displayName>South Korean Hwan (1953–1962)</displayName>
-				<displayName count="one">South Korean hwan (1953–1962)</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">South Korean hwan (1953–1962)</displayName>
 			</currency>
 			<currency type="KRO">
 				<displayName>South Korean Won (1945–1953)</displayName>
-				<displayName count="one">South Korean won (1945–1953)</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">South Korean won (1945–1953)</displayName>
 			</currency>
 			<currency type="KRW">
 				<displayName>South Korean Won</displayName>
-				<displayName count="one">South Korean won</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">South Korean won</displayName>
 			</currency>
 			<currency type="KWD">
@@ -5480,7 +5480,7 @@ annotations.
 			</currency>
 			<currency type="MDC">
 				<displayName>Moldovan Cupon</displayName>
-				<displayName count="one">Moldovan cupon</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Moldovan cupon</displayName>
 			</currency>
 			<currency type="MDL">
@@ -5540,7 +5540,7 @@ annotations.
 			</currency>
 			<currency type="MTL">
 				<displayName>Maltese Lira</displayName>
-				<displayName count="one">Maltese lira</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Maltese lira</displayName>
 			</currency>
 			<currency type="MTP">
@@ -5670,7 +5670,7 @@ annotations.
 			</currency>
 			<currency type="PGK">
 				<displayName>Papua New Guinean Kina</displayName>
-				<displayName count="one">Papua New Guinean kina</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Papua New Guinean kina</displayName>
 			</currency>
 			<currency type="PHP">
@@ -5860,7 +5860,7 @@ annotations.
 			</currency>
 			<currency type="THB">
 				<displayName>Thai Baht</displayName>
-				<displayName count="one">Thai baht</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Thai baht</displayName>
 			</currency>
 			<currency type="TJR">
@@ -5875,12 +5875,12 @@ annotations.
 			</currency>
 			<currency type="TMM">
 				<displayName>Turkmenistani Manat (1993–2009)</displayName>
-				<displayName count="one">Turkmenistani manat (1993–2009)</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Turkmenistani manat (1993–2009)</displayName>
 			</currency>
 			<currency type="TMT">
 				<displayName>Turkmenistani Manat</displayName>
-				<displayName count="one">Turkmenistani manat</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Turkmenistani manat</displayName>
 			</currency>
 			<currency type="TND">
@@ -5890,7 +5890,7 @@ annotations.
 			</currency>
 			<currency type="TOP">
 				<displayName>Tongan Paʻanga</displayName>
-				<displayName count="one">Tongan paʻanga</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Tongan paʻanga</displayName>
 			</currency>
 			<currency type="TPE">
@@ -5901,12 +5901,12 @@ annotations.
 			<currency type="TRL">
 				<displayName>Turkish Lira (1922–2005)</displayName>
 				<displayName count="one">Turkish lira (1922–2005)</displayName>
-				<displayName count="other">Turkish Lira (1922–2005)</displayName>
+				<displayName count="other">↑↑↑</displayName>
 			</currency>
 			<currency type="TRY">
 				<displayName>Turkish Lira</displayName>
 				<displayName count="one">Turkish lira</displayName>
-				<displayName count="other">Turkish Lira</displayName>
+				<displayName count="other">↑↑↑</displayName>
 			</currency>
 			<currency type="TTD">
 				<displayName>Trinidad &amp; Tobago Dollar</displayName>
@@ -5981,7 +5981,7 @@ annotations.
 			</currency>
 			<currency type="UZS">
 				<displayName>Uzbekistani Som</displayName>
-				<displayName count="one">Uzbekistani som</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Uzbekistani som</displayName>
 			</currency>
 			<currency type="VEB">
@@ -6006,12 +6006,12 @@ annotations.
 			</currency>
 			<currency type="VND">
 				<displayName>Vietnamese Dong</displayName>
-				<displayName count="one">Vietnamese dong</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Vietnamese dong</displayName>
 			</currency>
 			<currency type="VNN">
 				<displayName>Vietnamese Dong (1978–1985)</displayName>
-				<displayName count="one">Vietnamese dong (1978–1985)</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Vietnamese dong (1978–1985)</displayName>
 			</currency>
 			<currency type="VUV">
@@ -6021,7 +6021,7 @@ annotations.
 			</currency>
 			<currency type="WST">
 				<displayName>Samoan Tala</displayName>
-				<displayName count="one">Samoan tala</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">Samoan tala</displayName>
 			</currency>
 			<currency type="XAF">
@@ -6066,7 +6066,7 @@ annotations.
 			</currency>
 			<currency type="XDR">
 				<displayName>Special Drawing Rights</displayName>
-				<displayName count="one">special drawing rights</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">special drawing rights</displayName>
 			</currency>
 			<currency type="XEU">
@@ -6166,7 +6166,7 @@ annotations.
 			</currency>
 			<currency type="ZAR">
 				<displayName>South African Rand</displayName>
-				<displayName count="one">South African rand</displayName>
+				<displayName count="one">↑↑↑</displayName>
 				<displayName count="other">South African rand</displayName>
 			</currency>
 			<currency type="ZMK">
@@ -6320,7 +6320,7 @@ annotations.
 				<compoundUnitPattern>{0}-{1}</compoundUnitPattern>
 			</compoundUnit>
 			<unit type="acceleration-g-force">
-				<displayName>g-force</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} g-force</unitPattern>
 				<unitPattern count="other">{0} g-force</unitPattern>
 			</unit>
@@ -6335,12 +6335,12 @@ annotations.
 				<unitPattern count="other">{0} revolutions</unitPattern>
 			</unit>
 			<unit type="angle-radian">
-				<displayName>radians</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} radian</unitPattern>
 				<unitPattern count="other">{0} radians</unitPattern>
 			</unit>
 			<unit type="angle-degree">
-				<displayName>degrees</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} degree</unitPattern>
 				<unitPattern count="other">{0} degrees</unitPattern>
 			</unit>
@@ -6361,7 +6361,7 @@ annotations.
 				<perUnitPattern>{0} per square kilometer</perUnitPattern>
 			</unit>
 			<unit type="area-hectare">
-				<displayName>hectares</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} hectare</unitPattern>
 				<unitPattern count="other">{0} hectares</unitPattern>
 			</unit>
@@ -6384,7 +6384,7 @@ annotations.
 				<perUnitPattern>{0} per square mile</perUnitPattern>
 			</unit>
 			<unit type="area-acre">
-				<displayName>acres</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} acre</unitPattern>
 				<unitPattern count="other">{0} acres</unitPattern>
 			</unit>
@@ -6405,12 +6405,12 @@ annotations.
 				<perUnitPattern>{0} per square inch</perUnitPattern>
 			</unit>
 			<unit type="area-dunam">
-				<displayName>dunams</displayName>
-				<unitPattern count="one">{0} dunam</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} dunams</unitPattern>
 			</unit>
 			<unit type="concentr-karat">
-				<displayName>karats</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} karat</unitPattern>
 				<unitPattern count="other">{0} karats</unitPattern>
 			</unit>
@@ -6426,8 +6426,8 @@ annotations.
 			</unit>
 			<unit type="concentr-item">
 				<displayName>items</displayName>
-				<unitPattern count="one">{0} item</unitPattern>
-				<unitPattern count="other">{0} items</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-permillion">
 				<displayName>parts per million</displayName>
@@ -6435,17 +6435,17 @@ annotations.
 				<unitPattern count="other">{0} parts per million</unitPattern>
 			</unit>
 			<unit type="concentr-percent">
-				<displayName>percent</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} percent</unitPattern>
 				<unitPattern count="other">{0} percent</unitPattern>
 			</unit>
 			<unit type="concentr-permille">
-				<displayName>permille</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} permille</unitPattern>
 				<unitPattern count="other">{0} permille</unitPattern>
 			</unit>
 			<unit type="concentr-permyriad">
-				<displayName>permyriad</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} permyriad</unitPattern>
 				<unitPattern count="other">{0} permyriad</unitPattern>
 			</unit>
@@ -6521,12 +6521,12 @@ annotations.
 			</unit>
 			<unit type="digital-byte">
 				<displayName>bytes</displayName>
-				<unitPattern count="one">{0} byte</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} bytes</unitPattern>
 			</unit>
 			<unit type="digital-bit">
 				<displayName>bits</displayName>
-				<unitPattern count="one">{0} bit</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} bits</unitPattern>
 			</unit>
 			<unit type="duration-century">
@@ -6540,7 +6540,7 @@ annotations.
 				<unitPattern count="other">{0} decades</unitPattern>
 			</unit>
 			<unit type="duration-year">
-				<displayName>years</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} year</unitPattern>
 				<unitPattern count="other">{0} years</unitPattern>
 				<perUnitPattern>{0} per year</perUnitPattern>
@@ -6551,25 +6551,25 @@ annotations.
 				<unitPattern count="other">{0} quarters</unitPattern>
 			</unit>
 			<unit type="duration-month">
-				<displayName>months</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} month</unitPattern>
 				<unitPattern count="other">{0} months</unitPattern>
 				<perUnitPattern>{0} per month</perUnitPattern>
 			</unit>
 			<unit type="duration-week">
-				<displayName>weeks</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} week</unitPattern>
 				<unitPattern count="other">{0} weeks</unitPattern>
 				<perUnitPattern>{0} per week</perUnitPattern>
 			</unit>
 			<unit type="duration-day">
-				<displayName>days</displayName>
-				<unitPattern count="one">{0} day</unitPattern>
-				<unitPattern count="other">{0} days</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 				<perUnitPattern>{0} per day</perUnitPattern>
 			</unit>
 			<unit type="duration-hour">
-				<displayName>hours</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} hour</unitPattern>
 				<unitPattern count="other">{0} hours</unitPattern>
 				<perUnitPattern>{0} per hour</perUnitPattern>
@@ -6612,12 +6612,12 @@ annotations.
 				<unitPattern count="other">{0} milliamperes</unitPattern>
 			</unit>
 			<unit type="electric-ohm">
-				<displayName>ohms</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} ohm</unitPattern>
 				<unitPattern count="other">{0} ohms</unitPattern>
 			</unit>
 			<unit type="electric-volt">
-				<displayName>volts</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} volt</unitPattern>
 				<unitPattern count="other">{0} volts</unitPattern>
 			</unit>
@@ -6642,7 +6642,7 @@ annotations.
 				<unitPattern count="other">{0} kilojoules</unitPattern>
 			</unit>
 			<unit type="energy-joule">
-				<displayName>joules</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} joule</unitPattern>
 				<unitPattern count="other">{0} joules</unitPattern>
 			</unit>
@@ -6663,8 +6663,8 @@ annotations.
 			</unit>
 			<unit type="energy-therm-us">
 				<displayName>US therms</displayName>
-				<unitPattern count="one">{0} US therm</unitPattern>
-				<unitPattern count="other">{0} US therms</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="force-pound-force">
 				<displayName>pounds of force</displayName>
@@ -6703,16 +6703,16 @@ annotations.
 			</unit>
 			<unit type="graphics-em">
 				<displayName>typographic ems</displayName>
-				<unitPattern count="one">{0} em</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} ems</unitPattern>
 			</unit>
 			<unit type="graphics-pixel">
-				<displayName>pixels</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} pixel</unitPattern>
 				<unitPattern count="other">{0} pixels</unitPattern>
 			</unit>
 			<unit type="graphics-megapixel">
-				<displayName>megapixels</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} megapixel</unitPattern>
 				<unitPattern count="other">{0} megapixels</unitPattern>
 			</unit>
@@ -6790,29 +6790,29 @@ annotations.
 				<unitPattern count="other">{0} picometers</unitPattern>
 			</unit>
 			<unit type="length-mile">
-				<displayName>miles</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} mile</unitPattern>
 				<unitPattern count="other">{0} miles</unitPattern>
 			</unit>
 			<unit type="length-yard">
-				<displayName>yards</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} yard</unitPattern>
 				<unitPattern count="other">{0} yards</unitPattern>
 			</unit>
 			<unit type="length-foot">
-				<displayName>feet</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} foot</unitPattern>
 				<unitPattern count="other">{0} feet</unitPattern>
 				<perUnitPattern>{0} per foot</perUnitPattern>
 			</unit>
 			<unit type="length-inch">
-				<displayName>inches</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} inch</unitPattern>
 				<unitPattern count="other">{0} inches</unitPattern>
 				<perUnitPattern>{0} per inch</perUnitPattern>
 			</unit>
 			<unit type="length-parsec">
-				<displayName>parsecs</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} parsec</unitPattern>
 				<unitPattern count="other">{0} parsecs</unitPattern>
 			</unit>
@@ -6827,12 +6827,12 @@ annotations.
 				<unitPattern count="other">{0} astronomical units</unitPattern>
 			</unit>
 			<unit type="length-furlong">
-				<displayName>furlongs</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} furlong</unitPattern>
 				<unitPattern count="other">{0} furlongs</unitPattern>
 			</unit>
 			<unit type="length-fathom">
-				<displayName>fathoms</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} fathom</unitPattern>
 				<unitPattern count="other">{0} fathoms</unitPattern>
 			</unit>
@@ -6847,17 +6847,17 @@ annotations.
 				<unitPattern count="other">{0} miles-scandinavian</unitPattern>
 			</unit>
 			<unit type="length-point">
-				<displayName>points</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} point</unitPattern>
 				<unitPattern count="other">{0} points</unitPattern>
 			</unit>
 			<unit type="length-solar-radius">
-				<displayName>solar radii</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} solar radius</unitPattern>
 				<unitPattern count="other">{0} solar radii</unitPattern>
 			</unit>
 			<unit type="light-lux">
-				<displayName>lux</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} lux</unitPattern>
 				<unitPattern count="other">{0} lux</unitPattern>
 			</unit>
@@ -6872,7 +6872,7 @@ annotations.
 				<unitPattern count="other">{0} lumen</unitPattern>
 			</unit>
 			<unit type="light-solar-luminosity">
-				<displayName>solar luminosities</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} solar luminosity</unitPattern>
 				<unitPattern count="other">{0} solar luminosities</unitPattern>
 			</unit>
@@ -6888,7 +6888,7 @@ annotations.
 				<perUnitPattern>{0} per kilogram</perUnitPattern>
 			</unit>
 			<unit type="mass-gram">
-				<displayName>grams</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} gram</unitPattern>
 				<unitPattern count="other">{0} grams</unitPattern>
 				<perUnitPattern>{0} per gram</perUnitPattern>
@@ -6904,17 +6904,17 @@ annotations.
 				<unitPattern count="other">{0} micrograms</unitPattern>
 			</unit>
 			<unit type="mass-ton">
-				<displayName>tons</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} ton</unitPattern>
 				<unitPattern count="other">{0} tons</unitPattern>
 			</unit>
 			<unit type="mass-stone">
-				<displayName>stones</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} stone</unitPattern>
 				<unitPattern count="other">{0} stones</unitPattern>
 			</unit>
 			<unit type="mass-pound">
-				<displayName>pounds</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} pound</unitPattern>
 				<unitPattern count="other">{0} pounds</unitPattern>
 				<perUnitPattern>{0} per pound</perUnitPattern>
@@ -6931,28 +6931,28 @@ annotations.
 				<unitPattern count="other">{0} troy ounces</unitPattern>
 			</unit>
 			<unit type="mass-carat">
-				<displayName>carats</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} carat</unitPattern>
 				<unitPattern count="other">{0} carats</unitPattern>
 			</unit>
 			<unit type="mass-dalton">
-				<displayName>daltons</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} dalton</unitPattern>
 				<unitPattern count="other">{0} daltons</unitPattern>
 			</unit>
 			<unit type="mass-earth-mass">
-				<displayName>Earth masses</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} Earth mass</unitPattern>
 				<unitPattern count="other">{0} Earth masses</unitPattern>
 			</unit>
 			<unit type="mass-solar-mass">
-				<displayName>solar masses</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} solar mass</unitPattern>
 				<unitPattern count="other">{0} solar masses</unitPattern>
 			</unit>
 			<unit type="mass-grain">
 				<displayName>grains</displayName>
-				<unitPattern count="one">{0} grain</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} grains</unitPattern>
 			</unit>
 			<unit type="power-gigawatt">
@@ -6971,7 +6971,7 @@ annotations.
 				<unitPattern count="other">{0} kilowatts</unitPattern>
 			</unit>
 			<unit type="power-watt">
-				<displayName>watts</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} watt</unitPattern>
 				<unitPattern count="other">{0} watts</unitPattern>
 			</unit>
@@ -7002,7 +7002,7 @@ annotations.
 			</unit>
 			<unit type="pressure-bar">
 				<displayName>bars</displayName>
-				<unitPattern count="one">{0} bar</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} bars</unitPattern>
 			</unit>
 			<unit type="pressure-millibar">
@@ -7133,7 +7133,7 @@ annotations.
 				<unitPattern count="other">{0} hectoliters</unitPattern>
 			</unit>
 			<unit type="volume-liter">
-				<displayName>liters</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} liter</unitPattern>
 				<unitPattern count="other">{0} liters</unitPattern>
 				<perUnitPattern>{0} per liter</perUnitPattern>
@@ -7169,7 +7169,7 @@ annotations.
 				<unitPattern count="other">{0} acre-feet</unitPattern>
 			</unit>
 			<unit type="volume-bushel">
-				<displayName>bushels</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} bushel</unitPattern>
 				<unitPattern count="other">{0} bushels</unitPattern>
 			</unit>
@@ -7191,12 +7191,12 @@ annotations.
 				<unitPattern count="other">{0} quarts</unitPattern>
 			</unit>
 			<unit type="volume-pint">
-				<displayName>pints</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} pint</unitPattern>
 				<unitPattern count="other">{0} pints</unitPattern>
 			</unit>
 			<unit type="volume-cup">
-				<displayName>cups</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} cup</unitPattern>
 				<unitPattern count="other">{0} cups</unitPattern>
 			</unit>
@@ -7237,7 +7237,7 @@ annotations.
 			</unit>
 			<unit type="volume-drop">
 				<displayName>drops</displayName>
-				<unitPattern count="one">{0} drop</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} drops</unitPattern>
 			</unit>
 			<unit type="volume-dram">
@@ -7247,12 +7247,12 @@ annotations.
 			</unit>
 			<unit type="volume-jigger">
 				<displayName>jiggers</displayName>
-				<unitPattern count="one">{0} jigger</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} jiggers</unitPattern>
 			</unit>
 			<unit type="volume-pinch">
 				<displayName>pinches</displayName>
-				<unitPattern count="one">{0} pinch</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} pinches</unitPattern>
 			</unit>
 			<unit type="volume-quart-imperial">
@@ -7270,31 +7270,31 @@ annotations.
 		</unitLength>
 		<unitLength type="short">
 			<compoundUnit type="per">
-				<compoundUnitPattern>{0}/{1}</compoundUnitPattern>
+				<compoundUnitPattern>↑↑↑</compoundUnitPattern>
 			</compoundUnit>
 			<unit type="acceleration-g-force">
-				<displayName>g-force</displayName>
-				<unitPattern count="one">{0} G</unitPattern>
-				<unitPattern count="other">{0} G</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="acceleration-meter-per-square-second">
 				<displayName>meters/sec²</displayName>
-				<unitPattern count="one">{0} m/s²</unitPattern>
-				<unitPattern count="other">{0} m/s²</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="angle-revolution">
-				<displayName>rev</displayName>
-				<unitPattern count="one">{0} rev</unitPattern>
-				<unitPattern count="other">{0} rev</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="angle-radian">
 				<displayName>radians</displayName>
-				<unitPattern count="one">{0} rad</unitPattern>
-				<unitPattern count="other">{0} rad</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="angle-degree">
 				<displayName>degrees</displayName>
-				<unitPattern count="one">{0} deg</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} deg</unitPattern>
 			</unit>
 			<unit type="angle-arc-minute">
@@ -7308,198 +7308,198 @@ annotations.
 				<unitPattern count="other">{0} arcsecs</unitPattern>
 			</unit>
 			<unit type="area-square-kilometer">
-				<displayName>km²</displayName>
-				<unitPattern count="one">{0} km²</unitPattern>
-				<unitPattern count="other">{0} km²</unitPattern>
-				<perUnitPattern>{0}/km²</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-hectare">
 				<displayName>hectares</displayName>
-				<unitPattern count="one">{0} ha</unitPattern>
-				<unitPattern count="other">{0} ha</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="area-square-meter">
 				<displayName>meters²</displayName>
-				<unitPattern count="one">{0} m²</unitPattern>
-				<unitPattern count="other">{0} m²</unitPattern>
-				<perUnitPattern>{0}/m²</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-square-centimeter">
-				<displayName>cm²</displayName>
-				<unitPattern count="one">{0} cm²</unitPattern>
-				<unitPattern count="other">{0} cm²</unitPattern>
-				<perUnitPattern>{0}/cm²</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-square-mile">
 				<displayName>sq miles</displayName>
-				<unitPattern count="one">{0} sq mi</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} sq mi</unitPattern>
-				<perUnitPattern>{0}/mi²</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-acre">
 				<displayName>acres</displayName>
-				<unitPattern count="one">{0} ac</unitPattern>
-				<unitPattern count="other">{0} ac</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="area-square-yard">
 				<displayName>yards²</displayName>
-				<unitPattern count="one">{0} yd²</unitPattern>
-				<unitPattern count="other">{0} yd²</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="area-square-foot">
 				<displayName>sq feet</displayName>
-				<unitPattern count="one">{0} sq ft</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} sq ft</unitPattern>
 			</unit>
 			<unit type="area-square-inch">
 				<displayName>inches²</displayName>
-				<unitPattern count="one">{0} in²</unitPattern>
-				<unitPattern count="other">{0} in²</unitPattern>
-				<perUnitPattern>{0}/in²</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-dunam">
 				<displayName>dunams</displayName>
-				<unitPattern count="one">{0} dunam</unitPattern>
-				<unitPattern count="other">{0} dunam</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-karat">
 				<displayName>karats</displayName>
-				<unitPattern count="one">{0} kt</unitPattern>
-				<unitPattern count="other">{0} kt</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-milligram-ofglucose-per-deciliter">
-				<displayName>mg/dL</displayName>
-				<unitPattern count="one">{0} mg/dL</unitPattern>
-				<unitPattern count="other">{0} mg/dL</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-millimole-per-liter">
 				<displayName>millimol/liter</displayName>
-				<unitPattern count="one">{0} mmol/L</unitPattern>
-				<unitPattern count="other">{0} mmol/L</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-item">
-				<displayName>item</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} item</unitPattern>
 				<unitPattern count="other">{0} items</unitPattern>
 			</unit>
 			<unit type="concentr-permillion">
 				<displayName>parts/million</displayName>
-				<unitPattern count="one">{0} ppm</unitPattern>
-				<unitPattern count="other">{0} ppm</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-percent">
 				<displayName>percent</displayName>
-				<unitPattern count="one">{0}%</unitPattern>
-				<unitPattern count="other">{0}%</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-permille">
 				<displayName>permille</displayName>
-				<unitPattern count="one">{0}‰</unitPattern>
-				<unitPattern count="other">{0}‰</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-permyriad">
 				<displayName>permyriad</displayName>
-				<unitPattern count="one">{0}‱</unitPattern>
-				<unitPattern count="other">{0}‱</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-mole">
 				<displayName>mole</displayName>
-				<unitPattern count="one">{0} mol</unitPattern>
-				<unitPattern count="other">{0} mol</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="consumption-liter-per-kilometer">
 				<displayName>liters/km</displayName>
-				<unitPattern count="one">{0} L/km</unitPattern>
-				<unitPattern count="other">{0} L/km</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="consumption-liter-per-100-kilometer">
 				<displayName>L/100 km</displayName>
-				<unitPattern count="one">{0} L/100 km</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} L/100 km</unitPattern>
 			</unit>
 			<unit type="consumption-mile-per-gallon">
 				<displayName>miles/gal</displayName>
-				<unitPattern count="one">{0} mpg</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} mpg</unitPattern>
 			</unit>
 			<unit type="consumption-mile-per-gallon-imperial">
 				<displayName>miles/gal Imp.</displayName>
-				<unitPattern count="one">{0} mpg Imp.</unitPattern>
-				<unitPattern count="other">{0} mpg Imp.</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-petabyte">
 				<displayName>PByte</displayName>
-				<unitPattern count="one">{0} PB</unitPattern>
-				<unitPattern count="other">{0} PB</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-terabyte">
 				<displayName>TByte</displayName>
-				<unitPattern count="one">{0} TB</unitPattern>
-				<unitPattern count="other">{0} TB</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-terabit">
 				<displayName>Tbit</displayName>
-				<unitPattern count="one">{0} Tb</unitPattern>
-				<unitPattern count="other">{0} Tb</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-gigabyte">
 				<displayName>GByte</displayName>
-				<unitPattern count="one">{0} GB</unitPattern>
-				<unitPattern count="other">{0} GB</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-gigabit">
 				<displayName>Gbit</displayName>
-				<unitPattern count="one">{0} Gb</unitPattern>
-				<unitPattern count="other">{0} Gb</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-megabyte">
 				<displayName>MByte</displayName>
-				<unitPattern count="one">{0} MB</unitPattern>
-				<unitPattern count="other">{0} MB</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-megabit">
 				<displayName>Mbit</displayName>
-				<unitPattern count="one">{0} Mb</unitPattern>
-				<unitPattern count="other">{0} Mb</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-kilobyte">
 				<displayName>kByte</displayName>
-				<unitPattern count="one">{0} kB</unitPattern>
-				<unitPattern count="other">{0} kB</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-kilobit">
 				<displayName>kbit</displayName>
-				<unitPattern count="one">{0} kb</unitPattern>
-				<unitPattern count="other">{0} kb</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-byte">
-				<displayName>byte</displayName>
-				<unitPattern count="one">{0} byte</unitPattern>
-				<unitPattern count="other">{0} byte</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="digital-bit">
-				<displayName>bit</displayName>
-				<unitPattern count="one">{0} bit</unitPattern>
-				<unitPattern count="other">{0} bit</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="duration-century">
-				<displayName>c</displayName>
-				<unitPattern count="one">{0} c</unitPattern>
-				<unitPattern count="other">{0} c</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="duration-decade">
-				<displayName>dec</displayName>
-				<unitPattern count="one">{0} dec</unitPattern>
-				<unitPattern count="other">{0} dec</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="duration-year">
 				<displayName>years</displayName>
 				<unitPattern count="one">{0} yr</unitPattern>
 				<unitPattern count="other">{0} yrs</unitPattern>
-				<perUnitPattern>{0}/y</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-quarter">
-				<displayName>qtr</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} qtr</unitPattern>
 				<unitPattern count="other">{0} qtrs</unitPattern>
 			</unit>
@@ -7507,82 +7507,82 @@ annotations.
 				<displayName>months</displayName>
 				<unitPattern count="one">{0} mth</unitPattern>
 				<unitPattern count="other">{0} mths</unitPattern>
-				<perUnitPattern>{0}/m</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-week">
 				<displayName>weeks</displayName>
 				<unitPattern count="one">{0} wk</unitPattern>
 				<unitPattern count="other">{0} wks</unitPattern>
-				<perUnitPattern>{0}/w</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-day">
 				<displayName>days</displayName>
 				<unitPattern count="one">{0} day</unitPattern>
 				<unitPattern count="other">{0} days</unitPattern>
-				<perUnitPattern>{0}/d</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-hour">
 				<displayName>hours</displayName>
-				<unitPattern count="one">{0} hr</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} hr</unitPattern>
-				<perUnitPattern>{0}/h</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-minute">
 				<displayName>mins</displayName>
-				<unitPattern count="one">{0} min</unitPattern>
-				<unitPattern count="other">{0} min</unitPattern>
-				<perUnitPattern>{0}/min</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-second">
 				<displayName>secs</displayName>
-				<unitPattern count="one">{0} sec</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} sec</unitPattern>
-				<perUnitPattern>{0}/s</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="duration-millisecond">
 				<displayName>millisecs</displayName>
-				<unitPattern count="one">{0} ms</unitPattern>
-				<unitPattern count="other">{0} ms</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="duration-microsecond">
 				<displayName>μsecs</displayName>
-				<unitPattern count="one">{0} μs</unitPattern>
-				<unitPattern count="other">{0} μs</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="duration-nanosecond">
 				<displayName>nanosecs</displayName>
-				<unitPattern count="one">{0} ns</unitPattern>
-				<unitPattern count="other">{0} ns</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="electric-ampere">
 				<displayName>amps</displayName>
-				<unitPattern count="one">{0} A</unitPattern>
-				<unitPattern count="other">{0} A</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="electric-milliampere">
 				<displayName>milliamps</displayName>
-				<unitPattern count="one">{0} mA</unitPattern>
-				<unitPattern count="other">{0} mA</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="electric-ohm">
 				<displayName>ohms</displayName>
-				<unitPattern count="one">{0} Ω</unitPattern>
-				<unitPattern count="other">{0} Ω</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="electric-volt">
 				<displayName>volts</displayName>
-				<unitPattern count="one">{0} V</unitPattern>
-				<unitPattern count="other">{0} V</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-kilocalorie">
-				<displayName>kcal</displayName>
-				<unitPattern count="one">{0} kcal</unitPattern>
-				<unitPattern count="other">{0} kcal</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-calorie">
-				<displayName>cal</displayName>
-				<unitPattern count="one">{0} cal</unitPattern>
-				<unitPattern count="other">{0} cal</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-foodcalorie">
 				<displayName>Cal</displayName>
@@ -7591,93 +7591,93 @@ annotations.
 			</unit>
 			<unit type="energy-kilojoule">
 				<displayName>kilojoule</displayName>
-				<unitPattern count="one">{0} kJ</unitPattern>
-				<unitPattern count="other">{0} kJ</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-joule">
 				<displayName>joules</displayName>
-				<unitPattern count="one">{0} J</unitPattern>
-				<unitPattern count="other">{0} J</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-kilowatt-hour">
 				<displayName>kW-hour</displayName>
-				<unitPattern count="one">{0} kWh</unitPattern>
-				<unitPattern count="other">{0} kWh</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-electronvolt">
 				<displayName>electronvolt</displayName>
-				<unitPattern count="one">{0} eV</unitPattern>
-				<unitPattern count="other">{0} eV</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-british-thermal-unit">
 				<displayName>BTU</displayName>
-				<unitPattern count="one">{0} Btu</unitPattern>
-				<unitPattern count="other">{0} Btu</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="energy-therm-us">
-				<displayName>US therm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0} US therm</unitPattern>
 				<unitPattern count="other">{0} US therms</unitPattern>
 			</unit>
 			<unit type="force-pound-force">
 				<displayName>pound-force</displayName>
-				<unitPattern count="one">{0} lbf</unitPattern>
-				<unitPattern count="other">{0} lbf</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="force-newton">
 				<displayName>newton</displayName>
-				<unitPattern count="one">{0} N</unitPattern>
-				<unitPattern count="other">{0} N</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="force-kilowatt-hour-per-100-kilometer">
-				<displayName>kWh/100km</displayName>
-				<unitPattern count="one">{0} kWh/100km</unitPattern>
-				<unitPattern count="other">{0} kWh/100km</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="frequency-gigahertz">
-				<displayName>GHz</displayName>
-				<unitPattern count="one">{0} GHz</unitPattern>
-				<unitPattern count="other">{0} GHz</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="frequency-megahertz">
-				<displayName>MHz</displayName>
-				<unitPattern count="one">{0} MHz</unitPattern>
-				<unitPattern count="other">{0} MHz</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="frequency-kilohertz">
-				<displayName>kHz</displayName>
-				<unitPattern count="one">{0} kHz</unitPattern>
-				<unitPattern count="other">{0} kHz</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="frequency-hertz">
-				<displayName>Hz</displayName>
-				<unitPattern count="one">{0} Hz</unitPattern>
-				<unitPattern count="other">{0} Hz</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-em">
-				<displayName>em</displayName>
-				<unitPattern count="one">{0} em</unitPattern>
-				<unitPattern count="other">{0} em</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-pixel">
 				<displayName>pixels</displayName>
-				<unitPattern count="one">{0} px</unitPattern>
-				<unitPattern count="other">{0} px</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-megapixel">
 				<displayName>megapixels</displayName>
-				<unitPattern count="one">{0} MP</unitPattern>
-				<unitPattern count="other">{0} MP</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-pixel-per-centimeter">
-				<displayName>ppcm</displayName>
-				<unitPattern count="one">{0} ppcm</unitPattern>
-				<unitPattern count="other">{0} ppcm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-pixel-per-inch">
-				<displayName>ppi</displayName>
-				<unitPattern count="one">{0} ppi</unitPattern>
-				<unitPattern count="other">{0} ppi</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="graphics-dot-per-centimeter">
 				<displayName>dpcm</displayName>
@@ -7690,462 +7690,462 @@ annotations.
 				<unitPattern count="other">{0} dpi</unitPattern>
 			</unit>
 			<unit type="length-kilometer">
-				<displayName>km</displayName>
-				<unitPattern count="one">{0} km</unitPattern>
-				<unitPattern count="other">{0} km</unitPattern>
-				<perUnitPattern>{0}/km</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="length-meter">
 				<displayName>m</displayName>
-				<unitPattern count="one">{0} m</unitPattern>
-				<unitPattern count="other">{0} m</unitPattern>
-				<perUnitPattern>{0}/m</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="length-decimeter">
-				<displayName>dm</displayName>
-				<unitPattern count="one">{0} dm</unitPattern>
-				<unitPattern count="other">{0} dm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-centimeter">
-				<displayName>cm</displayName>
-				<unitPattern count="one">{0} cm</unitPattern>
-				<unitPattern count="other">{0} cm</unitPattern>
-				<perUnitPattern>{0}/cm</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="length-millimeter">
-				<displayName>mm</displayName>
-				<unitPattern count="one">{0} mm</unitPattern>
-				<unitPattern count="other">{0} mm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-micrometer">
 				<displayName>μmeters</displayName>
-				<unitPattern count="one">{0} μm</unitPattern>
-				<unitPattern count="other">{0} μm</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-nanometer">
-				<displayName>nm</displayName>
-				<unitPattern count="one">{0} nm</unitPattern>
-				<unitPattern count="other">{0} nm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-picometer">
-				<displayName>pm</displayName>
-				<unitPattern count="one">{0} pm</unitPattern>
-				<unitPattern count="other">{0} pm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-mile">
 				<displayName>miles</displayName>
-				<unitPattern count="one">{0} mi</unitPattern>
-				<unitPattern count="other">{0} mi</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-yard">
 				<displayName>yards</displayName>
-				<unitPattern count="one">{0} yd</unitPattern>
-				<unitPattern count="other">{0} yd</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-foot">
 				<displayName>feet</displayName>
-				<unitPattern count="one">{0} ft</unitPattern>
-				<unitPattern count="other">{0} ft</unitPattern>
-				<perUnitPattern>{0}/ft</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="length-inch">
 				<displayName>inches</displayName>
-				<unitPattern count="one">{0} in</unitPattern>
-				<unitPattern count="other">{0} in</unitPattern>
-				<perUnitPattern>{0}/in</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="length-parsec">
 				<displayName>parsecs</displayName>
-				<unitPattern count="one">{0} pc</unitPattern>
-				<unitPattern count="other">{0} pc</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-light-year">
 				<displayName>light yrs</displayName>
-				<unitPattern count="one">{0} ly</unitPattern>
-				<unitPattern count="other">{0} ly</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-astronomical-unit">
-				<displayName>au</displayName>
-				<unitPattern count="one">{0} au</unitPattern>
-				<unitPattern count="other">{0} au</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-furlong">
 				<displayName>furlongs</displayName>
-				<unitPattern count="one">{0} fur</unitPattern>
-				<unitPattern count="other">{0} fur</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-fathom">
 				<displayName>fathoms</displayName>
-				<unitPattern count="one">{0} fth</unitPattern>
-				<unitPattern count="other">{0} fth</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-nautical-mile">
-				<displayName>nmi</displayName>
-				<unitPattern count="one">{0} nmi</unitPattern>
-				<unitPattern count="other">{0} nmi</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-mile-scandinavian">
-				<displayName>smi</displayName>
-				<unitPattern count="one">{0} smi</unitPattern>
-				<unitPattern count="other">{0} smi</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-point">
 				<displayName>points</displayName>
-				<unitPattern count="one">{0} pt</unitPattern>
-				<unitPattern count="other">{0} pt</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="length-solar-radius">
 				<displayName>solar radii</displayName>
-				<unitPattern count="one">{0} R☉</unitPattern>
-				<unitPattern count="other">{0} R☉</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="light-lux">
 				<displayName>lux</displayName>
-				<unitPattern count="one">{0} lx</unitPattern>
-				<unitPattern count="other">{0} lx</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="light-solar-luminosity">
 				<displayName>solar luminosities</displayName>
-				<unitPattern count="one">{0} L☉</unitPattern>
-				<unitPattern count="other">{0} L☉</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-tonne">
-				<displayName>t</displayName>
-				<unitPattern count="one">{0} t</unitPattern>
-				<unitPattern count="other">{0} t</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-kilogram">
-				<displayName>kg</displayName>
-				<unitPattern count="one">{0} kg</unitPattern>
-				<unitPattern count="other">{0} kg</unitPattern>
-				<perUnitPattern>{0}/kg</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="mass-gram">
 				<displayName>grams</displayName>
-				<unitPattern count="one">{0} g</unitPattern>
-				<unitPattern count="other">{0} g</unitPattern>
-				<perUnitPattern>{0}/g</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="mass-milligram">
-				<displayName>mg</displayName>
-				<unitPattern count="one">{0} mg</unitPattern>
-				<unitPattern count="other">{0} mg</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-microgram">
-				<displayName>μg</displayName>
-				<unitPattern count="one">{0} μg</unitPattern>
-				<unitPattern count="other">{0} μg</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-ton">
 				<displayName>tons</displayName>
-				<unitPattern count="one">{0} tn</unitPattern>
-				<unitPattern count="other">{0} tn</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-stone">
 				<displayName>stones</displayName>
-				<unitPattern count="one">{0} st</unitPattern>
-				<unitPattern count="other">{0} st</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-pound">
 				<displayName>pounds</displayName>
-				<unitPattern count="one">{0} lb</unitPattern>
-				<unitPattern count="other">{0} lb</unitPattern>
-				<perUnitPattern>{0}/lb</perUnitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="mass-ounce">
-				<displayName>oz</displayName>
-				<unitPattern count="one">{0} oz</unitPattern>
-				<unitPattern count="other">{0} oz</unitPattern>
-				<perUnitPattern>{0}/oz</perUnitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="mass-ounce-troy">
 				<displayName>oz troy</displayName>
-				<unitPattern count="one">{0} oz t</unitPattern>
-				<unitPattern count="other">{0} oz t</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-carat">
 				<displayName>carats</displayName>
-				<unitPattern count="one">{0} CD</unitPattern>
-				<unitPattern count="other">{0} CD</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-dalton">
 				<displayName>daltons</displayName>
-				<unitPattern count="one">{0} Da</unitPattern>
-				<unitPattern count="other">{0} Da</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-earth-mass">
 				<displayName>Earth masses</displayName>
-				<unitPattern count="one">{0} M⊕</unitPattern>
-				<unitPattern count="other">{0} M⊕</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="mass-solar-mass">
 				<displayName>solar masses</displayName>
-				<unitPattern count="one">{0} M☉</unitPattern>
-				<unitPattern count="other">{0} M☉</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-gigawatt">
-				<displayName>GW</displayName>
-				<unitPattern count="one">{0} GW</unitPattern>
-				<unitPattern count="other">{0} GW</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-megawatt">
-				<displayName>MW</displayName>
-				<unitPattern count="one">{0} MW</unitPattern>
-				<unitPattern count="other">{0} MW</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-kilowatt">
-				<displayName>kW</displayName>
-				<unitPattern count="one">{0} kW</unitPattern>
-				<unitPattern count="other">{0} kW</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-watt">
 				<displayName>watts</displayName>
-				<unitPattern count="one">{0} W</unitPattern>
-				<unitPattern count="other">{0} W</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-milliwatt">
-				<displayName>mW</displayName>
-				<unitPattern count="one">{0} mW</unitPattern>
-				<unitPattern count="other">{0} mW</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="power-horsepower">
-				<displayName>hp</displayName>
-				<unitPattern count="one">{0} hp</unitPattern>
-				<unitPattern count="other">{0} hp</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-millimeter-ofhg">
 				<displayName>mmHg</displayName>
-				<unitPattern count="one">{0} mmHg</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} mmHg</unitPattern>
 			</unit>
 			<unit type="pressure-pound-force-per-square-inch">
-				<displayName>psi</displayName>
-				<unitPattern count="one">{0} psi</unitPattern>
-				<unitPattern count="other">{0} psi</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-inch-ofhg">
-				<displayName>inHg</displayName>
-				<unitPattern count="one">{0} inHg</unitPattern>
-				<unitPattern count="other">{0} inHg</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-bar">
-				<displayName>bar</displayName>
-				<unitPattern count="one">{0} bar</unitPattern>
-				<unitPattern count="other">{0} bar</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-millibar">
-				<displayName>mbar</displayName>
-				<unitPattern count="one">{0} mbar</unitPattern>
-				<unitPattern count="other">{0} mbar</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-atmosphere">
-				<displayName>atm</displayName>
-				<unitPattern count="one">{0} atm</unitPattern>
-				<unitPattern count="other">{0} atm</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-pascal">
-				<displayName>Pa</displayName>
-				<unitPattern count="one">{0} Pa</unitPattern>
-				<unitPattern count="other">{0} Pa</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-hectopascal">
-				<displayName>hPa</displayName>
-				<unitPattern count="one">{0} hPa</unitPattern>
-				<unitPattern count="other">{0} hPa</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-kilopascal">
-				<displayName>kPa</displayName>
-				<unitPattern count="one">{0} kPa</unitPattern>
-				<unitPattern count="other">{0} kPa</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="pressure-megapascal">
-				<displayName>MPa</displayName>
-				<unitPattern count="one">{0} MPa</unitPattern>
-				<unitPattern count="other">{0} MPa</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="speed-kilometer-per-hour">
 				<displayName>km/hour</displayName>
-				<unitPattern count="one">{0} km/h</unitPattern>
-				<unitPattern count="other">{0} km/h</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="speed-meter-per-second">
 				<displayName>meters/sec</displayName>
-				<unitPattern count="one">{0} m/s</unitPattern>
-				<unitPattern count="other">{0} m/s</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="speed-mile-per-hour">
 				<displayName>miles/hour</displayName>
-				<unitPattern count="one">{0} mph</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} mph</unitPattern>
 			</unit>
 			<unit type="speed-knot">
-				<displayName>kn</displayName>
-				<unitPattern count="one">{0} kn</unitPattern>
-				<unitPattern count="other">{0} kn</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="temperature-celsius">
 				<displayName>deg. C</displayName>
-				<unitPattern count="one">{0}°C</unitPattern>
-				<unitPattern count="other">{0}°C</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="temperature-fahrenheit">
 				<displayName>deg. F</displayName>
-				<unitPattern count="one">{0}°F</unitPattern>
-				<unitPattern count="other">{0}°F</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="temperature-kelvin">
-				<displayName>K</displayName>
-				<unitPattern count="one">{0} K</unitPattern>
-				<unitPattern count="other">{0} K</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="torque-pound-force-foot">
-				<displayName>lbf⋅ft</displayName>
-				<unitPattern count="one">{0} lbf⋅ft</unitPattern>
-				<unitPattern count="other">{0} lbf⋅ft</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="torque-newton-meter">
-				<displayName>N⋅m</displayName>
-				<unitPattern count="one">{0} N⋅m</unitPattern>
-				<unitPattern count="other">{0} N⋅m</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-kilometer">
-				<displayName>km³</displayName>
-				<unitPattern count="one">{0} km³</unitPattern>
-				<unitPattern count="other">{0} km³</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-meter">
-				<displayName>m³</displayName>
-				<unitPattern count="one">{0} m³</unitPattern>
-				<unitPattern count="other">{0} m³</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-centimeter">
-				<displayName>cm³</displayName>
-				<unitPattern count="one">{0} cm³</unitPattern>
-				<unitPattern count="other">{0} cm³</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-mile">
-				<displayName>mi³</displayName>
-				<unitPattern count="one">{0} mi³</unitPattern>
-				<unitPattern count="other">{0} mi³</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-yard">
 				<displayName>yards³</displayName>
-				<unitPattern count="one">{0} yd³</unitPattern>
-				<unitPattern count="other">{0} yd³</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-foot">
 				<displayName>feet³</displayName>
-				<unitPattern count="one">{0} ft³</unitPattern>
-				<unitPattern count="other">{0} ft³</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cubic-inch">
 				<displayName>inches³</displayName>
-				<unitPattern count="one">{0} in³</unitPattern>
-				<unitPattern count="other">{0} in³</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-megaliter">
-				<displayName>ML</displayName>
-				<unitPattern count="one">{0} ML</unitPattern>
-				<unitPattern count="other">{0} ML</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-hectoliter">
-				<displayName>hL</displayName>
-				<unitPattern count="one">{0} hL</unitPattern>
-				<unitPattern count="other">{0} hL</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-liter">
 				<displayName>liters</displayName>
-				<unitPattern count="one">{0} L</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} L</unitPattern>
 				<perUnitPattern>{0}/L</perUnitPattern>
 			</unit>
 			<unit type="volume-deciliter">
-				<displayName>dL</displayName>
-				<unitPattern count="one">{0} dL</unitPattern>
-				<unitPattern count="other">{0} dL</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-centiliter">
-				<displayName>cL</displayName>
-				<unitPattern count="one">{0} cL</unitPattern>
-				<unitPattern count="other">{0} cL</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-milliliter">
-				<displayName>mL</displayName>
-				<unitPattern count="one">{0} mL</unitPattern>
-				<unitPattern count="other">{0} mL</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-pint-metric">
-				<displayName>mpt</displayName>
-				<unitPattern count="one">{0} mpt</unitPattern>
-				<unitPattern count="other">{0} mpt</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cup-metric">
-				<displayName>mcup</displayName>
-				<unitPattern count="one">{0} mc</unitPattern>
-				<unitPattern count="other">{0} mc</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-acre-foot">
 				<displayName>acre ft</displayName>
-				<unitPattern count="one">{0} ac ft</unitPattern>
-				<unitPattern count="other">{0} ac ft</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-bushel">
 				<displayName>bushels</displayName>
-				<unitPattern count="one">{0} bu</unitPattern>
-				<unitPattern count="other">{0} bu</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-gallon">
 				<displayName>gal</displayName>
-				<unitPattern count="one">{0} gal</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} gal</unitPattern>
 			</unit>
 			<unit type="volume-gallon-imperial">
-				<displayName>Imp. gal</displayName>
-				<unitPattern count="one">{0} gal Imp.</unitPattern>
-				<unitPattern count="other">{0} gal Imp.</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-quart">
 				<displayName>qts</displayName>
-				<unitPattern count="one">{0} qt</unitPattern>
-				<unitPattern count="other">{0} qt</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-pint">
 				<displayName>pints</displayName>
-				<unitPattern count="one">{0} pt</unitPattern>
-				<unitPattern count="other">{0} pt</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-cup">
 				<displayName>cups</displayName>
-				<unitPattern count="one">{0} c</unitPattern>
-				<unitPattern count="other">{0} c</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-fluid-ounce">
 				<displayName>fl oz</displayName>
-				<unitPattern count="one">{0} fl oz</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
 				<unitPattern count="other">{0} fl oz</unitPattern>
 			</unit>
 			<unit type="volume-fluid-ounce-imperial">
-				<displayName>Imp. fl oz</displayName>
-				<unitPattern count="one">{0} fl oz Imp.</unitPattern>
-				<unitPattern count="other">{0} fl oz Imp.</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-tablespoon">
-				<displayName>tbsp</displayName>
-				<unitPattern count="one">{0} tbsp</unitPattern>
-				<unitPattern count="other">{0} tbsp</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-teaspoon">
-				<displayName>tsp</displayName>
-				<unitPattern count="one">{0} tsp</unitPattern>
-				<unitPattern count="other">{0} tsp</unitPattern>
+				<displayName>↑↑↑</displayName>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="volume-barrel">
 				<displayName>barrel</displayName>
-				<unitPattern count="one">{0} bbl</unitPattern>
-				<unitPattern count="other">{0} bbl</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<coordinateUnit>
-				<displayName>direction</displayName>
+				<displayName>↑↑↑</displayName>
 				<coordinateUnitPattern type="east">{0} E</coordinateUnitPattern>
 				<coordinateUnitPattern type="north">{0} N</coordinateUnitPattern>
 				<coordinateUnitPattern type="south">{0} S</coordinateUnitPattern>
@@ -8154,7 +8154,7 @@ annotations.
 		</unitLength>
 		<unitLength type="narrow">
 			<unit type="acceleration-g-force">
-				<displayName>g-force</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}G</unitPattern>
 				<unitPattern count="other">{0}Gs</unitPattern>
 			</unit>
@@ -8164,7 +8164,7 @@ annotations.
 				<unitPattern count="other">{0}m/s²</unitPattern>
 			</unit>
 			<unit type="angle-revolution">
-				<displayName>rev</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}rev</unitPattern>
 				<unitPattern count="other">{0}rev</unitPattern>
 			</unit>
@@ -8189,10 +8189,10 @@ annotations.
 				<unitPattern count="other">{0}″</unitPattern>
 			</unit>
 			<unit type="area-square-kilometer">
-				<displayName>km²</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}km²</unitPattern>
 				<unitPattern count="other">{0}km²</unitPattern>
-				<perUnitPattern>{0}/km²</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-hectare">
 				<displayName>hectare</displayName>
@@ -8200,13 +8200,13 @@ annotations.
 				<unitPattern count="other">{0}ha</unitPattern>
 			</unit>
 			<unit type="area-square-meter">
-				<displayName>meters²</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}m²</unitPattern>
 				<unitPattern count="other">{0}m²</unitPattern>
-				<perUnitPattern>{0}/m²</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-square-centimeter">
-				<displayName>cm²</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cm²</unitPattern>
 				<unitPattern count="other">{0}cm²</unitPattern>
 			</unit>
@@ -8214,7 +8214,7 @@ annotations.
 				<displayName>mi²</displayName>
 				<unitPattern count="one">{0}mi²</unitPattern>
 				<unitPattern count="other">{0}mi²</unitPattern>
-				<perUnitPattern>{0}/mi²</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="area-acre">
 				<displayName>acre</displayName>
@@ -8247,7 +8247,7 @@ annotations.
 				<unitPattern count="other">{0}kt</unitPattern>
 			</unit>
 			<unit type="concentr-milligram-ofglucose-per-deciliter">
-				<displayName>mg/dL</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mg/dL</unitPattern>
 				<unitPattern count="other">{0}mg/dL</unitPattern>
 			</unit>
@@ -8257,7 +8257,7 @@ annotations.
 				<unitPattern count="other">{0}mmol/L</unitPattern>
 			</unit>
 			<unit type="concentr-item">
-				<displayName>item</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}item</unitPattern>
 				<unitPattern count="other">{0}items</unitPattern>
 			</unit>
@@ -8268,18 +8268,18 @@ annotations.
 			</unit>
 			<unit type="concentr-percent">
 				<displayName>%</displayName>
-				<unitPattern count="one">{0}%</unitPattern>
-				<unitPattern count="other">{0}%</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-permille">
 				<displayName>‰</displayName>
-				<unitPattern count="one">{0}‰</unitPattern>
-				<unitPattern count="other">{0}‰</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-permyriad">
 				<displayName>‱</displayName>
-				<unitPattern count="one">{0}‱</unitPattern>
-				<unitPattern count="other">{0}‱</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="concentr-mole">
 				<displayName>mol</displayName>
@@ -8357,17 +8357,17 @@ annotations.
 				<unitPattern count="other">{0}B</unitPattern>
 			</unit>
 			<unit type="digital-bit">
-				<displayName>bit</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}bit</unitPattern>
 				<unitPattern count="other">{0}bit</unitPattern>
 			</unit>
 			<unit type="duration-century">
-				<displayName>c</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}c</unitPattern>
 				<unitPattern count="other">{0}c</unitPattern>
 			</unit>
 			<unit type="duration-decade">
-				<displayName>dec</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}dec</unitPattern>
 				<unitPattern count="other">{0}dec</unitPattern>
 			</unit>
@@ -8377,7 +8377,7 @@ annotations.
 				<unitPattern count="other">{0}y</unitPattern>
 			</unit>
 			<unit type="duration-quarter">
-				<displayName>qtr</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}q</unitPattern>
 				<unitPattern count="other">{0}q</unitPattern>
 			</unit>
@@ -8447,17 +8447,17 @@ annotations.
 				<unitPattern count="other">{0}V</unitPattern>
 			</unit>
 			<unit type="energy-kilocalorie">
-				<displayName>kcal</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kcal</unitPattern>
 				<unitPattern count="other">{0}kcal</unitPattern>
 			</unit>
 			<unit type="energy-calorie">
-				<displayName>cal</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cal</unitPattern>
 				<unitPattern count="other">{0}cal</unitPattern>
 			</unit>
 			<unit type="energy-foodcalorie">
-				<displayName>Cal</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}Cal</unitPattern>
 				<unitPattern count="other">{0}Cal</unitPattern>
 			</unit>
@@ -8482,12 +8482,12 @@ annotations.
 				<unitPattern count="other">{0}eV</unitPattern>
 			</unit>
 			<unit type="energy-british-thermal-unit">
-				<displayName>BTU</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}Btu</unitPattern>
 				<unitPattern count="other">{0}Btu</unitPattern>
 			</unit>
 			<unit type="energy-therm-us">
-				<displayName>US therm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}US therm</unitPattern>
 				<unitPattern count="other">{0}US therms</unitPattern>
 			</unit>
@@ -8502,32 +8502,32 @@ annotations.
 				<unitPattern count="other">{0}N</unitPattern>
 			</unit>
 			<unit type="force-kilowatt-hour-per-100-kilometer">
-				<displayName>kWh/100km</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kWh/100km</unitPattern>
 				<unitPattern count="other">{0}kWh/100km</unitPattern>
 			</unit>
 			<unit type="frequency-gigahertz">
-				<displayName>GHz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}GHz</unitPattern>
 				<unitPattern count="other">{0}GHz</unitPattern>
 			</unit>
 			<unit type="frequency-megahertz">
-				<displayName>MHz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}MHz</unitPattern>
 				<unitPattern count="other">{0}MHz</unitPattern>
 			</unit>
 			<unit type="frequency-kilohertz">
-				<displayName>kHz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kHz</unitPattern>
 				<unitPattern count="other">{0}kHz</unitPattern>
 			</unit>
 			<unit type="frequency-hertz">
-				<displayName>Hz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}Hz</unitPattern>
 				<unitPattern count="other">{0}Hz</unitPattern>
 			</unit>
 			<unit type="graphics-em">
-				<displayName>em</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}em</unitPattern>
 				<unitPattern count="other">{0}em</unitPattern>
 			</unit>
@@ -8542,22 +8542,22 @@ annotations.
 				<unitPattern count="other">{0}MP</unitPattern>
 			</unit>
 			<unit type="graphics-pixel-per-centimeter">
-				<displayName>ppcm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}ppcm</unitPattern>
 				<unitPattern count="other">{0}ppcm</unitPattern>
 			</unit>
 			<unit type="graphics-pixel-per-inch">
-				<displayName>ppi</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}ppi</unitPattern>
 				<unitPattern count="other">{0}ppi</unitPattern>
 			</unit>
 			<unit type="graphics-dot-per-centimeter">
-				<displayName>dpcm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}dpcm</unitPattern>
 				<unitPattern count="other">{0}dpcm</unitPattern>
 			</unit>
 			<unit type="graphics-dot-per-inch">
-				<displayName>dpi</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}dpi</unitPattern>
 				<unitPattern count="other">{0}dpi</unitPattern>
 			</unit>
@@ -8567,32 +8567,32 @@ annotations.
 				<unitPattern count="other">{0}dot</unitPattern>
 			</unit>
 			<unit type="length-earth-radius">
-				<displayName>R⊕</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}R⊕</unitPattern>
 				<unitPattern count="other">{0}R⊕</unitPattern>
 			</unit>
 			<unit type="length-kilometer">
-				<displayName>km</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}km</unitPattern>
 				<unitPattern count="other">{0}km</unitPattern>
 			</unit>
 			<unit type="length-meter">
-				<displayName>m</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}m</unitPattern>
 				<unitPattern count="other">{0}m</unitPattern>
 			</unit>
 			<unit type="length-decimeter">
-				<displayName>dm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}dm</unitPattern>
 				<unitPattern count="other">{0}dm</unitPattern>
 			</unit>
 			<unit type="length-centimeter">
-				<displayName>cm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cm</unitPattern>
 				<unitPattern count="other">{0}cm</unitPattern>
 			</unit>
 			<unit type="length-millimeter">
-				<displayName>mm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mm</unitPattern>
 				<unitPattern count="other">{0}mm</unitPattern>
 			</unit>
@@ -8602,12 +8602,12 @@ annotations.
 				<unitPattern count="other">{0}μm</unitPattern>
 			</unit>
 			<unit type="length-nanometer">
-				<displayName>nm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}nm</unitPattern>
 				<unitPattern count="other">{0}nm</unitPattern>
 			</unit>
 			<unit type="length-picometer">
-				<displayName>pm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}pm</unitPattern>
 				<unitPattern count="other">{0}pm</unitPattern>
 			</unit>
@@ -8642,7 +8642,7 @@ annotations.
 				<unitPattern count="other">{0}ly</unitPattern>
 			</unit>
 			<unit type="length-astronomical-unit">
-				<displayName>au</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}au</unitPattern>
 				<unitPattern count="other">{0}au</unitPattern>
 			</unit>
@@ -8657,12 +8657,12 @@ annotations.
 				<unitPattern count="other">{0}fth</unitPattern>
 			</unit>
 			<unit type="length-nautical-mile">
-				<displayName>nmi</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}nmi</unitPattern>
 				<unitPattern count="other">{0}nmi</unitPattern>
 			</unit>
 			<unit type="length-mile-scandinavian">
-				<displayName>smi</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}smi</unitPattern>
 				<unitPattern count="other">{0}smi</unitPattern>
 			</unit>
@@ -8677,17 +8677,17 @@ annotations.
 				<unitPattern count="other">{0}R☉</unitPattern>
 			</unit>
 			<unit type="light-lux">
-				<displayName>lux</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}lx</unitPattern>
 				<unitPattern count="other">{0}lx</unitPattern>
 			</unit>
 			<unit type="light-candela">
-				<displayName>cd</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cd</unitPattern>
 				<unitPattern count="other">{0}cd</unitPattern>
 			</unit>
 			<unit type="light-lumen">
-				<displayName>lm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}lm</unitPattern>
 				<unitPattern count="other">{0}lm</unitPattern>
 			</unit>
@@ -8697,12 +8697,12 @@ annotations.
 				<unitPattern count="other">{0}L☉</unitPattern>
 			</unit>
 			<unit type="mass-tonne">
-				<displayName>t</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}t</unitPattern>
 				<unitPattern count="other">{0}t</unitPattern>
 			</unit>
 			<unit type="mass-kilogram">
-				<displayName>kg</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kg</unitPattern>
 				<unitPattern count="other">{0}kg</unitPattern>
 			</unit>
@@ -8712,12 +8712,12 @@ annotations.
 				<unitPattern count="other">{0}g</unitPattern>
 			</unit>
 			<unit type="mass-milligram">
-				<displayName>mg</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mg</unitPattern>
 				<unitPattern count="other">{0}mg</unitPattern>
 			</unit>
 			<unit type="mass-microgram">
-				<displayName>μg</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}μg</unitPattern>
 				<unitPattern count="other">{0}μg</unitPattern>
 			</unit>
@@ -8737,7 +8737,7 @@ annotations.
 				<unitPattern count="other">{0}#</unitPattern>
 			</unit>
 			<unit type="mass-ounce">
-				<displayName>oz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}oz</unitPattern>
 				<unitPattern count="other">{0}oz</unitPattern>
 			</unit>
@@ -8772,17 +8772,17 @@ annotations.
 				<unitPattern count="other">{0}gr</unitPattern>
 			</unit>
 			<unit type="power-gigawatt">
-				<displayName>GW</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}GW</unitPattern>
 				<unitPattern count="other">{0}GW</unitPattern>
 			</unit>
 			<unit type="power-megawatt">
-				<displayName>MW</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}MW</unitPattern>
 				<unitPattern count="other">{0}MW</unitPattern>
 			</unit>
 			<unit type="power-kilowatt">
-				<displayName>kW</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kW</unitPattern>
 				<unitPattern count="other">{0}kW</unitPattern>
 			</unit>
@@ -8792,22 +8792,22 @@ annotations.
 				<unitPattern count="other">{0}W</unitPattern>
 			</unit>
 			<unit type="power-milliwatt">
-				<displayName>mW</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mW</unitPattern>
 				<unitPattern count="other">{0}mW</unitPattern>
 			</unit>
 			<unit type="power-horsepower">
-				<displayName>hp</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}hp</unitPattern>
 				<unitPattern count="other">{0}hp</unitPattern>
 			</unit>
 			<unit type="pressure-millimeter-ofhg">
-				<displayName>mmHg</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mmHg</unitPattern>
 				<unitPattern count="other">{0}mmHg</unitPattern>
 			</unit>
 			<unit type="pressure-pound-force-per-square-inch">
-				<displayName>psi</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}psi</unitPattern>
 				<unitPattern count="other">{0}psi</unitPattern>
 			</unit>
@@ -8817,37 +8817,37 @@ annotations.
 				<unitPattern count="other">{0}″ Hg</unitPattern>
 			</unit>
 			<unit type="pressure-bar">
-				<displayName>bar</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}bar</unitPattern>
 				<unitPattern count="other">{0}bar</unitPattern>
 			</unit>
 			<unit type="pressure-millibar">
-				<displayName>mbar</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mb</unitPattern>
 				<unitPattern count="other">{0}mb</unitPattern>
 			</unit>
 			<unit type="pressure-atmosphere">
-				<displayName>atm</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}atm</unitPattern>
 				<unitPattern count="other">{0}atm</unitPattern>
 			</unit>
 			<unit type="pressure-pascal">
-				<displayName>Pa</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}Pa</unitPattern>
 				<unitPattern count="other">{0}Pa</unitPattern>
 			</unit>
 			<unit type="pressure-hectopascal">
-				<displayName>hPa</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}hPa</unitPattern>
 				<unitPattern count="other">{0}hPa</unitPattern>
 			</unit>
 			<unit type="pressure-kilopascal">
-				<displayName>kPa</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kPa</unitPattern>
 				<unitPattern count="other">{0}kPa</unitPattern>
 			</unit>
 			<unit type="pressure-megapascal">
-				<displayName>MPa</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}MPa</unitPattern>
 				<unitPattern count="other">{0}MPa</unitPattern>
 			</unit>
@@ -8867,14 +8867,14 @@ annotations.
 				<unitPattern count="other">{0}mph</unitPattern>
 			</unit>
 			<unit type="speed-knot">
-				<displayName>kn</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}kn</unitPattern>
 				<unitPattern count="other">{0}kn</unitPattern>
 			</unit>
 			<unit type="temperature-celsius">
 				<displayName>°C</displayName>
-				<unitPattern count="one">{0}°C</unitPattern>
-				<unitPattern count="other">{0}°C</unitPattern>
+				<unitPattern count="one">↑↑↑</unitPattern>
+				<unitPattern count="other">↑↑↑</unitPattern>
 			</unit>
 			<unit type="temperature-fahrenheit">
 				<displayName>°F</displayName>
@@ -8882,39 +8882,39 @@ annotations.
 				<unitPattern count="other">{0}°</unitPattern>
 			</unit>
 			<unit type="temperature-kelvin">
-				<displayName>K</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}K</unitPattern>
 				<unitPattern count="other">{0}K</unitPattern>
 			</unit>
 			<unit type="torque-pound-force-foot">
-				<displayName>lbf⋅ft</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}lbf⋅ft</unitPattern>
 				<unitPattern count="other">{0}lbf⋅ft</unitPattern>
 			</unit>
 			<unit type="torque-newton-meter">
-				<displayName>N⋅m</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}N⋅m</unitPattern>
 				<unitPattern count="other">{0}N⋅m</unitPattern>
 			</unit>
 			<unit type="volume-cubic-kilometer">
-				<displayName>km³</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}km³</unitPattern>
 				<unitPattern count="other">{0}km³</unitPattern>
 			</unit>
 			<unit type="volume-cubic-meter">
-				<displayName>m³</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}m³</unitPattern>
 				<unitPattern count="other">{0}m³</unitPattern>
-				<perUnitPattern>{0}/m³</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="volume-cubic-centimeter">
-				<displayName>cm³</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cm³</unitPattern>
 				<unitPattern count="other">{0}cm³</unitPattern>
-				<perUnitPattern>{0}/cm³</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="volume-cubic-mile">
-				<displayName>mi³</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mi³</unitPattern>
 				<unitPattern count="other">{0}mi³</unitPattern>
 			</unit>
@@ -8934,12 +8934,12 @@ annotations.
 				<unitPattern count="other">{0}in³</unitPattern>
 			</unit>
 			<unit type="volume-megaliter">
-				<displayName>ML</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}ML</unitPattern>
 				<unitPattern count="other">{0}ML</unitPattern>
 			</unit>
 			<unit type="volume-hectoliter">
-				<displayName>hL</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}hL</unitPattern>
 				<unitPattern count="other">{0}hL</unitPattern>
 			</unit>
@@ -8947,20 +8947,20 @@ annotations.
 				<displayName>liter</displayName>
 				<unitPattern count="one">{0}L</unitPattern>
 				<unitPattern count="other">{0}L</unitPattern>
-				<perUnitPattern>{0}/L</perUnitPattern>
+				<perUnitPattern>↑↑↑</perUnitPattern>
 			</unit>
 			<unit type="volume-deciliter">
-				<displayName>dL</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}dL</unitPattern>
 				<unitPattern count="other">{0}dL</unitPattern>
 			</unit>
 			<unit type="volume-centiliter">
-				<displayName>cL</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}cL</unitPattern>
 				<unitPattern count="other">{0}cL</unitPattern>
 			</unit>
 			<unit type="volume-milliliter">
-				<displayName>mL</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mL</unitPattern>
 				<unitPattern count="other">{0}mL</unitPattern>
 			</unit>
@@ -8970,12 +8970,12 @@ annotations.
 				<unitPattern count="other">{0}mpt</unitPattern>
 			</unit>
 			<unit type="volume-cup-metric">
-				<displayName>mcup</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}mc</unitPattern>
 				<unitPattern count="other">{0}mc</unitPattern>
 			</unit>
 			<unit type="volume-acre-foot">
-				<displayName>acre ft</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}ac ft</unitPattern>
 				<unitPattern count="other">{0}ac ft</unitPattern>
 			</unit>
@@ -8985,7 +8985,7 @@ annotations.
 				<unitPattern count="other">{0}bu</unitPattern>
 			</unit>
 			<unit type="volume-gallon">
-				<displayName>gal</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}gal</unitPattern>
 				<unitPattern count="other">{0}gal</unitPattern>
 				<perUnitPattern>{0}/gal</perUnitPattern>
@@ -9012,7 +9012,7 @@ annotations.
 				<unitPattern count="other">{0}c</unitPattern>
 			</unit>
 			<unit type="volume-fluid-ounce">
-				<displayName>fl oz</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}fl oz</unitPattern>
 				<unitPattern count="other">{0}fl oz</unitPattern>
 			</unit>
@@ -9022,12 +9022,12 @@ annotations.
 				<unitPattern count="other">{0}fl oz Im</unitPattern>
 			</unit>
 			<unit type="volume-tablespoon">
-				<displayName>tbsp</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}tbsp</unitPattern>
 				<unitPattern count="other">{0}tbsp</unitPattern>
 			</unit>
 			<unit type="volume-teaspoon">
-				<displayName>tsp</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}tsp</unitPattern>
 				<unitPattern count="other">{0}tsp</unitPattern>
 			</unit>
@@ -9057,7 +9057,7 @@ annotations.
 				<unitPattern count="other">{0}fl.dr.</unitPattern>
 			</unit>
 			<unit type="volume-jigger">
-				<displayName>jigger</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}jigger</unitPattern>
 				<unitPattern count="other">{0}jigger</unitPattern>
 			</unit>
@@ -9067,7 +9067,7 @@ annotations.
 				<unitPattern count="other">{0}pn</unitPattern>
 			</unit>
 			<unit type="volume-quart-imperial">
-				<displayName>qt Imp</displayName>
+				<displayName>↑↑↑</displayName>
 				<unitPattern count="one">{0}qt-Imp.</unitPattern>
 				<unitPattern count="other">{0}qt-Imp.</unitPattern>
 			</unit>
@@ -9081,34 +9081,34 @@ annotations.
 	</units>
 	<listPatterns>
 		<listPattern>
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
 			<listPatternPart type="end">{0}, and {1}</listPatternPart>
 			<listPatternPart type="2">{0} and {1}</listPatternPart>
 		</listPattern>
 		<listPattern type="or">
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
-			<listPatternPart type="end">{0}, or {1}</listPatternPart>
-			<listPatternPart type="2">{0} or {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
+			<listPatternPart type="end">↑↑↑</listPatternPart>
+			<listPatternPart type="2">↑↑↑</listPatternPart>
 		</listPattern>
 		<listPattern type="standard-narrow">
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
 			<listPatternPart type="end">{0}, {1}</listPatternPart>
 			<listPatternPart type="2">{0}, {1}</listPatternPart>
 		</listPattern>
 		<listPattern type="standard-short">
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
 			<listPatternPart type="end">{0}, &amp; {1}</listPatternPart>
 			<listPatternPart type="2">{0} &amp; {1}</listPatternPart>
 		</listPattern>
 		<listPattern type="unit">
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
-			<listPatternPart type="end">{0}, {1}</listPatternPart>
-			<listPatternPart type="2">{0}, {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
+			<listPatternPart type="end">↑↑↑</listPatternPart>
+			<listPatternPart type="2">↑↑↑</listPatternPart>
 		</listPattern>
 		<listPattern type="unit-narrow">
 			<listPatternPart type="start">{0} {1}</listPatternPart>
@@ -9117,193 +9117,193 @@ annotations.
 			<listPatternPart type="2">{0} {1}</listPatternPart>
 		</listPattern>
 		<listPattern type="unit-short">
-			<listPatternPart type="start">{0}, {1}</listPatternPart>
-			<listPatternPart type="middle">{0}, {1}</listPatternPart>
+			<listPatternPart type="start">↑↑↑</listPatternPart>
+			<listPatternPart type="middle">↑↑↑</listPatternPart>
 			<listPatternPart type="end">{0}, {1}</listPatternPart>
 			<listPatternPart type="2">{0}, {1}</listPatternPart>
 		</listPattern>
 	</listPatterns>
 	<posix>
 		<messages>
-			<yesstr>yes:y</yesstr>
-			<nostr>no:n</nostr>
+			<yesstr>↑↑↑</yesstr>
+			<nostr>↑↑↑</nostr>
 		</messages>
 	</posix>
 	<characterLabels>
-		<characterLabelPattern type="all">{0} — all</characterLabelPattern>
-		<characterLabelPattern type="category-list">{0}: {1}</characterLabelPattern>
-		<characterLabelPattern type="compatibility">{0} — compatibility</characterLabelPattern>
-		<characterLabelPattern type="enclosed">{0} — enclosed</characterLabelPattern>
-		<characterLabelPattern type="extended">{0} — extended</characterLabelPattern>
-		<characterLabelPattern type="historic">{0} — historic</characterLabelPattern>
-		<characterLabelPattern type="miscellaneous">{0} — miscellaneous</characterLabelPattern>
-		<characterLabelPattern type="other">{0} — other</characterLabelPattern>
-		<characterLabelPattern type="scripts">scripts — {0}</characterLabelPattern>
+		<characterLabelPattern type="all">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="category-list">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="compatibility">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="enclosed">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="extended">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="historic">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="miscellaneous">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="other">↑↑↑</characterLabelPattern>
+		<characterLabelPattern type="scripts">↑↑↑</characterLabelPattern>
 		<characterLabelPattern type="strokes" count="one">{0} stroke</characterLabelPattern>
-		<characterLabelPattern type="strokes" count="other">{0} strokes</characterLabelPattern>
-		<characterLabel type="activities">activity</characterLabel>
-		<characterLabel type="african_scripts">African script</characterLabel>
-		<characterLabel type="american_scripts">American script</characterLabel>
-		<characterLabel type="animal">animal</characterLabel>
-		<characterLabel type="animals_nature">animal or nature</characterLabel>
-		<characterLabel type="arrows">arrow</characterLabel>
-		<characterLabel type="body">body</characterLabel>
-		<characterLabel type="box_drawing">box drawing</characterLabel>
-		<characterLabel type="braille">braille</characterLabel>
-		<characterLabel type="building">building</characterLabel>
-		<characterLabel type="bullets_stars">bullet or star</characterLabel>
-		<characterLabel type="consonantal_jamo">consonantal jamo</characterLabel>
-		<characterLabel type="currency_symbols">currency symbol</characterLabel>
-		<characterLabel type="dash_connector">dash or connector</characterLabel>
-		<characterLabel type="digits">digit</characterLabel>
-		<characterLabel type="dingbats">dingbat</characterLabel>
-		<characterLabel type="divination_symbols">divination symbol</characterLabel>
-		<characterLabel type="downwards_arrows">downwards arrow</characterLabel>
-		<characterLabel type="downwards_upwards_arrows">downwards upwards arrow</characterLabel>
-		<characterLabel type="east_asian_scripts">East Asian script</characterLabel>
-		<characterLabel type="emoji">emoji</characterLabel>
-		<characterLabel type="european_scripts">European script</characterLabel>
-		<characterLabel type="female">female</characterLabel>
-		<characterLabel type="flag">flag</characterLabel>
-		<characterLabel type="flags">flags</characterLabel>
-		<characterLabel type="food_drink">food &amp; drink</characterLabel>
-		<characterLabel type="format">format</characterLabel>
-		<characterLabel type="format_whitespace">format &amp; whitespace</characterLabel>
-		<characterLabel type="full_width_form_variant">full-width variant</characterLabel>
-		<characterLabel type="geometric_shapes">geometric shape</characterLabel>
-		<characterLabel type="half_width_form_variant">half-width variant</characterLabel>
-		<characterLabel type="han_characters">Han character</characterLabel>
-		<characterLabel type="han_radicals">Han radical</characterLabel>
-		<characterLabel type="hanja">hanja</characterLabel>
-		<characterLabel type="hanzi_simplified">Hanzi (simplified)</characterLabel>
-		<characterLabel type="hanzi_traditional">Hanzi (traditional)</characterLabel>
-		<characterLabel type="heart">heart</characterLabel>
-		<characterLabel type="historic_scripts">historic script</characterLabel>
-		<characterLabel type="ideographic_desc_characters">ideographic desc. character</characterLabel>
-		<characterLabel type="japanese_kana">Japanese kana</characterLabel>
-		<characterLabel type="kanbun">kanbun</characterLabel>
-		<characterLabel type="kanji">kanji</characterLabel>
-		<characterLabel type="keycap">keycap</characterLabel>
-		<characterLabel type="leftwards_arrows">leftwards arrow</characterLabel>
-		<characterLabel type="leftwards_rightwards_arrows">leftwards rightwards arrow</characterLabel>
-		<characterLabel type="letterlike_symbols">letterlike symbol</characterLabel>
-		<characterLabel type="limited_use">limited-use</characterLabel>
-		<characterLabel type="male">male</characterLabel>
-		<characterLabel type="math_symbols">math symbol</characterLabel>
-		<characterLabel type="middle_eastern_scripts">Middle Eastern script</characterLabel>
-		<characterLabel type="miscellaneous">miscellaneous</characterLabel>
-		<characterLabel type="modern_scripts">modern script</characterLabel>
-		<characterLabel type="modifier">modifier</characterLabel>
-		<characterLabel type="musical_symbols">musical symbol</characterLabel>
-		<characterLabel type="nature">nature</characterLabel>
-		<characterLabel type="nonspacing">nonspacing</characterLabel>
-		<characterLabel type="numbers">numbers</characterLabel>
-		<characterLabel type="objects">object</characterLabel>
-		<characterLabel type="other">other</characterLabel>
-		<characterLabel type="paired">paired</characterLabel>
-		<characterLabel type="person">person</characterLabel>
-		<characterLabel type="phonetic_alphabet">phonetic alphabet</characterLabel>
-		<characterLabel type="pictographs">pictograph</characterLabel>
-		<characterLabel type="place">place</characterLabel>
-		<characterLabel type="plant">plant</characterLabel>
-		<characterLabel type="punctuation">punctuation</characterLabel>
-		<characterLabel type="rightwards_arrows">rightwards arrow</characterLabel>
-		<characterLabel type="sign_standard_symbols">sign or symbol</characterLabel>
-		<characterLabel type="small_form_variant">small variants</characterLabel>
-		<characterLabel type="smiley">smiley</characterLabel>
-		<characterLabel type="smileys_people">smiley or person</characterLabel>
-		<characterLabel type="south_asian_scripts">South Asian script</characterLabel>
-		<characterLabel type="southeast_asian_scripts">Southeast Asian script</characterLabel>
-		<characterLabel type="spacing">spacing</characterLabel>
-		<characterLabel type="sport">sport</characterLabel>
-		<characterLabel type="symbols">symbol</characterLabel>
-		<characterLabel type="technical_symbols">technical symbol</characterLabel>
-		<characterLabel type="tone_marks">tone mark</characterLabel>
-		<characterLabel type="travel">travel</characterLabel>
-		<characterLabel type="travel_places">travel or place</characterLabel>
-		<characterLabel type="upwards_arrows">upwards arrows</characterLabel>
-		<characterLabel type="variant_forms">variant</characterLabel>
-		<characterLabel type="vocalic_jamo">vocalic jamo</characterLabel>
-		<characterLabel type="weather">weather</characterLabel>
-		<characterLabel type="western_asian_scripts">Western Asian script</characterLabel>
-		<characterLabel type="whitespace">whitespace</characterLabel>
+		<characterLabelPattern type="strokes" count="other">↑↑↑</characterLabelPattern>
+		<characterLabel type="activities">↑↑↑</characterLabel>
+		<characterLabel type="african_scripts">↑↑↑</characterLabel>
+		<characterLabel type="american_scripts">↑↑↑</characterLabel>
+		<characterLabel type="animal">↑↑↑</characterLabel>
+		<characterLabel type="animals_nature">↑↑↑</characterLabel>
+		<characterLabel type="arrows">↑↑↑</characterLabel>
+		<characterLabel type="body">↑↑↑</characterLabel>
+		<characterLabel type="box_drawing">↑↑↑</characterLabel>
+		<characterLabel type="braille">↑↑↑</characterLabel>
+		<characterLabel type="building">↑↑↑</characterLabel>
+		<characterLabel type="bullets_stars">↑↑↑</characterLabel>
+		<characterLabel type="consonantal_jamo">↑↑↑</characterLabel>
+		<characterLabel type="currency_symbols">↑↑↑</characterLabel>
+		<characterLabel type="dash_connector">↑↑↑</characterLabel>
+		<characterLabel type="digits">↑↑↑</characterLabel>
+		<characterLabel type="dingbats">↑↑↑</characterLabel>
+		<characterLabel type="divination_symbols">↑↑↑</characterLabel>
+		<characterLabel type="downwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="downwards_upwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="east_asian_scripts">↑↑↑</characterLabel>
+		<characterLabel type="emoji">↑↑↑</characterLabel>
+		<characterLabel type="european_scripts">↑↑↑</characterLabel>
+		<characterLabel type="female">↑↑↑</characterLabel>
+		<characterLabel type="flag">↑↑↑</characterLabel>
+		<characterLabel type="flags">↑↑↑</characterLabel>
+		<characterLabel type="food_drink">↑↑↑</characterLabel>
+		<characterLabel type="format">↑↑↑</characterLabel>
+		<characterLabel type="format_whitespace">↑↑↑</characterLabel>
+		<characterLabel type="full_width_form_variant">↑↑↑</characterLabel>
+		<characterLabel type="geometric_shapes">↑↑↑</characterLabel>
+		<characterLabel type="half_width_form_variant">↑↑↑</characterLabel>
+		<characterLabel type="han_characters">↑↑↑</characterLabel>
+		<characterLabel type="han_radicals">↑↑↑</characterLabel>
+		<characterLabel type="hanja">↑↑↑</characterLabel>
+		<characterLabel type="hanzi_simplified">↑↑↑</characterLabel>
+		<characterLabel type="hanzi_traditional">↑↑↑</characterLabel>
+		<characterLabel type="heart">↑↑↑</characterLabel>
+		<characterLabel type="historic_scripts">↑↑↑</characterLabel>
+		<characterLabel type="ideographic_desc_characters">↑↑↑</characterLabel>
+		<characterLabel type="japanese_kana">↑↑↑</characterLabel>
+		<characterLabel type="kanbun">↑↑↑</characterLabel>
+		<characterLabel type="kanji">↑↑↑</characterLabel>
+		<characterLabel type="keycap">↑↑↑</characterLabel>
+		<characterLabel type="leftwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="leftwards_rightwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="letterlike_symbols">↑↑↑</characterLabel>
+		<characterLabel type="limited_use">↑↑↑</characterLabel>
+		<characterLabel type="male">↑↑↑</characterLabel>
+		<characterLabel type="math_symbols">↑↑↑</characterLabel>
+		<characterLabel type="middle_eastern_scripts">↑↑↑</characterLabel>
+		<characterLabel type="miscellaneous">↑↑↑</characterLabel>
+		<characterLabel type="modern_scripts">↑↑↑</characterLabel>
+		<characterLabel type="modifier">↑↑↑</characterLabel>
+		<characterLabel type="musical_symbols">↑↑↑</characterLabel>
+		<characterLabel type="nature">↑↑↑</characterLabel>
+		<characterLabel type="nonspacing">↑↑↑</characterLabel>
+		<characterLabel type="numbers">↑↑↑</characterLabel>
+		<characterLabel type="objects">↑↑↑</characterLabel>
+		<characterLabel type="other">↑↑↑</characterLabel>
+		<characterLabel type="paired">↑↑↑</characterLabel>
+		<characterLabel type="person">↑↑↑</characterLabel>
+		<characterLabel type="phonetic_alphabet">↑↑↑</characterLabel>
+		<characterLabel type="pictographs">↑↑↑</characterLabel>
+		<characterLabel type="place">↑↑↑</characterLabel>
+		<characterLabel type="plant">↑↑↑</characterLabel>
+		<characterLabel type="punctuation">↑↑↑</characterLabel>
+		<characterLabel type="rightwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="sign_standard_symbols">↑↑↑</characterLabel>
+		<characterLabel type="small_form_variant">↑↑↑</characterLabel>
+		<characterLabel type="smiley">↑↑↑</characterLabel>
+		<characterLabel type="smileys_people">↑↑↑</characterLabel>
+		<characterLabel type="south_asian_scripts">↑↑↑</characterLabel>
+		<characterLabel type="southeast_asian_scripts">↑↑↑</characterLabel>
+		<characterLabel type="spacing">↑↑↑</characterLabel>
+		<characterLabel type="sport">↑↑↑</characterLabel>
+		<characterLabel type="symbols">↑↑↑</characterLabel>
+		<characterLabel type="technical_symbols">↑↑↑</characterLabel>
+		<characterLabel type="tone_marks">↑↑↑</characterLabel>
+		<characterLabel type="travel">↑↑↑</characterLabel>
+		<characterLabel type="travel_places">↑↑↑</characterLabel>
+		<characterLabel type="upwards_arrows">↑↑↑</characterLabel>
+		<characterLabel type="variant_forms">↑↑↑</characterLabel>
+		<characterLabel type="vocalic_jamo">↑↑↑</characterLabel>
+		<characterLabel type="weather">↑↑↑</characterLabel>
+		<characterLabel type="western_asian_scripts">↑↑↑</characterLabel>
+		<characterLabel type="whitespace">↑↑↑</characterLabel>
 	</characterLabels>
 	<typographicNames>
-		<axisName type="ital">italic</axisName>
-		<axisName type="opsz">optical size</axisName>
-		<axisName type="slnt">slant</axisName>
-		<axisName type="wdth">width</axisName>
-		<axisName type="wght">weight</axisName>
-		<styleName type="ital" subtype="1">cursive</styleName>
-		<styleName type="opsz" subtype="8">caption</styleName>
-		<styleName type="opsz" subtype="12">text</styleName>
-		<styleName type="opsz" subtype="18">titling</styleName>
-		<styleName type="opsz" subtype="72">display</styleName>
-		<styleName type="opsz" subtype="144">poster</styleName>
-		<styleName type="slnt" subtype="-12">backslanted</styleName>
-		<styleName type="slnt" subtype="0">upright</styleName>
-		<styleName type="slnt" subtype="12">slanted</styleName>
-		<styleName type="slnt" subtype="24">extra-slanted</styleName>
-		<styleName type="wdth" subtype="50">ultracondensed</styleName>
-		<styleName type="wdth" subtype="50" alt="compressed">ultracompressed</styleName>
-		<styleName type="wdth" subtype="50" alt="narrow">ultranarrow</styleName>
-		<styleName type="wdth" subtype="62.5">extra-condensed</styleName>
-		<styleName type="wdth" subtype="62.5" alt="compressed">extra-compressed</styleName>
-		<styleName type="wdth" subtype="62.5" alt="narrow">extra-narrow</styleName>
-		<styleName type="wdth" subtype="75">condensed</styleName>
-		<styleName type="wdth" subtype="75" alt="compressed">compressed</styleName>
-		<styleName type="wdth" subtype="75" alt="narrow">compressed</styleName>
-		<styleName type="wdth" subtype="87.5">semicondensed</styleName>
-		<styleName type="wdth" subtype="87.5" alt="compressed">semicompressed</styleName>
-		<styleName type="wdth" subtype="87.5" alt="narrow">seminarrow</styleName>
-		<styleName type="wdth" subtype="100">normal</styleName>
-		<styleName type="wdth" subtype="112.5">semiexpanded</styleName>
-		<styleName type="wdth" subtype="112.5" alt="extended">semiextended</styleName>
-		<styleName type="wdth" subtype="112.5" alt="wide">semiwide</styleName>
-		<styleName type="wdth" subtype="125">expanded</styleName>
-		<styleName type="wdth" subtype="125" alt="extended">extended</styleName>
-		<styleName type="wdth" subtype="125" alt="wide">wide</styleName>
-		<styleName type="wdth" subtype="150">extra-expanded</styleName>
-		<styleName type="wdth" subtype="150" alt="extended">extra-extended</styleName>
-		<styleName type="wdth" subtype="150" alt="wide">extra-wide</styleName>
-		<styleName type="wdth" subtype="200">ultraexpanded</styleName>
-		<styleName type="wdth" subtype="200" alt="extended">ultraextended</styleName>
-		<styleName type="wdth" subtype="200" alt="wide">ultrawide</styleName>
-		<styleName type="wght" subtype="100">thin</styleName>
-		<styleName type="wght" subtype="200">extra-light</styleName>
-		<styleName type="wght" subtype="200" alt="ultra">ultralight</styleName>
-		<styleName type="wght" subtype="300">light</styleName>
-		<styleName type="wght" subtype="350">semilight</styleName>
-		<styleName type="wght" subtype="380">book</styleName>
-		<styleName type="wght" subtype="400">regular</styleName>
-		<styleName type="wght" subtype="500">medium</styleName>
-		<styleName type="wght" subtype="600">semibold</styleName>
-		<styleName type="wght" subtype="600" alt="demi">demibold</styleName>
-		<styleName type="wght" subtype="700">bold</styleName>
-		<styleName type="wght" subtype="800">extra-bold</styleName>
-		<styleName type="wght" subtype="900">black</styleName>
-		<styleName type="wght" subtype="900" alt="heavy">heavy</styleName>
-		<styleName type="wght" subtype="950">extra-black</styleName>
-		<styleName type="wght" subtype="950" alt="ultrablack">ultrablack</styleName>
-		<styleName type="wght" subtype="950" alt="ultraheavy">ultraheavy</styleName>
-		<featureName type="afrc">vertical fractions</featureName>
-		<featureName type="cpsp">capital spacing</featureName>
-		<featureName type="dlig">optional ligatures</featureName>
-		<featureName type="frac">diagonal fractions</featureName>
-		<featureName type="lnum">lining numbers</featureName>
-		<featureName type="onum">old-style figures</featureName>
-		<featureName type="ordn">ordinals</featureName>
-		<featureName type="pnum">proportional numbers</featureName>
-		<featureName type="smcp">small capitals</featureName>
-		<featureName type="tnum">tabular numbers</featureName>
-		<featureName type="zero">slashed zero</featureName>
+		<axisName type="ital">↑↑↑</axisName>
+		<axisName type="opsz">↑↑↑</axisName>
+		<axisName type="slnt">↑↑↑</axisName>
+		<axisName type="wdth">↑↑↑</axisName>
+		<axisName type="wght">↑↑↑</axisName>
+		<styleName type="ital" subtype="1">↑↑↑</styleName>
+		<styleName type="opsz" subtype="8">↑↑↑</styleName>
+		<styleName type="opsz" subtype="12">↑↑↑</styleName>
+		<styleName type="opsz" subtype="18">↑↑↑</styleName>
+		<styleName type="opsz" subtype="72">↑↑↑</styleName>
+		<styleName type="opsz" subtype="144">↑↑↑</styleName>
+		<styleName type="slnt" subtype="-12">↑↑↑</styleName>
+		<styleName type="slnt" subtype="0">↑↑↑</styleName>
+		<styleName type="slnt" subtype="12">↑↑↑</styleName>
+		<styleName type="slnt" subtype="24">↑↑↑</styleName>
+		<styleName type="wdth" subtype="50">↑↑↑</styleName>
+		<styleName type="wdth" subtype="50" alt="compressed">↑↑↑</styleName>
+		<styleName type="wdth" subtype="50" alt="narrow">↑↑↑</styleName>
+		<styleName type="wdth" subtype="62.5">↑↑↑</styleName>
+		<styleName type="wdth" subtype="62.5" alt="compressed">↑↑↑</styleName>
+		<styleName type="wdth" subtype="62.5" alt="narrow">↑↑↑</styleName>
+		<styleName type="wdth" subtype="75">↑↑↑</styleName>
+		<styleName type="wdth" subtype="75" alt="compressed">↑↑↑</styleName>
+		<styleName type="wdth" subtype="75" alt="narrow">↑↑↑</styleName>
+		<styleName type="wdth" subtype="87.5">↑↑↑</styleName>
+		<styleName type="wdth" subtype="87.5" alt="compressed">↑↑↑</styleName>
+		<styleName type="wdth" subtype="87.5" alt="narrow">↑↑↑</styleName>
+		<styleName type="wdth" subtype="100">↑↑↑</styleName>
+		<styleName type="wdth" subtype="112.5">↑↑↑</styleName>
+		<styleName type="wdth" subtype="112.5" alt="extended">↑↑↑</styleName>
+		<styleName type="wdth" subtype="112.5" alt="wide">↑↑↑</styleName>
+		<styleName type="wdth" subtype="125">↑↑↑</styleName>
+		<styleName type="wdth" subtype="125" alt="extended">↑↑↑</styleName>
+		<styleName type="wdth" subtype="125" alt="wide">↑↑↑</styleName>
+		<styleName type="wdth" subtype="150">↑↑↑</styleName>
+		<styleName type="wdth" subtype="150" alt="extended">↑↑↑</styleName>
+		<styleName type="wdth" subtype="150" alt="wide">↑↑↑</styleName>
+		<styleName type="wdth" subtype="200">↑↑↑</styleName>
+		<styleName type="wdth" subtype="200" alt="extended">↑↑↑</styleName>
+		<styleName type="wdth" subtype="200" alt="wide">↑↑↑</styleName>
+		<styleName type="wght" subtype="100">↑↑↑</styleName>
+		<styleName type="wght" subtype="200">↑↑↑</styleName>
+		<styleName type="wght" subtype="200" alt="ultra">↑↑↑</styleName>
+		<styleName type="wght" subtype="300">↑↑↑</styleName>
+		<styleName type="wght" subtype="350">↑↑↑</styleName>
+		<styleName type="wght" subtype="380">↑↑↑</styleName>
+		<styleName type="wght" subtype="400">↑↑↑</styleName>
+		<styleName type="wght" subtype="500">↑↑↑</styleName>
+		<styleName type="wght" subtype="600">↑↑↑</styleName>
+		<styleName type="wght" subtype="600" alt="demi">↑↑↑</styleName>
+		<styleName type="wght" subtype="700">↑↑↑</styleName>
+		<styleName type="wght" subtype="800">↑↑↑</styleName>
+		<styleName type="wght" subtype="900">↑↑↑</styleName>
+		<styleName type="wght" subtype="900" alt="heavy">↑↑↑</styleName>
+		<styleName type="wght" subtype="950">↑↑↑</styleName>
+		<styleName type="wght" subtype="950" alt="ultrablack">↑↑↑</styleName>
+		<styleName type="wght" subtype="950" alt="ultraheavy">↑↑↑</styleName>
+		<featureName type="afrc">↑↑↑</featureName>
+		<featureName type="cpsp">↑↑↑</featureName>
+		<featureName type="dlig">↑↑↑</featureName>
+		<featureName type="frac">↑↑↑</featureName>
+		<featureName type="lnum">↑↑↑</featureName>
+		<featureName type="onum">↑↑↑</featureName>
+		<featureName type="ordn">↑↑↑</featureName>
+		<featureName type="pnum">↑↑↑</featureName>
+		<featureName type="smcp">↑↑↑</featureName>
+		<featureName type="tnum">↑↑↑</featureName>
+		<featureName type="zero">↑↑↑</featureName>
 	</typographicNames>
 	<personNames>
 		<nameOrderLocales order="givenFirst">und en</nameOrderLocales>
-		<nameOrderLocales order="surnameFirst">ja ko vi yue zh</nameOrderLocales>
+		<nameOrderLocales order="surnameFirst">↑↑↑</nameOrderLocales>
 		<foreignSpaceReplacement xml:space="preserve">↑↑↑</foreignSpaceReplacement>
-		<initialPattern type="initial">{0}.</initialPattern>
-		<initialPattern type="initialSequence">{0} {1}</initialPattern>
+		<initialPattern type="initial">↑↑↑</initialPattern>
+		<initialPattern type="initialSequence">↑↑↑</initialPattern>
 		<personName order="givenFirst" length="long" usage="referring" formality="formal">
 			<namePattern>{given} {given2} {surname} {suffix}</namePattern>
 		</personName>
@@ -9317,7 +9317,7 @@ annotations.
 			<namePattern>{given-informal}</namePattern>
 		</personName>
 		<personName order="givenFirst" length="long" usage="monogram" formality="formal">
-			<namePattern>{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-allCaps}</namePattern>
+			<namePattern>↑↑↑</namePattern>
 		</personName>
 		<personName order="givenFirst" length="long" usage="monogram" formality="informal">
 			<namePattern>{given-informal-monogram-allCaps}{surname-monogram-allCaps}</namePattern>
@@ -9371,7 +9371,7 @@ annotations.
 			<namePattern>{given-informal}</namePattern>
 		</personName>
 		<personName order="surnameFirst" length="long" usage="monogram" formality="formal">
-			<namePattern>{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-allCaps}</namePattern>
+			<namePattern>↑↑↑</namePattern>
 		</personName>
 		<personName order="surnameFirst" length="long" usage="monogram" formality="informal">
 			<namePattern>{surname-monogram-allCaps}{given-informal-monogram-allCaps}</namePattern>

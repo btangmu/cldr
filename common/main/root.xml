@@ -2893,7 +2893,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 				</short>
 			</zone>
 			<zone type="Etc/Unknown">
-				<exemplarCity>Unknown</exemplarCity>
+				<exemplarCity>↑↑↑</exemplarCity>
 			</zone>
 			<zone type="Antarctica/DumontDUrville">
 				<exemplarCity>Dumont d’Urville</exemplarCity>
@@ -3870,7 +3870,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="BRL">
 				<symbol>R$</symbol>
-				<symbol alt="narrow">R$</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="BSD">
 				<symbol alt="narrow">$</symbol>
@@ -3921,7 +3921,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="EUR">
 				<symbol>€</symbol>
-				<symbol alt="narrow">€</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="FJD">
 				<symbol alt="narrow">$</symbol>
@@ -3931,7 +3931,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="GBP">
 				<symbol>£</symbol>
-				<symbol alt="narrow">£</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="GEL">
 				<symbol alt="narrow">₾</symbol>
@@ -3969,11 +3969,11 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="ILS">
 				<symbol>₪</symbol>
-				<symbol alt="narrow">₪</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="INR">
 				<symbol>₹</symbol>
-				<symbol alt="narrow">₹</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="ISK">
 				<symbol alt="narrow">kr</symbol>
@@ -3996,7 +3996,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="KRW">
 				<symbol>₩</symbol>
-				<symbol alt="narrow">₩</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="KYD">
 				<symbol alt="narrow">$</symbol>
@@ -4062,7 +4062,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="PHP">
 				<symbol>₱</symbol>
-				<symbol alt="narrow">₱</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="PKR">
 				<symbol alt="narrow">Rs</symbol>
@@ -4138,7 +4138,7 @@ Warnings: All cp values have U+FE0F characters removed. See /annotationsDerived/
 			</currency>
 			<currency type="VND">
 				<symbol>₫</symbol>
-				<symbol alt="narrow">₫</symbol>
+				<symbol alt="narrow">↑↑↑</symbol>
 			</currency>
 			<currency type="XAF">
 				<symbol>FCFA</symbol>

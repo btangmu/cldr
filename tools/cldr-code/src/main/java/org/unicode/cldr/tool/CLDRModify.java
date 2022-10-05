@@ -634,8 +634,8 @@ public class CLDRModify {
                 }
             }
             return cldrFileToFilterResolved;
-
         }
+
         public void show(String reason, String detail) {
             System.out.println("%" + localeID + "\t" + reason + "\tConsidering " + detail);
         }
