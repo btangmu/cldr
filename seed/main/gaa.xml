@@ -182,7 +182,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<territory type="CG" draft="unconfirmed">Kongo - Brazzaville</territory>
 			<territory type="CG" alt="variant" draft="unconfirmed">Kongo (Jeŋmaŋ)</territory>
 			<territory type="CI" draft="unconfirmed">Ko Divua</territory>
-			<territory type="CI" alt="variant" draft="unconfirmed">Ko Divua</territory>
+			<territory type="CI" alt="variant" draft="unconfirmed">↑↑↑</territory>
 			<territory type="CL" draft="unconfirmed">Tsili</territory>
 			<territory type="CM" draft="unconfirmed">Kameroon</territory>
 			<territory type="CN" draft="unconfirmed">Tsaina</territory>
@@ -2695,7 +2695,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<currency type="GNF">
 				<displayName draft="unconfirmed">Guinea Franki</displayName>
 				<displayName count="other" draft="unconfirmed">Guinea frankii</displayName>
-				<symbol draft="unconfirmed">GNF</symbol>
+				<symbol draft="unconfirmed">↑↑↑</symbol>
 				<symbol alt="narrow" draft="unconfirmed">↑↑↑</symbol>
 			</currency>
 			<currency type="GTQ">
@@ -2765,7 +2765,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<currency type="LRD">
 				<displayName draft="unconfirmed">Liberia Dɔla</displayName>
 				<displayName count="other" draft="unconfirmed">Liberia dɔlai</displayName>
-				<symbol draft="unconfirmed">LRD</symbol>
+				<symbol draft="unconfirmed">↑↑↑</symbol>
 				<symbol alt="narrow" draft="unconfirmed">↑↑↑</symbol>
 			</currency>
 			<currency type="LYD">
@@ -3011,7 +3011,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<currency type="ZMW">
 				<displayName draft="unconfirmed">Zambia Kwatsa</displayName>
 				<displayName count="other" draft="unconfirmed">Zambia kwatsai</displayName>
-				<symbol draft="unconfirmed">ZMW</symbol>
+				<symbol draft="unconfirmed">↑↑↑</symbol>
 				<symbol alt="narrow" draft="unconfirmed">↑↑↑</symbol>
 			</currency>
 		</currencies>

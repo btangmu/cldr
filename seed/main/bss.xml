@@ -71,7 +71,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 		</fields>
 		<timeZoneNames>
 			<zone type="Etc/GMT+1">
-				<exemplarCity>GMT+1</exemplarCity>
+				<exemplarCity>↑↑↑</exemplarCity>
 			</zone>
 		</timeZoneNames>
 	</dates>

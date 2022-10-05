@@ -349,10 +349,15 @@ public class CLDRModify {
             try {
                 Factory cldrFactoryForAvailable = Factory.make(sourceDir, ".*");
                 Factory cldrFactory = cldrFactoryForAvailable;
-                // Fix for annotations.  Need root.xml or else cannot load resolved
-                // locales.
-                if (sourceDir.endsWith("/seed/annotations/") && "Q".equals(options[FIX].value)) {
-                    System.err.println("Correcting factory so that annotations can load, including " + CLDRPaths.ANNOTATIONS_DIRECTORY);
+                // Need root.xml or else cannot load resolved locales.
+                /*
+                 * TODO: when seed and common are merged per https://unicode-org.atlassian.net/browse/CLDR-6396
+                 * this will become moot; in the meantime it became necessary to do this not only for "Q"
+                 * but also for "p" per https://unicode-org.atlassian.net/browse/CLDR-15054
+                 */
+                if ((sourceDir.endsWith("/seed/annotations/") && "Q".equals(options[FIX].value)) ||
+                    (sourceDir.contains("/seed/") && "p".equals(options[FIX].value))) {
+                    System.err.println("Correcting factory to enable getting root");
                     final File[] paths = {
                         new File(sourceDir),
                         new File(CLDRPaths.ANNOTATIONS_DIRECTORY) // common/annotations - to load root.xml
