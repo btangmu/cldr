@@ -51,7 +51,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<script type="Latn" draft="unconfirmed">لاتين</script>
 			<script type="Mlym" draft="unconfirmed">مالايالم</script>
 			<script type="Taml" draft="unconfirmed">تاميل</script>
-			<script type="Thai" draft="unconfirmed">↑↑↑</script>
+			<script type="Thai" draft="unconfirmed">Thai</script>
 			<script type="Zsym" draft="unconfirmed">سيمبول</script>
 			<script type="Zxxx" draft="unconfirmed">تيدق دتوليس</script>
 			<script type="Zyyy" draft="unconfirmed">بياسا</script>

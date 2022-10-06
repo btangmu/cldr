@@ -151,7 +151,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 			<language type="lrc" draft="unconfirmed">luryjski pōłnocny</language>
 			<language type="lt" draft="unconfirmed">litewski</language>
 			<language type="lu" draft="unconfirmed">luba-katanga</language>
-			<language type="luo" draft="unconfirmed">↑↑↑</language>
+			<language type="luo" draft="unconfirmed">luo</language>
 			<language type="luy" draft="unconfirmed">luhya</language>
 			<language type="lv" draft="unconfirmed">łotewski</language>
 			<language type="mas" draft="unconfirmed">masajski</language>
@@ -1269,9 +1269,9 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 					</eraNames>
 					<eraAbbr>
 						<era type="0" draft="unconfirmed">p.n.e.</era>
-						<era type="0" alt="variant" draft="unconfirmed">↑↑↑</era>
+						<era type="0" alt="variant" draft="unconfirmed">p.n.e.</era>
 						<era type="1" draft="unconfirmed">n.e.</era>
-						<era type="1" alt="variant" draft="unconfirmed">↑↑↑</era>
+						<era type="1" alt="variant" draft="unconfirmed">n.e.</era>
 					</eraAbbr>
 				</eras>
 				<dateFormats>
@@ -2142,13 +2142,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Dubaj</exemplarCity>
 			</zone>
 			<zone type="Asia/Kabul">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kabul</exemplarCity>
 			</zone>
 			<zone type="America/Antigua">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Antigua</exemplarCity>
 			</zone>
 			<zone type="America/Anguilla">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Anguilla</exemplarCity>
 			</zone>
 			<zone type="Europe/Tirane">
 				<exemplarCity draft="unconfirmed">Tirana</exemplarCity>
@@ -2157,136 +2157,136 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Erywań</exemplarCity>
 			</zone>
 			<zone type="Africa/Luanda">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Luanda</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Rothera">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rothera</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Palmer">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Palmer</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Troll">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Troll</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Syowa">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Syowa</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Mawson">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Mawson</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Davis">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Davis</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Vostok">
 				<exemplarCity draft="unconfirmed">Wostok</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Casey">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Casey</exemplarCity>
 			</zone>
 			<zone type="Antarctica/DumontDUrville">
 				<exemplarCity draft="unconfirmed">Dumont d’Urville</exemplarCity>
 			</zone>
 			<zone type="Antarctica/McMurdo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">McMurdo</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/Rio_Gallegos">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rio Gallegos</exemplarCity>
 			</zone>
 			<zone type="America/Mendoza">
 				<exemplarCity draft="unconfirmed">Myndoza</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/San_Juan">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">San Juan</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/Ushuaia">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Ushuaia</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/La_Rioja">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">La Rioja</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/San_Luis">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">San Luis</exemplarCity>
 			</zone>
 			<zone type="America/Catamarca">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Catamarca</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/Salta">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Salta</exemplarCity>
 			</zone>
 			<zone type="America/Jujuy">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Jujuy</exemplarCity>
 			</zone>
 			<zone type="America/Argentina/Tucuman">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tucuman</exemplarCity>
 			</zone>
 			<zone type="America/Cordoba">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Cordoba</exemplarCity>
 			</zone>
 			<zone type="America/Buenos_Aires">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Buenos Aires</exemplarCity>
 			</zone>
 			<zone type="Pacific/Pago_Pago">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Pago Pago</exemplarCity>
 			</zone>
 			<zone type="Europe/Vienna">
 				<exemplarCity draft="unconfirmed">Wiedyń</exemplarCity>
 			</zone>
 			<zone type="Australia/Perth">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Perth</exemplarCity>
 			</zone>
 			<zone type="Australia/Eucla">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Eucla</exemplarCity>
 			</zone>
 			<zone type="Australia/Darwin">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Darwin</exemplarCity>
 			</zone>
 			<zone type="Australia/Adelaide">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Adelaide</exemplarCity>
 			</zone>
 			<zone type="Australia/Broken_Hill">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Broken Hill</exemplarCity>
 			</zone>
 			<zone type="Australia/Melbourne">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Melbourne</exemplarCity>
 			</zone>
 			<zone type="Australia/Currie">
 				<exemplarCity draft="unconfirmed">Currie</exemplarCity>
 			</zone>
 			<zone type="Australia/Hobart">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Hobart</exemplarCity>
 			</zone>
 			<zone type="Australia/Lindeman">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lindeman</exemplarCity>
 			</zone>
 			<zone type="Australia/Sydney">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Sydney</exemplarCity>
 			</zone>
 			<zone type="Australia/Brisbane">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Brisbane</exemplarCity>
 			</zone>
 			<zone type="Antarctica/Macquarie">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Macquarie</exemplarCity>
 			</zone>
 			<zone type="Australia/Lord_Howe">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lord Howe</exemplarCity>
 			</zone>
 			<zone type="America/Aruba">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Aruba</exemplarCity>
 			</zone>
 			<zone type="Europe/Mariehamn">
 				<exemplarCity draft="unconfirmed">Maarianhamina</exemplarCity>
 			</zone>
 			<zone type="Asia/Baku">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Baku</exemplarCity>
 			</zone>
 			<zone type="Europe/Sarajevo">
 				<exemplarCity draft="unconfirmed">Sarajewo</exemplarCity>
 			</zone>
 			<zone type="America/Barbados">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Barbados</exemplarCity>
 			</zone>
 			<zone type="Asia/Dhaka">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dhaka</exemplarCity>
 			</zone>
 			<zone type="Europe/Brussels">
 				<exemplarCity draft="unconfirmed">Bruksela</exemplarCity>
@@ -2295,7 +2295,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Wagadugu</exemplarCity>
 			</zone>
 			<zone type="Europe/Sofia">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Sofia</exemplarCity>
 			</zone>
 			<zone type="Asia/Bahrain">
 				<exemplarCity draft="unconfirmed">Bahrajn</exemplarCity>
@@ -2313,157 +2313,157 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Bermudy</exemplarCity>
 			</zone>
 			<zone type="Asia/Brunei">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Brunei</exemplarCity>
 			</zone>
 			<zone type="America/La_Paz">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">La Paz</exemplarCity>
 			</zone>
 			<zone type="America/Kralendijk">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kralendijk</exemplarCity>
 			</zone>
 			<zone type="America/Eirunepe">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Eirunepe</exemplarCity>
 			</zone>
 			<zone type="America/Rio_Branco">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rio Branco</exemplarCity>
 			</zone>
 			<zone type="America/Porto_Velho">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Porto Velho</exemplarCity>
 			</zone>
 			<zone type="America/Boa_Vista">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Boa Vista</exemplarCity>
 			</zone>
 			<zone type="America/Manaus">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Manaus</exemplarCity>
 			</zone>
 			<zone type="America/Cuiaba">
 				<exemplarCity draft="unconfirmed">Cuiabá</exemplarCity>
 			</zone>
 			<zone type="America/Santarem">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Santarem</exemplarCity>
 			</zone>
 			<zone type="America/Campo_Grande">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Campo Grande</exemplarCity>
 			</zone>
 			<zone type="America/Belem">
 				<exemplarCity draft="unconfirmed">Belém</exemplarCity>
 			</zone>
 			<zone type="America/Araguaina">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Araguaina</exemplarCity>
 			</zone>
 			<zone type="America/Sao_Paulo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Sao Paulo</exemplarCity>
 			</zone>
 			<zone type="America/Bahia">
 				<exemplarCity draft="unconfirmed">Salvador</exemplarCity>
 			</zone>
 			<zone type="America/Fortaleza">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Fortaleza</exemplarCity>
 			</zone>
 			<zone type="America/Maceio">
 				<exemplarCity draft="unconfirmed">Maceiō</exemplarCity>
 			</zone>
 			<zone type="America/Recife">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Recife</exemplarCity>
 			</zone>
 			<zone type="America/Noronha">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Noronha</exemplarCity>
 			</zone>
 			<zone type="America/Nassau">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Nassau</exemplarCity>
 			</zone>
 			<zone type="Asia/Thimphu">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Thimphu</exemplarCity>
 			</zone>
 			<zone type="Africa/Gaborone">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Gaborone</exemplarCity>
 			</zone>
 			<zone type="Europe/Minsk">
 				<exemplarCity draft="unconfirmed">Mińsk</exemplarCity>
 			</zone>
 			<zone type="America/Belize">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Belize</exemplarCity>
 			</zone>
 			<zone type="America/Dawson">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dawson</exemplarCity>
 			</zone>
 			<zone type="America/Whitehorse">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Whitehorse</exemplarCity>
 			</zone>
 			<zone type="America/Inuvik">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Inuvik</exemplarCity>
 			</zone>
 			<zone type="America/Vancouver">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Vancouver</exemplarCity>
 			</zone>
 			<zone type="America/Fort_Nelson">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Fort Nelson</exemplarCity>
 			</zone>
 			<zone type="America/Dawson_Creek">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dawson Creek</exemplarCity>
 			</zone>
 			<zone type="America/Creston">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Creston</exemplarCity>
 			</zone>
 			<zone type="America/Yellowknife">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Yellowknife</exemplarCity>
 			</zone>
 			<zone type="America/Edmonton">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Edmonton</exemplarCity>
 			</zone>
 			<zone type="America/Swift_Current">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Swift Current</exemplarCity>
 			</zone>
 			<zone type="America/Cambridge_Bay">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Cambridge Bay</exemplarCity>
 			</zone>
 			<zone type="America/Regina">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Regina</exemplarCity>
 			</zone>
 			<zone type="America/Winnipeg">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Winnipeg</exemplarCity>
 			</zone>
 			<zone type="America/Resolute">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Resolute</exemplarCity>
 			</zone>
 			<zone type="America/Rainy_River">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rainy River</exemplarCity>
 			</zone>
 			<zone type="America/Rankin_Inlet">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rankin Inlet</exemplarCity>
 			</zone>
 			<zone type="America/Coral_Harbour">
 				<exemplarCity draft="unconfirmed">Atikokan</exemplarCity>
 			</zone>
 			<zone type="America/Thunder_Bay">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Thunder Bay</exemplarCity>
 			</zone>
 			<zone type="America/Nipigon">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Nipigon</exemplarCity>
 			</zone>
 			<zone type="America/Toronto">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Toronto</exemplarCity>
 			</zone>
 			<zone type="America/Iqaluit">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Iqaluit</exemplarCity>
 			</zone>
 			<zone type="America/Pangnirtung">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Pangnirtung</exemplarCity>
 			</zone>
 			<zone type="America/Moncton">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Moncton</exemplarCity>
 			</zone>
 			<zone type="America/Halifax">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Halifax</exemplarCity>
 			</zone>
 			<zone type="America/Goose_Bay">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Goose Bay</exemplarCity>
 			</zone>
 			<zone type="America/Glace_Bay">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Glace Bay</exemplarCity>
 			</zone>
 			<zone type="America/Blanc-Sablon">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Blanc-Sablon</exemplarCity>
 			</zone>
 			<zone type="America/St_Johns">
 				<exemplarCity draft="unconfirmed">St. John’s</exemplarCity>
@@ -2475,13 +2475,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Kinszasa</exemplarCity>
 			</zone>
 			<zone type="Africa/Lubumbashi">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lubumbashi</exemplarCity>
 			</zone>
 			<zone type="Africa/Bangui">
 				<exemplarCity draft="unconfirmed">Bangi</exemplarCity>
 			</zone>
 			<zone type="Africa/Brazzaville">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Brazzaville</exemplarCity>
 			</zone>
 			<zone type="Europe/Zurich">
 				<exemplarCity draft="unconfirmed">Zurych</exemplarCity>
@@ -2490,16 +2490,16 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Abidżan</exemplarCity>
 			</zone>
 			<zone type="Pacific/Rarotonga">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Rarotonga</exemplarCity>
 			</zone>
 			<zone type="Pacific/Easter">
 				<exemplarCity draft="unconfirmed">Wyspa Wielkanocno</exemplarCity>
 			</zone>
 			<zone type="America/Punta_Arenas">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Punta Arenas</exemplarCity>
 			</zone>
 			<zone type="America/Santiago">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Santiago</exemplarCity>
 			</zone>
 			<zone type="Africa/Douala">
 				<exemplarCity draft="unconfirmed">Duala</exemplarCity>
@@ -2511,7 +2511,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Szanghaj</exemplarCity>
 			</zone>
 			<zone type="America/Bogota">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Bogota</exemplarCity>
 			</zone>
 			<zone type="America/Costa_Rica">
 				<exemplarCity draft="unconfirmed">Kostaryka</exemplarCity>
@@ -2532,7 +2532,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Nikozja</exemplarCity>
 			</zone>
 			<zone type="Asia/Famagusta">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Famagusta</exemplarCity>
 			</zone>
 			<zone type="Europe/Prague">
 				<exemplarCity draft="unconfirmed">Praga</exemplarCity>
@@ -2541,7 +2541,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Büsingen am Hochrhein</exemplarCity>
 			</zone>
 			<zone type="Europe/Berlin">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Berlin</exemplarCity>
 			</zone>
 			<zone type="Africa/Djibouti">
 				<exemplarCity draft="unconfirmed">Dżibuti</exemplarCity>
@@ -2553,16 +2553,16 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Dōminika</exemplarCity>
 			</zone>
 			<zone type="America/Santo_Domingo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Santo Domingo</exemplarCity>
 			</zone>
 			<zone type="Africa/Algiers">
 				<exemplarCity draft="unconfirmed">Alger</exemplarCity>
 			</zone>
 			<zone type="Pacific/Galapagos">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Galapagos</exemplarCity>
 			</zone>
 			<zone type="America/Guayaquil">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Guayaquil</exemplarCity>
 			</zone>
 			<zone type="Europe/Tallinn">
 				<exemplarCity draft="unconfirmed">Tallin</exemplarCity>
@@ -2580,7 +2580,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Wyspy Kanaryjske</exemplarCity>
 			</zone>
 			<zone type="Africa/Ceuta">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Ceuta</exemplarCity>
 			</zone>
 			<zone type="Europe/Madrid">
 				<exemplarCity draft="unconfirmed">Madryt</exemplarCity>
@@ -2589,13 +2589,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Addis Abeba</exemplarCity>
 			</zone>
 			<zone type="Europe/Helsinki">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Helsinki</exemplarCity>
 			</zone>
 			<zone type="Pacific/Fiji">
 				<exemplarCity draft="unconfirmed">Fidżi</exemplarCity>
 			</zone>
 			<zone type="Atlantic/Stanley">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Stanley</exemplarCity>
 			</zone>
 			<zone type="Pacific/Truk">
 				<exemplarCity draft="unconfirmed">Chuuk</exemplarCity>
@@ -2604,7 +2604,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Pohnpei</exemplarCity>
 			</zone>
 			<zone type="Pacific/Kosrae">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kosrae</exemplarCity>
 			</zone>
 			<zone type="Atlantic/Faeroe">
 				<exemplarCity draft="unconfirmed">Wyspy Ôwcze</exemplarCity>
@@ -2613,7 +2613,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Paryż</exemplarCity>
 			</zone>
 			<zone type="Africa/Libreville">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Libreville</exemplarCity>
 			</zone>
 			<zone type="Europe/London">
 				<long>
@@ -2625,19 +2625,19 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Grynada</exemplarCity>
 			</zone>
 			<zone type="Asia/Tbilisi">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tbilisi</exemplarCity>
 			</zone>
 			<zone type="America/Cayenne">
 				<exemplarCity draft="unconfirmed">Kajynna</exemplarCity>
 			</zone>
 			<zone type="Europe/Guernsey">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Guernsey</exemplarCity>
 			</zone>
 			<zone type="Africa/Accra">
 				<exemplarCity draft="unconfirmed">Akra</exemplarCity>
 			</zone>
 			<zone type="Europe/Gibraltar">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Gibraltar</exemplarCity>
 			</zone>
 			<zone type="America/Thule">
 				<exemplarCity draft="unconfirmed">Qaanaaq</exemplarCity>
@@ -2649,7 +2649,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Ittoqqortoormiit</exemplarCity>
 			</zone>
 			<zone type="America/Danmarkshavn">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Danmarkshavn</exemplarCity>
 			</zone>
 			<zone type="Africa/Banjul">
 				<exemplarCity draft="unconfirmed">Bandżul</exemplarCity>
@@ -2661,7 +2661,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Gwadelupa</exemplarCity>
 			</zone>
 			<zone type="Africa/Malabo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Malabo</exemplarCity>
 			</zone>
 			<zone type="Europe/Athens">
 				<exemplarCity draft="unconfirmed">Atyny</exemplarCity>
@@ -2673,10 +2673,10 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Gwatymala</exemplarCity>
 			</zone>
 			<zone type="Pacific/Guam">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Guam</exemplarCity>
 			</zone>
 			<zone type="Africa/Bissau">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Bissau</exemplarCity>
 			</zone>
 			<zone type="America/Guyana">
 				<exemplarCity draft="unconfirmed">Gujana</exemplarCity>
@@ -2685,13 +2685,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Hōngkōng</exemplarCity>
 			</zone>
 			<zone type="America/Tegucigalpa">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tegucigalpa</exemplarCity>
 			</zone>
 			<zone type="Europe/Zagreb">
 				<exemplarCity draft="unconfirmed">Zagrzeb</exemplarCity>
 			</zone>
 			<zone type="America/Port-au-Prince">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Port-au-Prince</exemplarCity>
 			</zone>
 			<zone type="Europe/Budapest">
 				<exemplarCity draft="unconfirmed">Budapeszt</exemplarCity>
@@ -2700,19 +2700,19 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Dżakarta</exemplarCity>
 			</zone>
 			<zone type="Asia/Pontianak">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Pontianak</exemplarCity>
 			</zone>
 			<zone type="Asia/Makassar">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Makassar</exemplarCity>
 			</zone>
 			<zone type="Asia/Jayapura">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Jayapura</exemplarCity>
 			</zone>
 			<zone type="Europe/Dublin">
 				<long>
 					<daylight draft="unconfirmed">Irlandyjo (latowy czas)</daylight>
 				</long>
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dublin</exemplarCity>
 			</zone>
 			<zone type="Asia/Jerusalem">
 				<exemplarCity draft="unconfirmed">Jerozolima</exemplarCity>
@@ -2733,31 +2733,31 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Teheran</exemplarCity>
 			</zone>
 			<zone type="Atlantic/Reykjavik">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Reykjavik</exemplarCity>
 			</zone>
 			<zone type="Europe/Rome">
 				<exemplarCity draft="unconfirmed">Rzym</exemplarCity>
 			</zone>
 			<zone type="Europe/Jersey">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Jersey</exemplarCity>
 			</zone>
 			<zone type="America/Jamaica">
 				<exemplarCity draft="unconfirmed">Jamajka</exemplarCity>
 			</zone>
 			<zone type="Asia/Amman">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Amman</exemplarCity>
 			</zone>
 			<zone type="Asia/Tokyo">
 				<exemplarCity draft="unconfirmed">Tokio</exemplarCity>
 			</zone>
 			<zone type="Africa/Nairobi">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Nairobi</exemplarCity>
 			</zone>
 			<zone type="Asia/Bishkek">
 				<exemplarCity draft="unconfirmed">Biszkek</exemplarCity>
 			</zone>
 			<zone type="Asia/Phnom_Penh">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Phnom Penh</exemplarCity>
 			</zone>
 			<zone type="Pacific/Enderbury">
 				<exemplarCity draft="unconfirmed">Enderbury</exemplarCity>
@@ -2766,10 +2766,10 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
 			</zone>
 			<zone type="Pacific/Kiritimati">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kiritimati</exemplarCity>
 			</zone>
 			<zone type="Pacific/Tarawa">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tarawa</exemplarCity>
 			</zone>
 			<zone type="Indian/Comoro">
 				<exemplarCity draft="unconfirmed">Kōmory</exemplarCity>
@@ -2796,7 +2796,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Ôral</exemplarCity>
 			</zone>
 			<zone type="Asia/Atyrau">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Atyrau</exemplarCity>
 			</zone>
 			<zone type="Asia/Aqtobe">
 				<exemplarCity draft="unconfirmed">Aktiubińsk</exemplarCity>
@@ -2820,16 +2820,16 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Saint Lucia</exemplarCity>
 			</zone>
 			<zone type="Europe/Vaduz">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Vaduz</exemplarCity>
 			</zone>
 			<zone type="Asia/Colombo">
 				<exemplarCity draft="unconfirmed">Kolōmbo</exemplarCity>
 			</zone>
 			<zone type="Africa/Monrovia">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Monrovia</exemplarCity>
 			</zone>
 			<zone type="Africa/Maseru">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Maseru</exemplarCity>
 			</zone>
 			<zone type="Europe/Vilnius">
 				<exemplarCity draft="unconfirmed">Wilno</exemplarCity>
@@ -2844,7 +2844,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Trypolis</exemplarCity>
 			</zone>
 			<zone type="Africa/Casablanca">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Casablanca</exemplarCity>
 			</zone>
 			<zone type="Europe/Monaco">
 				<exemplarCity draft="unconfirmed">Mōnako</exemplarCity>
@@ -2853,25 +2853,25 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Kiszyniōw</exemplarCity>
 			</zone>
 			<zone type="Europe/Podgorica">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Podgorica</exemplarCity>
 			</zone>
 			<zone type="America/Marigot">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Marigot</exemplarCity>
 			</zone>
 			<zone type="Indian/Antananarivo">
 				<exemplarCity draft="unconfirmed">Antananarywa</exemplarCity>
 			</zone>
 			<zone type="Pacific/Kwajalein">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kwajalein</exemplarCity>
 			</zone>
 			<zone type="Pacific/Majuro">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Majuro</exemplarCity>
 			</zone>
 			<zone type="Europe/Skopje">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Skopje</exemplarCity>
 			</zone>
 			<zone type="Africa/Bamako">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Bamako</exemplarCity>
 			</zone>
 			<zone type="Asia/Rangoon">
 				<exemplarCity draft="unconfirmed">Rangun</exemplarCity>
@@ -2889,7 +2889,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Makau</exemplarCity>
 			</zone>
 			<zone type="Pacific/Saipan">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Saipan</exemplarCity>
 			</zone>
 			<zone type="America/Martinique">
 				<exemplarCity draft="unconfirmed">Martynika</exemplarCity>
@@ -2901,7 +2901,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Mōntserrat</exemplarCity>
 			</zone>
 			<zone type="Europe/Malta">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Malta</exemplarCity>
 			</zone>
 			<zone type="Indian/Mauritius">
 				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
@@ -2910,49 +2910,49 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Malediwy</exemplarCity>
 			</zone>
 			<zone type="Africa/Blantyre">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Blantyre</exemplarCity>
 			</zone>
 			<zone type="America/Tijuana">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tijuana</exemplarCity>
 			</zone>
 			<zone type="America/Hermosillo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Hermosillo</exemplarCity>
 			</zone>
 			<zone type="America/Mazatlan">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Mazatlan</exemplarCity>
 			</zone>
 			<zone type="America/Chihuahua">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Chihuahua</exemplarCity>
 			</zone>
 			<zone type="America/Bahia_Banderas">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Bahia Banderas</exemplarCity>
 			</zone>
 			<zone type="America/Ojinaga">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Ojinaga</exemplarCity>
 			</zone>
 			<zone type="America/Monterrey">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Monterrey</exemplarCity>
 			</zone>
 			<zone type="America/Mexico_City">
 				<exemplarCity draft="unconfirmed">Meksyk (miasto)</exemplarCity>
 			</zone>
 			<zone type="America/Matamoros">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Matamoros</exemplarCity>
 			</zone>
 			<zone type="America/Merida">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Merida</exemplarCity>
 			</zone>
 			<zone type="America/Cancun">
 				<exemplarCity draft="unconfirmed">Cancún</exemplarCity>
 			</zone>
 			<zone type="Asia/Kuala_Lumpur">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kuala Lumpur</exemplarCity>
 			</zone>
 			<zone type="Asia/Kuching">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kuching</exemplarCity>
 			</zone>
 			<zone type="Africa/Maputo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Maputo</exemplarCity>
 			</zone>
 			<zone type="Africa/Windhoek">
 				<exemplarCity draft="unconfirmed">Windhuk</exemplarCity>
@@ -2961,49 +2961,49 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Numea</exemplarCity>
 			</zone>
 			<zone type="Africa/Niamey">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Niamey</exemplarCity>
 			</zone>
 			<zone type="Pacific/Norfolk">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Norfolk</exemplarCity>
 			</zone>
 			<zone type="Africa/Lagos">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lagos</exemplarCity>
 			</zone>
 			<zone type="America/Managua">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Managua</exemplarCity>
 			</zone>
 			<zone type="Europe/Amsterdam">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Amsterdam</exemplarCity>
 			</zone>
 			<zone type="Europe/Oslo">
 				<exemplarCity draft="unconfirmed">Ôslo</exemplarCity>
 			</zone>
 			<zone type="Asia/Katmandu">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Katmandu</exemplarCity>
 			</zone>
 			<zone type="Pacific/Nauru">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Nauru</exemplarCity>
 			</zone>
 			<zone type="Pacific/Niue">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Niue</exemplarCity>
 			</zone>
 			<zone type="Pacific/Chatham">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Chatham</exemplarCity>
 			</zone>
 			<zone type="Pacific/Auckland">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Auckland</exemplarCity>
 			</zone>
 			<zone type="Asia/Muscat">
 				<exemplarCity draft="unconfirmed">Maskat</exemplarCity>
 			</zone>
 			<zone type="America/Panama">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Panama</exemplarCity>
 			</zone>
 			<zone type="America/Lima">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lima</exemplarCity>
 			</zone>
 			<zone type="Pacific/Tahiti">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tahiti</exemplarCity>
 			</zone>
 			<zone type="Pacific/Marquesas">
 				<exemplarCity draft="unconfirmed">Markizy</exemplarCity>
@@ -3012,13 +3012,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Wyspy Gambiera</exemplarCity>
 			</zone>
 			<zone type="Pacific/Port_Moresby">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Port Moresby</exemplarCity>
 			</zone>
 			<zone type="Pacific/Bougainville">
 				<exemplarCity draft="unconfirmed">Bougainville’owa Wyspa</exemplarCity>
 			</zone>
 			<zone type="Asia/Manila">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Manila</exemplarCity>
 			</zone>
 			<zone type="Asia/Karachi">
 				<exemplarCity draft="unconfirmed">Karaczi</exemplarCity>
@@ -3027,16 +3027,16 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Warszawa</exemplarCity>
 			</zone>
 			<zone type="America/Miquelon">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Miquelon</exemplarCity>
 			</zone>
 			<zone type="Pacific/Pitcairn">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Pitcairn</exemplarCity>
 			</zone>
 			<zone type="America/Puerto_Rico">
 				<exemplarCity draft="unconfirmed">Portoryko</exemplarCity>
 			</zone>
 			<zone type="Asia/Gaza">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Gaza</exemplarCity>
 			</zone>
 			<zone type="Asia/Hebron">
 				<exemplarCity draft="unconfirmed">Hebrōn</exemplarCity>
@@ -3051,7 +3051,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Lizbōna</exemplarCity>
 			</zone>
 			<zone type="Pacific/Palau">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Palau</exemplarCity>
 			</zone>
 			<zone type="America/Asuncion">
 				<exemplarCity draft="unconfirmed">Asuńcion</exemplarCity>
@@ -3069,7 +3069,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Belgrad</exemplarCity>
 			</zone>
 			<zone type="Europe/Kaliningrad">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kaliningrad</exemplarCity>
 			</zone>
 			<zone type="Europe/Moscow">
 				<exemplarCity draft="unconfirmed">Moskwa</exemplarCity>
@@ -3090,7 +3090,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Kirow</exemplarCity>
 			</zone>
 			<zone type="Europe/Samara">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Samara</exemplarCity>
 			</zone>
 			<zone type="Asia/Yekaterinburg">
 				<exemplarCity draft="unconfirmed">Jekaterynburg</exemplarCity>
@@ -3135,7 +3135,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Ust-Niera</exemplarCity>
 			</zone>
 			<zone type="Asia/Magadan">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Magadan</exemplarCity>
 			</zone>
 			<zone type="Asia/Srednekolymsk">
 				<exemplarCity draft="unconfirmed">Sriedniekołymsk</exemplarCity>
@@ -3144,16 +3144,16 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Kamczatka</exemplarCity>
 			</zone>
 			<zone type="Asia/Anadyr">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Anadyr</exemplarCity>
 			</zone>
 			<zone type="Africa/Kigali">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kigali</exemplarCity>
 			</zone>
 			<zone type="Asia/Riyadh">
 				<exemplarCity draft="unconfirmed">Rijad</exemplarCity>
 			</zone>
 			<zone type="Pacific/Guadalcanal">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Guadalcanal</exemplarCity>
 			</zone>
 			<zone type="Indian/Mahe">
 				<exemplarCity draft="unconfirmed">Mahé</exemplarCity>
@@ -3180,19 +3180,19 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Bratysława</exemplarCity>
 			</zone>
 			<zone type="Africa/Freetown">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Freetown</exemplarCity>
 			</zone>
 			<zone type="Europe/San_Marino">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">San Marino</exemplarCity>
 			</zone>
 			<zone type="Africa/Dakar">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dakar</exemplarCity>
 			</zone>
 			<zone type="Africa/Mogadishu">
 				<exemplarCity draft="unconfirmed">Mogadiszu</exemplarCity>
 			</zone>
 			<zone type="America/Paramaribo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Paramaribo</exemplarCity>
 			</zone>
 			<zone type="Africa/Juba">
 				<exemplarCity draft="unconfirmed">Dżuba</exemplarCity>
@@ -3210,10 +3210,10 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Damaszek</exemplarCity>
 			</zone>
 			<zone type="Africa/Mbabane">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Mbabane</exemplarCity>
 			</zone>
 			<zone type="America/Grand_Turk">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Grand Turk</exemplarCity>
 			</zone>
 			<zone type="Africa/Ndjamena">
 				<exemplarCity draft="unconfirmed">Ndżamena</exemplarCity>
@@ -3225,25 +3225,25 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Lomé</exemplarCity>
 			</zone>
 			<zone type="Asia/Bangkok">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Bangkok</exemplarCity>
 			</zone>
 			<zone type="Asia/Dushanbe">
 				<exemplarCity draft="unconfirmed">Duszanbe</exemplarCity>
 			</zone>
 			<zone type="Pacific/Fakaofo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Fakaofo</exemplarCity>
 			</zone>
 			<zone type="Asia/Dili">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dili</exemplarCity>
 			</zone>
 			<zone type="Asia/Ashgabat">
 				<exemplarCity draft="unconfirmed">Aszchabad</exemplarCity>
 			</zone>
 			<zone type="Africa/Tunis">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tunis</exemplarCity>
 			</zone>
 			<zone type="Pacific/Tongatapu">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tongatapu</exemplarCity>
 			</zone>
 			<zone type="Europe/Istanbul">
 				<exemplarCity draft="unconfirmed">Stambuł</exemplarCity>
@@ -3252,13 +3252,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Port-of-Spain</exemplarCity>
 			</zone>
 			<zone type="Pacific/Funafuti">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Funafuti</exemplarCity>
 			</zone>
 			<zone type="Asia/Taipei">
 				<exemplarCity draft="unconfirmed">Tajpej</exemplarCity>
 			</zone>
 			<zone type="Africa/Dar_es_Salaam">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Dar es Salaam</exemplarCity>
 			</zone>
 			<zone type="Europe/Uzhgorod">
 				<exemplarCity draft="unconfirmed">Użgorod</exemplarCity>
@@ -3273,49 +3273,49 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Zaporoże</exemplarCity>
 			</zone>
 			<zone type="Africa/Kampala">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Kampala</exemplarCity>
 			</zone>
 			<zone type="Pacific/Midway">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Midway</exemplarCity>
 			</zone>
 			<zone type="Pacific/Wake">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Wake</exemplarCity>
 			</zone>
 			<zone type="America/Adak">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Adak</exemplarCity>
 			</zone>
 			<zone type="America/Nome">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Nome</exemplarCity>
 			</zone>
 			<zone type="Pacific/Johnston">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Johnston</exemplarCity>
 			</zone>
 			<zone type="America/Anchorage">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Anchorage</exemplarCity>
 			</zone>
 			<zone type="America/Yakutat">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Yakutat</exemplarCity>
 			</zone>
 			<zone type="America/Sitka">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Sitka</exemplarCity>
 			</zone>
 			<zone type="America/Juneau">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Juneau</exemplarCity>
 			</zone>
 			<zone type="America/Metlakatla">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Metlakatla</exemplarCity>
 			</zone>
 			<zone type="America/Los_Angeles">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Los Angeles</exemplarCity>
 			</zone>
 			<zone type="America/Boise">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Boise</exemplarCity>
 			</zone>
 			<zone type="America/Phoenix">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Phoenix</exemplarCity>
 			</zone>
 			<zone type="America/Denver">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Denver</exemplarCity>
 			</zone>
 			<zone type="America/North_Dakota/Beulah">
 				<exemplarCity draft="unconfirmed">Beulah, Pōłnocno Dakota</exemplarCity>
@@ -3327,7 +3327,7 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Center, Pōłnocno Dakota</exemplarCity>
 			</zone>
 			<zone type="America/Chicago">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Chicago</exemplarCity>
 			</zone>
 			<zone type="America/Menominee">
 				<exemplarCity draft="unconfirmed">Mynominee</exemplarCity>
@@ -3351,25 +3351,25 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Marengo, Indiana</exemplarCity>
 			</zone>
 			<zone type="America/Indianapolis">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Indianapolis</exemplarCity>
 			</zone>
 			<zone type="America/Louisville">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Louisville</exemplarCity>
 			</zone>
 			<zone type="America/Indiana/Vevay">
 				<exemplarCity draft="unconfirmed">Vevay, Indiana</exemplarCity>
 			</zone>
 			<zone type="America/Kentucky/Monticello">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Monticello</exemplarCity>
 			</zone>
 			<zone type="America/Detroit">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Detroit</exemplarCity>
 			</zone>
 			<zone type="America/New_York">
 				<exemplarCity draft="unconfirmed">Nowy Jork</exemplarCity>
 			</zone>
 			<zone type="America/Montevideo">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Montevideo</exemplarCity>
 			</zone>
 			<zone type="Asia/Samarkand">
 				<exemplarCity draft="unconfirmed">Samarkanda</exemplarCity>
@@ -3384,10 +3384,10 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Saint Vincent</exemplarCity>
 			</zone>
 			<zone type="America/Caracas">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Caracas</exemplarCity>
 			</zone>
 			<zone type="America/Tortola">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Tortola</exemplarCity>
 			</zone>
 			<zone type="America/St_Thomas">
 				<exemplarCity draft="unconfirmed">Saint Thomas</exemplarCity>
@@ -3396,13 +3396,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Ho Chi Minh</exemplarCity>
 			</zone>
 			<zone type="Pacific/Efate">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Efate</exemplarCity>
 			</zone>
 			<zone type="Pacific/Wallis">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Wallis</exemplarCity>
 			</zone>
 			<zone type="Pacific/Apia">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Apia</exemplarCity>
 			</zone>
 			<zone type="Asia/Aden">
 				<exemplarCity draft="unconfirmed">Adyn</exemplarCity>
@@ -3411,13 +3411,13 @@ CLDR data files are interpreted according to the LDML specification (http://unic
 				<exemplarCity draft="unconfirmed">Majotta</exemplarCity>
 			</zone>
 			<zone type="Africa/Johannesburg">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Johannesburg</exemplarCity>
 			</zone>
 			<zone type="Africa/Lusaka">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Lusaka</exemplarCity>
 			</zone>
 			<zone type="Africa/Harare">
-				<exemplarCity draft="unconfirmed">↑↑↑</exemplarCity>
+				<exemplarCity draft="unconfirmed">Harare</exemplarCity>
 			</zone>
 			<metazone type="Afghanistan">
 				<long>
