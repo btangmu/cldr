@@ -27,7 +27,7 @@ const ROW_ID_PREFIX = "row_"; // formerly "r@"
 
 const CLDR_TABLE_DEBUG = false;
 
-const TABLE_USES_NEW_API = true;
+const TABLE_USES_NEW_API = false;
 
 /*
  * NO_WINNING_VALUE indicates the server delivered path data without a valid winning value.
