@@ -1232,6 +1232,7 @@ public class CLDRModify {
             @Override
             public void handleStart() {
                 inputProcessor = new DisplayAndInputProcessor(cldrFileToFilter, true);
+                // if (cldrFileToFilter.getLocaleID() != "en")
                 inputProcessor.enableInheritanceReplacement(getResolved());
             }
 

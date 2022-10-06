@@ -3,16 +3,11 @@
 
 package org.unicode.cldr.test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.ibm.icu.util.Output;
 import org.unicode.cldr.test.CheckExemplars.ExemplarType;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.DateTimeCanonicalizer.DateTimePatternType;
@@ -1257,8 +1252,12 @@ public class DisplayAndInputProcessor {
      */
     private String replaceBaileyWithInheritanceMarker(String path, String value) {
         if (cldrFileForBailey != null && !value.isEmpty()) {
-            String baileyValue = cldrFileForBailey.getBaileyValue(path, null, null);
-            if (value.equals(baileyValue)) {
+            Output<String> pathWhereFound = new Output<>();
+            Output<String> localeWhereFound = new Output<>();
+            String baileyValue = cldrFileForBailey.getBaileyValue(path, pathWhereFound, localeWhereFound);
+            if (value.equals(baileyValue) &&
+                !XMLSource.ROOT_ID.equals(localeWhereFound.value) &&
+                !XMLSource.CODE_FALLBACK_ID.equals(localeWhereFound.value)) {
                 return CldrUtility.INHERITANCE_MARKER;
             }
         }
