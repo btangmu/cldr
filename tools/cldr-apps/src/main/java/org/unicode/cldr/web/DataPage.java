@@ -1073,7 +1073,11 @@ public class DataPage implements JSONString {
         }
 
         public String getHelpHTML() {
-            return nativeExampleGenerator.getHelpHtml(xpath, sm.getTranslationHintsFile().getStringValue(xpath));
+            String s = nativeExampleGenerator.getHelpHtml(xpath, sm.getTranslationHintsFile().getStringValue(xpath));
+            if ("//ldml/localeDisplayNames/languages/language[@type=\"zh\"]".equals(xpath)) {
+                s += "<br>Translation hint: specifically, Mandarin Chinese.";
+            }
+            return s;
         }
 
         public String getDisplayExample() {
