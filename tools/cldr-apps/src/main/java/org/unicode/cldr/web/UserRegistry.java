@@ -269,7 +269,11 @@ public class UserRegistry {
 
         private UserSettings settings;
 
+        /**
+         * The locales for which this user is authorized
+         */
         private LocaleSet authorizedLocaleSet = null;
+
         private LocaleSet interestLocalesSet = null;
 
         /**
@@ -382,9 +386,16 @@ public class UserRegistry {
             return v;
         }
 
+        /**
+         * Get the set of locales for which this user is authorized
+         *
+         * Generally this is the intersection of the user's set and the organization's set,
+         * except for Street/Guest users, for whom it is simply the user's set
+         */
         private LocaleSet getAuthorizedLocaleSet() {
             if (authorizedLocaleSet == null) {
-                LocaleSet orgLocales = getOrganization().getCoveredLocales();
+                LocaleSet orgLocales = (userlevel == STREET) ? null : getOrganization().getCoveredLocales();
+                // LocaleSet orgLocales = getOrganization().getCoveredLocales();
                 authorizedLocaleSet = LocaleNormalizer.setFromStringQuietly(locales, orgLocales);
             }
             return authorizedLocaleSet;
@@ -561,8 +572,6 @@ public class UserRegistry {
          *
          * @param locale the CLDRLocale
          * @return true or false
-         *
-         * Code related to userIsExpert, UserRegistry.EXPERT removed 2021-05-18 per CLDR-14597
          */
         private boolean hasLocalePermission(CLDRLocale locale) {
             /*
