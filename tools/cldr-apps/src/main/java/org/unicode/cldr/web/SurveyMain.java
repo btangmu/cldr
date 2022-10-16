@@ -669,7 +669,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             String newLocales = ctx.field("new_locales").trim();
             LocaleNormalizer locNorm = new LocaleNormalizer();
             final Organization organization = Organization.fromString(u.org);
-            LocaleSet orgLocales = (u.userlevel == UserRegistry.STREET) ? null : organization.getCoveredLocales();
+            LocaleSet orgLocales = u.canVoteInNonOrgLocales() ? null : organization.getCoveredLocales();
             newLocales = locNorm.normalizeForSubset(newLocales, orgLocales);
             if (locNorm.hasMessage()) {
                 reportNormalizationWarning(ctx.getOut(), locNorm, newLocales);

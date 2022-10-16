@@ -465,16 +465,12 @@ function getChangeLevelOptions(u, theirLevel) {
     const me = cldrStatus.getSurveyUser();
     if (!(me && me.email && u.data.email === me.email)) {
       for (let number in levelList) {
-        if (
-          cldrUserLevels.match(levelList[number].name, cldrUserLevels.ANONYMOUS)
-        ) {
+        const name = levelList[number].name;
+        if (cldrUserLevels.match(name, cldrUserLevels.ANONYMOUS)) {
           continue;
         }
         // only allow mass LOCK
-        if (
-          justUser ||
-          cldrUserLevels.match(levelList[number].name, cldrUserLevels.LOCKED)
-        ) {
+        if (justUser || cldrUserLevels.match(name, cldrUserLevels.LOCKED)) {
           html += doChangeUserOption(number, theirLevel);
         }
       }

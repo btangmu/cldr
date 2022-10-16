@@ -390,15 +390,25 @@ public class UserRegistry {
          * Get the set of locales for which this user is authorized
          *
          * Generally this is the intersection of the user's set and the organization's set,
-         * except for Street/Guest users, for whom it is simply the user's set
+         * except for users who can vote in non-org locales, for whom it is simply the user's set
          */
         private LocaleSet getAuthorizedLocaleSet() {
             if (authorizedLocaleSet == null) {
-                LocaleSet orgLocales = (userlevel == STREET) ? null : getOrganization().getCoveredLocales();
-                // LocaleSet orgLocales = getOrganization().getCoveredLocales();
+                LocaleSet orgLocales = canVoteInNonOrgLocales() ? null : getOrganization().getCoveredLocales();
                 authorizedLocaleSet = LocaleNormalizer.setFromStringQuietly(locales, orgLocales);
             }
             return authorizedLocaleSet;
+        }
+
+        /**
+         * Can this user vote in locales that are not in their organization's locales per Locales.txt?
+         *
+         * @return true if the user has that authority
+         *
+         * A STREET user has this advantage over a VETTER or MANAGER, though with less votes
+         */
+        public boolean canVoteInNonOrgLocales() {
+            return userlevel == ADMIN || userlevel == TC || userlevel == STREET;
         }
 
         @Override
@@ -1206,8 +1216,7 @@ public class UserRegistry {
         String msg = "";
         if (!intLocs) {
             final LocaleNormalizer locNorm = new LocaleNormalizer();
-            // STREET users are not limited to org locales
-            LocaleSet orgLocaleSet = (user.userlevel == STREET) ? null : user.getOrganization().getCoveredLocales();
+            LocaleSet orgLocaleSet = user.canVoteInNonOrgLocales() ? null : user.getOrganization().getCoveredLocales();
             newLocales = locNorm.normalizeForSubset(newLocales, orgLocaleSet);
             if (locNorm.hasMessage()) {
                 msg = locNorm.getMessageHtml() + "<br />";
