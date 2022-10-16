@@ -149,7 +149,6 @@ public class TestUserRegistry extends TestFmwk {
      */
     public void TestUserLocaleAuthorization() {
         if (TestAll.skipIfDerby(this)) {
-            System.out.println("Skipping TestUserLocaleAuthorization because Derby");
             return;
         }
         UserRegistry reg = CookieSession.sm.reg;
