@@ -66,9 +66,7 @@ export default {
     const user = cldrStatus.getSurveyUser();
     if (!user) {
       this.helpMessage = cldrText.get("lock_account_login");
-    } else if (
-      user.userlevelName.toLowerCase() === cldrUserLevels.ADMIN.toLowerCase()
-    ) {
+    } else if (cldrUserLevels.match(user.userlevelName, cldrUserLevels.ADMIN)) {
       this.helpMessage = cldrText.get("lock_account_admin");
     } else {
       this.email = user.email;

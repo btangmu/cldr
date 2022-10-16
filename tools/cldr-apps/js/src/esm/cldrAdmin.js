@@ -24,8 +24,7 @@ function load() {
   const surveyUser = cldrStatus.getSurveyUser();
   const hasPermission =
     surveyUser &&
-    surveyUser.userlevelName.toLowerCase() ===
-      cldrUserLevels.ADMIN.toLowerCase();
+    cldrUserLevels.match(surveyUser.userlevelName, cldrUserLevels.ADMIN);
   if (!hasPermission) {
     ourDiv.innerHTML = cldrText.get("E_NO_PERMISSION");
   } else {
