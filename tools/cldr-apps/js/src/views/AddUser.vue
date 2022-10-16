@@ -173,13 +173,15 @@ export default {
     },
 
     async validateLocales() {
-      // the locales must be in the org's locales, unless the user is street level
-      const STREET_LEVEL = cldrUserLevels.getUserLevel(
-        cldrUserLevels.STREET,
+      if (!this.levelList) {
+        this.errors.push("Waiting for server...");
+        return;
+      }
+      const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
+        this.newUser.level,
         this.levelList
       );
-      const orgForValidation =
-        parseInt(this.newUser.level) === STREET_LEVEL ? "" : this.newUser.org;
+      const orgForValidation = skipOrg ? "" : this.newUser.org;
       await cldrAjax
         .doFetch(
           "./api/locales/normalize?" +
