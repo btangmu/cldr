@@ -70,13 +70,13 @@ function check(list) {
   checked = true;
 }
 
-function match(a, b) {
-  return a.toLowerCase() === b.toLowerCase();
-}
-
 function canVoteInNonOrgLocales(number, list) {
   const name = list[number].name;
-  return name.matches(ADMIN) || name.matches(TC) || name.matches(STREET);
+  return match(name, ADMIN) || match(name, TC) || match(name, STREET);
+}
+
+function match(a, b) {
+  return a.toLowerCase() === b.toLowerCase();
 }
 
 export {
