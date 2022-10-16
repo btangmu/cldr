@@ -525,7 +525,8 @@ function updateRowVoteInfo(tr, theRow) {
     const itemVotesLength = item.votes ? Object.keys(item.votes).length : 0;
     const anon =
       itemVotesLength == 1 &&
-      item.votes[Object.keys(item.votes)[0]].level === cldrUserLevels.ANONYMOUS;
+      item.votes[Object.keys(item.votes)[0]].level.toLowerCase() ===
+        cldrUserLevels.ANONYMOUS.toLowerCase();
     if (itemVotesLength == 0 || anon) {
       var vrow = cldrDom.createChunk(
         null,

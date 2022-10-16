@@ -406,8 +406,10 @@ public class UserRegistry {
             return getVoterToInfo(id);
         }
 
-        @Schema( name = "userLevelName", description = "VoteREsolver.Level user level" )
+        @Schema( name = "userLevelName", description = "VoteResolver.Level user level" )
         public synchronized VoteResolver.Level getLevel() {
+            // CAUTION: this name, like "VETTER", is uppercase when serialized for json response, while
+            // in some other http responses, lowercase levels like "vetter" are used -- we should be consistent
             return VoteResolver.Level.fromSTLevel(this.userlevel);
         }
 
@@ -1204,7 +1206,9 @@ public class UserRegistry {
         String msg = "";
         if (!intLocs) {
             final LocaleNormalizer locNorm = new LocaleNormalizer();
-            newLocales = locNorm.normalizeForSubset(newLocales, user.getOrganization().getCoveredLocales());
+            // STREET users are not limited to org locales
+            LocaleSet orgLocaleSet = (user.userlevel == STREET) ? null : user.getOrganization().getCoveredLocales();
+            newLocales = locNorm.normalizeForSubset(newLocales, orgLocaleSet);
             if (locNorm.hasMessage()) {
                 msg = locNorm.getMessageHtml() + "<br />";
             }

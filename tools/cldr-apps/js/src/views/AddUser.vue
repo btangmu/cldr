@@ -176,7 +176,7 @@ export default {
       // the locales must be in the org's locales, unless the user is street level
       const STREET_LEVEL = cldrUserLevels.getUserLevel(
         cldrUserLevels.STREET,
-        levelList
+        this.levelList
       );
       const orgForValidation =
         parseInt(this.newUser.level) === STREET_LEVEL ? "" : this.newUser.org;

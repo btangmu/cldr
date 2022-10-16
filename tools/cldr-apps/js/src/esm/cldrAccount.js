@@ -465,11 +465,18 @@ function getChangeLevelOptions(u, theirLevel) {
     const me = cldrStatus.getSurveyUser();
     if (!(me && me.email && u.data.email === me.email)) {
       for (let number in levelList) {
-        if (levelList[number].name === cldrUserLevels.ANONYMOUS) {
+        if (
+          levelList[number].name.toLowerCase() ===
+          cldrUserLevels.ANONYMOUS.toLowerCase()
+        ) {
           continue;
         }
         // only allow mass LOCK
-        if (justUser || levelList[number].name === cldrUserLevels.LOCKED) {
+        if (
+          justUser ||
+          levelList[number].name.toLowerCase() ===
+            cldrUserLevels.LOCKED.toLowerCase()
+        ) {
           html += doChangeUserOption(number, theirLevel);
         }
       }
@@ -988,7 +995,9 @@ function getBulkActionMenuLevels() {
   html += "<option>" + LIST_ACTION_NONE + "</option>";
   // Example: <option class='user999' value='999'>999: (LOCKED)</option>
   for (let n in levelList) {
-    if (levelList[n].name !== cldrUserLevels.ANONYMOUS) {
+    if (
+      levelList[n].name.toLowerCase() !== cldrUserLevels.ANONYMOUS.toLowerCase()
+    ) {
       html +=
         "<option class='user" +
         n +
