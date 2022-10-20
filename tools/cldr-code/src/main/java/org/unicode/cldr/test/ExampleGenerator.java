@@ -2433,7 +2433,9 @@ public class ExampleGenerator {
      * @return null if none available.
      */
     public synchronized String getHelpHtml(String xpath, String value, boolean listPlaceholders) {
-
+        if (listPlaceholders) {
+            throw new IllegalArgumentException("getHelpHtml listPlaceholders");
+        }
         // lazy initialization
 
         if (pathDescription == null) {

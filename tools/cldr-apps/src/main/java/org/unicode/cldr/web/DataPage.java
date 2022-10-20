@@ -94,6 +94,10 @@ public class DataPage implements JSONString {
      * @author srl
      */
     public class DataRow implements JSONString, PathValueInfo {
+        public String getTranslationHint() {
+            return TranslationHints.get(xpath, translationHintsFile);
+        }
+
         /**
          * A CandidateItem represents a particular alternative item which could be chosen or voted for.
          *
@@ -1073,7 +1077,12 @@ public class DataPage implements JSONString {
         }
 
         public String getHelpHTML() {
-            String s = nativeExampleGenerator.getHelpHtml(xpath, sm.getTranslationHintsFile().getStringValue(xpath));
+            String test = this.displayName;
+            String val = sm.getTranslationHintsFile().getStringValue(xpath);
+            if ((val != null || test != null) && (test == null || !test.equals(val))) {
+                System.out.println("getHelpHTML mismatch: " + test + " VS " + val);
+            }
+            String s = nativeExampleGenerator.getHelpHtml(xpath, val);
             if ("//ldml/localeDisplayNames/languages/language[@type=\"zh\"]".equals(xpath)) {
                 s += "<br>Translation hint: specifically, Mandarin Chinese.";
             }
