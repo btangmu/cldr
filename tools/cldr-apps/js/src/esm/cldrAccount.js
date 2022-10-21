@@ -99,7 +99,7 @@ let isJustMe = false;
 let justUser = null;
 
 let showLockedUsers = false;
-let orgMap = null;
+let orgs = null;
 let levelList = null;
 let shownUsers = null;
 let justOrg = null;
@@ -194,10 +194,13 @@ function listSingleUser(email) {
 }
 
 function reallyLoad() {
-  if (needOrgMap()) {
-    getOrgMap().then(reallyReallyLoad);
-  } else {
-    reallyReallyLoad();
+  getOrgs().then(reallyReallyLoad);
+}
+
+async function getOrgs() {
+  orgs = await cldrOrganizations.getOrgs();
+  if (!orgs) {
+    console.error("Organization names not received from server");
   }
 }
 
@@ -208,7 +211,7 @@ function reallyReallyLoad() {
     load: loadHandler,
     error: errorHandler,
   };
-  cldrAjax.sendXhr(xhrArgs);  
+  cldrAjax.sendXhr(xhrArgs);
 }
 
 function loadHandler(json) {
@@ -261,7 +264,7 @@ function getHtml(json) {
       html += " " + participatingUsersButton;
     }
     html += "</p>\n";
-    if (orgMap && !justUser) {
+    if (orgs && !justUser) {
       html += getOrgFilterMenu();
     }
   }
@@ -297,11 +300,12 @@ function getTable(json) {
     };
     byEmail[u.data.email] = u;
     if (oldOrg !== u.data.org) {
+      const orgDisplayName = orgs.shortToDisplay[u.data.org];
       html +=
         "<tr class='heading'><th class='partsection' colspan='6'><a name='" +
         u.data.org +
         "'><h4>" +
-        u.data.org +
+        orgDisplayName +
         "</h4></a></th></tr>\n";
       oldOrg = u.data.org;
     }
@@ -955,10 +959,17 @@ function getOrgFilterMenu() {
     "<label class='menutop-active'>Filter Organization " +
     "<select id='filterOrgSelect' class='menutop-other'>\n" +
     "<option value='all'>Show All</option>\n";
-  for (let shortName in orgMap) {
-    const displayName = orgMap[shortName];
+  for (let displayName in orgs.displayToShort) {
+    const shortName = orgs.displayToShort[displayName];
     const sel = shortName === justOrg ? " selected='selected'" : "";
-    html += "<option value='" + shortName + "'" + sel + ">" + displayName + "</option>\n";
+    html +=
+      "<option value='" +
+      shortName +
+      "'" +
+      sel +
+      ">" +
+      displayName +
+      "</option>\n";
   }
   html += "</select>\n";
   html += "</label>\n";
@@ -1201,15 +1212,6 @@ function getUrl() {
   return cldrAjax.makeUrl(p);
 }
 
-function needOrgMap() {
-  if (orgMap) {
-    return false; // already got orgMap
-  }
-  // Only Admin needs orgMap
-  const perm = cldrStatus.getPermissions();
-  return perm && perm.userIsAdmin;
-}
-
 function getLoginUrl(email, password) {
   const p = new URLSearchParams();
   p.append("email", email);
@@ -1347,21 +1349,8 @@ function setActionMenuOnChange() {
   }
 }
 
-async function getOrgMap() {
-  orgMap = cldrOrganizations.get().then(loadOrgs);
-}
-
-function loadOrgs(map) {
-  if (map) {
-    orgMap = map;
-  } else {
-    console.error("Organization names not received from server");
-  }
-}
-
 export {
   createUser,
-  filterOrg,
   load,
   loadListUsers,
   zoomUser,

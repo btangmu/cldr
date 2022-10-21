@@ -39,7 +39,7 @@
             <select id="new_org" name="new_org" v-model="newUser.org">
               <option disabled value="">Please select one</option>
               <option
-                v-for="(displayName, shortName) in orgMap"
+                v-for="(shortName, displayName) in orgs.displayToShort"
                 v-bind:value="shortName"
               >
                 {{ displayName }}
@@ -149,7 +149,7 @@ export default {
         name: null,
         org: null,
       },
-      orgMap: null,
+      orgs: null,
       userId: null,
     };
   },
@@ -170,19 +170,15 @@ export default {
       if (cldrStatus.getPermissions().userIsAdmin) {
         this.canChooseOrg = true;
         this.newUser.org = "";
-        this.getOrgMap();
+        this.getOrgs();
       } else {
         this.canChooseOrg = false;
         this.newUser.org = cldrStatus.getOrganizationName();
-        this.orgMap = null;
+        this.orgs = null;
       }
     },
 
     async validateLocales() {
-      if (!this.levelList) {
-        this.errors.push("Waiting for server...");
-        return;
-      }
       const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
         this.newUser.level,
         this.levelList
@@ -240,14 +236,14 @@ export default {
       return cldrText.get(`locale_rejection_${reason}`, reason);
     },
 
-    getOrgMap() {
+    getOrgs() {
       this.loading = true;
-      this.orgMap = cldrOrganizations.get().then(this.loadOrgs);
+      cldrOrganizations.getOrgs().then(this.loadOrgs);
     },
 
-    loadOrgs(map) {
-      if (map) {
-        this.orgMap = map;
+    loadOrgs(o) {
+      if (o) {
+        this.orgs = o;
         this.areWeLoading();
       } else {
         this.errors.push("Organization names not received from server");
@@ -256,7 +252,7 @@ export default {
     },
 
     areWeLoading() {
-      this.loading = !(this.levelList && (this.orgMap || this.newUser.org));
+      this.loading = !(this.levelList && (this.orgs || this.newUser.org));
     },
 
     async add() {

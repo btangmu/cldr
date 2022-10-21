@@ -25,7 +25,7 @@ public class OrgList {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(
         summary = "Get Organization Map",
-        description = "This handles a request for the set of organizations")
+        description = "This handles a request for the list of organizations")
     @APIResponses(
         value = {
             @APIResponse(
@@ -46,13 +46,13 @@ public class OrgList {
     @Schema(description = "Response for organizations query")
     public static final class OrgMapResponse {
 
-        @Schema(description = "Map of organization names")
+        @Schema(description = "Map from display names to short names")
         public Map<String,String> map;
 
         public OrgMapResponse() {
             map = new TreeMap<>();
             for (Organization o: Organization.values()) {
-                map.put(o.name(), o.getDisplayName());
+                map.put(o.getDisplayName(), o.name());
             }
         }
     }
