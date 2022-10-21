@@ -46,13 +46,13 @@ public class OrgList {
     @Schema(description = "Response for organizations query")
     public static final class OrgMapResponse {
 
-        @Schema(description = "Map from display names to short names")
+        @Schema(description = "Map from short names to display names")
         public Map<String,String> map;
 
         public OrgMapResponse() {
             map = new TreeMap<>();
             for (Organization o: Organization.values()) {
-                map.put(o.getDisplayName(), o.name());
+                map.put(o.name(), o.getDisplayName());
             }
         }
     }

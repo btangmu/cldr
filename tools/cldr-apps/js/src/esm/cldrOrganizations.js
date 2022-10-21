@@ -33,14 +33,14 @@ function loadOrgs(json) {
     console.error("Organization list not received from server");
     return null;
   }
-  const displayToShort = json.map;
+  const shortToDisplay = json.map;
+  const displayToShort = {};
+  for (let shortName in shortToDisplay) {
+    displayToShort[shortToDisplay[shortName]] = shortName;
+  }
   const sortedDisplayNames = Object.keys(displayToShort).sort((a, b) =>
     a.localeCompare(b)
   );
-  const shortToDisplay = {};
-  for (let displayName of sortedDisplayNames) {
-    shortToDisplay[displayToShort[displayName]] = displayName;
-  }
   orgs = { displayToShort, shortToDisplay, sortedDisplayNames };
   return orgs;
 }
