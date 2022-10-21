@@ -265,7 +265,7 @@ export default {
         return;
       }
       const xhrArgs = {
-        url: this.getAddUserUrl(),
+        url: cldrAjax.makeApiUrl("adduser", null),
         postData: this.newUser,
         handleAs: "json",
         load: this.loadHandler,
@@ -356,12 +356,6 @@ export default {
 
     manageThisUser() {
       cldrAccount.zoomUser(this.newUser.email);
-    },
-
-    getAddUserUrl() {
-      const p = new URLSearchParams();
-      p.append("s", cldrStatus.getSessionId());
-      return cldrAjax.makeApiUrl("adduser", p);
     },
   },
 };
