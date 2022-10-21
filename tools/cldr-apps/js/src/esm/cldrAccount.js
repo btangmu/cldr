@@ -4,6 +4,7 @@
 import * as cldrAjax from "./cldrAjax.js";
 import * as cldrDom from "./cldrDom.js";
 import * as cldrLoad from "./cldrLoad.js";
+import * as cldrOrganizations from "./cldrOrganizations.js";
 import * as cldrStatus from "./cldrStatus.js";
 import * as cldrSurvey from "./cldrSurvey.js";
 import * as cldrText from "./cldrText.js";
@@ -12,8 +13,8 @@ import * as cldrUserLevels from "./cldrUserLevels.js";
 const CLDR_ACCOUNT_DEBUG = false;
 const SHOW_GRAVATAR = !CLDR_ACCOUNT_DEBUG;
 
-const WHAT_USER_LIST = "user_list"; // cf. org.unicode.cldr.web.SurveyAjax.WHAT_USER_LIST
-const LIST_JUST = "justu"; // cf. org.unicode.cldr.web.UserList.LIST_JUST
+const WHAT_USER_LIST = "user_list"; // cf. SurveyAjax.WHAT_USER_LIST
+const LIST_JUST = "justu"; // cf. UserList.LIST_JUST
 
 // cf. UserList.java and SurveyMain.java for these constants
 const LIST_ACTION_SETLEVEL = "set_userlevel_";
@@ -29,7 +30,6 @@ const LIST_MAILUSER_CONFIRM = "mailthem_c";
 const LIST_MAILUSER_CONFIRM_CODE = "confirm";
 const PREF_SHOWLOCKED = "p_showlocked";
 const PREF_JUSTORG = "p_justorg";
-const GET_ORGS = "get_orgs";
 
 const userListTableId = "userListTable";
 
@@ -75,7 +75,7 @@ const bulkActionChangeButtonDiv =
   "</div>\n";
 
 const infoType = {
-  // this MUST agree with org.unicode.cldr.web.UserRegistry.InfoType
+  // this MUST agree with UserRegistry.InfoType
   INFO_EMAIL: "E-mail",
   INFO_NAME: "Name",
   INFO_PASSWORD: "Password",
@@ -99,7 +99,7 @@ let isJustMe = false;
 let justUser = null;
 
 let showLockedUsers = false;
-let orgList = null;
+let orgMap = null;
 let levelList = null;
 let shownUsers = null;
 let justOrg = null;
@@ -194,13 +194,21 @@ function listSingleUser(email) {
 }
 
 function reallyLoad() {
+  if (needOrgMap()) {
+    getOrgMap().then(reallyReallyLoad);
+  } else {
+    reallyReallyLoad();
+  }
+}
+
+function reallyReallyLoad() {
   const xhrArgs = {
     url: getUrl(),
     handleAs: "json",
     load: loadHandler,
     error: errorHandler,
   };
-  cldrAjax.sendXhr(xhrArgs);
+  cldrAjax.sendXhr(xhrArgs);  
 }
 
 function loadHandler(json) {
@@ -208,9 +216,6 @@ function loadHandler(json) {
   if (json.err) {
     ourDiv.innerHTML = json.err;
   } else {
-    if (json.orgList) {
-      orgList = json.orgList;
-    }
     shownUsers = json.shownUsers;
     if (
       justUser &&
@@ -256,7 +261,7 @@ function getHtml(json) {
       html += " " + participatingUsersButton;
     }
     html += "</p>\n";
-    if (orgList && !justUser) {
+    if (orgMap && !justUser) {
       html += getOrgFilterMenu();
     }
   }
@@ -950,10 +955,11 @@ function getOrgFilterMenu() {
     "<label class='menutop-active'>Filter Organization " +
     "<select id='filterOrgSelect' class='menutop-other'>\n" +
     "<option value='all'>Show All</option>\n";
-  orgList.forEach(function (org) {
-    const sel = org === justOrg ? " selected='selected'" : "";
-    html += "<option value='" + org + "'" + sel + ">" + org + "</option>\n";
-  });
+  for (let shortName in orgMap) {
+    const displayName = orgMap[shortName];
+    const sel = shortName === justOrg ? " selected='selected'" : "";
+    html += "<option value='" + shortName + "'" + sel + ">" + displayName + "</option>\n";
+  }
   html += "</select>\n";
   html += "</label>\n";
   return html;
@@ -1181,9 +1187,6 @@ function getUrl() {
   const allowCache = false;
   const p = new URLSearchParams();
   p.append("what", WHAT_USER_LIST);
-  if (needOrgList()) {
-    p.append(GET_ORGS, true);
-  }
   p.append(PREF_SHOWLOCKED, showLockedUsers);
   if (justOrg) {
     p.append(PREF_JUSTORG, justOrg);
@@ -1198,11 +1201,11 @@ function getUrl() {
   return cldrAjax.makeUrl(p);
 }
 
-function needOrgList() {
-  if (orgList) {
-    return false; // already got orgList
+function needOrgMap() {
+  if (orgMap) {
+    return false; // already got orgMap
   }
-  // Only Admin needs orgList
+  // Only Admin needs orgMap
   const perm = cldrStatus.getPermissions();
   return perm && perm.userIsAdmin;
 }
@@ -1344,22 +1347,21 @@ function setActionMenuOnChange() {
   }
 }
 
-/**
- * Get the list of organizations
- *
- * @returns an array of strings, or null
- *
- * This only works if the user is admin and the #account page has already been opened,
- * as is the case for AddUser.vue
- */
-function getOrgList() {
-  return orgList;
+async function getOrgMap() {
+  orgMap = cldrOrganizations.get().then(loadOrgs);
+}
+
+function loadOrgs(map) {
+  if (map) {
+    orgMap = map;
+  } else {
+    console.error("Organization names not received from server");
+  }
 }
 
 export {
   createUser,
   filterOrg,
-  getOrgList,
   load,
   loadListUsers,
   zoomUser,

@@ -38,7 +38,12 @@
           <td v-if="canChooseOrg">
             <select id="new_org" name="new_org" v-model="newUser.org">
               <option disabled value="">Please select one</option>
-              <option v-for="org in orgList">{{ org }}</option>
+              <option
+                v-for="(displayName, shortName) in orgMap"
+                v-bind:value="shortName"
+              >
+                {{ displayName }}
+              </option>
             </select>
           </td>
           <td v-else>
@@ -123,6 +128,7 @@
 import * as cldrAccount from "../esm/cldrAccount.js";
 import * as cldrAjax from "../esm/cldrAjax.js";
 import * as cldrLoad from "../esm/cldrLoad.js";
+import * as cldrOrganizations from "../esm/cldrOrganizations.js";
 import * as cldrStatus from "../esm/cldrStatus.js";
 import * as cldrText from "../esm/cldrText.js";
 import * as cldrUserLevels from "../esm/cldrUserLevels.js";
@@ -143,7 +149,7 @@ export default {
         name: null,
         org: null,
       },
-      orgList: null,
+      orgMap: null,
       userId: null,
     };
   },
@@ -164,11 +170,11 @@ export default {
       if (cldrStatus.getPermissions().userIsAdmin) {
         this.canChooseOrg = true;
         this.newUser.org = "";
-        this.getOrgList();
+        this.getOrgMap();
       } else {
         this.canChooseOrg = false;
         this.newUser.org = cldrStatus.getOrganizationName();
-        this.orgList = "";
+        this.orgMap = null;
       }
     },
 
@@ -213,9 +219,7 @@ export default {
         this.loading = false;
       } else {
         this.levelList = list;
-        if (this.orgList || this.newUser.org) {
-          this.loading = false;
-        }
+        this.areWeLoading();
       }
     },
 
@@ -236,31 +240,23 @@ export default {
       return cldrText.get(`locale_rejection_${reason}`, reason);
     },
 
-    getOrgList() {
-      this.orgList = cldrAccount.getOrgList();
-      if (this.orgList) {
-        return;
-      }
+    getOrgMap() {
       this.loading = true;
-      const xhrArgs = {
-        url: cldrAjax.makeApiUrl("organizations", null),
-        handleAs: "json",
-        load: (json) => this.loadOrgList(json),
-        error: (err) => this.errors.push(err),
-      };
-      cldrAjax.sendXhr(xhrArgs);
+      this.orgMap = cldrOrganizations.get().then(this.loadOrgs);
     },
 
-    loadOrgList(json) {
-      if (!json.list) {
-        this.errors.push("Organization list not received from server");
-        this.loading = false;
+    loadOrgs(map) {
+      if (map) {
+        this.orgMap = map;
+        this.areWeLoading();
       } else {
-        this.orgList = json.list;
-        if (this.levelList) {
-          this.loading = false;
-        }
+        this.errors.push("Organization names not received from server");
+        this.loading = false;
       }
+    },
+
+    areWeLoading() {
+      this.loading = !(this.levelList && (this.orgMap || this.newUser.org));
     },
 
     async add() {
