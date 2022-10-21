@@ -52,7 +52,9 @@ public class OrgList {
         public OrgMapResponse() {
             map = new TreeMap<>();
             for (Organization o: Organization.values()) {
-                map.put(o.name(), o.getDisplayName());
+                if (o.visibleOnFrontEnd()) {
+                    map.put(o.name(), o.getDisplayName());
+                }
             }
         }
     }
