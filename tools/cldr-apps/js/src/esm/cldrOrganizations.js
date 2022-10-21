@@ -6,13 +6,16 @@ import * as cldrAjax from "./cldrAjax.js";
 let orgs = null;
 
 /**
- * Get a complete list of organizations, in the form of two map, from short name to display name, and vice-versa
+ * Get a complete list of organizations, with their short names and display names
  *
- * Short and display names are like "wikimedia" and ""Wikimedia Foundation", respectively
+ * Short and display names are like "wikimedia" and "Wikimedia Foundation", respectively
  *
- * @returns the object with two maps, displayToShort and shortToDisplay
+ * @returns the object with these elements:
+ *          displayToShort - the map from display names to short names
+ *          shortToDisplay - the map from short names to display names
+ *          sortedDisplayNames - the sorted array of display names
  */
-async function getOrgs() {
+async function get() {
   if (orgs) {
     return orgs;
   }
@@ -26,18 +29,26 @@ async function getOrgs() {
 }
 
 function loadOrgs(json) {
-  if (json.map) {
-    const displayToShort = json.map;
-    const shortToDisplay = {};
-    for (let displayName in displayToShort) {
-      shortToDisplay[displayToShort[displayName]] = displayName;
-    }
-    orgs = { displayToShort, shortToDisplay };
-    return orgs;
-  } else {
-    console.err("Organization list not received from server");
+  if (!json.map) {
+    console.error("Organization list not received from server");
     return null;
   }
+  const displayToShort = json.map;
+  const sortedDisplayNames = Object.keys(displayToShort).sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const shortToDisplay = {};
+  for (let displayName of sortedDisplayNames) {
+    shortToDisplay[displayToShort[displayName]] = displayName;
+  }
+  orgs = { displayToShort, shortToDisplay, sortedDisplayNames };
+  return orgs;
 }
 
-export { getOrgs };
+export {
+  get,
+  /*
+   * The following is meant to be accessible for unit testing only, to set mock data:
+   */
+  loadOrgs,
+};

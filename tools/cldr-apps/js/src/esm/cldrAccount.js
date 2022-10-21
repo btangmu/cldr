@@ -194,13 +194,17 @@ function listSingleUser(email) {
 }
 
 function reallyLoad() {
-  getOrgs().then(reallyReallyLoad);
+  getOrgsAndLevels().then(reallyReallyLoad);
 }
 
-async function getOrgs() {
-  orgs = await cldrOrganizations.getOrgs();
+async function getOrgsAndLevels() {
+  orgs = await cldrOrganizations.get();
   if (!orgs) {
-    console.error("Organization names not received from server");
+    throw new Error("Organization names not received from server");
+  }
+  levelList = await cldrUserLevels.getLevelList();
+  if (!levelList) {
+    throw new Error("User levels not received from server");
   }
 }
 
@@ -227,11 +231,6 @@ function loadHandler(json) {
     ) {
       justUser = shownUsers[0].email;
     }
-    if (json.userPerms.levels) {
-      // Note for future improvement: levelList could be derived instead from cldrUserLevels.getLevelList,
-      // then the back end would no longer need to include it in UserList
-      levelList = json.userPerms.levels;
-    }
     ourDiv.innerHTML = getHtml(json);
   }
   cldrSurvey.hideLoader();
@@ -254,7 +253,7 @@ function getHtml(json) {
   if (isJustMe) {
     html += "<h2>My Account</h2>\n";
   } else {
-    const org = json.org ? json.org : "ALL";
+    const org = json.org ? orgs.shortToDisplay[json.org] : "ALL";
     html += "<h2>Users for " + org + "</h2>\n";
   }
   html += getEmailNotification(json);
@@ -264,7 +263,7 @@ function getHtml(json) {
       html += " " + participatingUsersButton;
     }
     html += "</p>\n";
-    if (orgs && !justUser) {
+    if (orgs && !justUser && cldrStatus.getPermissions()?.userIsAdmin) {
       html += getOrgFilterMenu();
     }
   }
@@ -287,32 +286,44 @@ function getHtml(json) {
 }
 
 function getTable(json) {
-  shownUsers = json.shownUsers;
-  // Note: this assignment to levelList is redundant except for the unit test;
-  // a future revision of the unit test could supply a mock levelList separately
-  levelList = json.userPerms.levels;
+  shownUsers = json.shownUsers; // redundant except for unit test
   byEmail = {};
   let html = getTableStart();
-  let oldOrg = "";
-  for (let i in shownUsers) {
-    const u = {
-      data: shownUsers[i],
-    };
-    byEmail[u.data.email] = u;
-    if (oldOrg !== u.data.org) {
-      const orgDisplayName = orgs.shortToDisplay[u.data.org];
-      html +=
-        "<tr class='heading'><th class='partsection' colspan='6'><a name='" +
-        u.data.org +
-        "'><h4>" +
-        orgDisplayName +
-        "</h4></a></th></tr>\n";
-      oldOrg = u.data.org;
+  for (let org of getSortedOrgsToShow()) {
+    const orgDisplayName = orgs.shortToDisplay[org];
+    html +=
+      "<tr class='heading'><th class='partsection' colspan='6'><a name='" +
+      org +
+      "'><h4>" +
+      orgDisplayName +
+      "</h4></a></th></tr>\n";
+    for (let userData of shownUsers) {
+      if (org === userData.org) {
+        const u = {
+          data: userData,
+        };
+        byEmail[userData.email] = u;
+        html += getUserTableRow(u, json);
+      }
     }
-    html += getUserTableRow(u, json);
   }
   html += getTableEnd(json);
   return html;
+}
+
+function getSortedOrgsToShow() {
+  const sortedOrgs = [];
+  const orgsFound = {};
+  for (let userData of shownUsers) {
+    orgsFound[userData.org] = true;
+  }
+  for (let displayName of orgs.sortedDisplayNames) {
+    const shortName = orgs.displayToShort[displayName];
+    if (orgsFound[shortName]) {
+      sortedOrgs.push(shortName);
+    }
+  }
+  return sortedOrgs;
 }
 
 function getTableStart() {
@@ -959,7 +970,7 @@ function getOrgFilterMenu() {
     "<label class='menutop-active'>Filter Organization " +
     "<select id='filterOrgSelect' class='menutop-other'>\n" +
     "<option value='all'>Show All</option>\n";
-  for (let displayName in orgs.displayToShort) {
+  for (let displayName of orgs.sortedDisplayNames) {
     const shortName = orgs.displayToShort[displayName];
     const sel = shortName === justOrg ? " selected='selected'" : "";
     html +=
@@ -1349,6 +1360,14 @@ function setActionMenuOnChange() {
   }
 }
 
+function setMockLevels(list) {
+  levelList = list;
+}
+
+function setMockOrgs(o) {
+  orgs = o;
+}
+
 export {
   createUser,
   load,
@@ -1359,4 +1378,6 @@ export {
    */
   getHtml,
   getTable,
+  setMockLevels,
+  setMockOrgs,
 };

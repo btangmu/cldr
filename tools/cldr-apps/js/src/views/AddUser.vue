@@ -39,8 +39,8 @@
             <select id="new_org" name="new_org" v-model="newUser.org">
               <option disabled value="">Please select one</option>
               <option
-                v-for="(shortName, displayName) in orgs.displayToShort"
-                v-bind:value="shortName"
+                v-for="displayName of orgs.sortedDisplayNames"
+                v-bind:value="orgs.displayToShort[displayName]"
               >
                 {{ displayName }}
               </option>
@@ -75,6 +75,7 @@
               @change="validateLocales"
               placeholder="en de de_CH fr zh_Hant"
             />
+            &nbsp;
             <button v-on:click="setAllLocales()">All Locales</button><br />
             (Space separated. Use the All Locales button to grant access to all
             locales. )<br />
@@ -161,11 +162,13 @@ export default {
   methods: {
     initializeData() {
       this.addedNewUser = false;
-      this.userId = null;
-      this.newUser.name = "";
+      this.errors = [];
+      this.locWarnings = null;
       this.newUser.email = "";
       this.newUser.level = "";
       this.newUser.locales = "und";
+      this.newUser.name = "";
+      this.userId = null;
       this.getLevelList();
       if (cldrStatus.getPermissions().userIsAdmin) {
         this.canChooseOrg = true;
@@ -211,7 +214,7 @@ export default {
 
     loadLevelList(list) {
       if (!list) {
-        this.errors.push("Level list not received from server");
+        this.errors.push("User-level list not received from server");
         this.loading = false;
       } else {
         this.levelList = list;
@@ -238,7 +241,7 @@ export default {
 
     getOrgs() {
       this.loading = true;
-      cldrOrganizations.getOrgs().then(this.loadOrgs);
+      cldrOrganizations.get().then(this.loadOrgs);
     },
 
     loadOrgs(o) {
