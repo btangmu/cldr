@@ -1502,12 +1502,6 @@ public class DataPage {
 
                 // Only display metazone data for which an English value exists
                 if (isMetazones && !Objects.equals(suff, "/commonlyUsed")) {
-                    // TODO: what is this about? does this still happen? Yes, it happens if the
-                    // user submits a new value for http://localhost:9080/cldr-apps/v#/fr_CA/SAsia/64a4521796fa7ff4
-                    // path = //ldml/dates/timeZoneNames/metazone[@type="Afghanistan"]/short/standard
-                    // suff = "/short/standard"
-                    // engValue gets null
-                    // ref: https://unicode-org.atlassian.net/browse/CLDR-13665
                     String engValue = comparisonValueFile.getStringValue(base_xpath_string);
                     if (engValue == null || engValue.length() == 0) {
                         continue;
