@@ -54,12 +54,6 @@ public class DataPage {
     private final static boolean USE_CANDIDATE_HISTORY = false;
 
     /**
-     * The translation-hints CLDRFile for this DataPage
-     * This is English if TRANS_HINT_ID = "en_ZZ"; see SurveyMain.getTranslationHintsFile
-     */
-    private CLDRFile translationHintsFile;
-
-    /**
      * The comparison-value CLDRFile for this DataPage
      * This is English; see SurveyMain.getEnglishFile
      */
@@ -1055,7 +1049,7 @@ public class DataPage {
         }
 
         public String getTranslationHint() {
-            return TranslationHints.get(xpath, translationHintsFile);
+            return TranslationHints.get(xpath);
         }
     }
 
@@ -1310,11 +1304,9 @@ public class DataPage {
             if (checkCldr == null) {
                 throw new InternalError("checkCldr == null");
             }
-            page.translationHintsFile = sm.getTranslationHintsFile();
             page.comparisonValueFile = sm.getEnglishFile();
 
-            String englishPath = page.comparisonValueFile.getSupplementalDirectory().getPath();
-            page.nativeExampleGenerator = TestCache.getExampleGenerator(locale, ourSrc, page.comparisonValueFile, englishPath);
+            page.nativeExampleGenerator = TestCache.getExampleGenerator(locale, ourSrc, page.comparisonValueFile);
 
             page.populateFrom(ourSrc, checkCldr);
             /*
@@ -1369,17 +1361,6 @@ public class DataPage {
     private static final boolean DEBUG_DATA_PAGE = false;
     private String creationTime = null; // only used if DEBUG_DATA_PAGE
 
-    /**
-     * Create a DataPage
-     *
-     * @param pageId
-     * @param sm
-     * @param loc
-     * @param prefix
-     * @param matcher
-     *
-     * Called only by DataPage.make
-     */
     DataPage(PageId pageId, SurveyMain sm, CLDRLocale loc, String prefix, XPathMatcher matcher) {
         this.locale = loc;
         this.sm = sm;

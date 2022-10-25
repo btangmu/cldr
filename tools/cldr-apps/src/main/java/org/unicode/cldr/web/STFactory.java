@@ -484,7 +484,15 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 }
                 TreeSet<User> ts = new TreeSet<>();
                 for (Entry<User, PerUserData> e : userToData.entrySet()) {
-                    if (e.getValue().getValue().equals(value)) {
+                    PerUserData pud = e.getValue();
+                    String pudValue = pud.getValue();
+                    // TODO: this fails if value isCldrUtility.INHERITANCE_MARKER
+                    // and pudValue is the bailey value -- we need a liberal comparison here,
+                    // or PerUserData needs to store INHERITANCE_MARKER instead of bailey
+                    // when the value equals bailey, or the caller needs to change
+                    // INHERITANCE_MARKER to bailey
+                    // Reference: https://unicode-org.atlassian.net/browse/CLDR-16105
+                    if (pudValue != null && pudValue.equals(value)) {
                         ts.add(e.getKey());
                     }
                 }

@@ -5,7 +5,7 @@ const defaultEndpoint = "https://dbpedia.org/sparql/";
 const format = "JSON";
 const abstractLang = "en";
 
-const USELESS_IN_INFO_PANEL = "see info panel on right";
+const USELESS_IN_INFO_PANEL = "see info panel";
 
 function addDeferredHelpTo(fragment, helpHtml, resource, translationHint) {
   // Always have help (if available).
@@ -13,7 +13,10 @@ function addDeferredHelpTo(fragment, helpHtml, resource, translationHint) {
     class: "alert alert-info fix-popover-help",
   });
   // helpHtml and translationHint are loaded immediately in the DataPage, no separate query needed
-  if (translationHint && translationHint !== USELESS_IN_INFO_PANEL) {
+  if (
+    translationHint &&
+    !translationHint.toLowerCase().includes(USELESS_IN_INFO_PANEL)
+  ) {
     const hintHtml =
       "<strong>Translation hint:</strong> " +
       translationHint +

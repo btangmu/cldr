@@ -349,13 +349,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     public static final String PREF_DEBUGJSP = "p_debugjsp"; // debug JSPs?
     public static final String PREF_COVLEV = "p_covlev"; // covlev
 
-    static final String TRANS_HINT_ID = "en_ZZ"; // Needs to be en_ZZ as per cldrbug #2918; must match TRANS_HINT_ID in JavaScript
+    static final String TRANS_HINT_ID = "en";
     public static final ULocale TRANS_HINT_LOCALE = new ULocale(TRANS_HINT_ID);
     // TRANS_HINT_LANGUAGE_NAME needs to match TRANS_HINT_LANGUAGE_NAME in JavaScript ("English")
-    public static final String TRANS_HINT_LANGUAGE_NAME = TRANS_HINT_LOCALE.getDisplayLanguage(TRANS_HINT_LOCALE); // Note:
-    // Only
-    // shows
-    // language.
+    public static final String TRANS_HINT_LANGUAGE_NAME = TRANS_HINT_LOCALE.getDisplayLanguage(TRANS_HINT_LOCALE);
 
     // ========== lengths
 
@@ -2173,8 +2170,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         ctx.includeFragment("generalinfo.jsp");
     }
 
-    private static CLDRFile gTranslationHintsFile = null;
-
     private static ExampleGenerator gComparisonValuesExample = null;
 
     private Factory gFactory = null;
@@ -2231,30 +2226,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         gSTFactory = null;
     }
 
-    /**
-     * This is the TRANSLATION HINTS FILE (en_ZZ) - thus it contains 'translation hints'.
-     * @see {@link #TRANS_HINT_ID}
-     * @see {@link #getEnglishFile()}
-     * @return
-     */
-    public synchronized CLDRFile getTranslationHintsFile() {
-        if (gTranslationHintsFile == null) {
-            try {
-                CLDRFile file = getDiskFactory().make(TRANS_HINT_LOCALE.toString(), true);
-                file.setSupplementalDirectory(getSupplementalDirectory()); // so the icuServiceBuilder doesn't blow up.
-                file.freeze(); // so it can be shared.
-                gTranslationHintsFile = file;
-
-                // propagate it.
-                CheckCLDR.setDisplayInformation(gTranslationHintsFile);
-                setDefaultCLDRLocaleFormatter();
-            } catch (Throwable t) {
-                busted("Could not load translation hints locale " + TRANS_HINT_LOCALE, t);
-            }
-        }
-        return gTranslationHintsFile;
-    }
-
     private final Set<UserLocaleStuff> allUserLocaleStuffs = new HashSet<>();
 
     public static final String QUERY_VALUE_SUFFIX = "_v";
@@ -2262,7 +2233,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     public synchronized ExampleGenerator getComparisonValuesExample() {
         if (gComparisonValuesExample == null) {
             CLDRFile comparisonValuesFile = getEnglishFile();
-            gComparisonValuesExample = new ExampleGenerator(comparisonValuesFile, comparisonValuesFile, fileBase + "/../supplemental/");
+            gComparisonValuesExample = new ExampleGenerator(comparisonValuesFile, comparisonValuesFile);
             gComparisonValuesExample.setVerboseErrors(twidBool("ExampleGenerator.setVerboseErrors"));
         }
         return gComparisonValuesExample;
@@ -2321,7 +2292,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         CheckCLDR checkCldr;
         checkCldr = CheckCLDR.getCheckAll(getSTFactory(), "(?!.*(CheckCoverage).*).*");
 
-        CheckCLDR.setDisplayInformation(getTranslationHintsFile());
+        CheckCLDR.setDisplayInformation(getEnglishFile());
 
         return checkCldr;
     }
@@ -2386,7 +2357,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 dbSource = resolvedSource.getUnresolving();
                 cldrfile = getSTFactory().make(locale, true).setSupplementalDirectory(getSupplementalDirectory());
                 resolvedFile = cldrfile;
-                translationHintsFile = getTranslationHintsFile();
             }
         }
 
@@ -2739,12 +2709,11 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 return;
             }
 
-            progress.update("Setup translation-hints file..");
+            progress.update("Setup English file..");
 
-            // load translation-hints file
-            getTranslationHintsFile();
+            getEnglishFile();
 
-            progress.update("Setup translation-hints example..");
+            progress.update("Setup comparison-values example..");
 
             // and example
             getComparisonValuesExample();
@@ -3527,8 +3496,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     /**
      * Get exactly the "en" disk file.
-     * @see #getTranslationHintsFile()
-     * @return
      */
     public CLDRFile getEnglishFile() {
         if (gEnglishFile == null) synchronized (this) {

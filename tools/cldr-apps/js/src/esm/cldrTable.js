@@ -757,7 +757,7 @@ function updateRowEnglishComparisonCell(tr, theRow, cell) {
     cell.appendChild(
       cldrDom.createChunk(theRow.displayName, "span", "subSpan")
     );
-    const TRANS_HINT_ID = "en_ZZ"; // must match SurveyMain.TRANS_HINT_ID? Dubious!
+    const TRANS_HINT_ID = "en"; // expected to match SurveyMain.TRANS_HINT_ID
     cldrSurvey.setLang(cell, TRANS_HINT_ID);
     if (theRow.displayExample || theRow.translationHint) {
       const infos = document.createElement("div");
