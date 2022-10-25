@@ -1868,9 +1868,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         return localeTree;
     }
 
-    /**
-     * @return
-     */
     private CLDRFormatter setDefaultCLDRLocaleFormatter() {
         CLDRFormatter defaultFormatter = new CLDRLocale.CLDRFormatter(getEnglishFile(), FormatBehavior.replace);
         CLDRLocale.setDefaultFormatter(defaultFormatter);
@@ -2288,15 +2285,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         return phase().getCPhase();
     }
 
-    public CheckCLDR createCheck() {
-        CheckCLDR checkCldr;
-        checkCldr = CheckCLDR.getCheckAll(getSTFactory(), "(?!.*(CheckCoverage).*).*");
-
-        CheckCLDR.setDisplayInformation(getEnglishFile());
-
-        return checkCldr;
-    }
-
     /**
      * Any user of this should be within session sync.
      *
@@ -2309,7 +2297,6 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         public XMLSource resolvedSource = null;
         private int use;
         CLDRFile resolvedFile = null;
-        CLDRFile translationHintsFile;
 
         public void open() {
             use++;
@@ -3499,10 +3486,10 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
      */
     public CLDRFile getEnglishFile() {
         if (gEnglishFile == null) synchronized (this) {
-            CLDRFile english = getDiskFactory().make(ULocale.ENGLISH.getBaseName(), true);
-            english.setSupplementalDirectory(getSupplementalDirectory());
-            english.freeze();
-            gEnglishFile = english;
+            gEnglishFile = getDiskFactory().make(ULocale.ENGLISH.getBaseName(), true);
+            gEnglishFile.setSupplementalDirectory(getSupplementalDirectory());
+            gEnglishFile.freeze();
+            CheckCLDR.setDisplayInformation(gEnglishFile);
         }
         return gEnglishFile;
     }
