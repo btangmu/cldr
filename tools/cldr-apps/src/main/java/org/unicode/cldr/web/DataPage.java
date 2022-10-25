@@ -14,19 +14,12 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONString;
 import org.unicode.cldr.icu.LDMLConstants;
-import org.unicode.cldr.test.CheckCLDR;
+import org.unicode.cldr.test.*;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus;
 import org.unicode.cldr.test.CheckCLDR.InputMethod;
 import org.unicode.cldr.test.CheckCLDR.Options;
 import org.unicode.cldr.test.CheckCLDR.StatusAction;
-import org.unicode.cldr.test.DisplayAndInputProcessor;
-import org.unicode.cldr.test.ExampleGenerator;
-import org.unicode.cldr.test.TestCache;
 import org.unicode.cldr.test.TestCache.TestResultBundle;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.CLDRInfo.CandidateInfo;
@@ -65,6 +58,12 @@ public class DataPage {
      * This is English if TRANS_HINT_ID = "en_ZZ"; see SurveyMain.getTranslationHintsFile
      */
     private CLDRFile translationHintsFile;
+
+    /**
+     * The comparison-value CLDRFile for this DataPage
+     * This is English; see SurveyMain.getEnglishFile
+     */
+    private CLDRFile comparisonValueFile;
 
     /**
      * The CLDRFile for the root locale; use lazy initialization, see getRootFile
@@ -537,7 +536,7 @@ public class DataPage {
             baselineValue = resolver.getBaselineValue();
             baselineStatus = resolver.getBaselineStatus();
 
-            this.displayName = translationHintsFile.getStringValue(xpath);
+            this.displayName = comparisonValueFile.getStringValue(xpath);
         }
 
         /**
@@ -873,13 +872,13 @@ public class DataPage {
         }
 
         public String getHelpHTML() {
-            return nativeExampleGenerator.getHelpHtml(xpath, sm.getTranslationHintsFile().getStringValue(xpath));
+            return nativeExampleGenerator.getHelpHtml(xpath, this.displayName);
         }
 
         public String getDisplayExample() {
             String displayExample = null;
             if (displayName != null) {
-                displayExample = sm.getTranslationHintsExample().getExampleHtml(xpath, displayName);
+                displayExample = sm.getComparisonValuesExample().getNonTrivialExampleHtml(xpath, displayName);
             }
             return displayExample;
         }
@@ -1054,6 +1053,10 @@ public class DataPage {
                 return null;
             }
         }
+
+        public String getTranslationHint() {
+            return TranslationHints.get(xpath, translationHintsFile);
+        }
     }
 
     /*
@@ -1093,7 +1096,7 @@ public class DataPage {
     /**
      * A DisplaySet represents a list of rows, in sorted and divided order.
      */
-    public static class DisplaySet implements JSONString {
+    public static class DisplaySet {
 
         /**
          * Partitions divide up the rows into sets, such as 'proposed',
@@ -1136,25 +1139,6 @@ public class DataPage {
             this.partitions = partitions;
             rows = myRows;
         }
-
-        /**
-         * Convert this DisplaySet to a JSON string.
-         */
-        @Override
-        public String toJSONString() throws JSONException {
-            JSONArray r = new JSONArray();
-            for (DataRow row : rows) {
-                r.put(row.fieldHash());
-            }
-            JSONArray p = new JSONArray();
-            for (Partition partition : partitions) {
-                p.put(new JSONObject().put("name", partition.name).put("start", partition.start).put("limit", partition.limit)
-                    .put("helptext", partition.helptext));
-            }
-            return new JSONObject().put("displayName", sortMode.getDisplayName())
-                .put("rows", r).put("partitions", p).toString();
-        }
-
     }
 
     /**
@@ -1327,8 +1311,10 @@ public class DataPage {
                 throw new InternalError("checkCldr == null");
             }
             page.translationHintsFile = sm.getTranslationHintsFile();
-            String englishPath = page.translationHintsFile.getSupplementalDirectory().getPath();
-            page.nativeExampleGenerator = TestCache.getExampleGenerator(locale, ourSrc, page.translationHintsFile, englishPath);
+            page.comparisonValueFile = sm.getEnglishFile();
+
+            String englishPath = page.comparisonValueFile.getSupplementalDirectory().getPath();
+            page.nativeExampleGenerator = TestCache.getExampleGenerator(locale, ourSrc, page.comparisonValueFile, englishPath);
 
             page.populateFrom(ourSrc, checkCldr);
             /*
@@ -1535,7 +1521,13 @@ public class DataPage {
 
                 // Only display metazone data for which an English value exists
                 if (isMetazones && !Objects.equals(suff, "/commonlyUsed")) {
-                    String engValue = translationHintsFile.getStringValue(base_xpath_string);
+                    // TODO: what is this about? does this still happen? Yes, it happens if the
+                    // user submits a new value for http://localhost:9080/cldr-apps/v#/fr_CA/SAsia/64a4521796fa7ff4
+                    // path = //ldml/dates/timeZoneNames/metazone[@type="Afghanistan"]/short/standard
+                    // suff = "/short/standard"
+                    // engValue gets null
+                    // ref: https://unicode-org.atlassian.net/browse/CLDR-13665
+                    String engValue = comparisonValueFile.getStringValue(base_xpath_string);
                     if (engValue == null || engValue.length() == 0) {
                         continue;
                     }

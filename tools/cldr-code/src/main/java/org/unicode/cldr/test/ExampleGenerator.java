@@ -384,6 +384,28 @@ public class ExampleGenerator {
      * @return the example HTML, or null
      */
     public String getExampleHtml(String xpath, String value) {
+        return getExampleHtmlExtended(xpath, value, false /* nonTrivial */);
+    }
+
+    /**
+     * Same as getExampleHtml but return null if the result would simply be the given
+     * value plus some markup
+     *
+     * For example, for path = //ldml/localeDisplayNames/languages/language[@type="nl_BE"]
+     * and value = "Flemish", getExampleHtml returns "<div class='cldr_example'>Flemish</div>",
+     * which is trivial. Maybe there is some context in which such trivial examples are useful
+     * -- if not, getExampleHtml should be revised to be the same as getNonTrivialExampleHtml
+     * and there won't be a need for this distinct method.
+     *
+     * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
+     * @param value the value; e.g., "{1} [{0}]"; not necessarily the winning value
+     * @return the example HTML, or null
+     */
+    public String getNonTrivialExampleHtml(String xpath, String value) {
+        return getExampleHtmlExtended(xpath, value, true /* nonTrivial */);
+    }
+
+    private String getExampleHtmlExtended(String xpath, String value, boolean nonTrivial) {
         if (value == null || xpath == null || xpath.endsWith("/alias")) {
             return null;
         }
@@ -404,7 +426,7 @@ public class ExampleGenerator {
             if (result != null) {
                 return result;
             }
-            result = constructExampleHtml(xpath, value);
+            result = constructExampleHtml(xpath, value, nonTrivial);
             cacheItem.putExample(result);
         } catch (RuntimeException e) {
             e.printStackTrace();
@@ -420,9 +442,10 @@ public class ExampleGenerator {
      *
      * @param xpath the path; e.g., "//ldml/dates/timeZoneNames/fallbackFormat"
      * @param value the value; e.g., "{1} [{0}]"; not necessarily the winning value
+     * @param nonTrivial true if we should avoid returning a trivial example (just value wrapped in markup)
      * @return the example HTML, or null
      */
-    private String constructExampleHtml(String xpath, String value) {
+    private String constructExampleHtml(String xpath, String value, boolean nonTrivial) {
         String result = null;
         boolean showContexts = isRTL || BIDI_MARKS.containsSome(value); // only used for certain example types
         /*
@@ -493,10 +516,11 @@ public class ExampleGenerator {
             result = handlePersonName(parts, value);
         }
         if (result != null) {
-//            if (!typeIsEnglish) {
-//                result = addTransliteration(result, value);
-//            }
-            result = finalizeBackground(result);
+             if (nonTrivial && value.equals(result)) {
+                 result = null;
+             } else {
+                 result = finalizeBackground(result);
+             }
         }
         return result;
     }
@@ -1707,7 +1731,7 @@ public class ExampleGenerator {
                 if (value == null) {
                     result = timezone.substring(timezone.lastIndexOf('/') + 1).replace('_', ' ');
                 } else {
-                    result = value;
+                    result = value; // trivial -- is this beneficial?
                 }
                 return result;
             }
@@ -1724,7 +1748,7 @@ public class ExampleGenerator {
                 result = setBackground(cldrFile.getName(CLDRFile.TERRITORY_NAME, countryCode));
             }
         } else if (parts.contains("zone")) { // {0} Time
-            result = value;
+            result = value; // trivial -- is this beneficial?
         } else if (parts.contains("regionFormat")) { // {0} Time
             result = format(value, setBackground(cldrFile.getName(CLDRFile.TERRITORY_NAME, "JP")));
             result = addExampleResult(
@@ -2108,7 +2132,7 @@ public class ExampleGenerator {
             String type = parts.getAttributeValue(-1, "type");
             if (type.contains("_")) {
                 if (value != null && !value.equals(type)) {
-                    result = value;
+                    result = value; // trivial -- is this beneficial?
                 } else {
                     result = cldrFile.getBaileyValue(xpath, null, null);
                 }
@@ -2433,7 +2457,9 @@ public class ExampleGenerator {
      * @return null if none available.
      */
     public synchronized String getHelpHtml(String xpath, String value, boolean listPlaceholders) {
-
+        if (listPlaceholders) {
+            throw new IllegalArgumentException("getHelpHtml listPlaceholders");
+        }
         // lazy initialization
 
         if (pathDescription == null) {

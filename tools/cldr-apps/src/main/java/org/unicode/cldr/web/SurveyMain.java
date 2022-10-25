@@ -2174,7 +2174,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
     }
 
     private static CLDRFile gTranslationHintsFile = null;
-    private static ExampleGenerator gTranslationHintsExample = null;
+
+    private static ExampleGenerator gComparisonValuesExample = null;
 
     private Factory gFactory = null;
 
@@ -2258,23 +2259,13 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     public static final String QUERY_VALUE_SUFFIX = "_v";
 
-    /**
-     *
-     * @return
-     *
-     * Called by DataPage.DataRow.toJSONString, and from helpHtml.jsp, and locally by doStartup
-     */
-    public synchronized ExampleGenerator getTranslationHintsExample() {
-        if (gTranslationHintsExample == null) {
-            CLDRFile translationHintsFile = getTranslationHintsFile();
-            gTranslationHintsExample = new ExampleGenerator(translationHintsFile, translationHintsFile, fileBase + "/../supplemental/");
+    public synchronized ExampleGenerator getComparisonValuesExample() {
+        if (gComparisonValuesExample == null) {
+            CLDRFile comparisonValuesFile = getEnglishFile();
+            gComparisonValuesExample = new ExampleGenerator(comparisonValuesFile, comparisonValuesFile, fileBase + "/../supplemental/");
+            gComparisonValuesExample.setVerboseErrors(twidBool("ExampleGenerator.setVerboseErrors"));
         }
-        /*
-         * TODO: to improve performance, move the following line inside the above "if" block, or explain why that can't be done.
-         * Why would we need to check this more than once? Can the return value of twidBool change during a run of Survey Tool?
-         */
-        gTranslationHintsExample.setVerboseErrors(twidBool("ExampleGenerator.setVerboseErrors"));
-        return gTranslationHintsExample;
+        return gComparisonValuesExample;
     }
 
     public synchronized WebContext.HTMLDirection getHTMLDirectionFor(CLDRLocale locale) {
@@ -2756,7 +2747,7 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             progress.update("Setup translation-hints example..");
 
             // and example
-            getTranslationHintsExample();
+            getComparisonValuesExample();
 
             progress.update("Wake up the database..");
 
