@@ -172,7 +172,7 @@ public class SurveyForum {
         return num;
     }
 
-    private void gatherInterestedUsers(String forum, Set<Integer> cc_emails, Set<Integer> bcc_emails) {
+    private void gatherUsersInterestedInLocale(String forum, Set<Integer> cc_emails, Set<Integer> bcc_emails) {
         try {
             Connection conn = null;
             PreparedStatement pIntUsers = null;
@@ -213,7 +213,8 @@ public class SurveyForum {
      *
      * Called by doPostInternal
      */
-    private void emailNotify(UserRegistry.User user, CLDRLocale locale, int base_xpath, String subj, String text, Integer postId) {
+    private void emailNotify(User user, PostInfo postInfo, int postId) {
+        CLDRLocale locale = postInfo.getLocale();
         String forum = localeToForum(locale);
         ElapsedTimer et = new ElapsedTimer("Sending email to " + forum);
         // Do email-
@@ -221,19 +222,44 @@ public class SurveyForum {
         Set<Integer> bcc_emails = new HashSet<>();
 
         // Collect list of users to send to.
-        gatherInterestedUsers(forum, cc_emails, bcc_emails);
+        gatherUsersInterestedInLocale(forum, cc_emails, bcc_emails);
+        gatherUsersInterestedInThread(postInfo, user, cc_emails);
 
-        String subject = "CLDR forum post (" + locale.getDisplayName() + " - " + locale + "): " + subj;
+        String subject = "CLDR forum post (" + locale.getDisplayName() + " - " + locale + "): " + postInfo.getSubj();
 
         String body = "Do not reply to this message, instead go to <"
             + CLDRConfig.getInstance().absoluteUrls().forSpecial(CLDRURLS.Special.Forum, locale, (String) null, Integer.toString(postId))
 
             + ">\n====\n\n"
-            + text;
+            + postInfo.getText();
 
-        logger.fine(et + ": Forum notify: u#" + user.id + " x" + base_xpath + " queueing cc:" + cc_emails.size() + " and bcc:" + bcc_emails.size());
+        logger.fine(et + ": Forum notify: u#" + user.id + " x" + postInfo.getPath() + " queueing cc:" + cc_emails.size() + " and bcc:" + bcc_emails.size());
 
-        MailSender.getInstance().queue(user.id, cc_emails, bcc_emails, HTMLUnsafe(subject), HTMLUnsafe(body), locale, base_xpath, postId);
+        MailSender.getInstance().queue(user.id, cc_emails, bcc_emails, HTMLUnsafe(subject), HTMLUnsafe(body), locale, postInfo.getPath(), postId);
+    }
+
+    /**
+     * Add users interested in this particular thread
+     *
+     * If this is a reply, add the user who started the thread, if they are not the current poster,
+     * and they are a TC member
+     *
+     * @param postInfo the new post
+     * @param currentUser the poster of the new post
+     * @param cc_emails the set of emails to which we may add
+     */
+    private void gatherUsersInterestedInThread(PostInfo postInfo, User currentUser, Set<Integer> cc_emails) {
+        if (postInfo.getReplyTo() < 0) {
+            return; // not a reply
+        }
+        final int rootPosterId = getUserId(postInfo.getRoot());
+        if (rootPosterId == currentUser.id) {
+            return; // don't notify the poster of their own action
+        }
+        UserRegistry.User rootPoster = sm.reg.getInfo(rootPosterId);
+        if (UserRegistry.userIsTC(rootPoster)) {
+            cc_emails.add(rootPosterId);
+        }
     }
 
     /**
@@ -243,15 +269,14 @@ public class SurveyForum {
      *
      * @param user the current user
      * @param postType the PostType
-     * @param replyTo the post id of the parent, or NO_PARENT
+     * @param postInfo the PostInfo
      * @return true or false
-     *
-     * @throws SurveyException
      */
-    private boolean userCanUsePostType(User user, PostType postType, int replyTo) throws SurveyException {
+    private boolean userCanUsePostType(User user, PostType postType, PostInfo postInfo) {
         if (SurveyMain.isPhaseReadonly()) {
             return false;
         }
+        int replyTo = postInfo.getReplyTo();
         if (postType == PostType.DISCUSS && replyTo == NO_PARENT && !UserRegistry.userIsTC(user)) {
             return false; // only TC can initiate Discuss; others can reply
         }
@@ -261,50 +286,36 @@ public class SurveyForum {
         if (replyTo == NO_PARENT) {
             return false; // first post can't begin as closed
         }
-        if (getFirstPosterInThread(replyTo) == user.id) {
+        if (getUserId(postInfo.getRoot()) == user.id) {
             return true;
         }
-        if (UserRegistry.userIsTC(user)) {
-            return true;
-        }
-        return false;
+        return UserRegistry.userIsTC(user);
     }
 
     /**
-     * Get the user id of the first poster in the thread containing this post
+     * Get the user id of the poster of this post
      *
-     * @param postId
+     * @param postId the post id
      * @return the user id, or UserRegistry.NO_USER
-     *
-     * @throws SurveyException
      */
-    private int getFirstPosterInThread(int postId) throws SurveyException {
+    private int getUserId(int postId) {
         int posterId = UserRegistry.NO_USER;
         Connection conn = null;
         PreparedStatement pList = null;
         try {
             conn = sm.dbUtils.getAConnection();
             if (conn != null) {
-                pList = DBUtils.prepareStatement(conn, "pList", "SELECT parent,poster FROM " + DBUtils.Table.FORUM_POSTS
+                pList = DBUtils.prepareStatement(conn, "pList", "SELECT poster FROM " + DBUtils.Table.FORUM_POSTS
                     + " WHERE id=?");
-                for (;;) {
-                    pList.setInt(1, postId);
-                    ResultSet rs = pList.executeQuery();
-                    int parentId = NO_PARENT;
-                    while (rs.next()) {
-                        parentId = rs.getInt(1);
-                        posterId = rs.getInt(2);
-                    }
-                    if (parentId == NO_PARENT) {
-                        break;
-                    }
-                    postId = parentId;
+                pList.setInt(1, postId);
+                ResultSet rs = pList.executeQuery();
+                while (rs.next()) {
+                    posterId = rs.getInt(1);
                 }
             }
         } catch (SQLException se) {
-            String complaint = "SurveyForum: Couldn't get parent for post - " + DBUtils.unchainSqlException(se);
+            String complaint = "SurveyForum: Couldn't get poster for post - " + DBUtils.unchainSqlException(se);
             SurveyLog.logException(logger, se, complaint);
-            throw new SurveyException(ErrorCode.E_INTERNAL, complaint);
         } finally {
             DBUtils.close(pList, conn);
         }
@@ -1003,14 +1014,14 @@ public class SurveyForum {
         }
         PostType postType = postInfo.getType();
         User user = postInfo.getUser();
-        if (!userCanUsePostType(user, postType, postInfo.getReplyTo())) {
+        if (!userCanUsePostType(user, postType, postInfo)) {
             SurveyLog.errln("Post not allowed in SurveyForum.doPostInternal");
             return 0;
         }
         int postId = savePostToDb(postInfo);
 
         if (postInfo.getSendEmail()) {
-            emailNotify(user, postInfo.getLocale(), postInfo.getPath(), postInfo.getSubj(), postInfo.getText(), postId);
+            emailNotify(user, postInfo, postId);
         }
         return postId;
     }
