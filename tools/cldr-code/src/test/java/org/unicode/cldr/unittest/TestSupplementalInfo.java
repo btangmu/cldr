@@ -91,7 +91,7 @@ public class TestSupplementalInfo extends TestFmwkPlus {
     public void TestPluralSampleOrder() {
         HashSet<PluralInfo> seen = new HashSet<>();
         for (String locale : SUPPLEMENTAL.getPluralLocales()) {
-            if (locale.equals("root")) {
+            if (locale.equals(LocaleNames.ROOT)) {
                 continue;
             }
             PluralInfo pi = SUPPLEMENTAL.getPlurals(locale);
@@ -683,7 +683,7 @@ public class TestSupplementalInfo extends TestFmwkPlus {
         toTest.addAll(SUPPLEMENTAL.getDefaultContentLocales());
         LanguageTagParser ltp = new LanguageTagParser();
         main: for (String locale : toTest) {
-            if (locale.startsWith(LocaleNames.UND) || locale.equals("root")) {
+            if (locale.startsWith(LocaleNames.UND) || locale.equals(LocaleNames.ROOT)) {
                 continue;
             }
             Set<String> s = SUPPLEMENTAL.getEquivalentsForLocale(locale);
@@ -765,7 +765,7 @@ public class TestSupplementalInfo extends TestFmwkPlus {
             new LinkedHashMap<String, Set<String>>(), TreeSet.class);
         main: for (String locale : testInfo.getCldrFactory()
             .getAvailableLanguages()) {
-            if (!locale.contains("_") && !"root".equals(locale)) {
+            if (!locale.contains("_") && !LocaleNames.ROOT.equals(locale)) {
                 String defaultScript = SUPPLEMENTAL.getDefaultScript(locale);
                 if (defaultScript != null) {
                     continue;
@@ -1581,7 +1581,7 @@ public class TestSupplementalInfo extends TestFmwkPlus {
             }
         }
         for (String locale : testInfo.getCldrFactory().getAvailableLanguages()) {
-            if ("root".equals(locale)) {
+            if (LocaleNames.ROOT.equals(locale)) {
                 continue;
             }
             if (!StandardCodes.isLocaleAtLeastBasic(locale)) {
@@ -1671,7 +1671,7 @@ public class TestSupplementalInfo extends TestFmwkPlus {
         for (String locale : allLocales) {
             // the only known case where plural rules depend on region or script
             // is pt_PT
-            if (locale.equals("root")) {
+            if (locale.equals(LocaleNames.ROOT)) {
                 continue;
             }
             ltp.set(locale);
