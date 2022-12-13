@@ -1165,34 +1165,28 @@ public class VettingViewer<T> {
             }
             output.append("</td>\n");
         }
-        if (localeID == null) {
-            output.append("<th></th>\n");
-        } else {
-            output.append("<td class='tvs-count'>" + getLocaleStatusColumn(localeID) + "</td>\n");
-        }
+        addLocaleStatusColumn(output, localeID);
         output.append("</tr>\n");
     }
 
-    private String getLocaleStatusColumn(String localeID) {
-        CLDRLocale locale = CLDRLocale.getInstance(localeID);
-        SpecialLocales.Type type = SpecialLocales.getType(locale);
-        if (type == SpecialLocales.Type.algorithmic) {
-            return "AL";
-        } else if (isTechCommitteeLocale(locale)) {
-            return "TC";
-        } else {
-            return "HC"; // high coverage
+    private void addLocaleStatusColumn(Appendable output, String localeID) throws IOException {
+        output.append("<td class='tvs-count'>");
+        if (localeID != null) {
+            output.append(getLocaleStatusColumn(CLDRLocale.getInstance(localeID)));
         }
+        output.append("</td>\n");
     }
 
-    private boolean isTechCommitteeLocale(CLDRLocale locale) {
-        for (Organization org : Organization.getTCOrgs()) {
-            LocaleSet orgLocales = org.getCoveredLocales();
-            if (orgLocales.containsLocaleOrParent(locale)) {
-                return true;
-            }
+    private String getLocaleStatusColumn(CLDRLocale locale) {
+        if (SpecialLocales.getType(locale) == SpecialLocales.Type.algorithmic) {
+            return "AL"; // algorithmic
+        } else if (Organization.special.getCoveredLocales().containsLocaleOrParent(locale)) {
+            return "HC"; // high coverage
+        } else if (Organization.cldr.getCoveredLocales().containsLocaleOrParent(locale)) {
+            return "TC"; // Technical Committee
+        } else {
+            return "";
         }
-        return false;
     }
 
     private String getLocaleProgressPercent(String localeId, Counter<NotificationCategory> problemCounter) throws ExecutionException {
