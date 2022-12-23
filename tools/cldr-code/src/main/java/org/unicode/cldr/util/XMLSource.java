@@ -1351,15 +1351,16 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
         /**
          * Creates a new ResolvingSource with the given locale resolution chain.
          *
-         * @param sourceList
-         *            the list of XMLSources to look in during resolution,
-         *            ordered from the current locale up to root.
+         * @param sourceList the list of XMLSources to look in during resolution,
+         *                   ordered from the current locale up to root.
+         * @param factory the Factory for creating more ResolvingSource objects
          */
-        public ResolvingSource(List<XMLSource> sourceList) {
+        public ResolvingSource(List<XMLSource> sourceList, Factory factory) {
             // Sanity check for root.
             if (sourceList == null || !sourceList.get(sourceList.size() - 1).getLocaleID().equals("root")) {
                 throw new IllegalArgumentException("Last element should be root");
             }
+            this.factory = factory;
             currentSource = sourceList.get(0); // Convenience variable
             sources = new LinkedHashMap<>();
             for (XMLSource source : sourceList) {

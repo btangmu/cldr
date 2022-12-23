@@ -337,7 +337,7 @@ public class TestExampleDependencies extends TestFmwk {
         XMLSource topSource = factory.makeSource(localeId).cloneAsThawed(); // make top one modifiable
         List<XMLSource> parents = getParentSources(factory, localeId);
         XMLSource[] a = new XMLSource[parents.size()];
-        return new CLDRFile(topSource, parents.toArray(a));
+        return new CLDRFile(topSource, factory, parents.toArray(a));
     }
 
     /**
