@@ -781,6 +781,7 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
     public static class ResolvingSource extends XMLSource implements Listener {
         private XMLSource currentSource;
         private LinkedHashMap<String, XMLSource> sources;
+        private Factory factory;
 
         @Override
         public boolean isResolving() {
@@ -1098,15 +1099,15 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
                 String value = source.getValueAtDPath(xpath);
                 if (value != null) {
                     if (skipInheritanceMarker && CldrUtility.INHERITANCE_MARKER.equals(value)) {
-                        if (true) {
+                        if (false) {
                             it.print("skipping inheritance marker (" + source.getLocaleID() + ")");
                         } else {
-                            Output<String> pathWhereFound = new Output<>();
-                            Output<String> localeWhereFound = new Output<>();
                             it.print("NOT skipping inheritance marker (" + source.getLocaleID() + ") -- calling source.getBaileyValue...");
                             it.print("source.isResolving = " + source.isResolving()); // false
-                            // ResolvingSource rs =
-                            String inheritedValue = source.getBaileyValue(xpath, pathWhereFound, localeWhereFound);
+                            ResolvingSource rs = factory.makeResolvingSource(source.getLocaleID(), factory.getMinimalDraftStatus());
+                            Output<String> pathWhereFound = new Output<>();
+                            Output<String> localeWhereFound = new Output<>();
+                            String inheritedValue = rs.getBaileyValue(xpath, pathWhereFound, localeWhereFound);
                             it.print("got " + inheritedValue); // null
                             if (inheritedValue != null) {
                                 AliasLocation aliasLocation = new AliasLocation(pathWhereFound.toString(), localeWhereFound.toString());
@@ -1722,6 +1723,10 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
         @Override
         public VersionInfo getDtdVersionInfo() {
             return currentSource.getDtdVersionInfo();
+        }
+
+        public void setFactory(Factory factory) {
+            this.factory = factory;
         }
     }
 

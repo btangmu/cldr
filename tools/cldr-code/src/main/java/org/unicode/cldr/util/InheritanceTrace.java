@@ -39,34 +39,15 @@ public class InheritanceTrace {
         return pathWhereFound;
     }
 
-    public void setPathWhereFound(String pathWhereFound) {
-        this.pathWhereFound = pathWhereFound;
-    }
-
     public String getLocaleWhereFound() {
         return localeWhereFound;
     }
 
-    public void setLocaleWhereFound(String localeWhereFound) {
-        this.localeWhereFound = localeWhereFound;
-    }
-
-
     public void set(XMLSource.AliasLocation aliasLocation, InheritanceCategory category) {
-        setLocaleWhereFound(aliasLocation.localeWhereFound);
-        setPathWhereFound(aliasLocation.pathWhereFound);
-        setCategory(category);
-    }
-
-    public InheritanceCategory getCategory() {
-        return category;
-    }
-
-    public void setCategory(InheritanceCategory category) {
+        this.localeWhereFound = aliasLocation.localeWhereFound;
+        this.pathWhereFound = aliasLocation.pathWhereFound;
         this.category = category;
-        if (debug) {
-            print("set category " + category + "; found at " + localeWhereFound + " " + pathWhereFound);
-        }
+        print("set category " + category + "; found at " + localeWhereFound + " " + pathWhereFound);
     }
 
     public void print(String message) {

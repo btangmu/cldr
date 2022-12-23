@@ -180,7 +180,9 @@ public abstract class Factory implements SublocaleProvider {
             sourceList.add(source);
             curLocale = LocaleIDParser.getParent(curLocale, ignoreExplicitParentLocale);
         }
-        return new ResolvingSource(sourceList);
+        ResolvingSource rs = new ResolvingSource(sourceList);
+        rs.setFactory(this);
+        return rs;
     }
 
     public abstract DraftStatus getMinimalDraftStatus();
