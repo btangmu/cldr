@@ -1040,35 +1040,38 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
          * @param xpath the given path
          * @param skipFirst true if we're getting the Bailey value (caller is getBaileyValue),
          *                  else false (caller is getCachedFullStatus)
-         * @param skipInheritanceMarker if true, skip sources in which value is INHERITANCE_MARKER
+         * @param resolveInheritanceMarker if true, when find INHERITANCE_MARKER, get the resolved path and locale
          * @return the AliasLocation
          *
-         * skipInheritanceMarker must be true when the caller is getBaileyValue, so that the caller
+         * resolveInheritanceMarker was formerly named skipInheritanceMarker and that name may still be used elsewhere.
+         *
+         * It must be true when the caller is getBaileyValue, so that the caller
          * will not return INHERITANCE_MARKER as the George Bailey value. When the caller is getMissingStatus,
          * we're not getting the Bailey value, and skipping INHERITANCE_MARKER here could take us up
          * to "root", which getMissingStatus would misinterpret to mean the item should be listed under
-         * Missing in the Dashboard. Therefore skipInheritanceMarker needs to be false when getMissingStatus
+         * Missing in the Dashboard. Therefore resolveInheritanceMarker needs to be false when getMissingStatus
          * is the caller. Note that we get INHERITANCE_MARKER when there are votes for inheritance, but when
          * there are no votes getValueAtDPath returns null so we don't get INHERITANCE_MARKER.
          *
          * Situation for CheckCoverage.handleCheck may be similar to getMissingStatus, see ticket 11720.
          *
-         * For other callers, we stick with skipInheritanceMarker true for now, to retain
-         * the behavior before the skipInheritanceMarker parameter was added, but we should be alert for the
-         * possibility that skipInheritanceMarker should be false in some other cases
+         * For other callers, we stick with resolveInheritanceMarker true for now, to retain
+         * the behavior before the resolveInheritanceMarker parameter was added, but we should be alert for the
+         * possibility that resolveInheritanceMarker should be false in some other cases
          *
-         * References: https://unicode.org/cldr/trac/ticket/11765
-         *             https://unicode.org/cldr/trac/ticket/11720
-         *             https://unicode.org/cldr/trac/ticket/11103
+         * References: https://unicode-org.atlassian.net/browse/CLDR-16239
+         * (old:)      https://unicode-org.atlassian.net/browse/CLDR-11765
+         *             https://unicode-org.atlassian.net/browse/CLDR-11720
+         *             https://unicode-org.atlassian.net/browse/CLDR-11103
          */
-        private AliasLocation getPathLocation(String xpath, boolean skipFirst, boolean skipInheritanceMarker, InheritanceTrace it) {
-            it.print("skipFirst = " + skipFirst + "; skipInheritanceMarker = " + skipInheritanceMarker);
-            AliasLocation aliasLocation = getPathLocationFromAncestors(xpath, skipFirst, skipInheritanceMarker, it);
+        private AliasLocation getPathLocation(String xpath, boolean skipFirst, boolean resolveInheritanceMarker, InheritanceTrace it) {
+            it.print("skipFirst = " + skipFirst + "; skipInheritanceMarker = " + resolveInheritanceMarker);
+            AliasLocation aliasLocation = getPathLocationFromAncestors(xpath, skipFirst, resolveInheritanceMarker, it);
             if (aliasLocation != null) {
                 return aliasLocation;
             }
             InheritanceTrace.InheritanceCategory aliasedCategory = UNKNOWN;
-            TreeMap<String, String> aliases = sources.get("root").getAliases();
+            TreeMap<String, String> aliases = sources.get(LocaleNames.ROOT).getAliases();
             String aliasedPath = aliases.get(xpath);
             if (aliasedPath != null) {
                 aliasedCategory = CHUTES;
@@ -1079,7 +1082,7 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
             }
             if (aliasedPath != null) {
                 // Call getCachedFullStatus recursively to avoid recalculating cached aliases.
-                aliasLocation = getCachedFullStatus(aliasedPath, skipInheritanceMarker, it);
+                aliasLocation = getCachedFullStatus(aliasedPath, resolveInheritanceMarker, it);
                 it.set(aliasLocation, aliasedCategory);
                 return aliasLocation;
             }
@@ -1089,7 +1092,7 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
             return aliasLocation;
         }
 
-        private AliasLocation getPathLocationFromAncestors(String xpath, boolean skipFirst, boolean skipInheritanceMarker, InheritanceTrace it) {
+        private AliasLocation getPathLocationFromAncestors(String xpath, boolean skipFirst, boolean resolveInheritanceMarker, InheritanceTrace it) {
             for (XMLSource source : sources.values()) {
                 if (skipFirst) {
                     it.print("skipping first (" + source.getLocaleID() + ")");
@@ -1098,31 +1101,33 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
                 }
                 String value = source.getValueAtDPath(xpath);
                 if (value != null) {
-                    if (skipInheritanceMarker && CldrUtility.INHERITANCE_MARKER.equals(value)) {
-                        if (false) {
-                            it.print("skipping inheritance marker (" + source.getLocaleID() + ")");
-                        } else {
-                            it.print("NOT skipping inheritance marker (" + source.getLocaleID() + ") -- calling source.getBaileyValue...");
-                            it.print("source.isResolving = " + source.isResolving()); // false
-                            ResolvingSource rs = factory.makeResolvingSource(source.getLocaleID(), factory.getMinimalDraftStatus());
-                            Output<String> pathWhereFound = new Output<>();
-                            Output<String> localeWhereFound = new Output<>();
-                            String inheritedValue = rs.getBaileyValue(xpath, pathWhereFound, localeWhereFound);
-                            it.print("got " + inheritedValue); // null
-                            if (inheritedValue != null) {
-                                AliasLocation aliasLocation = new AliasLocation(pathWhereFound.toString(), localeWhereFound.toString());
-                                it.set(aliasLocation, InheritanceTrace.InheritanceCategory.VERTICAL);
-                                return aliasLocation;
-                            }
+                    AliasLocation aliasLocation;
+                    if (resolveInheritanceMarker && CldrUtility.INHERITANCE_MARKER.equals(value)) {
+                       aliasLocation = getResolvedPathLocation(source.getLocaleID(), xpath, it);
+                       if (aliasLocation == null) {
+                           continue;
                         }
-                        continue;
+                    } else {
+                        aliasLocation = new AliasLocation(xpath, source.getLocaleID());
                     }
-                    AliasLocation aliasLocation = new AliasLocation(xpath, source.getLocaleID());
                     it.set(aliasLocation, InheritanceTrace.InheritanceCategory.VERTICAL);
                     return aliasLocation;
                 }
             }
             return null;
+        }
+
+        private AliasLocation getResolvedPathLocation(String localeID, String xpath, InheritanceTrace it) {
+            it.print("resolving inheritance marker");
+            ResolvingSource rs = factory.makeResolvingSource(localeID, factory.getMinimalDraftStatus());
+            Output<String> pathWhereFound = new Output<>();
+            Output<String> localeWhereFound = new Output<>();
+            String inheritedValue = rs.getBaileyValue(xpath, pathWhereFound, localeWhereFound);
+            it.print("resolved inheritance marker to " + inheritedValue);
+            if (inheritedValue == null) {
+                return null;
+            }
+            return new AliasLocation(pathWhereFound.toString(), localeWhereFound.toString());
         }
 
         private String getAliasedPathFromPossibleSubpath(String xpath, TreeMap<String, String> aliases) {

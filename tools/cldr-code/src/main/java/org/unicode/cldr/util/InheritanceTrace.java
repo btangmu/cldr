@@ -1,6 +1,10 @@
 package org.unicode.cldr.util;
 
 public class InheritanceTrace {
+    public enum InheritanceCategory {
+        VERTICAL, CHUTES, LATERAL, SPECIAL_LATERAL, CONSTRUCTED, FALLBACK, UNKNOWN
+    }
+
     private final String DEBUG_PATH = "//ldml/units/unitLength[@type=\"short\"]/unit[@type=\"duration-hour\"]/unitPattern[@count=\"one\"]";
 
     private final boolean debug; // specific to this path/locale
@@ -54,9 +58,5 @@ public class InheritanceTrace {
         if (debug) {
             System.out.println("InheritanceTrace: " + id + " " + message);
         }
-    }
-
-    public enum InheritanceCategory {
-        VERTICAL, CHUTES, LATERAL, SPECIAL_LATERAL, CONSTRUCTED, FALLBACK, UNKNOWN
     }
 }
