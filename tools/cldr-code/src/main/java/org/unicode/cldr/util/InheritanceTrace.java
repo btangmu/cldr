@@ -2,10 +2,11 @@ package org.unicode.cldr.util;
 
 public class InheritanceTrace {
     public enum InheritanceCategory {
-        VERTICAL, CHUTES, LATERAL, SPECIAL_LATERAL, CONSTRUCTED, FALLBACK, UNKNOWN
+        VERTICAL, CHUTES, LATERAL, SPECIAL_LATERAL, CONSTRUCTED, FALLBACK, START, UNKNOWN
     }
 
-    private final String DEBUG_PATH = "//ldml/units/unitLength[@type=\"short\"]/unit[@type=\"duration-hour\"]/unitPattern[@count=\"one\"]";
+    private final String DEBUG_PATH = "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"wide\"]/month[@type=\"10\"]";
+    // private final String DEBUG_PATH = "//ldml/dates/calendars/calendar[@type=\"gregorian\"]/months/monthContext[@type=\"stand-alone\"]/monthWidth[@type=\"abbreviated\"]/month[@type=\"10\"]";
 
     private final boolean debug; // specific to this path/locale
 

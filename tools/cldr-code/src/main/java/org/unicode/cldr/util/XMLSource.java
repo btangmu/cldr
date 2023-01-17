@@ -968,17 +968,20 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
              * getBaileyValue could use a cache if there was one for skipFirst true.
              */
             if (!skipInheritanceMarker || !cachingIsEnabled ) {
-                it.print("getCachedFullStatus: no cache");
+                it.print("getCachedFullStatus: no cache, calling getPathLocation");
                 return getPathLocation(xpath, false /* skipFirst */, skipInheritanceMarker, it);
             }
             synchronized (getSourceLocaleIDCache) {
                 AliasLocation fullStatus = getSourceLocaleIDCache.get(xpath);
                 if (fullStatus == null) {
-                    it.print("getCachedFullStatus: not in cache, adding");
+                    it.print("getCachedFullStatus: not in cache, calling getPathLocation");
                     fullStatus = getPathLocation(xpath, false /* skipFirst */, skipInheritanceMarker, it);
+                    it.print("getCachedFullStatus: adding to cache; xpath = " + xpath +
+                        " mapped to " + fullStatus.localeWhereFound + " " + fullStatus.pathWhereFound);
                     getSourceLocaleIDCache.put(xpath, fullStatus); // cache copy
                 } else {
-                    it.print("getCachedFullStatus: already in cache");
+                    it.print("getCachedFullStatus: already in cache; xpath = " + xpath +
+                        " mapped to " + fullStatus.localeWhereFound + " " + fullStatus.pathWhereFound);
                 }
                 return fullStatus;
             }
@@ -1068,58 +1071,89 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
             it.print("skipFirst = " + skipFirst + "; skipInheritanceMarker = " + resolveInheritanceMarker);
             AliasLocation aliasLocation = getPathLocationFromAncestors(xpath, skipFirst, resolveInheritanceMarker, it);
             if (aliasLocation != null) {
+                it.print("found vertical");
                 return aliasLocation;
             }
             InheritanceTrace.InheritanceCategory aliasedCategory = UNKNOWN;
             TreeMap<String, String> aliases = sources.get(LocaleNames.ROOT).getAliases();
             String aliasedPath = aliases.get(xpath);
             if (aliasedPath != null) {
+                it.print("found in aliases");
                 aliasedCategory = CHUTES;
             } else if ((aliasedPath = getAliasedPathFromPossibleSubpath(xpath, aliases)) != null) {
+                it.print("found subpath");
                 aliasedCategory = CHUTES;
             } else if ((aliasedPath = getLateralAliasedPath(xpath)) != null) {
+                it.print("found lateral");
                 aliasedCategory = LATERAL;
             }
             if (aliasedPath != null) {
                 // Call getCachedFullStatus recursively to avoid recalculating cached aliases.
                 aliasLocation = getCachedFullStatus(aliasedPath, resolveInheritanceMarker, it);
+                // However, don't use the cache if skipFirst is true
+                // aliasLocation = skipFirst
+                //    ? getPathLocation(aliasedPath, true /* skipFirst */, resolveInheritanceMarker, it)
+                //    : getCachedFullStatus(aliasedPath, resolveInheritanceMarker, it);
                 it.set(aliasLocation, aliasedCategory);
                 return aliasLocation;
             }
-            // Fallback location.
             aliasLocation = new AliasLocation(xpath, CODE_FALLBACK_ID);
             it.set(aliasLocation, FALLBACK);
             return aliasLocation;
         }
 
         private AliasLocation getPathLocationFromAncestors(String xpath, boolean skipFirst, boolean resolveInheritanceMarker, InheritanceTrace it) {
+            boolean isFirst = true;
             for (XMLSource source : sources.values()) {
                 if (skipFirst) {
                     it.print("skipping first (" + source.getLocaleID() + ")");
-                    skipFirst = false;
+                    skipFirst = isFirst = false;
                     continue;
                 }
+                it.print("getPathLocationFromAncestors before getValueAtDPath; class = " + source.getClass());
                 String value = source.getValueAtDPath(xpath);
+                it.print("getPathLocationFromAncestors after getValueAtDPath, value = " + value);
                 if (value != null) {
                     AliasLocation aliasLocation;
                     if (resolveInheritanceMarker && CldrUtility.INHERITANCE_MARKER.equals(value)) {
-                       aliasLocation = getResolvedPathLocation(source.getLocaleID(), xpath, it);
-                       if (aliasLocation == null) {
-                           continue;
+                        it.print("found inheritance marker: " + source.getLocaleID() + " " + xpath);
+                        if (false) {
+                            it.print("skipping inheritance marker instead of getResolvedPathLocation!");
+                            continue;
+                        } else {
+                            aliasLocation = getResolvedPathLocation(source, xpath, it);
+                            if (aliasLocation == null) {
+                                continue;
+                            }
                         }
                     } else {
                         aliasLocation = new AliasLocation(xpath, source.getLocaleID());
                     }
-                    it.set(aliasLocation, InheritanceTrace.InheritanceCategory.VERTICAL);
+                    InheritanceTrace.InheritanceCategory category;
+                    if (isFirst && xpath.equals(aliasLocation.pathWhereFound)) {
+                        // same locale and path as where we started (not getting bailey)
+                        category = InheritanceTrace.InheritanceCategory.START;
+                    } else {
+                        category = InheritanceTrace.InheritanceCategory.VERTICAL;
+                    }
+                    it.set(aliasLocation, category);
                     return aliasLocation;
                 }
+                isFirst = false;
             }
             return null;
         }
 
-        private AliasLocation getResolvedPathLocation(String localeID, String xpath, InheritanceTrace it) {
-            it.print("resolving inheritance marker");
-            ResolvingSource rs = factory.makeResolvingSource(localeID, factory.getMinimalDraftStatus());
+        private AliasLocation getResolvedPathLocation(XMLSource source, String xpath, InheritanceTrace it) {
+            it.print("resolving inheritance marker: " + source.getLocaleID() + " " + xpath);
+            ResolvingSource rs;
+            if (source.isResolving()) {
+                rs = (ResolvingSource) source;
+                it.print("source was already resolving");
+            } else {
+                rs = factory.makeResolvingSource(source.getLocaleID(), factory.getMinimalDraftStatus());
+                it.print("made resolving source");
+            }
             Output<String> pathWhereFound = new Output<>();
             Output<String> localeWhereFound = new Output<>();
             String inheritedValue = rs.getBaileyValue(xpath, pathWhereFound, localeWhereFound);
