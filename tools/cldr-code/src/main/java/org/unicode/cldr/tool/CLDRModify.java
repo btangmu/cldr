@@ -1278,20 +1278,6 @@ public class CLDRModify {
                 }
             }
 
-            private int stepsFromRoot(String origLoc) {
-                int steps = 0;
-                String loc = origLoc;
-                while (!LocaleNames.ROOT.equals(loc)) {
-                    loc = LocaleIDParser.getParent(loc);
-                    if (loc == null) {
-                        throw new IllegalArgumentException("Missing root in inheritance chain");
-                    }
-                    ++steps;
-                }
-                System.out.println("stepsFromRoot = " + steps + " for " + origLoc);
-                return steps;
-            }
-
             @Override
             public void handleEnd() {
                 inputProcessor = null; // clean up, just in case
@@ -2203,6 +2189,86 @@ public class CLDRModify {
                 seen.addAll(paths);
             }
         });
+
+        // 'R' = Revert to baseline version under certain conditions
+        /*
+         * 	Revert each L2+ locale/path VXML value of ↑↑↑ to the baseline value, where all the following criteria are met:
+         * 	1	The baseline value is a hard value (can use unresolved file for this)
+         * 	2	The survey tool did not allow changes in the locale/path in v43
+         * 	    ▪ That is, other than allowed locales with Person Names, Turkey, missing, and errors
+         *    	▪ NOTE: we should be able to check missing/errors by running the CheckCLDR tests on the baseline data. Most locales only had PN & Turkey, but some had errors or missing values.
+         * 	3	The bailey value is fetched from a different path AND from an ancestor locale.
+         * 	    ▪ Ideally we would look at intervening paths also, but I think this is sufficient.
+         */
+        fixList.add('R', "Revert under certain conditions", new CLDRFilter() {
+            // vxmlDir needs to be the "plain" (without post-processing) path of an existing copy of common/main
+            // For example, vetdata-2023-01-23-plain-droptrue ...
+            // Also ldml.dtd is required -- and should already have been created by ST when generating vxml
+            final private String vxmlDir = "../vetdata-2023-01-23-plain-droptrue/vxml/";
+            final private File[] list = new File[]{
+                new File(vxmlDir + "common/main/"),
+                new File(vxmlDir + "common/annotations/")
+            };
+            private Factory vxmlFactory = null;
+            private CLDRFile vxmlFile = null;
+            private int steps = 0;
+
+            @Override
+            public void handleStart() {
+                if (vxmlFactory == null) {
+                    vxmlFactory = SimpleFactory.make(list, ".*");
+                }
+                String localeID = cldrFileToFilter.getLocaleID();
+                steps = CLDRModify.stepsFromRoot(localeID);
+                try {
+                    vxmlFile = vxmlFactory.make(localeID, false /* not resolved */);
+                } catch (Exception e) {
+                    System.out.println("Skipping " + localeID + " due to " + e);
+                    vxmlFile = null;
+                }
+            }
+
+            @Override
+            public void handlePath(String xpath) {
+                if (vxmlFile == null) {
+                    return; // use baseline
+                }
+                String vxmlValue = vxmlFile.getStringValue(xpath);
+                boolean revertToBaseline = (steps >= 2) || wantRevertToBaselineForThisPath(xpath, vxmlValue);
+                if (!revertToBaseline) {
+                    String fullXPath = cldrFileToFilter.getFullXPath(xpath);
+                    replace(fullXPath, fullXPath, vxmlValue);
+                }
+            }
+
+            /**
+             * 	Revert each L2+ locale/path VXML value of ↑↑↑ to the baseline value, where all the following criteria are met:
+             * 	1	The baseline value is a hard value (can use unresolved file for this)
+             * 	2	The survey tool did not allow changes in the locale/path in v43
+             * 	    ▪ That is, other than allowed locales with Person Names, Turkey, missing, and errors
+             *    	▪ NOTE: we should be able to check missing/errors by running the CheckCLDR tests on the baseline data. Most locales only had PN & Turkey, but some had errors or missing values.
+             * 	3	The bailey value is fetched from a different path AND from an ancestor locale.
+             * 	    ▪ Ideally we would look at intervening paths also, but I think this is sufficient.
+             */
+            private boolean wantRevertToBaselineForThisPath(String xpath, String vxmlValue) {
+                if (!CldrUtility.INHERITANCE_MARKER.equals(vxmlValue)) {
+                    // criterion zero: vxml value is NOT ↑↑↑ so don't revert to baseline
+                    return false;
+                }
+                String baselineValue = cldrFileToFilter.getStringValue(xpath);
+                if (baselineValue == null || CldrUtility.INHERITANCE_MARKER.equals(baselineValue)) {
+                    // criterion 1: baseline value is NOT a hard value so don't revert to baseline
+                    return false;
+                }
+                // criterion 2: Did the survey tool did not allow changes in the locale/path in v43?
+                // TODO: ... if (changes were allowed) return false, don't revert to baseline
+
+                // criterion 3: bailey value is fetched from a different path AND from an ancestor locale?
+                // TODO: ... if (not diff path/locale) return false, don't revert to baseline
+
+                return true;
+            }
+        });
     }
 
     public static String getLast2Dirs(File sourceDir1) {
@@ -2325,6 +2391,26 @@ public class CLDRModify {
             k.removeAll(removal, COMMENT_REMOVALS);
         }
         k.putAll(replacements, CLDRFile.MERGE_REPLACE_MINE);
+    }
+
+    /**
+     * How many steps from root is the given locale?
+     *
+     * @param origLoc
+     * @return the number of steps; e.g., 0 for "root", -1 for "code-fallback", 1 for "fr", 2 for "fr_CA", ...
+     */
+    private static int stepsFromRoot(String origLoc) {
+        int steps = 0;
+        String loc = origLoc;
+        while (!LocaleNames.ROOT.equals(loc)) {
+            loc = LocaleIDParser.getParent(loc);
+            if (loc == null) {
+                throw new IllegalArgumentException("Missing root in inheritance chain");
+            }
+            ++steps;
+        }
+        System.out.println("stepsFromRoot = " + steps + " for " + origLoc);
+        return steps;
     }
 
     /**
