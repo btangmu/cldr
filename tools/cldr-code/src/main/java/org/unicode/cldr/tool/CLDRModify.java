@@ -584,6 +584,9 @@ public class CLDRModify {
 
     static PathChecker pathChecker = new PathChecker();
 
+    /**
+     * Implementation for a certain type of filter. Each filter has a letter associated with it.
+     */
     abstract static class CLDRFilter {
         protected CLDRFile cldrFileToFilter;
         protected CLDRFile cldrFileToFilterResolved;
@@ -593,6 +596,13 @@ public class CLDRModify {
         private CLDRFile toBeReplaced;
         protected Factory factory;
 
+        /**
+         * Called when a new locale is being processed
+         * @param k
+         * @param factory
+         * @param removal
+         * @param replacements
+         */
         public final void setFile(CLDRFile k, Factory factory, Set<String> removal, CLDRFile replacements) {
             this.cldrFileToFilter = k;
             cldrFileToFilterResolved = null;
@@ -603,11 +613,21 @@ public class CLDRModify {
             handleStart();
         }
 
+        /**
+         * Called by setFile() before all processing for a file
+         */
         public void handleStart() {
         }
 
+        /**
+         * Called for each xpath
+         * @param xpath
+         */
         public abstract void handlePath(String xpath);
 
+        /**
+         * Called after all xpaths in this file are handled
+         */
         public void handleEnd() {
         }
 
@@ -739,11 +759,20 @@ public class CLDRModify {
             return toBeReplaced;
         }
 
+        /**
+         * Called before all files are processed.
+         * Note: TODO: This is called unconditionally, whether the filter is enabled or not.
+         */
+        public void handleSetup() {
+        }
+
+        /**
+         * Called after all files are processed.
+         * Note: TODO: This is called unconditionally, whether the filter is enabled or not.
+         */
         public void handleCleanup() {
         }
 
-        public void handleSetup() {
-        }
 
         public String getLocaleID() {
             return localeID;
@@ -2193,14 +2222,21 @@ public class CLDRModify {
             // For example, vetdata-2023-01-23-plain-dropfalse ... see https://github.com/unicode-org/cldr/pull/2659
             // Also ldml.dtd is required -- and should already have been created by ST when generating vxml
             final private String vxmlDir = "../vetdata-2023-01-23-plain-dropfalse/vxml/";
-            final private File[] list = new File[]{
-                new File(vxmlDir + "common/" + new File(options[SOURCEDIR].value).getName())
-            };
             private Factory vxmlFactory = null;
             private CLDRFile vxmlFile = null;
             // private int steps = 0;
             private CLDRFile baselineFileUnresolved = null;
             private CLDRFile baselineFileResolved = null;
+            private File[] list = null;
+
+            @Override
+            public void handleSetup() {
+                final String vxmlSubPath = vxmlDir + "common/" + new File(options[SOURCEDIR].value).getName();
+                System.out.println(vxmlSubPath);
+                list = new File[]{
+                    new File(vxmlSubPath)
+                };
+            }
 
             @Override
             public void handleStart() {
@@ -2248,7 +2284,7 @@ public class CLDRModify {
                 }
                 String vxmlValue = vxmlFile.getStringValue(xpath);
                 if (vxmlValue == null) {
-                    throw new RuntimeException("vxmlValue == null");
+                    throw new RuntimeException(this.getLocaleID() + ":"+xpath+": vxmlValue == null");
                 }
                 if (!wantRevertToBaseline(xpath, vxmlValue)) {
                     if (deb) {
