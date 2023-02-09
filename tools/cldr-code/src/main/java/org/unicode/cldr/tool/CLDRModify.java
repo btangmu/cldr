@@ -2459,7 +2459,6 @@ public class CLDRModify {
             }
         });
 
-
         // 'F' = compare Fully resolved versions
         // given two directories (main and production), verify that the corresponding fully resolved CLDRFiles
         // for each locale are identical (and listing differences if they are not)”
@@ -2503,15 +2502,9 @@ public class CLDRModify {
 
             @Override
             public void handlePath(String xpath) {
-                boolean debugging = true;
+                boolean debugging = false;
                 if (debugging) {
                     System.out.println("handlePath: got " + xpath);
-                }
-                if (vxmlFileResolved == null) {
-                    if (debugging) {
-                        System.out.println("handlePath: vxmlFile is null");
-                    }
-                    return; // use baseline
                 }
                 String vxmlResolvedValue = vxmlFileResolved.getStringValue(xpath);
                 if (vxmlResolvedValue == null) {
