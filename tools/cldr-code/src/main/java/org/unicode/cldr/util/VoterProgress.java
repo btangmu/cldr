@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static org.unicode.cldr.util.VoteType.NONE;
-
 public class VoterProgress {
 
     /**
@@ -53,7 +51,7 @@ public class VoterProgress {
     }
 
     public void incrementVotedPathCount(VoteType voteType) {
-        if (voteType == null || voteType == NONE) {
+        if (voteType == null || voteType == VoteType.NONE) {
             throw new IllegalArgumentException("null/NONE not allowed for incrementVotedPathCount");
         }
         votedPathCount++;
