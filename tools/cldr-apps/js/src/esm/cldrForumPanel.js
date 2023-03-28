@@ -6,26 +6,67 @@ import * as cldrDom from "./cldrDom.js";
 import * as cldrEvent from "./cldrEvent.js";
 import * as cldrForum from "./cldrForum.js";
 import * as cldrInfo from "./cldrInfo.js";
-import * as cldrLoad from "./cldrLoad.js";
+import * as cldrLruCache from "./cldrLruCache.mjs";
 import * as cldrRetry from "./cldrRetry.js";
 import * as cldrStatus from "./cldrStatus.js";
 import * as cldrSurvey from "./cldrSurvey.js";
 import * as cldrTable from "./cldrTable.js";
 import * as cldrText from "./cldrText.js";
 
+const forumCache = new cldrLruCache.LRU();
+
+function makeCacheKey(theRow) {
+  return cldrStatus.getCurrentLocale() + "-" + theRow.xpstrid;
+}
+
+function clearCache() {
+  forumCache.clear();
+}
+
 /**
  * Called when showing the Info Panel each time
  *
- * @param {Node} frag
- * @param {Node} forumDivClone = tr.forumDiv.cloneNode(true)
- * @param {Node} tr
+ * @param {Node} frag the fragment node to which we should append
+ * @param {Node} tr the node for the row currently displayed in the DOM, plus associated data
+ *                  -- unfortunately due to tech debt it's hard to tell for this tr object,
+ *                  what (if anything) comes from, or corresponds to (1) the current DOM,
+ *                  (2) the latest json, (3) DOM fragments under construction, (4) miscellaneous
+ *                  data items attached to tr although they don't correspond directly to the DOM...
+ *                  Seemingly tr.theRow is from json; tr.forumDiv is from current DOM;
+ *                  tr.xpstrid and tr.theTable.session are miscellaneous data...
+ * @param {Object} theRow data for the row, based (partly) on latest json
+ *
+ * Pretend we don't know that theRow === tr.theRow, since the DOM shouldn't be used as a database
+ *
+ * Called by cldrInfo.show
  */
-function loadInfo(frag, forumDivClone, tr) {
-  if (tr.theRow) {
-    addTopButtons(tr.theRow, frag);
+function loadInfo(frag, tr, theRow) {
+  if (!frag || !tr || !theRow) {
+    return;
   }
-  const loader2 = cldrDom.createChunk(cldrText.get("loading"), "i");
-  frag.appendChild(loader2);
+  if (!tr.forumDiv) {
+    tr.forumDiv = document.createElement("div");
+    tr.forumDiv.className = "forumDiv";
+  }
+  const forumDivClone = tr.forumDiv.cloneNode(true);
+  cldrForum.setUserCanPost(tr.theTable.json.canModify);
+  setForumUrl(tr, theRow, tr.forumDiv);
+  const cacheKey = makeCacheKey(theRow);
+  const cachedPosts = forumCache.get(cacheKey);
+  if (cachedPosts) {
+    const content = getForumContent(cachedPosts, theRow.xpstrid);
+    forumDivClone.appendChild(content);
+    frag.appendChild(forumDivClone);
+  } else {
+    addTopButtons(theRow, frag);
+    const loader2 = cldrDom.createChunk(cldrText.get("loading"), "i");
+    frag.appendChild(loader2);
+    frag.appendChild(forumDivClone);
+    scheduleForumCountFetch(tr, forumDivClone, loader2);
+  }
+}
+
+function scheduleForumCountFetch(tr, forumDivClone, loader2) {
   const ourUrl = tr.forumDiv.url + "&what=forum_count" + cldrSurvey.cacheKill();
   window.setTimeout(function () {
     const xhrArgs = {
@@ -117,7 +158,7 @@ function updatePosts(tr) {
       tr = document.getElementById(rowId);
     } else {
       /*
-       * This is normal when adding a post in the main forum interface, which has no Info Panel).
+       * This is normal when adding a post in the main forum interface, which has no Info Panel.
        */
       return;
     }
@@ -125,9 +166,9 @@ function updatePosts(tr) {
   if (!tr || !tr.forumDiv || !tr.forumDiv.url) {
     return;
   }
-  let ourUrl = tr.forumDiv.url + "&what=forum_fetch";
+  const ourUrl = tr.forumDiv.url + "&what=forum_fetch";
 
-  let errorHandler = function (err) {
+  function errorHandler(err) {
     console.log("Error in updatePosts: " + err);
     const message =
       cldrStatus.stopIcon() +
@@ -136,29 +177,15 @@ function updatePosts(tr) {
       "</td>";
     cldrInfo.showWithRow(message, tr);
     cldrRetry.handleDisconnect("Could not load for updatePosts:" + err, null);
-  };
+  }
 
-  let loadHandler = function (json) {
+  function loadHandler(json) {
     try {
       if (json && json.ret && json.ret.length > 0) {
         const posts = json.ret;
-        let content = cldrForum.parseContent(posts, "info");
-        /*
-         * Reality check: the json should refer to the same path as tr, which in practice
-         * always matches cldrStatus.getCurrentId(). If not, log a warning and substitute "Please reload"
-         * for the content.
-         */
-        const xpstrid = posts[0].xpath;
-        if (xpstrid !== tr.xpstrid || xpstrid !== cldrStatus.getCurrentId()) {
-          console.log(
-            "Warning: xpath strid mismatch in updatePosts loadHandler:"
-          );
-          console.log("posts[0].xpath = " + posts[0].xpath);
-          console.log("tr.xpstrid = " + tr.xpstrid);
-          console.log("surveyCurrentId = " + cldrStatus.getCurrentId());
+        forumCache.set(makeCacheKey(tr.theRow), posts);
+        const content = getForumContent(posts, tr.xpstrid);
 
-          content = "Please reload";
-        }
         /*
          * Update the element whose class is 'forumDiv'.
          */
@@ -171,7 +198,7 @@ function updatePosts(tr) {
         cldrStatus.stopIcon() + " exception in ajax forum read: " + e.message;
       cldrInfo.showWithRow(message, tr);
     }
-  };
+  }
 
   const xhrArgs = {
     url: ourUrl,
@@ -182,27 +209,31 @@ function updatePosts(tr) {
   cldrAjax.sendXhr(xhrArgs);
 }
 
+function getForumContent(posts, xpstridExpected) {
+  /*
+   * Reality check: the json should refer to the same path as tr, which in practice
+   * always matches cldrStatus.getCurrentId(). If not, log a warning and substitute "Please reload"
+   * for the content.
+   */
+  const xpstrid = posts[0].xpath;
+  if (xpstrid !== xpstridExpected || xpstrid !== cldrStatus.getCurrentId()) {
+    console.log("Warning: xpath strid mismatch in updatePosts loadHandler:");
+    console.log("posts[0].xpath = " + posts[0].xpath);
+    console.log("xpstridExpected = " + xpstridExpected);
+    console.log("surveyCurrentId = " + cldrStatus.getCurrentId());
+    return "Please reload";
+  }
+  return cldrForum.parseContent(posts, "info");
+}
+
 /**
  * Called when initially setting up the section.
  *
  * @param {Node} tr
- * @param {Node} theRow
+ * @param {Object} theRow
  * @param {Node} forumDiv
  */
-function appendForumStuff(tr, theRow, forumDiv) {
-  cldrForum.setUserCanPost(tr.theTable.json.canModify);
-
-  cldrDom.removeAllChildNodes(forumDiv); // we may be updating.
-  const locmap = cldrLoad.getTheLocaleMap();
-  var theForum = locmap.getLanguage(cldrStatus.getCurrentLocale());
-  forumDiv.replyStub =
-    cldrStatus.getContextPath() +
-    "/survey?forum=" +
-    theForum +
-    "&_=" +
-    cldrStatus.getCurrentLocale() +
-    "&replyto=";
-  forumDiv.postUrl = forumDiv.replyStub + "x" + theRow;
+function setForumUrl(tr, theRow, forumDiv) {
   /*
    * Note: SurveyAjax requires a "what" parameter for SurveyAjax.
    * It is not supplied here, but may be added later with code such as:
@@ -225,4 +256,4 @@ function appendForumStuff(tr, theRow, forumDiv) {
     "&voteinfo=t";
 }
 
-export { loadInfo, appendForumStuff, updatePosts };
+export { clearCache, loadInfo, updatePosts };
