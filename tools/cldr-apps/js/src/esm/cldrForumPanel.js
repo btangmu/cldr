@@ -6,26 +6,85 @@ import * as cldrDom from "./cldrDom.js";
 import * as cldrEvent from "./cldrEvent.js";
 import * as cldrForum from "./cldrForum.js";
 import * as cldrInfo from "./cldrInfo.js";
-import * as cldrLoad from "./cldrLoad.js";
 import * as cldrRetry from "./cldrRetry.js";
 import * as cldrStatus from "./cldrStatus.js";
 import * as cldrSurvey from "./cldrSurvey.js";
 import * as cldrTable from "./cldrTable.js";
 import * as cldrText from "./cldrText.js";
 
+/*
+ * Begin to update the Forum section of the Info Panel for this row
+ *
+ * TODO: maybe combine with cldrForumPanel.loadInfo()
+ *
+ * @param tr the table row
+ * @param theRow the data from the server for this row
+ *
+ * Called by cldrTable.updateRow
+ */
+function beginUpdate(tr, theRow) {
+  if (cldrStatus.getSurveyUser()) {
+    if (!tr.forumDiv) {
+      console.log("cldrForumPanel.beginUpdate creating new tr.forumDiv");
+      tr.forumDiv = document.createElement("div");
+      tr.forumDiv.className = "forumDiv";
+    } else {
+      // this does happen, with tr.forumDiv.outerHTML = '<div class="forumDiv"></div>'
+      console.log(
+        "cldrForumPanel.beginUpdate re-using existing tr.forumDiv; childElementCount = " +
+          tr.forumDiv.childElementCount
+      );
+    }
+    cldrForum.setUserCanPost(tr.theTable.json.canModify);
+    setForumUrl(tr, theRow, tr.forumDiv);
+    /// cldrDom.removeAllChildNodes(tr.forumDiv);
+  }
+}
+
 /**
  * Called when showing the Info Panel each time
  *
- * @param {Node} frag
- * @param {Node} forumDivClone = tr.forumDiv.cloneNode(true)
- * @param {Node} tr
+ * @param {Node} frag the fragment node to which we should append
+ * @param {Node} tr the node for the row currently displayed in the DOM, plus associated data
+ *                  -- unfortunately due to tech debt it's hard to tell for this tr object,
+ *                  what (if anything) comes from, or corresponds to (1) the current DOM,
+ *                  (2) the latest json, (3) DOM fragments under construction, (4) miscellaneous
+ *                  data items attached to tr although they don't correspond directly to the DOM...
+ *                  Seemingly tr.theRow is from json; tr.forumDiv is from current DOM;
+ *                  tr.theTable.session is miscellaneous data...
+ *
+ * Called by cldrInfo.show
  */
-function loadInfo(frag, forumDivClone, tr) {
+function loadInfo(frag, tr) {
+  console.log(
+    "cldrForumPanel.loadInfo; tr.forumDiv.childElementCount = " +
+      tr.forumDiv.childElementCount
+  );
+  const forumDivClone = tr.forumDiv.cloneNode(true);
+  if (forumDivClone.childElementCount > 0 || tr.forumDiv.childElementCount > 0) {
+    // this never happens!
+    console.log("cldrForumPanel.loadInfo taking the FIRST easy way out");
+    frag.appendChild(forumDivClone);
+    return;
+  }
+  const allForumDiv = document.getElementsByClassName("forumDiv");
+  console.log("allForumDiv.length = " + allForumDiv.length);
+
+  const currentForumDiv = document.getElementsByClassName("forumDiv")[0];
+  if (currentForumDiv && currentForumDiv.childElementCount > 0) {
+    console.log("cldrForumPanel.loadInfo taking the SECOND easy way out");
+    frag.appendChild(currentForumDiv);
+    return;
+  }
+  console.log("cldrForumPanel.loadInfo NOT taking the easy way out");
+  /// cldrDom.removeAllChildNodes(forumDivClone);
+
   if (tr.theRow) {
     addTopButtons(tr.theRow, frag);
   }
   const loader2 = cldrDom.createChunk(cldrText.get("loading"), "i");
   frag.appendChild(loader2);
+  frag.appendChild(forumDivClone);
   const ourUrl = tr.forumDiv.url + "&what=forum_count" + cldrSurvey.cacheKill();
   window.setTimeout(function () {
     const xhrArgs = {
@@ -186,23 +245,10 @@ function updatePosts(tr) {
  * Called when initially setting up the section.
  *
  * @param {Node} tr
- * @param {Node} theRow
+ * @param {Object} theRow
  * @param {Node} forumDiv
  */
-function appendForumStuff(tr, theRow, forumDiv) {
-  cldrForum.setUserCanPost(tr.theTable.json.canModify);
-
-  cldrDom.removeAllChildNodes(forumDiv); // we may be updating.
-  const locmap = cldrLoad.getTheLocaleMap();
-  var theForum = locmap.getLanguage(cldrStatus.getCurrentLocale());
-  forumDiv.replyStub =
-    cldrStatus.getContextPath() +
-    "/survey?forum=" +
-    theForum +
-    "&_=" +
-    cldrStatus.getCurrentLocale() +
-    "&replyto=";
-  forumDiv.postUrl = forumDiv.replyStub + "x" + theRow;
+function setForumUrl(tr, theRow, forumDiv) {
   /*
    * Note: SurveyAjax requires a "what" parameter for SurveyAjax.
    * It is not supplied here, but may be added later with code such as:
@@ -225,4 +271,4 @@ function appendForumStuff(tr, theRow, forumDiv) {
     "&voteinfo=t";
 }
 
-export { loadInfo, appendForumStuff, updatePosts };
+export { beginUpdate, loadInfo, setForumUrl, updatePosts };

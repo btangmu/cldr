@@ -205,6 +205,7 @@ function panelShouldBeShown() {
 function show(str, tr, hideIfLast, fn) {
   openPanel();
   if (unShow) {
+    console.log("cldrInfo.show calling unShow");
     unShow();
     unShow = null;
   }
@@ -263,21 +264,10 @@ function show(str, tr, hideIfLast, fn) {
   if (tr && tr.ticketLink) {
     fragment.appendChild(tr.ticketLink.cloneNode(true));
   }
-
-  // forum stuff
   if (tr && tr.forumDiv) {
     cldrSideways.loadMenu(fragment, tr);
-    /*
-     * The name forumDivClone is a reminder that forumDivClone !== tr.forumDiv.
-     * TODO: explain the reason for using cloneNode here, rather than using
-     * tr.forumDiv directly. Would it work as well to set tr.forumDiv = forumDivClone,
-     * after cloning?
-     */
-    var forumDivClone = tr.forumDiv.cloneNode(true);
-    cldrForumPanel.loadInfo(fragment, forumDivClone, tr); // give a chance to update anything else
-    fragment.appendChild(forumDivClone);
+    cldrForumPanel.loadInfo(fragment, tr);
   }
-
   if (tr && tr.theRow && tr.theRow.xpath) {
     fragment.appendChild(
       cldrDom.clickToSelect(
@@ -290,6 +280,8 @@ function show(str, tr, hideIfLast, fn) {
     console.log("itemInfo not found in show!");
     return;
   }
+
+  console.log("cldrInfo.show, removing all child nodes, appending fragment!");
 
   // Now, copy or append the 'fragment' to the
   // appropriate spot. This depends on how we were called.

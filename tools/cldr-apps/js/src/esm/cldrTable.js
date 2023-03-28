@@ -12,6 +12,7 @@ import * as cldrAjax from "./cldrAjax.js";
 import * as cldrCoverage from "./cldrCoverage.js";
 import * as cldrDom from "./cldrDom.js";
 import * as cldrEvent from "./cldrEvent.js";
+import * as cldrForum from "./cldrForum.js";
 import * as cldrForumPanel from "./cldrForumPanel.js";
 import * as cldrGui from "./cldrGui.js";
 import * as cldrInfo from "./cldrInfo.js";
@@ -376,8 +377,8 @@ function getPageUrl(curLocale, curPage, curId) {
 /**
  * Update one row using data received from server.
  *
- * @param tr the table row
- * @param theRow the data for the row
+ * @param {Node} tr the table row
+ * @param {Object} theRow the data for the row
  *
  * Cells (columns) in each row:
  * Code    English    Abstain    A    Winning    Add    Others
@@ -500,6 +501,10 @@ function reallyUpdateRow(tr, theRow) {
   if (codeCell) {
     updateRowCodeCell(tr, theRow, codeCell);
   }
+
+  // TODO: call beginUpdate from a more logical place and/or merge with cldrForumPanel.loadInfo
+  // (previously the code in beginUpdate was strangely in updateRowCodeCell)
+  cldrForumPanel.beginUpdate(tr, theRow);
 
   /*
    * Set up the "comparison cell", a.k.a. the "English" column.
@@ -698,14 +703,8 @@ function updateRowCodeCell(tr, theRow, cell) {
     codeStr = codeStr + " (optional)";
   }
   cell.appendChild(cldrDom.createChunk(codeStr));
-  if (cldrStatus.getSurveyUser()) {
-    cell.className = "d-code codecell";
-    if (!tr.forumDiv) {
-      tr.forumDiv = document.createElement("div");
-      tr.forumDiv.className = "forumDiv";
-    }
-    cldrForumPanel.appendForumStuff(tr, theRow, tr.forumDiv);
-  }
+  cell.className = "d-code codecell";
+
   // extra attributes
   if (
     theRow.extraAttributes &&

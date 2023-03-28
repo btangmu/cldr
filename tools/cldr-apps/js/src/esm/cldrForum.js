@@ -66,7 +66,7 @@ let userCanPost = false;
  */
 let displayUtc = false;
 
-// called as special.load
+// called as special.load; this is for the full-page Forum, not for posts shown in the Info Panel
 function load() {
   const curLocale = cldrStatus.getCurrentLocale();
   if (!curLocale) {
@@ -871,10 +871,6 @@ function makeOneNewPostButton(
   code,
   value
 ) {
-  const buttonTitle = couldFlag
-    ? "forumNewPostFlagButton"
-    : "forumNewPostButton";
-
   const buttonClass = couldFlag
     ? "addPostButton forumNewPostFlagButton btn btn-default btn-sm"
     : "addPostButton forumNewButton btn btn-default btn-sm";
