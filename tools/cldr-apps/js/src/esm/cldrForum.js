@@ -378,6 +378,7 @@ function submitPost(event) {
  */
 function reallySubmitPost(text) {
   $("#post-form button").fadeOut();
+  cldrForumPanel.clearCache();
   const form = getFormValues(text);
   sendPostRequest(form);
 }

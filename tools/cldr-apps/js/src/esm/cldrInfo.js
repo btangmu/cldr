@@ -264,9 +264,11 @@ function show(str, tr, hideIfLast, fn) {
   if (tr && tr.ticketLink) {
     fragment.appendChild(tr.ticketLink.cloneNode(true));
   }
-  if (tr && tr.forumDiv) {
-    cldrSideways.loadMenu(fragment, tr);
-    cldrForumPanel.loadInfo(fragment, tr);
+  if (tr) {
+    cldrSideways.loadMenu(fragment, tr); // regional variants (sibling locales)
+  }
+  if (tr?.theRow && cldrStatus.getSurveyUser()) {
+    cldrForumPanel.loadInfo(fragment, tr, tr.theRow);
   }
   if (tr && tr.theRow && tr.theRow.xpath) {
     fragment.appendChild(

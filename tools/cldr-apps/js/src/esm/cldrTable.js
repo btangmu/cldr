@@ -502,10 +502,6 @@ function reallyUpdateRow(tr, theRow) {
     updateRowCodeCell(tr, theRow, codeCell);
   }
 
-  // TODO: call beginUpdate from a more logical place and/or merge with cldrForumPanel.loadInfo
-  // (previously the code in beginUpdate was strangely in updateRowCodeCell)
-  cldrForumPanel.beginUpdate(tr, theRow);
-
   /*
    * Set up the "comparison cell", a.k.a. the "English" column.
    */
