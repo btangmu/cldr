@@ -213,7 +213,6 @@ function updatePosts(tr) {
 }
 
 function getForumContent(posts, xpstridExpected) {
-  let content = cldrForum.parseContent(posts, "info");
   /*
    * Reality check: the json should refer to the same path as tr, which in practice
    * always matches cldrStatus.getCurrentId(). If not, log a warning and substitute "Please reload"
@@ -225,9 +224,9 @@ function getForumContent(posts, xpstridExpected) {
     console.log("posts[0].xpath = " + posts[0].xpath);
     console.log("xpstridExpected = " + xpstridExpected);
     console.log("surveyCurrentId = " + cldrStatus.getCurrentId());
-    content = "Please reload";
+    return "Please reload";
   }
-  return content;
+  return cldrForum.parseContent(posts, "info");
 }
 
 /**
@@ -260,4 +259,4 @@ function setForumUrl(tr, theRow, forumDiv) {
     "&voteinfo=t";
 }
 
-export { clearCache, loadInfo, setForumUrl, updatePosts };
+export { clearCache, loadInfo, updatePosts };
