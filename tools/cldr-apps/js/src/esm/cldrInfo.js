@@ -264,7 +264,7 @@ function show(str, tr, hideIfLast, fn) {
     fragment.appendChild(tr.ticketLink.cloneNode(true));
   }
   if (tr) {
-    cldrSideways.loadMenu(fragment, tr); // regional variants (sibling locales)
+    cldrSideways.loadMenu(fragment, tr.xpstrid); // regional variants (sibling locales)
   }
   if (tr?.theRow && cldrStatus.getSurveyUser()) {
     cldrForumPanel.loadInfo(fragment, tr, tr.theRow);
@@ -881,7 +881,14 @@ function addJumpToOriginal(theRow, el) {
   }
 }
 
+function clearCachesAndReload() {
+  cldrForumPanel.clearCache();
+  cldrSideways.clearCache();
+  cldrLoad.reloadV();
+}
+
 export {
+  clearCachesAndReload,
   closePanel,
   initialize,
   listen,
