@@ -1,7 +1,8 @@
 /*
  * cldrCache: a simple least-recently-used cache for the Survey Tool front end
  *
- * Based on: https://stackoverflow.com/questions/996505/lru-cache-implementation-in-javascript
+ * Based partly on: https://stackoverflow.com/questions/996505/lru-cache-implementation-in-javascript
+ * post by odinho - Velmont
  */
 export class LRU {
   constructor(max = 100) {
@@ -14,13 +15,13 @@ export class LRU {
   }
 
   get(key) {
-    const item = this._cache.get(key);
-    if (item) {
+    const val = this._cache.get(key);
+    if (val) {
       // delete and set again so it's most recent
       this._cache.delete(key);
-      this._cache.set(key, item);
+      this._cache.set(key, val);
     }
-    return item;
+    return val;
   }
 
   set(key, val) {

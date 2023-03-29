@@ -266,7 +266,7 @@ function show(str, tr, hideIfLast, fn) {
   if (tr) {
     cldrSideways.loadMenu(fragment, tr.xpstrid); // regional variants (sibling locales)
   }
-  if (tr?.theRow && cldrStatus.getSurveyUser()) {
+  if (tr?.theRow && !cldrStatus.isVisitor()) {
     cldrForumPanel.loadInfo(fragment, tr, tr.theRow);
   }
   if (tr && tr.theRow && tr.theRow.xpath) {
