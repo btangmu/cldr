@@ -195,40 +195,6 @@ function passAll(threadPosts) {
 }
 
 /**
- * Is the thread open and of type "Discuss", including a response by the current user?
- *
- * Open Discussions should include Open discussions that you have responded on, but not closed.
- *
- * @param {Array} threadPosts the array of posts in the thread
- * @return {Boolean} true if it passes, else false
- */
-function passIfOpenDiscuss(threadPosts) {
-  const rootPost = getRootPost(threadPosts);
-  return (
-    rootPost?.open &&
-    rootPost.postType === "Discuss" &&
-    hasYourResponse(threadPosts)
-  );
-}
-
-/**
- * Is the thread open and of type "Request", including a response by the current user?
- *
- * Open Requests should include Requests that you have responded on, but not closed
- *
- * @param {Array} threadPosts the array of posts in the thread
- * @return {Boolean} true if it passes, else false
- */
-function passIfOpenRequestByOther(threadPosts) {
-  const rootPost = getRootPost(threadPosts);
-  return (
-    rootPost?.open &&
-    rootPost.postType === "Request" &&
-    hasYourResponse(threadPosts)
-  );
-}
-
-/**
  * Does the thread with the given array of posts need action?
  *
  * (Open request from others AND I haven’t agreed or declined)
@@ -252,18 +218,6 @@ function passIfNeedingAction(threadPosts) {
 }
 
 /**
- * Does this thread include any responding (non-initial) posts by the current user?
- *
- * @param {Array} threadPosts the array of posts in the thread
- * @return {Boolean} true if it has this user's response, else false
- */
-function hasYourResponse(threadPosts) {
-  return threadPosts.some(
-    (post) => post.poster && post.poster === filterUserId && post.parent !== -1
-  );
-}
-
-/**
  * Is the thread with the given array of posts an open request started by the current user?
  *
  * @param {Array} threadPosts the array of posts in the thread
@@ -275,6 +229,55 @@ function passIfOpenRequestYouStarted(threadPosts) {
     rootPost?.open &&
     rootPost.poster === filterUserId &&
     rootPost.postType === "Request"
+  );
+}
+
+/**
+ * Is the thread open and of type "Request", started by other than the current user, and including a response by the current user?
+ *
+ * Open Requests should include Requests that you have responded on, but not closed
+ *
+ * @param {Array} threadPosts the array of posts in the thread
+ * @return {Boolean} true if it passes, else false
+ */
+function passIfOpenRequestByOther(threadPosts) {
+  const rootPost = getRootPost(threadPosts);
+  if (!rootPost.poster || rootPost.poster === filterUserId) {
+    return false; // not "by other"
+  }
+  return (
+    rootPost?.open &&
+    rootPost.postType === "Request" &&
+    hasYourResponse(threadPosts)
+  );
+}
+
+/**
+ * Is the thread open and of type "Discuss", including a response by the current user?
+ *
+ * Open Discussions should include Open discussions that you have responded on, but not closed.
+ *
+ * @param {Array} threadPosts the array of posts in the thread
+ * @return {Boolean} true if it passes, else false
+ */
+function passIfOpenDiscuss(threadPosts) {
+  const rootPost = getRootPost(threadPosts);
+  return (
+    rootPost?.open &&
+    rootPost.postType === "Discuss" &&
+    hasYourResponse(threadPosts)
+  );
+}
+
+/**
+ * Does this thread include any responding (non-initial) posts by the current user?
+ *
+ * @param {Array} threadPosts the array of posts in the thread
+ * @return {Boolean} true if it has this user's response, else false
+ */
+function hasYourResponse(threadPosts) {
+  return threadPosts.some(
+    (post) => post.poster && post.poster === filterUserId && post.parent !== -1
   );
 }
 
