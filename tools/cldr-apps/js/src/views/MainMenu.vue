@@ -58,6 +58,11 @@
           <li><a href="#vetting_participation///">Vetting Participation</a></li>
         </ul>
       </li>
+      <li v-if="canSeeDisputes">
+        <ul>
+          <li><a href="#disputes///">Disputes</a></li>
+        </ul>
+      </li>
       <li v-if="accountLocked" class="emphatic">
         LOCKED: Note: your account is currently locked
       </li>
@@ -121,6 +126,7 @@ export default {
       canImportOldVotes: false,
       canListUsers: false,
       canMonitorVetting: false,
+      canSeeDisputes: false,
       canSeeStatistics: false,
       canUseVettingSummary: false,
       isAdmin: false,
@@ -140,19 +146,20 @@ export default {
   methods: {
     initializeData() {
       const perm = cldrStatus.getPermissions();
-      this.accountLocked = perm && perm.userIsLocked;
-      this.canImportOldVotes = perm && perm.userCanImportOldVotes;
+      this.accountLocked = perm?.userIsLocked || false;
+      this.canImportOldVotes = perm?.userCanImportOldVotes || false;
       this.canListUsers = this.canMonitorVetting =
-        perm && (perm.userIsTC || perm.userIsVetter);
-      this.canMonitorForum = perm && perm.userCanMonitorForum;
+        perm?.userIsTC || perm?.userIsVetter || false;
+      this.canMonitorForum = perm?.userCanMonitorForum || false;
       // this.canSeeStatistics will be false until there is a new implementation
-      this.canUseVettingSummary = perm && perm.userCanUseVettingSummary;
-      this.isAdmin = perm && perm.userIsAdmin;
-      this.isTC = perm && perm.userIsTC;
+      this.canUseVettingSummary = perm?.userCanUseVettingSummary || false;
+      this.canSeeDisputes = perm?.userCanSeeDisputes || false;
+      this.isAdmin = perm?.userIsAdmin || false;
+      this.isTC = perm?.userIsTC || false;
 
       const user = cldrStatus.getSurveyUser();
       this.loggedIn = !!user;
-      this.userId = user ? user.id : 0;
+      this.userId = user?.id || 0;
 
       this.org = cldrStatus.getOrganizationName();
       this.recentActivityUrl = this.getSpecialUrl("recent_activity");

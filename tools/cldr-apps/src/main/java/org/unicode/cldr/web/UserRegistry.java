@@ -482,6 +482,7 @@ public class UserRegistry {
                 .put("userCanUseVettingSummary", userCanUseVettingSummary(this))
                 .put("userCanCreateSummarySnapshot", userCanCreateSummarySnapshot(this))
                 .put("userCanMonitorForum", userCanMonitorForum(this))
+                .put("userCanSeeDisputes", userCanSeeDisputes(this))
                 .put("userIsAdmin", userIsAdmin(this))
                 .put("userIsManager", getLevel().canManageSomeUsers())
                 .put("userIsTC", userIsTC(this))
@@ -1689,6 +1690,16 @@ public class UserRegistry {
      */
     public static boolean userCanGetEmailList(User u) {
         return (u != null) && u.getLevel().canGetEmailList();
+    }
+
+    /**
+     * Can the user see disputes?
+     *
+     * @param u the user
+     * @return true or false
+     */
+    public static boolean userCanSeeDisputes(User u) {
+        return (u != null) && u.getLevel().canSeeDisputes();
     }
 
     public enum ModifyDenial {

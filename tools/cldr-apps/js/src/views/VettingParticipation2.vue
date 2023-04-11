@@ -16,7 +16,6 @@
 <script>
 import { ref } from "vue";
 import * as cldrAjax from "../esm/cldrAjax.js";
-import * as cldrStatus from "../esm/cldrStatus.js";
 import * as localesTxtGenerator from "../esm/localesTxtGenerator.mjs";
 
 export default {
@@ -27,7 +26,7 @@ export default {
       participationData: ref(null),
     };
   },
-  // Note: note loading fetchData()  on create() due to slowness
+  // Note: note loading fetchData() on create() due to slowness
   methods: {
     async fetchData() {
       try {

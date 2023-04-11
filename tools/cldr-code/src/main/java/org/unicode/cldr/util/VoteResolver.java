@@ -435,7 +435,11 @@ public class VoteResolver<T> {
         public boolean canDeleteUsers() {
             return isAdmin();
         }
-     }
+
+        public boolean canSeeDisputes() {
+            return isManagerOrStronger();
+        }
+    }
 
     /**
      * Internal class for voter information. It is public for testing only

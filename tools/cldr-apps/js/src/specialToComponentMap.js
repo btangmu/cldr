@@ -5,6 +5,7 @@ import GeneralInfo from "./views/GeneralInfo.vue";
 import LockAccount from "./views/LockAccount.vue";
 import LookUp from "./views/LookUp.vue";
 import MainMenu from "./views/MainMenu.vue";
+import OrgLocaleDisputes from "./views/OrgLocaleDisputes.vue";
 import TestPanel from "./views/TestPanel.vue";
 import TransferVotes from "./views/TransferVotes.vue";
 import UnknownPanel from "./views/UnknownPanel.vue";
@@ -19,6 +20,7 @@ const specialToComponentMap = {
   about: AboutPanel,
   add_user: AddUser,
   auto_import: AutoImport,
+  disputes: OrgLocaleDisputes,
   general: GeneralInfo,
   lock_account: LockAccount,
   lookup: LookUp,
