@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
+import com.ibm.icu.util.Output;
 import org.unicode.cldr.test.CheckCLDR;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
 import org.unicode.cldr.test.TestCache;
@@ -236,11 +237,30 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
             return resolver;
         }
 
-        public String reviseInheritanceAsNeeded(String path, String value) {
+        /**
+         * Get the possibly modified value. If value matches the bailey value or inheritance marker, possibly
+         * change it from bailey value to inheritance marker, or vice-versa, as needed to meet these requirements:
+         * 1. If the path changes when getting bailey, then we are inheriting sideways. We need to use a hard value.
+         * 2. If the value is different from the bailey value, can't use inheritance; we need a hard value.
+         * 3. Otherwise we use inheritance marker.
+         *
+         * @param path the path
+         * @param value the input value
+         * @return the possibly modified value
+         */
+        private String reviseInheritanceAsNeeded(String path, String value) {
             if (value != null) {
                 CLDRFile cldrFile = make(ballotBox.locale.getBaseName());
                 if (cldrFile != null) {
-                    value = cldrFile.reviseInheritanceAsNeeded(path, value);
+                    if (!cldrFile.isResolved()) {
+                        throw new InternalCldrException("must be resolved");
+                    }
+                    Output<String> pathWhereFound = new Output<>();
+                    Output<String> localeWhereFound = new Output<>();
+                    String baileyValue = cldrFile.getBaileyValue(path, pathWhereFound, localeWhereFound);
+                    if (baileyValue != null && (CldrUtility.INHERITANCE_MARKER.equals(value) || baileyValue.equals(value))) {
+                        return pathWhereFound.value.equals(path) ? CldrUtility.INHERITANCE_MARKER : baileyValue;
+                    }
                 }
              }
             return value;

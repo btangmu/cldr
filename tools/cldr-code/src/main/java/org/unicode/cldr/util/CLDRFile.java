@@ -109,7 +109,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String>, LocaleSt
      */
     private static final boolean USE_LOADING_BUFFER = true;
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public static final Pattern ALT_PROPOSED_PATTERN = PatternCache.get(".*\\[@alt=\"[^\"]*proposed[^\"]*\"].*");
     public static final Pattern DRAFT_PATTERN = PatternCache.get("\\[@draft=\"([^\"]*)\"\\]");
@@ -620,10 +620,9 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String>, LocaleSt
      */
     public CLDRFile add(String currentFullXPath, String value) {
         if (locked) throw new UnsupportedOperationException("Attempt to modify locked object");
+        // StringValue v = new StringValue(value, currentFullXPath);
         Log.logln(LOG_PROGRESS, "ADDING: \t" + currentFullXPath + " \t" + value + "\t" + currentFullXPath);
-        if (isResolved()) {
-            value = reviseInheritanceAsNeeded(currentFullXPath, value);
-        }
+        // xpath = xpath.intern();
         try {
             dataSource.putValueAtPath(currentFullXPath, value);
         } catch (RuntimeException e) {
@@ -631,40 +630,6 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String>, LocaleSt
                 + value).initCause(e);
         }
         return this;
-    }
-
-    /**
-     * Get the possibly modified value. If this file is resolving, and value matches the bailey value
-     * or inheritance marker, possibly change it from bailey value to inheritance marker, or vice-versa,
-     * as needed to meet these requirements:
-     * 1. If the path changes when getting bailey, then we are inheriting sideways. We need to use a hard value.
-     * 2. If the value is different from the bailey value, can't use inheritance; we need a hard value.
-     * 3. Otherwise we use inheritance marker.
-     *
-     * @param path the path
-     * @param value the input value
-     * @return the possibly modified value
-     */
-    public String reviseInheritanceAsNeeded(String path, String value) {
-        if (!isResolved()) {
-            throw new IllegalArgumentException("must be resolved");
-        }
-        Output<String> pathWhereFound = new Output<>();
-        Output<String> localeWhereFound = new Output<>();
-
-        String baileyValue = getBaileyValue(path, pathWhereFound, localeWhereFound);
-        if (baileyValue != null && (CldrUtility.INHERITANCE_MARKER.equals(value) || baileyValue.equals(value))) {
-            String returnValue = pathWhereFound.value.equals(path) ? CldrUtility.INHERITANCE_MARKER : baileyValue;
-            if (DEBUG) {
-                if (returnValue.equals(value)) {
-                    System.out.println("reviseInheritanceAsNeeded unchanged got " + value + " returned " + returnValue);
-                } else {
-                    System.out.println("reviseInheritanceAsNeeded CHANGED got " + value + " returned " + returnValue);
-                }
-            }
-            return returnValue;
-        }
-        return value;
     }
 
     /**
@@ -3358,7 +3323,7 @@ public class CLDRFile implements Freezable<CLDRFile>, Iterable<String>, LocaleSt
      * versions of getName and their subroutines and data -- to a new class in a separate file,
      * and enable tracking similar to existing "pathWhereFound/localeWhereFound" but more general.
      *
-     * Reference: https://unicode-org.atlassian.net/browse/CLDR-15830
+     * Reference: https://unicode-org.atlassian.net/browse/CLDR-13263
      *******************************************************************************************
      */
 
