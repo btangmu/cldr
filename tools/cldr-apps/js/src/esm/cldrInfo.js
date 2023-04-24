@@ -18,6 +18,19 @@ import InfoPanel from "../views/InfoPanel.vue";
 
 import { createCldrApp } from "../cldrVueRouter";
 
+/**
+ * The plan is for the front end not to distinguish anymore between "hard" and "soft" inheritance.
+ * That is, INHERITANCE_MARKER ("soft") and the the value matching the inheritedValue ("hard") should
+ * not be distinguished from each other. The back end should only supply one or the other, not both at the same
+ * time. (Probably only the "hard" value will be supplied and the front end won't need INHERITANCE_MARKER anymore.)
+ * Therefore DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE should be true (or unneeded since permanently true).
+ * However, we're keeping the boolean switch at least for the near future, maybe until done with v44, in case
+ * we need to revert temporarily to the old behavior by changing it to false.
+ * If and when DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE becomes permanently true,
+ * voteInfo_votesForSpecificValue should be deleted from cldrText.
+ */
+const DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE = true;
+
 let containerId = null;
 let neighborId = null;
 let buttonClass = null;
@@ -464,8 +477,11 @@ function updateRowVoteInfo(tr, theRow) {
       "tr",
       "voteInfo_tr voteInfo_tr_heading"
     );
+    // add vote chunk if the item has votes, or is inherited
     if (
       item.rawValue === cldrSurvey.INHERITANCE_MARKER ||
+      (DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE &&
+        item.rawValue === theRow.inheritedValue) ||
       (item.votes && Object.keys(item.votes).length > 0)
     ) {
       vrow.appendChild(
@@ -507,13 +523,22 @@ function updateRowVoteInfo(tr, theRow) {
       );
       isectionIsUsed = true;
     }
+
     cldrSurvey.setLang(valdiv); // want the whole div to be marked as cldrValue
-    if (value === cldrSurvey.INHERITANCE_MARKER) {
+    if (
+      value === cldrSurvey.INHERITANCE_MARKER ||
+      (DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE &&
+        value === theRow.inheritedValue)
+    ) {
       /*
        * theRow.inheritedValue can be undefined here; then do not append
        */
       if (theRow.inheritedValue) {
-        cldrVote.appendItem(valdiv, theRow.inheritedValue, item.pClass);
+        let pClass = item.pClass;
+        if (!pClass.includes("fallback")) {
+          pClass += " fallback";
+        }
+        cldrVote.appendItem(valdiv, theRow.inheritedValue, pClass);
         valdiv.appendChild(
           cldrDom.createChunk(cldrText.get("voteInfo_votesForInheritance"), "p")
         );
@@ -525,7 +550,10 @@ function updateRowVoteInfo(tr, theRow) {
         value === theRow.winningValue ? "winner" : "value"
       );
     }
-    if (value === theRow.inheritedValue) {
+    if (
+      !DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE &&
+      value === theRow.inheritedValue
+    ) {
       valdiv.appendChild(
         cldrDom.createChunk(cldrText.get("voteInfo_votesForSpecificValue"), "p")
       );
@@ -690,11 +718,13 @@ function updateRowVoteInfoForAllOrgs(theRow, vr, value, item, vdiv) {
        * For now, display it, and use item.pClass rather than literal "fallback" so the color matches when
        * item.pClass is "alias", "fallback_root", etc.
        */
-      var baileyClass =
-        item.rawValue === cldrSurvey.INHERITANCE_MARKER
+      const baileyClass =
+        item.rawValue === cldrSurvey.INHERITANCE_MARKER ||
+        (DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE &&
+          item.rawValue === theRow.inheritedValue)
           ? " " + item.pClass
           : "";
-      var vrow = cldrDom.createChunk(
+      const vrow = cldrDom.createChunk(
         null,
         "tr",
         "voteInfo_tr voteInfo_orgHeading"
@@ -708,7 +738,7 @@ function updateRowVoteInfoForAllOrgs(theRow, vr, value, item, vdiv) {
         vrow.appendChild(createVoter(null));
       }
       if (orgsVote) {
-        var cell = cldrDom.createChunk(
+        const cell = cldrDom.createChunk(
           null,
           "td",
           "voteInfo_orgsVote voteInfo_voteCount voteInfo_td" + baileyClass
@@ -735,19 +765,19 @@ function updateRowVoteInfoForAllOrgs(theRow, vr, value, item, vdiv) {
           continue; // skip
         }
         // OTHER VOTER row
-        var vrow = cldrDom.createChunk(null, "tr", "voteInfo_tr");
-        vrow.appendChild(
+        const otherVoterRow = cldrDom.createChunk(null, "tr", "voteInfo_tr");
+        otherVoterRow.appendChild(
           cldrDom.createChunk("", "td", "voteInfo_orgColumn voteInfo_td")
         ); // spacer
-        vrow.appendChild(createVoter(item.votes[voter])); // voteInfo_td
-        vrow.appendChild(
+        otherVoterRow.appendChild(createVoter(item.votes[voter])); // voteInfo_td
+        otherVoterRow.appendChild(
           cldrDom.createChunk(
             item.votes[voter].votes,
             "td",
             "voteInfo_orgsNonVote voteInfo_voteCount voteInfo_td" + baileyClass
           )
         );
-        vdiv.appendChild(vrow);
+        vdiv.appendChild(otherVoterRow);
       }
     }
   }
@@ -790,7 +820,11 @@ function showItemInfoFn(theRow, item) {
       displayValue = theRow.inheritedValue;
     }
 
-    cldrVote.appendItem(h3, displayValue, item.pClass);
+    const itemSpan = cldrVote.appendItem(h3, displayValue, item.pClass);
+    if (DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE) {
+      if (item.rawValue === theRow.inheritedValue) {
+      }
+    }
     h3.className = "span";
     td.appendChild(h3);
 
@@ -811,7 +845,11 @@ function showItemInfoFn(theRow, item) {
       );
     }
 
-    if (item.value === cldrSurvey.INHERITANCE_MARKER) {
+    if (
+      item.value === cldrSurvey.INHERITANCE_MARKER ||
+      (DISPLAY_HARD_INHERITANCE_LIKE_SOFT_INHERITANCE &&
+        item.value === theRow.inheritedValue)
+    ) {
       addJumpToOriginal(theRow, h3);
     }
 
