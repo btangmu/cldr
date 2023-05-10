@@ -5,10 +5,11 @@
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
-const bogusData = {
+const USE_TEST_DATA = false; // testing only, bypass back end
+const TEST_DATA = {
   announcements: [
     {
-      poster: "foo@example.com",
+      poster: "front-end@example.com",
       date: "2023-01-17 12:30:03.0",
       subject: "Hello!",
       body: "<p>This is a test including some html.<p>Paragraph.<p><i>Italic.</i> <b>Bold.</b> <a href='https://unicode.org'>Link to unicode.org</a>",
@@ -18,7 +19,7 @@ const bogusData = {
       poster: "example@unicode.org",
       date: "2022-12-31 12:30:03.0",
       subject: "Greetings!",
-      body: "This is a test 👀",
+      body: "This is a test 👀 and it's generated on the front end",
       checked: true,
     },
   ],
@@ -29,9 +30,9 @@ async function refresh(viewCallbackSetData) {
     viewCallbackSetData(null);
     return;
   }
-  if (true) {
+  if (USE_TEST_DATA) {
     window.setTimeout(function () {
-      viewCallbackSetData(bogusData);
+      viewCallbackSetData(TEST_DATA);
     }, 2000);
     return;
   }
@@ -40,7 +41,7 @@ async function refresh(viewCallbackSetData) {
     localeId = "*";
   }
   // in general, we'll specify a SET of locale ids (possibly empty or "*", both meaning "all locales" == "not locale-specific")
-  const url = cldrAjax.makeApiUrl("announcements/" + localeId + "/", null);
+  const url = cldrAjax.makeApiUrl("announcements/locale/" + localeId, null);
   return await cldrAjax
     .doFetch(url)
     .then(cldrAjax.handleFetchErrors)
@@ -49,10 +50,10 @@ async function refresh(viewCallbackSetData) {
     .catch((e) => console.error(e));
 }
 
-function saveEntryCheckmark(checked, announcement) {
+function saveCheckmark(checked, announcement) {
   console.log(
-    "TODO: implement saveEntryCheckmark " + checked + " " + announcement.date
+    "TODO: implement saveCheckmark " + checked + " " + announcement.date
   );
 }
 
-export { refresh, saveEntryCheckmark };
+export { refresh, saveCheckmark };

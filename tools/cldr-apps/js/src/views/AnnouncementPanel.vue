@@ -8,10 +8,10 @@
         {{ totalCount }} announcements, {{ unreadCount }} unread
       </span>
       <span class="rightControl">
-        <input type="checkbox" v-model="showAlreadyRead" /><label
-          for="showAlreadyRead"
+        <input type="checkbox" v-model="showUnreadOnly" /><label
+          for="showUnreadOnly"
         >
-          &nbsp;show announcements that have already been read</label
+          &nbsp;show unread only</label
         >
       </span>
     </section>
@@ -19,7 +19,7 @@
       v-for="(announcement, i) in announcementData.announcements"
       :key="i"
     >
-      <div v-if="showAlreadyRead || !announcement.checked">
+      <div v-if="!showUnreadOnly || !announcement.checked">
         <div class="announcementBox">
           <section class="fullJustified">
             <span class="announcementSender">
@@ -42,9 +42,7 @@
                   checkmarkChanged(event, announcement);
                 }
               "
-            /><label for="alreadyReadChecked"
-              >&nbsp;I have read this announcement</label
-            >
+            /><label for="alreadyReadChecked">&nbsp;I have read this</label>
           </div>
         </div>
       </div>
@@ -61,7 +59,7 @@ export default {
     return {
       pleaseLogIn: false,
       announcementData: null,
-      showAlreadyRead: false,
+      showUnreadOnly: true,
       totalCount: 0,
       unreadCount: 0,
     };
@@ -82,7 +80,7 @@ export default {
     },
 
     checkmarkChanged(event, announcement) {
-      cldrAnnouncements.saveEntryCheckmark(event.target.checked, announcement);
+      cldrAnnouncements.saveCheckmark(event.target.checked, announcement);
       this.updateCounts();
     },
 
