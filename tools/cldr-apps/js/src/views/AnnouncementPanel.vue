@@ -103,7 +103,7 @@ export default {
 
   created() {
     this.canAnnounce = cldrAnnouncement.canAnnounce();
-    this.canChooseAllOrgs = cldrAnnouncement.canDoAllOrgs();
+    this.canChooseAllOrgs = cldrAnnouncement.canChooseAllOrgs();
     cldrAnnouncement.refresh(this.setData);
   },
 
@@ -140,7 +140,7 @@ export default {
     finishCompose(formState) {
       this.formIsVisible = false;
       if (formState) {
-        cldrAnnouncement.announce(formState, this.composeResult);
+        cldrAnnouncement.compose(formState, this.composeResult);
       }
     },
 
@@ -149,12 +149,13 @@ export default {
         notification.success({
           placement: "topLeft",
           message: "Your announcement was posted successfully",
-          duration: 4,
+          duration: 3,
         });
       } else {
+        const errMessage = result?.err || "unknown";
         notification.error({
           placement: "topLeft",
-          message: "Your announcement was NOT confirmed to be posted",
+          message: "Your announcement was not posted: " + errMessage,
         });
       }
       cldrAnnouncement.refresh(this.setData);

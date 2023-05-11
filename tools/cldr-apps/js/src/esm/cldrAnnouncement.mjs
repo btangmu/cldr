@@ -5,7 +5,9 @@
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
-const USE_TEST_DATA = false; // testing only, bypass back end
+const DEBUG = false;
+
+const USE_TEST_DATA = DEBUG && false; // testing only, bypass back end
 const TEST_DATA = {
   announcements: [
     {
@@ -49,23 +51,18 @@ function canAnnounce() {
   return cldrStatus.getPermissions()?.userIsManager || false;
 }
 
-function canDoAllOrgs() {
+function canChooseAllOrgs() {
   return cldrStatus.getPermissions()?.userIsTC || false;
 }
 
-async function announce(formState, viewCallbackComposeResult) {
-  for (let key of Object.keys(formState)) {
-    const val = formState[key];
-    console.log(key + ": " + val);
+async function compose(formState, viewCallbackComposeResult) {
+  if (DEBUG) {
+    for (let key of Object.keys(formState)) {
+      const val = formState[key];
+      console.log(key + ": " + val);
+    }
   }
-  const init = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(formState),
-  };
+  const init = cldrAjax.makePostData(formState);
   const url = cldrAjax.makeApiUrl("announce", null);
   return await cldrAjax
     .doFetch(url, init)
@@ -75,10 +72,17 @@ async function announce(formState, viewCallbackComposeResult) {
     .catch((e) => console.error(e));
 }
 
-function saveCheckmark(checked, announcement) {
-  console.log(
-    "TODO: implement saveCheckmark " + checked + " " + announcement.date
-  );
+async function saveCheckmark(checked, announcement) {
+  const init = cldrAjax.makePostData({
+    id: announcement.id,
+    checked: Boolean(checked),
+  });
+  const url = cldrAjax.makeApiUrl("announce/checkread", null);
+  return await cldrAjax
+    .doFetch(url, init)
+    .then(cldrAjax.handleFetchErrors)
+    .then((r) => r.json())
+    .catch((e) => console.error(e));
 }
 
-export { announce, canAnnounce, canDoAllOrgs, refresh, saveCheckmark };
+export { canAnnounce, canChooseAllOrgs, compose, refresh, saveCheckmark };

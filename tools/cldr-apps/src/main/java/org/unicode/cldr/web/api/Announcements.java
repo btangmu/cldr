@@ -54,36 +54,27 @@ public class Announcements {
         if (SurveyMain.isBusted() || !SurveyMain.wasInitCalled() || !SurveyMain.triedToStartUp()) {
             return STError.surveyNotQuiteReady();
         }
-        AnnouncementResponse response = new AnnouncementResponse();
+        AnnouncementResponse response = new AnnouncementResponse(session.user);
         return Response.ok(response).build();
     }
 
-    @Schema(description = "Set of announcements")
+    @Schema(description = "List of announcements")
     public static final class AnnouncementResponse {
         @Schema(description = "announcements")
         public Announcement[] announcements;
 
-        public AnnouncementResponse() {
-            String body1 =
-                    "<p>This is a test including some html.<p>Paragraph.<p><i>Italic.</i> <b>Bold.</b> <a href='https://unicode.org'>Link to unicode.org</a>";
-            String body2 = "This is a test \uD83D\uDC40 and it's generated on the back end";
+        public AnnouncementResponse(UserRegistry.User user) {
             List<Announcement> announcementList = new ArrayList<>();
-            announcementList.add(
-                    new Announcement(
-                            "backend@example.com", "2023-01-17 12:30:03.0", "Wow!", body1, false));
-            announcementList.add(
-                    new Announcement(
-                            "server@unicode.org",
-                            "2022-12-31 01:22:22.0",
-                            "This is really so important",
-                            body2,
-                            true));
+            AnnouncementData.get(user, announcementList);
             announcements = announcementList.toArray(new Announcement[0]);
         }
     }
 
     @Schema(description = "Single announcement")
     public static class Announcement {
+        @Schema(description = "id as stored in database")
+        public int id;
+
         @Schema(description = "poster")
         public String poster;
 
@@ -100,7 +91,8 @@ public class Announcements {
         public boolean checked;
 
         public Announcement(
-                String poster, String date, String subject, String body, boolean checked) {
+                int id, String poster, String date, String subject, String body, boolean checked) {
+            this.id = id;
             this.poster = poster;
             this.date = date;
             this.subject = subject;
@@ -135,10 +127,10 @@ public class Announcements {
                                         schema = @Schema(implementation = STError.class))),
             })
     public Response submitAnnouncement(
-            @HeaderParam(Auth.SESSION_HEADER) String session,
+            @HeaderParam(Auth.SESSION_HEADER) String sessionString,
             AnnouncementSubmissionRequest request) {
-        final CookieSession mySession = Auth.getSession(session);
-        if (mySession == null) {
+        CookieSession session = Auth.getSession(sessionString);
+        if (session == null) {
             return Auth.noSessionResponse();
         }
         System.out.println(
@@ -152,8 +144,15 @@ public class Announcements {
                         + request.orgsAll
                         + " locales="
                         + request.locales);
-        final AnnouncementSubmissionResponse r = new AnnouncementSubmissionResponse();
-        return Response.ok().entity(r).build();
+
+        if (!UserRegistry.userIsManagerOrStronger(session.user)
+                || (request.orgsAll
+                        && !UserRegistry.userIsTC(session.user))) { // userIsTC means TC or stronger
+            return Response.status(403, "Forbidden").build();
+        }
+        final AnnouncementSubmissionResponse response = new AnnouncementSubmissionResponse();
+        AnnouncementData.submit(request, response);
+        return Response.ok().entity(response).build();
     }
 
     public static class AnnouncementSubmissionRequest {
@@ -186,6 +185,78 @@ public class Announcements {
     public static class AnnouncementSubmissionResponse {
 
         @Schema(description = "ok")
-        public final boolean ok = true;
+        public boolean ok = false;
+
+        @Schema(description = "err")
+        public String err = "";
+    }
+
+    @POST
+    @Path("/checkread")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(
+            summary = "Set already-read status",
+            description = "Indicate whether an announcement has been read")
+    @APIResponses(
+            value = {
+                @APIResponse(
+                        responseCode = "200",
+                        description = "Submitted",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = Response.class))),
+                @APIResponse(
+                        responseCode = "401",
+                        description = "Authorization required, send a valid session id"),
+                @APIResponse(responseCode = "403", description = "Forbidden, no access"),
+                @APIResponse(
+                        responseCode = "500",
+                        description = "Internal Server Error",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = STError.class))),
+            })
+    public Response checkRead(
+            @HeaderParam(Auth.SESSION_HEADER) String sessionString, CheckReadRequest request) {
+        CookieSession session = Auth.getSession(sessionString);
+        if (session == null) {
+            return Auth.noSessionResponse();
+        }
+        if (!UserRegistry.userIsGuest(session.user)) { // means guest or stronger
+            return Response.status(403, "Forbidden").build();
+        }
+        final CheckReadResponse response = new CheckReadResponse();
+        AnnouncementData.checkRead(request.id, request.checked, response);
+        return Response.ok().entity(response).build();
+    }
+
+    public static class CheckReadRequest {
+
+        /**
+         * A constructor without parameters prevents serialization error, "No default constructor
+         * found"
+         */
+        public CheckReadRequest() {
+            this.id = 0;
+            this.checked = false;
+        }
+
+        @Schema(description = "id")
+        public int id;
+
+        @Schema(description = "checked")
+        public boolean checked;
+    }
+
+    public static class CheckReadResponse {
+
+        @Schema(description = "ok")
+        public boolean ok = false;
+
+        @Schema(description = "err")
+        public String err = "";
     }
 }
