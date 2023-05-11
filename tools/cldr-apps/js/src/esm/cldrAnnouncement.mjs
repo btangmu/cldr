@@ -36,12 +36,7 @@ async function refresh(viewCallbackSetData) {
     }, 2000);
     return;
   }
-  let localeId = cldrStatus.getCurrentLocale();
-  if (!localeId) {
-    localeId = "*";
-  }
-  // in general, we'll specify a SET of locale ids (possibly empty or "*", both meaning "all locales" == "not locale-specific")
-  const url = cldrAjax.makeApiUrl("announcements/locale/" + localeId, null);
+  const url = cldrAjax.makeApiUrl("announcements", null);
   return await cldrAjax
     .doFetch(url)
     .then(cldrAjax.handleFetchErrors)
@@ -57,13 +52,11 @@ function saveCheckmark(checked, announcement) {
 }
 
 function canAnnounce() {
-  const { userIsManager } = cldrStatus.getPermissions();
-  return userIsManager || false;
+  return cldrStatus.getPermissions()?.userIsManager || false;
 }
 
 function canDoAllOrgs() {
-  const { userIsTC } = cldrStatus.getPermissions();
-  return userIsTC || false;
+  return cldrStatus.getPermissions()?.userIsTC || false;
 }
 
 function announce(formState) {

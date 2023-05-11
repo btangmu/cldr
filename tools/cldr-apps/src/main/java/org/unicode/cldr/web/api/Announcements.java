@@ -3,10 +3,7 @@ package org.unicode.cldr.web.api;
 import java.util.ArrayList;
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -15,14 +12,15 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.unicode.cldr.web.CookieSession;
 import org.unicode.cldr.web.SurveyMain;
+import org.unicode.cldr.web.UserRegistry;
 
 @ApplicationScoped
 @Path("/announcements")
 @Tag(name = "announcements", description = "APIs for Survey Tool announcements")
 public class Announcements {
     @GET
-    @Path("/locale/{locale}")
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Get announcements", description = "Get announcements")
     @APIResponses(
@@ -46,13 +44,18 @@ public class Announcements {
                                         mediaType = "application/json",
                                         schema = @Schema(implementation = STError.class))),
             })
-    public Response getAnnouncements(
-            @PathParam("locale") @Schema(required = true, description = "Locale ID", example = "aa")
-                    String localeId) {
+    public Response getAnnouncements(@HeaderParam(Auth.SESSION_HEADER) String sessionString) {
+        CookieSession session = Auth.getSession(sessionString);
+        if (session == null) {
+            return Auth.noSessionResponse();
+        }
+        if (!UserRegistry.userIsGuest(session.user)) { // userIsGuest means "is guest or stronger"
+            return Response.status(403, "Forbidden").build();
+        }
+        session.userDidAction();
         if (SurveyMain.isBusted() || !SurveyMain.wasInitCalled() || !SurveyMain.triedToStartUp()) {
             return STError.surveyNotQuiteReady();
         }
-        // Do we actually want locale param? Probably not...
         AnnouncementResponse response = new AnnouncementResponse();
         return Response.ok(response).build();
     }

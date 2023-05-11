@@ -77,8 +77,6 @@ import { defineComponent, reactive } from "vue";
 export default defineComponent({
   props: ["formHasAllOrgs", "postOrCancel"],
 
-  // emits: ["postOrCancel"],
-
   setup() {
     const formState = reactive({
       audience: "Everyone",
@@ -106,16 +104,13 @@ export default defineComponent({
 
   methods: {
     onCancel() {
-      this.$emit("postOrCancel", null);
       this.postOrCancel(null);
     },
 
     onPost() {
-      // How to validate? onFinish or onFinishFailed should be called, but they're called if
-      // and only if there's no @click for the button, or if we don't call $emit here.
-      // As a work-around, at least check that subject and body aren't empty.
+      // onFinish or onFinishFailed should be called for validation.
+      // Double-check that subject and body aren't empty.
       if (this.formState.subject && this.formState.body) {
-        this.$emit("postOrCancel", this.formState);
         this.postOrCancel(this.formState);
       }
     },
