@@ -50,7 +50,7 @@
         <div class="announcementBox">
           <section class="fullJustified">
             <span class="announcementSender">
-              {{ announcement.poster }}
+              {{ announcement.posterName }}
             </span>
             <span class="announcementDate">
               {{ announcement.date }}

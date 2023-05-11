@@ -72,11 +72,14 @@ public class Announcements {
 
     @Schema(description = "Single announcement")
     public static class Announcement {
-        @Schema(description = "id as stored in database")
+        @Schema(description = "announcement id as stored in database")
         public int id;
 
-        @Schema(description = "poster")
-        public String poster;
+        @Schema(description = "poster id")
+        public int poster;
+
+        @Schema(description = "poster name")
+        public String posterName;
 
         @Schema(description = "date")
         public String date;
@@ -91,9 +94,11 @@ public class Announcements {
         public boolean checked;
 
         public Announcement(
-                int id, String poster, String date, String subject, String body, boolean checked) {
+                int id, int poster, String date, String subject, String body, boolean checked) {
             this.id = id;
             this.poster = poster;
+            UserRegistry.User posterUser = CookieSession.sm.reg.getInfo(poster);
+            this.posterName = (posterUser != null) ? posterUser.name : Integer.toString(id);
             this.date = date;
             this.subject = subject;
             this.body = body;
@@ -133,25 +138,17 @@ public class Announcements {
         if (session == null) {
             return Auth.noSessionResponse();
         }
-        System.out.println(
-                "submitAnnouncement got: subject="
-                        + request.subject
-                        + " body="
-                        + request.body
-                        + " audience="
-                        + request.audience
-                        + " orgsAll="
-                        + request.orgsAll
-                        + " locales="
-                        + request.locales);
-
         if (!UserRegistry.userIsManagerOrStronger(session.user)
                 || (request.orgsAll
                         && !UserRegistry.userIsTC(session.user))) { // userIsTC means TC or stronger
             return Response.status(403, "Forbidden").build();
         }
         final AnnouncementSubmissionResponse response = new AnnouncementSubmissionResponse();
-        AnnouncementData.submit(request, response);
+        try {
+            AnnouncementData.submit(request, response, session.user);
+        } catch (SurveyException e) {
+            throw new RuntimeException(e);
+        }
         return Response.ok().entity(response).build();
     }
 
