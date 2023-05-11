@@ -52,6 +52,7 @@ public class Announcements {
         if (SurveyMain.isBusted() || !SurveyMain.wasInitCalled() || !SurveyMain.triedToStartUp()) {
             return STError.surveyNotQuiteReady();
         }
+        // Do we actually want locale param? Probably not...
         AnnouncementResponse response = new AnnouncementResponse();
         return Response.ok(response).build();
     }

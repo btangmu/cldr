@@ -15,6 +15,33 @@
         >
       </span>
     </section>
+    <div
+      class="nothingToShow"
+      v-if="announcementData.announcements.length === 0"
+    >
+      There are no announcements yet
+    </div>
+    <div
+      class="nothingToShow"
+      v-if="
+        announcementData.announcements.length > 0 &&
+        unreadCount === 0 &&
+        showUnreadOnly
+      "
+    >
+      There are no unread announcements 🎉
+    </div>
+    <div v-if="canAnnounce" class="composeButton">
+      <a-button title="Compose a new announcement" @click="startCompose">
+        Compose a new announcement
+      </a-button>
+    </div>
+    <div v-if="formIsVisible" ref="popover" class="popoverForm">
+      <AnnounceForm
+        :postOrCancel="finishCompose"
+        :formHasAllOrgs="canChooseAllOrgs"
+      />
+    </div>
     <template
       v-for="(announcement, i) in announcementData.announcements"
       :key="i"
@@ -37,6 +64,7 @@
             <input
               type="checkbox"
               v-model="announcement.checked"
+              id="alreadyReadChecked"
               @change="
                 (event) => {
                   checkmarkChanged(event, announcement);
@@ -51,14 +79,25 @@
 </template>
 
 <script>
-import * as cldrAnnouncements from "../esm/cldrAnnouncement.mjs";
+import * as cldrAnnouncement from "../esm/cldrAnnouncement.mjs";
 // import * as cldrText from "../esm/cldrText.mjs";
 
+import AnnounceForm from "./AnnounceForm.vue";
+
 export default {
+  components: {
+    AnnounceForm,
+  },
+
+  // emits: ["postOrCancel", "formHasAllOrgs"],
+
   data() {
     return {
-      pleaseLogIn: false,
       announcementData: null,
+      canAnnounce: false,
+      canChooseAllOrgs: false,
+      formIsVisible: false,
+      pleaseLogIn: false,
       showUnreadOnly: true,
       totalCount: 0,
       unreadCount: 0,
@@ -66,7 +105,9 @@ export default {
   },
 
   created() {
-    cldrAnnouncements.refresh(this.setData);
+    this.canAnnounce = cldrAnnouncement.canAnnounce();
+    this.canChooseAllOrgs = cldrAnnouncement.canDoAllOrgs();
+    cldrAnnouncement.refresh(this.setData);
   },
 
   methods: {
@@ -80,7 +121,7 @@ export default {
     },
 
     checkmarkChanged(event, announcement) {
-      cldrAnnouncements.saveCheckmark(event.target.checked, announcement);
+      cldrAnnouncement.saveCheckmark(event.target.checked, announcement);
       this.updateCounts();
     },
 
@@ -93,6 +134,17 @@ export default {
         }
       }
       this.unreadCount = this.totalCount - checkedCount;
+    },
+
+    startCompose() {
+      this.formIsVisible = true;
+    },
+
+    finishCompose(formState) {
+      this.formIsVisible = false;
+      if (formState) {
+        cldrAnnouncement.announce(formState);
+      }
     },
   },
 };
@@ -110,11 +162,20 @@ export default {
   /* imitate forum style slightly */
   background-color: #f5f5f5;
   border: 1px solid #e3e3e3;
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
   border-radius: 3px;
-  padding: 1ex;
-  margin-top: 0.5em;
-  margin-bottom: 1.4em;
+  padding: 1em;
+  margin: 1em;
+}
+
+.nothingToShow {
+  font-weight: bold;
+  font-size: 24px;
+  color: #40a9ff;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 3px;
+  padding: 1em;
+  margin: 1em;
 }
 
 .announcementSender {
@@ -136,7 +197,7 @@ export default {
 }
 
 .announcementBody {
-  border: 1px solid blue;
+  border: 1px solid #1890ff;
   margin: 1ex;
   padding: 1ex;
 }
@@ -152,6 +213,23 @@ export default {
   display: flex;
   justify-content: flex-end;
   text-align: baseline;
+}
+
+.popoverForm {
+  display: block;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  position: absolute;
+  padding: 20px 20px;
+  z-index: 1200;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 3px;
+}
+
+.composeButton {
+  padding: 1em;
 }
 
 label {

@@ -1,5 +1,5 @@
 /*
- * cldrAnnouncements: for Survey Tool announcements.
+ * cldrAnnouncement: for Survey Tool announcements.
  * The display logic is in AnnouncementPanel.vue.
  */
 import * as cldrAjax from "./cldrAjax.mjs";
@@ -56,4 +56,22 @@ function saveCheckmark(checked, announcement) {
   );
 }
 
-export { refresh, saveCheckmark };
+function canAnnounce() {
+  const { userIsManager } = cldrStatus.getPermissions();
+  return userIsManager || false;
+}
+
+function canDoAllOrgs() {
+  const { userIsTC } = cldrStatus.getPermissions();
+  return userIsTC || false;
+}
+
+function announce(formState) {
+  console.log("TODO: implement announce. Got:");
+  for (let key of Object.keys(formState)) {
+    const val = formState[key];
+    console.log(key + ": " + val);
+  }
+}
+
+export { announce, canAnnounce, canDoAllOrgs, refresh, saveCheckmark };
