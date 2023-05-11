@@ -12,13 +12,11 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.unicode.cldr.web.CookieSession;
-import org.unicode.cldr.web.SurveyMain;
-import org.unicode.cldr.web.UserRegistry;
+import org.unicode.cldr.web.*;
 
 @ApplicationScoped
-@Path("/announcements")
-@Tag(name = "announcements", description = "APIs for Survey Tool announcements")
+@Path("/announce")
+@Tag(name = "announce", description = "APIs for Survey Tool announcements")
 public class Announcements {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -109,5 +107,85 @@ public class Announcements {
             this.body = body;
             this.checked = checked;
         }
+    }
+
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    @Operation(summary = "Submit an announcement", description = "Submit an announcement")
+    @APIResponses(
+            value = {
+                @APIResponse(
+                        responseCode = "200",
+                        description = "Announcement submitted (but check result status)",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = Response.class))),
+                @APIResponse(
+                        responseCode = "401",
+                        description = "Authorization required, send a valid session id"),
+                @APIResponse(responseCode = "403", description = "Forbidden, no access"),
+                @APIResponse(
+                        responseCode = "500",
+                        description = "Internal Server Error",
+                        content =
+                                @Content(
+                                        mediaType = "application/json",
+                                        schema = @Schema(implementation = STError.class))),
+            })
+    public Response submitAnnouncement(
+            @HeaderParam(Auth.SESSION_HEADER) String session,
+            AnnouncementSubmissionRequest request) {
+        final CookieSession mySession = Auth.getSession(session);
+        if (mySession == null) {
+            return Auth.noSessionResponse();
+        }
+        System.out.println(
+                "submitAnnouncement got: subject="
+                        + request.subject
+                        + " body="
+                        + request.body
+                        + " audience="
+                        + request.audience
+                        + " orgsAll="
+                        + request.orgsAll
+                        + " locales="
+                        + request.locales);
+        final AnnouncementSubmissionResponse r = new AnnouncementSubmissionResponse();
+        return Response.ok().entity(r).build();
+    }
+
+    public static class AnnouncementSubmissionRequest {
+
+        /**
+         * A constructor without parameters prevents serialization error, "No default constructor
+         * found"
+         */
+        public AnnouncementSubmissionRequest() {
+            this.subject = "";
+            this.body = "";
+        }
+
+        @Schema(description = "subject")
+        public String subject;
+
+        @Schema(description = "body")
+        public String body;
+
+        @Schema(description = "audience")
+        public String audience = "Everyone";
+
+        @Schema(description = "locales")
+        public String locales = "";
+
+        @Schema(description = "orgsAll")
+        public Boolean orgsAll = false;
+    }
+
+    public static class AnnouncementSubmissionResponse {
+
+        @Schema(description = "ok")
+        public final boolean ok = true;
     }
 }

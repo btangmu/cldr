@@ -80,16 +80,13 @@
 
 <script>
 import * as cldrAnnouncement from "../esm/cldrAnnouncement.mjs";
-// import * as cldrText from "../esm/cldrText.mjs";
-
 import AnnounceForm from "./AnnounceForm.vue";
+import { notification } from "ant-design-vue";
 
 export default {
   components: {
     AnnounceForm,
   },
-
-  // emits: ["postOrCancel", "formHasAllOrgs"],
 
   data() {
     return {
@@ -143,8 +140,24 @@ export default {
     finishCompose(formState) {
       this.formIsVisible = false;
       if (formState) {
-        cldrAnnouncement.announce(formState);
+        cldrAnnouncement.announce(formState, this.composeResult);
       }
+    },
+
+    composeResult(result) {
+      if (result?.ok) {
+        notification.success({
+          placement: "topLeft",
+          message: "Your announcement was posted successfully",
+          duration: 4,
+        });
+      } else {
+        notification.error({
+          placement: "topLeft",
+          message: "Your announcement was NOT confirmed to be posted",
+        });
+      }
+      cldrAnnouncement.refresh(this.setData);
     },
   },
 };

@@ -36,19 +36,13 @@ async function refresh(viewCallbackSetData) {
     }, 2000);
     return;
   }
-  const url = cldrAjax.makeApiUrl("announcements", null);
+  const url = cldrAjax.makeApiUrl("announce", null);
   return await cldrAjax
     .doFetch(url)
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(viewCallbackSetData)
     .catch((e) => console.error(e));
-}
-
-function saveCheckmark(checked, announcement) {
-  console.log(
-    "TODO: implement saveCheckmark " + checked + " " + announcement.date
-  );
 }
 
 function canAnnounce() {
@@ -59,12 +53,32 @@ function canDoAllOrgs() {
   return cldrStatus.getPermissions()?.userIsTC || false;
 }
 
-function announce(formState) {
-  console.log("TODO: implement announce. Got:");
+async function announce(formState, viewCallbackComposeResult) {
   for (let key of Object.keys(formState)) {
     const val = formState[key];
     console.log(key + ": " + val);
   }
+  const init = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(formState),
+  };
+  const url = cldrAjax.makeApiUrl("announce", null);
+  return await cldrAjax
+    .doFetch(url, init)
+    .then(cldrAjax.handleFetchErrors)
+    .then((r) => r.json())
+    .then(viewCallbackComposeResult)
+    .catch((e) => console.error(e));
+}
+
+function saveCheckmark(checked, announcement) {
+  console.log(
+    "TODO: implement saveCheckmark " + checked + " " + announcement.date
+  );
 }
 
 export { announce, canAnnounce, canDoAllOrgs, refresh, saveCheckmark };
