@@ -91,10 +91,18 @@ public class Announcements {
         public String body;
 
         @Schema(description = "checked")
-        public boolean checked;
+        public boolean checked = false;
 
-        public Announcement(
-                int id, int poster, String date, String subject, String body, boolean checked) {
+        @Schema(description = "locales")
+        public String locales = null;
+
+        @Schema(description = "orgsAll")
+        public boolean orgsAll = false;
+
+        @Schema(description = "audience")
+        public String audience = "Everyone";
+
+        public Announcement(int id, int poster, String date, String subject, String body) {
             this.id = id;
             this.poster = poster;
             UserRegistry.User posterUser = CookieSession.sm.reg.getInfo(poster);
@@ -102,6 +110,15 @@ public class Announcements {
             this.date = date;
             this.subject = subject;
             this.body = body;
+        }
+
+        public void setFilters(String locales, Boolean orgsAll, String audience) {
+            this.locales = locales;
+            this.orgsAll = orgsAll;
+            this.audience = audience;
+        }
+
+        public void setChecked(boolean checked) {
             this.checked = checked;
         }
     }
@@ -181,11 +198,14 @@ public class Announcements {
 
     public static class AnnouncementSubmissionResponse {
 
-        @Schema(description = "ok")
+        @Schema(description = "ok, true if successful")
         public boolean ok = false;
 
-        @Schema(description = "err")
+        @Schema(description = "error message, empty if successful")
         public String err = "";
+
+        @Schema(description = "id of newly created announcement, zero if none")
+        public int id = 0;
     }
 
     @POST
@@ -226,7 +246,7 @@ public class Announcements {
             return Response.status(403, "Forbidden").build();
         }
         final CheckReadResponse response = new CheckReadResponse();
-        AnnouncementData.checkRead(request.id, request.checked, response);
+        AnnouncementData.checkRead(request.id, request.checked, response, session.user);
         return Response.ok().entity(response).build();
     }
 

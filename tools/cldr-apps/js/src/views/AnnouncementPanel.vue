@@ -5,7 +5,7 @@
   <template v-if="announcementData">
     <section class="fullJustified">
       <span class="summaryCounts">
-        {{ totalCount }} announcements, {{ unreadCount }} unread
+        {{ totalCount }} announcement(s), {{ unreadCount }} unread
       </span>
       <span class="rightControl">
         <input type="checkbox" v-model="showUnreadOnly" /><label
