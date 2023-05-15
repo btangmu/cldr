@@ -1,6 +1,6 @@
 /*
- * cldrAnnouncement: for Survey Tool announcements.
- * The display logic is in AnnouncementPanel.vue.
+ * cldrAnnounce: for Survey Tool announcements.
+ * The display logic is in AnnouncePanel.vue.
  */
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";

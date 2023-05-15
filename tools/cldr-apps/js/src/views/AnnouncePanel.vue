@@ -5,7 +5,7 @@
   <template v-if="announcementData">
     <section class="fullJustified">
       <span class="summaryCounts">
-        {{ totalCount }} announcement(s), {{ unreadCount }} unread
+        {{ unreadCount }} unread, {{ totalCount }} total
       </span>
       <span class="rightControl">
         <input type="checkbox" v-model="showUnreadOnly" /><label
@@ -46,46 +46,25 @@
       v-for="(announcement, i) in announcementData.announcements"
       :key="i"
     >
-      <div v-if="!showUnreadOnly || !announcement.checked">
-        <div class="announcementBox">
-          <section class="fullJustified">
-            <span class="announcementSender">
-              {{ announcement.posterName }}
-            </span>
-            <span class="announcementDate">
-              {{ announcement.date }}
-            </span>
-          </section>
-          <section class="announcementSubject">
-            {{ announcement.subject }}
-          </section>
-          <div v-html="announcement.body" class="announcementBody"></div>
-          <div class="rightControl">
-            <input
-              type="checkbox"
-              v-model="announcement.checked"
-              id="alreadyReadChecked"
-              @change="
-                (event) => {
-                  checkmarkChanged(event, announcement);
-                }
-              "
-            /><label for="alreadyReadChecked">&nbsp;I have read this</label>
-          </div>
-        </div>
-      </div>
+      <AnnouncePost
+        :announcement="announcement"
+        :checkmarkChanged="checkmarkChanged"
+        :showUnreadOnly="showUnreadOnly"
+      />
     </template>
   </template>
 </template>
 
 <script>
-import * as cldrAnnouncement from "../esm/cldrAnnouncement.mjs";
+import * as cldrAnnounce from "../esm/cldrAnnounce.mjs";
 import AnnounceForm from "./AnnounceForm.vue";
+import AnnouncePost from "./AnnouncePost.vue";
 import { notification } from "ant-design-vue";
 
 export default {
   components: {
     AnnounceForm,
+    AnnouncePost,
   },
 
   data() {
@@ -102,9 +81,9 @@ export default {
   },
 
   created() {
-    this.canAnnounce = cldrAnnouncement.canAnnounce();
-    this.canChooseAllOrgs = cldrAnnouncement.canChooseAllOrgs();
-    cldrAnnouncement.refresh(this.setData);
+    this.canAnnounce = cldrAnnounce.canAnnounce();
+    this.canChooseAllOrgs = cldrAnnounce.canChooseAllOrgs();
+    cldrAnnounce.refresh(this.setData);
   },
 
   methods: {
@@ -118,7 +97,7 @@ export default {
     },
 
     checkmarkChanged(event, announcement) {
-      cldrAnnouncement.saveCheckmark(event.target.checked, announcement);
+      cldrAnnounce.saveCheckmark(event.target.checked, announcement);
       this.updateCounts();
     },
 
@@ -140,7 +119,7 @@ export default {
     finishCompose(formState) {
       this.formIsVisible = false;
       if (formState) {
-        cldrAnnouncement.compose(formState, this.composeResult);
+        cldrAnnounce.compose(formState, this.composeResult);
       }
     },
 
@@ -158,7 +137,7 @@ export default {
           message: "Your announcement was not posted: " + errMessage,
         });
       }
-      cldrAnnouncement.refresh(this.setData);
+      cldrAnnounce.refresh(this.setData);
     },
   },
 };
@@ -172,15 +151,6 @@ export default {
   font-size: larger;
 }
 
-.announcementBox {
-  /* imitate forum style slightly */
-  background-color: #f5f5f5;
-  border: 1px solid #e3e3e3;
-  border-radius: 3px;
-  padding: 1em;
-  margin: 1em;
-}
-
 .nothingToShow {
   font-weight: bold;
   font-size: 24px;
@@ -190,30 +160,6 @@ export default {
   border-radius: 3px;
   padding: 1em;
   margin: 1em;
-}
-
-.announcementSender {
-  font-weight: bold;
-  margin-left: 0;
-  margin-right: auto;
-  color: #40a9ff;
-}
-
-.announcementSubject {
-  font-weight: bold;
-  font-size: larger;
-}
-
-.announcementDate {
-  display: block;
-  margin-left: auto;
-  margin-right: 0;
-}
-
-.announcementBody {
-  border: 1px solid #1890ff;
-  margin: 1ex;
-  padding: 1ex;
 }
 
 .fullJustified {

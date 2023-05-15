@@ -87,15 +87,4 @@ public class LocaleSet {
         }
         return !Sets.intersection(getSet(), otherSet.getSet()).isEmpty();
     }
-
-    public LocaleSet intersection(LocaleSet otherSet) {
-        if (isEmpty() || otherSet.isEmpty()) {
-            return new LocaleSet();
-        }
-        if (isAllLocales || otherSet.isAllLocales) {
-            return new LocaleSet(true);
-        }
-        Set<CLDRLocale> intersection = Sets.intersection(getSet(), otherSet.getSet());
-        return new LocaleSet(intersection, true);
-    }
 }

@@ -1,11 +1,12 @@
 package org.unicode.cldr.web;
 
+import com.ibm.icu.dev.util.ElapsedTimer;
 import java.sql.*;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
-import org.unicode.cldr.util.LocaleNormalizer;
-import org.unicode.cldr.util.LocaleSet;
-import org.unicode.cldr.util.VoteResolver;
+import java.util.Set;
+import org.unicode.cldr.util.*;
 import org.unicode.cldr.web.api.Announcements;
 
 public class AnnouncementData {
@@ -14,29 +15,9 @@ public class AnnouncementData {
 
     static boolean dbIsSetUp = false;
 
-    static boolean DEBUG_FAKE_DATA = false;
-
     public static void get(
             UserRegistry.User user, List<Announcements.Announcement> announcementList) {
         makeSureDbSetup();
-        if (DEBUG_FAKE_DATA) {
-            String body1 =
-                    "<p>This is a test including some html.<p>Paragraph.<p><i>Italic.</i> <b>Bold.</b> <a href='https://unicode.org'>Link to unicode.org</a>";
-            String body2 = "This is a test \uD83D\uDC40 and it's generated on the back end";
-            announcementList.add(
-                    new Announcements.Announcement(
-                            123, 2222, "2023-01-17 12:30:03.0", "Wow!", body1));
-            Announcements.Announcement a =
-                    new Announcements.Announcement(
-                            456,
-                            3333,
-                            "2022-12-31 01:22:22.0",
-                            "This is really so important",
-                            body2);
-            a.setChecked(true);
-            announcementList.add(a);
-            return;
-        }
         AnnouncementFilter aFilter = new AnnouncementFilter(user);
         final String sql = "SELECT * FROM " + DBUtils.Table.ANNOUNCE + " ORDER BY last_time DESC";
         try {
@@ -105,7 +86,7 @@ public class AnnouncementData {
             Connection conn = null;
             PreparedStatement pAdd = null;
             try {
-                conn = CookieSession.sm.dbUtils.getDBConnection();
+                conn = CookieSession.sm.dbUtils.getAConnection();
                 pAdd = prepare_pAdd(conn);
                 pAdd.setInt(1, user.id); // "poster"
                 DBUtils.setStringUTF8(pAdd, 2, request.subject); // "subj"
@@ -114,21 +95,17 @@ public class AnnouncementData {
                 pAdd.setBoolean(5, request.orgsAll); // "orgsAll"
                 pAdd.setString(6, request.audience); // "audience"
                 int n = pAdd.executeUpdate();
-                if (conn != null) {
-                    conn.commit();
-                }
-                announcementId = DBUtils.getLastId(pAdd);
                 if (n != 1) {
                     throw new RuntimeException("Couldn't post announcement, update failed.");
                 }
+                announcementId = DBUtils.getLastId(pAdd);
+                emailNotify(request, user, announcementId);
             } finally {
                 DBUtils.close(pAdd, conn);
             }
         } catch (SQLException se) {
             String complaint =
-                    "Couldn't post announcement - "
-                            + DBUtils.unchainSqlException(se)
-                            + " - pAddAnnouncement";
+                    "Couldn't save announcement post to db - " + DBUtils.unchainSqlException(se);
             SurveyLog.logException(logger, se, complaint);
             throw new SurveyException(SurveyException.ErrorCode.E_INTERNAL, complaint);
         }
@@ -144,6 +121,86 @@ public class AnnouncementData {
         return DBUtils.prepareStatement(conn, "pAddAnnouncement", sql);
     }
 
+    private static void emailNotify(
+            Announcements.AnnouncementSubmissionRequest request,
+            UserRegistry.User poster,
+            int announcementId) {
+        ElapsedTimer et = new ElapsedTimer("Sending email for announcement " + announcementId);
+        Set<Integer> recipients = new HashSet<>();
+        gatherRecipients(request, poster, recipients);
+        logger.fine(
+                et
+                        + ": Announcement notify: u#"
+                        + poster.id
+                        + " announcement:"
+                        + announcementId
+                        + " queueing:"
+                        + recipients.size());
+        if (recipients.size() == 0) {
+            return;
+        }
+        String subject = "CLDR announcement: " + request.subject;
+        String body =
+                "There is a new announcement in the Survey Tool. Do not reply to this message, instead go to the Survey Tool";
+        MailSender mailSender = MailSender.getInstance();
+        for (int recipient : recipients) {
+            mailSender.queue(poster.id, recipient, subject, body);
+        }
+    }
+
+    private static synchronized void gatherRecipients(
+            Announcements.AnnouncementSubmissionRequest request,
+            UserRegistry.User poster,
+            Set<Integer> recipients) {
+        String orgName = request.orgsAll ? null : poster.getOrganization().name();
+        Connection conn = null;
+        PreparedStatement ps = null;
+        java.sql.ResultSet rs = null;
+        try {
+            conn = CookieSession.sm.dbUtils.getAConnection();
+            ps = CookieSession.sm.reg.list(orgName, conn); // orgName = null to list all
+            rs = ps.executeQuery();
+            if (rs == null) {
+                return;
+            }
+            while (rs.next()) {
+                addRecipientIfPasses(rs, request, poster, recipients);
+            }
+        } catch (SQLException se) {
+            logger.log(
+                    java.util.logging.Level.WARNING,
+                    "Query for org " + orgName + " failed: " + DBUtils.unchainSqlException(se),
+                    se);
+        } finally {
+            DBUtils.close(conn, ps, rs);
+        }
+    }
+
+    private static void addRecipientIfPasses(
+            ResultSet rs,
+            Announcements.AnnouncementSubmissionRequest request,
+            UserRegistry.User poster,
+            Set<Integer> recipients)
+            throws SQLException {
+        int id = rs.getInt(1);
+        if (id == poster.id) {
+            return; // don't email the poster
+        }
+        int level = rs.getInt(2);
+        if (level == UserRegistry.ANONYMOUS || level >= UserRegistry.LOCKED) {
+            return; // don't email anonymous or locked users
+        }
+        UserRegistry.User user = CookieSession.sm.reg.getInfo(id);
+        AnnouncementFilter aFilter = new AnnouncementFilter(user);
+        Announcements.Announcement a =
+                new Announcements.Announcement(0, poster.id, null, null, null);
+        a.setFilters(request.locales, request.orgsAll, request.audience);
+        if (aFilter.passes(a)) {
+            logger.fine("In AnnouncementData.addRecipientIfPasses, adding recipient: " + user.id);
+            recipients.add(user.id);
+        }
+    }
+
     private static boolean getChecked(int announcementId, int userId) {
         String table = DBUtils.Table.ANNOUNCE_READ.toString();
         String sql = "SELECT COUNT(*) FROM " + table + " WHERE announce_id=? AND user_id=?";
@@ -152,7 +209,7 @@ public class AnnouncementData {
         PreparedStatement ps = null;
         int count;
         try {
-            conn = DBUtils.getInstance().getAConnection();
+            conn = CookieSession.sm.dbUtils.getAConnection();
             if (conn == null) {
                 logger.severe("Connection failed in getChecked");
                 return false;
@@ -204,7 +261,7 @@ public class AnnouncementData {
         Connection conn = null;
         PreparedStatement ps = null;
         try {
-            conn = DBUtils.getInstance().getAConnection();
+            conn = CookieSession.sm.dbUtils.getAConnection();
             if (conn == null) {
                 logger.severe("Connection failed in addCheckRow");
                 return false;
@@ -213,7 +270,6 @@ public class AnnouncementData {
             ps.setInt(1, announcementId);
             ps.setInt(2, userId);
             int count = ps.executeUpdate();
-            conn.commit();
             if (count < 1) {
                 logger.severe("Update failed in addCheckRow");
                 return false;
@@ -234,7 +290,7 @@ public class AnnouncementData {
         Connection conn = null;
         PreparedStatement ps = null;
         try {
-            conn = DBUtils.getInstance().getAConnection();
+            conn = CookieSession.sm.dbUtils.getAConnection();
             if (conn == null) {
                 logger.severe("Connection failed in deleteCheckRow");
                 return false;
@@ -243,7 +299,6 @@ public class AnnouncementData {
             ps.setInt(1, announcementId);
             ps.setInt(2, userId);
             int count = ps.executeUpdate();
-            conn.commit();
             if (count < 1) {
                 logger.severe("Delete failed in deleteCheckRow");
                 return false;
@@ -269,41 +324,36 @@ public class AnnouncementData {
     }
 
     private static synchronized void setupDB() throws SQLException {
-        String sql = null;
-        Connection conn = null;
+        boolean haveAnnounceTable = DBUtils.hasTable(DBUtils.Table.ANNOUNCE.toString());
+        boolean haveAnnounceReadTable = DBUtils.hasTable(DBUtils.Table.ANNOUNCE_READ.toString());
+        if (haveAnnounceTable && haveAnnounceReadTable) {
+            return;
+        }
         try {
-            if (!DBUtils.hasTable(DBUtils.Table.ANNOUNCE.toString())) {
+            Connection conn = null;
+            try {
                 conn = DBUtils.getInstance().getDBConnection();
                 if (conn == null) {
                     logger.severe("Connection failed in setupDB");
                     return;
                 }
-                sql = createAnnounceTable(conn);
-            }
-            if (!DBUtils.hasTable(DBUtils.Table.ANNOUNCE_READ.toString())) {
-                if (conn == null) {
-                    conn = DBUtils.getInstance().getDBConnection();
-                    if (conn == null) {
-                        logger.severe("Connection failed in setupDB (2)");
-                        return;
-                    }
+                if (!haveAnnounceTable) {
+                    createAnnounceTable(conn);
                 }
-                sql = createAnnounceReadTable(conn);
+                if (!haveAnnounceReadTable) {
+                    createAnnounceReadTable(conn);
+                }
+            } finally {
+                DBUtils.close(conn);
             }
         } catch (SQLException se) {
             se.printStackTrace();
             System.err.println("SQL err: " + DBUtils.unchainSqlException(se));
-            System.err.println("Last SQL run: " + sql);
             throw se;
-        } finally {
-            if (conn != null) {
-                DBUtils.close(conn);
-            }
         }
     }
 
-    private static String createAnnounceTable(Connection conn) throws SQLException {
-        Statement s = conn.createStatement();
+    private static void createAnnounceTable(Connection conn) throws SQLException {
         String sql =
                 "CREATE TABLE "
                         + DBUtils.Table.ANNOUNCE
@@ -325,14 +375,18 @@ public class AnnouncementData {
                         + " orgsAll BOOLEAN, "
                         + " audience VARCHAR(122)"
                         + " )";
-        s.execute(sql);
-        s.close();
-        conn.commit();
-        return sql;
+        try {
+            Statement s = conn.createStatement();
+            s.execute(sql);
+            s.close();
+            conn.commit();
+        } catch (SQLException se) {
+            System.err.println("Last SQL run: " + sql);
+            throw se;
+        }
     }
 
-    private static String createAnnounceReadTable(Connection conn) throws SQLException {
-        Statement s = conn.createStatement();
+    private static void createAnnounceReadTable(Connection conn) throws SQLException {
         String sql =
                 "CREATE TABLE "
                         + DBUtils.Table.ANNOUNCE_READ
@@ -342,22 +396,32 @@ public class AnnouncementData {
                         + ", "
                         + " user_id INT NOT NULL "
                         + " )";
-        s.execute(sql);
-        s.close();
-        conn.commit();
-        return sql;
+        try {
+            Statement s = conn.createStatement();
+            s.execute(sql);
+            s.close();
+            conn.commit();
+
+        } catch (SQLException se) {
+            System.err.println("Last SQL run: " + sql);
+            throw se;
+        }
     }
 
     private static class AnnouncementFilter {
         private final UserRegistry.User user;
-        private final LocaleSet intLoc, authLoc;
         private final VoteResolver.Level userLevel;
+        private final boolean userHasAllLocales;
+        private LocaleSet intLoc = null, authLoc = null;
 
         public AnnouncementFilter(UserRegistry.User user) {
             this.user = user;
             this.userLevel = user.getLevel();
-            this.intLoc = user.getInterestLocales();
-            this.authLoc = user.getAuthorizedLocaleSet();
+            userHasAllLocales = userLevel.isManagerOrStronger();
+            if (!userHasAllLocales) {
+                this.intLoc = user.getInterestLocales();
+                this.authLoc = user.getAuthorizedLocaleSet();
+            }
         }
 
         public boolean passes(Announcements.Announcement a) {
@@ -375,7 +439,7 @@ public class AnnouncementData {
         }
 
         private boolean matchLocales(String locales) {
-            if (locales == null || locales.isEmpty()) {
+            if (userHasAllLocales || locales == null || locales.isEmpty()) {
                 return true;
             }
             locales = LocaleNormalizer.normalizeQuietly(locales);

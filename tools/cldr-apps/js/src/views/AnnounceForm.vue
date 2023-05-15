@@ -54,7 +54,7 @@
     >
       <a-textarea
         v-model:value="formState.body"
-        placeholder="Enter message here...</br>Simple HTML mark-up is supported."
+        placeholder="Enter message here... Simple HTML mark-up is supported."
         :rows="4"
       />
     </a-form-item>
