@@ -238,7 +238,8 @@ function panelShouldBeShown() {
  * @param {String} str the string to show at the top
  * @param {Node} tr the <TR> of the row
  * @param {Object} hideIfLast mysterious parameter, a.k.a. theObj
- * @param {Function} fn the draw function, a.k.a. showFn, sometimes (always?) constructed
+ * @param {Function} fn the draw function, a.k.a. showFn, sometimes constructed by cldrInfo.showItemInfoFn,
+ *                      sometimes ourShowFn in cldrVote.showProposedItem
  */
 function show(str, tr, hideIfLast, fn) {
   openPanel();
@@ -302,6 +303,12 @@ function show(str, tr, hideIfLast, fn) {
     fragment.appendChild(tr.ticketLink.cloneNode(true));
   }
   if (tr) {
+    // TODO: Put a blank line around the sublocale menu, and give it a label. In context:
+    // Changes to this item require 20 votes.
+    // Regional Variants for German
+    // [ Germany (= German) ]
+    // Flag for Review (moved up)
+    // Reference: https://unicode-org.atlassian.net/browse/CLDR-7536
     cldrSideways.loadMenu(fragment, tr.xpstrid); // regional variants (sibling locales)
   }
   if (tr?.theRow && !cldrStatus.isVisitor()) {
@@ -452,6 +459,10 @@ function updateRowVoteInfo(tr, theRow) {
     }
   }
   if (!theRow.rowFlagged && theRow.canFlagOnLosing) {
+    // TODO: display this message and the actual "Flag for Review" button in the same place; see forumNewPostFlagButton.
+    // Change to: ⚐ [for committee approval|Ask]
+    // and don't show unless it can be, of course.
+    // Reference: https://unicode-org.atlassian.net/browse/CLDR-7536
     cldrSurvey.addIcon(tr.voteDiv, "i-flag-d");
     tr.voteDiv.appendChild(
       cldrDom.createChunk(cldrText.get("flag_d_desc", "p", "helpContent"))
@@ -824,6 +835,9 @@ function showItemInfoFn(theRow, item) {
       displayValue = theRow.inheritedDisplayValue;
     }
 
+    // TODO: display the value as "Value: ...", and display the pClass message
+    // (e.g., "This item is inherited...") on the following line.
+    // Reference: https://unicode-org.atlassian.net/browse/CLDR-7536
     cldrVote.appendItem(h3, displayValue, item.pClass);
     h3.className = "span";
     td.appendChild(h3);
@@ -852,6 +866,8 @@ function showItemInfoFn(theRow, item) {
     }
 
     if (item.example) {
+      // TODO: add a label "Example:" above the example
+      // Reference: https://unicode-org.atlassian.net/browse/CLDR-7536
       cldrTable.appendExample(td, item.example);
     }
   }; // end function(td)
