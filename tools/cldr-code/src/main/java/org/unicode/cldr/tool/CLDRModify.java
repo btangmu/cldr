@@ -2090,9 +2090,12 @@ public class CLDRModify {
                     Set<String> available = Annotations.getAllAvailable();
                     TreeSet<String> sorted = new TreeSet<>(Collator.getInstance(ULocale.ROOT));
                     CLDRFile resolved;
-
-                    Set<String> fakeKeywordPaths = new TreeSet<>();
-                    Set<String> realKeywordPaths = new TreeSet<>();
+                    /**
+                     * All keyword paths (annotations without type tts), indexed by code point (cp);
+                     * filled in on first pass (handleStart); retrieved during second pass when
+                     * handling each corresponding tts path (handlePath)
+                     */
+                    final Map<String, String> keywordPaths = new HashMap<>();
 
                     @Override
                     public void handleStart() {
@@ -2102,6 +2105,21 @@ public class CLDRModify {
                                     "no annotations available, probably wrong directory");
                         }
                         resolved = factory.make(localeID, true);
+                        for (String xpath : cldrFileToFilter) {
+                            rememberKeywordPaths(xpath);
+                        }
+                    }
+
+                    private void rememberKeywordPaths(String xpath) {
+                        if (xpath.contains("/annotation")) {
+                            String fullpath = cldrFileToFilter.getFullXPath(xpath);
+                            XPathParts parts = XPathParts.getFrozenInstance(fullpath);
+                            String type = parts.getAttributeValue(2, "type");
+                            if (type == null) { // not type="tts"
+                                String cp = parts.getAttributeValue(2, "cp");
+                                keywordPaths.put(cp, xpath);
+                            }
+                        }
                     }
 
                     @Override
@@ -2117,13 +2135,10 @@ public class CLDRModify {
                         XPathParts parts = XPathParts.getFrozenInstance(fullpath);
                         String type = parts.getAttributeValue(2, "type");
                         if (type == null) {
-                            realKeywordPaths.add(xpath);
                             return; // no TTS, so keywords, skip
                         }
-                        XPathParts keywordParts = parts.cloneAsThawed().removeAttribute(2, "type");
-                        String keywordPath = keywordParts.toString();
-                        keywordPath = cldrFileToFilter.getFullXPath(keywordPath);
-                        fakeKeywordPaths.add(keywordPath);
+                        String cp = parts.getAttributeValue(2, "cp");
+                        String keywordPath = keywordPaths.get(cp);
                         String distinguishingKeywordPath =
                                 CLDRFile.getDistinguishingXPath(keywordPath, null);
                         String rawKeywordValue = cldrFileToFilter.getStringValue(keywordPath);
@@ -2162,34 +2177,6 @@ public class CLDRModify {
                         String newKeywordValue = Joiner.on(" | ").join(sorted);
                         if (!newKeywordValue.equals(keywordValue)) {
                             replace(keywordPath, keywordPath, newKeywordValue);
-                        }
-                    }
-
-                    @Override
-                    public void handleEnd() {
-                        if (fakeKeywordPaths.isEmpty() || realKeywordPaths.isEmpty()) {
-                            throw new RuntimeException(
-                                    "fake/real EMPTY loc: " + cldrFileToFilter.getLocaleID());
-                        }
-                        if (!fakeKeywordPaths.equals(realKeywordPaths)) {
-                            fakeKeywordPaths.removeAll(realKeywordPaths);
-                            realKeywordPaths.removeAll(fakeKeywordPaths);
-                            for (String p : fakeKeywordPaths) {
-                                System.out.println(
-                                        "ONLY fake: "
-                                                + p
-                                                + " loc: "
-                                                + cldrFileToFilter.getLocaleID());
-                            }
-                            for (String p : realKeywordPaths) {
-                                System.out.println(
-                                        "ONLY real: "
-                                                + p
-                                                + " loc: "
-                                                + cldrFileToFilter.getLocaleID());
-                            }
-                            // throw new RuntimeException("fake/real diff loc: " +
-                            // cldrFileToFilter.getLocaleID());
                         }
                     }
                 });
