@@ -139,7 +139,7 @@ export default {
       }
       cldrAnnounce.refresh(this.setData);
     },
-  },
+  }
 };
 </script>
 
