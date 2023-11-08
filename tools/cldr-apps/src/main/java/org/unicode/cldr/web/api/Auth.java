@@ -64,7 +64,12 @@ public class Auth {
             LoginRequest request) {
 
         // If there's no user/pass, try to fill one in from cookies.
-        if (request.isEmpty()) {
+        boolean AUTH_DEBUG = true;
+        if (AUTH_DEBUG) {
+            System.out.println(
+                    "org.unicode.cldr.web.api.Auth.login: jwt is disabled for debugging!");
+        }
+        if (!AUTH_DEBUG && request.isEmpty()) {
             // No option to ignore the cookies.
             // If you want to logout, use the /logout endpoint first.
             // Also compare WebContext.setSession()

@@ -1230,6 +1230,17 @@ public class WebContext implements Cloneable, Appendable {
         c.setMaxAge(expiry);
         c.setPath("/");
         response.addCookie(c);
+        if (WEB_CONTEXT_DEBUG) {
+            System.out.println(
+                    "WebContext.addCookie: c = "
+                            + c
+                            + "; name = "
+                            + c.getName()
+                            + "; value = "
+                            + c.getValue()
+                            + "; domain = "
+                            + c.getDomain());
+        }
     }
 
     /**
@@ -1457,7 +1468,8 @@ public class WebContext implements Cloneable, Appendable {
         }
 
         if (session != null && session.user != null && user != null && user.id != session.user.id) {
-            logger.severe("Changing session " + session.id + " from " + session.user + " to " + user);
+            logger.severe(
+                    "Changing session " + session.id + " from " + session.user + " to " + user);
             // 'user'
             if (WEB_CONTEXT_DEBUG) {
                 System.out.println("WebContext.setSession: changed");
