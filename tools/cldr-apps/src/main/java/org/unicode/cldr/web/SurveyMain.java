@@ -121,6 +121,8 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
     private static final long serialVersionUID = -3587451989643792204L;
 
+    private static final boolean DEBUG_LOGIN = true;
+
     /**
      * This class enumerates the current phase of the Survey Tool. Not to be confused with
      * CheckCLDR.Phase. More than one SurveyMain.Phase enums may map to the same CheckCLDR.Phase.
@@ -1736,7 +1738,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
         ctx.setSession();
 
         if (ctx.session == null) {
-
+            if (DEBUG_LOGIN) {
+                System.out.println("SurveyMain.doSession: ctx.session == null");
+            }
             printHeader(ctx, "Survey Tool");
             if (ctx.getSessionMessage() == null) {
                 ctx.setSessionMessage("Could not create your user session.");
@@ -1769,6 +1773,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
 
         // setup thread name
         if (ctx.session.user != null) {
+            if (DEBUG_LOGIN) {
+                System.out.println("SurveyMain.doSession: ctx.session.user != null");
+            }
             Thread.currentThread()
                     .setName(
                             Thread.currentThread().getName()
@@ -1830,6 +1837,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
                 DisputePageManager.doDisputed(ctx);
                 return;
             } else if (doWhat.equals("logout")) {
+                if (DEBUG_LOGIN) {
+                    System.out.println("SurveyMain.doSession: doWhat = logout");
+                }
                 ctx.logout();
                 try {
                     ctx.response.sendRedirect(ctx.jspLink("?logout=1"));
@@ -1855,6 +1865,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             title = title + " Example";
         } else if (which == null || which.isEmpty()) {
             if (ctx.getLocale() == null) {
+                if (DEBUG_LOGIN) {
+                    System.out.println("SurveyMain.doSession: ctx.redirect(ctx.vurl())");
+                }
                 ctx.redirect(ctx.vurl());
                 return;
             } else {

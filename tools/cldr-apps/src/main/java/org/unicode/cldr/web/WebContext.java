@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
+import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRLocale;
 import org.unicode.cldr.util.Level;
 import org.unicode.cldr.util.PathHeader;
@@ -47,6 +48,7 @@ import org.w3c.dom.Document;
 public class WebContext implements Cloneable, Appendable {
     public static final String TMPL_PATH = "/WEB-INF/tmpl/";
     private static final java.util.logging.Logger logger = SurveyLog.forClass(WebContext.class);
+
     // USER fields
     public SurveyMain sm = null;
     public Document[] doc = new Document[0];
@@ -71,6 +73,8 @@ public class WebContext implements Cloneable, Appendable {
     boolean dontCloseMe = false;
     HttpServletRequest request;
     HttpServletResponse response;
+
+    private static final boolean WEB_CONTEXT_DEBUG = true;
 
     /**
      * @return the output PrintWriter
@@ -719,12 +723,43 @@ public class WebContext implements Cloneable, Appendable {
      */
     void redirect(String where) {
         try {
-            response.sendRedirect(where);
+            String port = getRedirectPort();
+            if (port != null) {
+                String url =
+                        request.getScheme() + "://" + request.getServerName() + ":" + port + where;
+                if (WEB_CONTEXT_DEBUG) {
+                    System.out.println("Sending redirect to url = " + url);
+                }
+                response.sendRedirect(url);
+            } else {
+                if (WEB_CONTEXT_DEBUG) {
+                    System.out.println("Sending redirect to where = " + where);
+                }
+                response.sendRedirect(where);
+            }
             out.close();
             close();
         } catch (IOException ioe) {
             throw new RuntimeException(ioe + " while redirecting to " + where);
         }
+    }
+
+    private static final String PORT_NUMBER_NOT_INITIALIZED = "?";
+
+    /**
+     * On first access, this becomes either null (for default port number 80) or a port number such
+     * as "8888". Ordinarily Survey Tool uses nginx as a load-balancing server, running on the
+     * default port (80). For development it may be useful to have it on a different port. This can
+     * be enabled by a line such as this in cldr.properties: CLDR_REDIRECT_PORT=8888
+     */
+    private static String webContextRedirectPort = PORT_NUMBER_NOT_INITIALIZED;
+
+    private String getRedirectPort() {
+        if (PORT_NUMBER_NOT_INITIALIZED.equals(webContextRedirectPort)) {
+            webContextRedirectPort =
+                    CLDRConfig.getInstance().getProperty("CLDR_REDIRECT_PORT", null);
+        }
+        return webContextRedirectPort; // default null
     }
 
     /** Close the stream. Normally not called directly, except in outermost processor. */
@@ -1321,7 +1356,14 @@ public class WebContext implements Cloneable, Appendable {
             password = field(SurveyMain.QUERY_PASSWORD_ALT);
         }
         String email = field(SurveyMain.QUERY_EMAIL);
-
+        if (WEB_CONTEXT_DEBUG) {
+            String passwordStatus = password.isEmpty() ? "empty" : "NOT empty";
+            System.out.println(
+                    "WebContext.setSession: request email="
+                            + email
+                            + " and password is "
+                            + passwordStatus);
+        }
         User user = null;
 
         // if there was an email/password in the cookie, use that.
@@ -1337,6 +1379,10 @@ public class WebContext implements Cloneable, Appendable {
                     }
                 }
             }
+            if (WEB_CONTEXT_DEBUG) {
+                String jwtUserStatus = user == null ? "null" : "NOT null";
+                System.out.println("WebContext.setSession: jwt user is " + jwtUserStatus);
+            }
         }
 
         // if an email/password given, try to fetch a user
@@ -1345,6 +1391,10 @@ public class WebContext implements Cloneable, Appendable {
                 user = CookieSession.sm.reg.get(password, email, userIP());
             } catch (LogoutException e) {
                 logout(); // failed login, so logout this session.
+            }
+            if (WEB_CONTEXT_DEBUG) {
+                String cookieUserStatus = user == null ? "null" : "NOT null";
+                System.out.println("WebContext.setSession: cookie user is " + cookieUserStatus);
             }
         }
         if (user != null) {
@@ -1355,12 +1405,19 @@ public class WebContext implements Cloneable, Appendable {
         // we just logged in- see if there's already a user session for this user..
         if (user != null) {
             session = CookieSession.retrieveUser(user.email); // is this user already logged in?
+            if (WEB_CONTEXT_DEBUG) {
+                String sessionStatus = session == null ? "null" : "NOT null";
+                System.out.println("WebContext.setSession: session is " + sessionStatus);
+            }
             if (session != null) {
                 if (null
                         == CookieSession.retrieve(
                                 session.id)) { // double check- is the session still valid?
                     session = null; // don't allow dead sessions to show up
                     // via the user list.
+                    if (WEB_CONTEXT_DEBUG) {
+                        System.out.println("WebContext.setSession: session was dead");
+                    }
                 }
             }
         }
@@ -1376,12 +1433,18 @@ public class WebContext implements Cloneable, Appendable {
             logger.fine("Changing session " + session.id + " from " + session.user + " to " + user);
             session = null; // user was already logged in as 'session.user', replacing this with
             // 'user'
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: changed");
+            }
         }
 
         if ((user == null)
                 && (hasField(SurveyMain.QUERY_PASSWORD) || hasField(SurveyMain.QUERY_EMAIL))) {
             logger.fine("Logging out - mySession=" + session + ", and had em/pw");
             logout(); // zap cookies if some id/pw failed to work
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: zapped");
+            }
         }
 
         if (session == null && user == null) {
@@ -1456,10 +1519,16 @@ public class WebContext implements Cloneable, Appendable {
             session.setUser(user); // this will replace any existing session by this user.
             session.user.ip = userIP();
             String s = getSessionMessage();
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: getSessionMessage = " + s);
+            }
             if (s != null && s.contains(LOGIN_FAILED)) {
                 setSessionMessage(null);
             }
         } else {
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: null user");
+            }
             if ((email != null) && (email.length() > 0) && (session.user == null)) {
                 setSessionMessage(LOGIN_FAILED); // No reset at present, CLDR-7405
             }
@@ -1473,6 +1542,9 @@ public class WebContext implements Cloneable, Appendable {
         }
         if (session != null) {
             setSessionCookie(response, session.id);
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: set cookie");
+            }
         }
     }
 
