@@ -1392,7 +1392,7 @@ public class WebContext implements Cloneable, Appendable {
                     User jwtInfo = CookieSession.sm.reg.getInfo(Integer.parseInt(jwtId));
                     if (jwtInfo != null) {
                         user = jwtInfo;
-                        logger.fine("Logged in " + jwtInfo + " #" + jwtId + " using JWT");
+                        logger.severe("Logged in " + jwtInfo + " #" + jwtId + " using JWT");
                     }
                 }
             }
@@ -1422,7 +1422,7 @@ public class WebContext implements Cloneable, Appendable {
             }
         }
         if (user != null) {
-            logger.fine("Logged in " + user);
+            logger.severe("Logged in " + user);
             user.touch(); // mark this user as active.
         }
 
@@ -1450,21 +1450,24 @@ public class WebContext implements Cloneable, Appendable {
         String aNum = getCookieValue(Auth.SESSION_HEADER);
         if (aNum != null) {
             session = CookieSession.retrieve(aNum);
-            logger.fine("From cookie " + Auth.SESSION_HEADER + " : " + session);
+            logger.severe("From cookie " + Auth.SESSION_HEADER + " : " + session);
+            if (WEB_CONTEXT_DEBUG) {
+                System.out.println("WebContext.setSession: aNum != null, session=" + session);
+            }
         }
 
         if (session != null && session.user != null && user != null && user.id != session.user.id) {
-            logger.fine("Changing session " + session.id + " from " + session.user + " to " + user);
-            session = null; // user was already logged in as 'session.user', replacing this with
+            logger.severe("Changing session " + session.id + " from " + session.user + " to " + user);
             // 'user'
             if (WEB_CONTEXT_DEBUG) {
                 System.out.println("WebContext.setSession: changed");
             }
+            session = null; // user was already logged in as 'session.user', replacing this with
         }
 
         if ((user == null)
                 && (hasField(SurveyMain.QUERY_PASSWORD) || hasField(SurveyMain.QUERY_EMAIL))) {
-            logger.fine("Logging out - mySession=" + session + ", and had em/pw");
+            logger.severe("Logging out - mySession=" + session + ", and had em/pw");
             logout(); // zap cookies if some id/pw failed to work
             if (WEB_CONTEXT_DEBUG) {
                 System.out.println("WebContext.setSession: zapped");
@@ -1490,7 +1493,7 @@ public class WebContext implements Cloneable, Appendable {
             }
         }
 
-        logger.fine("Session Now=" + session + ", user=" + user);
+        logger.severe("Session Now=" + session + ", user=" + user);
 
         // allow in administrator or TC.
         if (!UserRegistry.userIsTC(user)) {
@@ -1536,7 +1539,7 @@ public class WebContext implements Cloneable, Appendable {
         if (session == null) {
             String newId = CookieSession.newId();
             session = CookieSession.newSession(userIP(), newId);
-            logger.fine("New session #" + session + " for " + user);
+            logger.severe("New session #" + session + " for " + user);
         }
 
         if (user != null) {
@@ -1560,7 +1563,7 @@ public class WebContext implements Cloneable, Appendable {
         // processs the 'remember me'
         if (session != null && session.user != null) {
             if (hasField(SurveyMain.QUERY_SAVE_COOKIE)) {
-                logger.fine("Remembering user: " + session.user + " for session " + session.id);
+                logger.severe("Remembering user: " + session.user + " for session " + session.id);
                 loginRemember(session.user);
             }
         }

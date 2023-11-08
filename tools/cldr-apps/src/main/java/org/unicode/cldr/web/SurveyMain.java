@@ -3437,9 +3437,9 @@ public class SurveyMain extends HttpServlet implements CLDRProgressIndicator, Ex
             }
 
             progress.update("Load XPT");
-            logger.fine("XPT init:  " + xpt.statistics());
+            logger.severe("XPT init:  " + xpt.statistics());
             xpt.loadXPaths(getDiskFactory().makeSource(TRANS_HINT_ID));
-            logger.fine("XPT loaded:" + xpt.statistics());
+            logger.severe("XPT loaded:" + xpt.statistics());
             progress.update("Create fora"); // restore
             try {
                 fora = SurveyForum.createTable(dbUtils.getDBConnection(), this);
