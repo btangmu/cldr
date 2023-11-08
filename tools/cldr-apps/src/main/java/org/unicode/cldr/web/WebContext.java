@@ -19,6 +19,8 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.logging.Handler;
+import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -112,6 +114,19 @@ public class WebContext implements Cloneable, Appendable {
     public WebContext(HttpServletRequest irq, HttpServletResponse irs) throws IOException {
         setRequestResponse(irq, irs);
         setStream(irs.getWriter());
+
+        // https://stackoverflow.com/questions/470430/java-util-logging-logger-doesnt-respect-java-util-logging-level
+        // Set same level all loggers and handlers up to the parent level
+        // OFF,SEVERE,WARNING,INFO,CONFIG,FINE,FINER,FINEST,ALL
+        Logger logger = Logger.getLogger(this.getClass().getPackage().getName());
+        java.util.logging.Level level =
+                java.util.logging.Level.parse("FINEST"); // logger.getLevel();
+        Logger tempLogger = logger;
+        while (tempLogger != null) {
+            tempLogger.setLevel(level);
+            for (Handler handler : tempLogger.getHandlers()) handler.setLevel(level);
+            tempLogger = tempLogger.getParent();
+        }
     }
 
     /**
@@ -1369,8 +1384,7 @@ public class WebContext implements Cloneable, Appendable {
         // if there was an email/password in the cookie, use that.
         if (WEB_CONTEXT_DEBUG) {
             System.out.println("WebContext.setSession: jwt is disabled for debugging!");
-        } else
-        {
+        } else {
             final String jwt = getCookieValue(SurveyMain.COOKIE_SAVELOGIN);
             if (jwt != null && !jwt.isBlank()) {
                 final String jwtId = CookieSession.sm.klm.getSubject(jwt);
@@ -1394,10 +1408,17 @@ public class WebContext implements Cloneable, Appendable {
                 user = CookieSession.sm.reg.get(password, email, userIP());
             } catch (LogoutException e) {
                 logout(); // failed login, so logout this session.
+                if (WEB_CONTEXT_DEBUG) {
+                    System.out.println("WebContext.setSession: logged out!");
+                }
             }
             if (WEB_CONTEXT_DEBUG) {
                 String cookieUserStatus = user == null ? "null" : "NOT null";
-                System.out.println("WebContext.setSession: cookie user is " + cookieUserStatus);
+                System.out.println(
+                        "WebContext.setSession: cookie user is "
+                                + cookieUserStatus
+                                + " and email="
+                                + email);
             }
         }
         if (user != null) {
