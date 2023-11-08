@@ -1367,6 +1367,9 @@ public class WebContext implements Cloneable, Appendable {
         User user = null;
 
         // if there was an email/password in the cookie, use that.
+        if (WEB_CONTEXT_DEBUG) {
+            System.out.println("WebContext.setSession: jwt is disabled for debugging!");
+        } else
         {
             final String jwt = getCookieValue(SurveyMain.COOKIE_SAVELOGIN);
             if (jwt != null && !jwt.isBlank()) {
