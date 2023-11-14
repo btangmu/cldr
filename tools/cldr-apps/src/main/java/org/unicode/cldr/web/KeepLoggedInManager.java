@@ -32,7 +32,7 @@ public class KeepLoggedInManager {
     private final File keyFile;
     private SecretKey key;
 
-    private HashSet<String> excludedJwtId;
+    private HashSet<String> excludedJwtId = new HashSet<>();
 
     public static File getDefaultParent() {
         final CLDRConfig config = CLDRConfig.getInstance();
