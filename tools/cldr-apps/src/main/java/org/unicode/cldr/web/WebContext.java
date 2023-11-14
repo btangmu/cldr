@@ -1393,17 +1393,24 @@ public class WebContext implements Cloneable, Appendable {
         User user = null;
 
         // if there was an email/password in the cookie, use that.
-        if (WEB_CONTEXT_DEBUG) {
+        if (WEB_CONTEXT_DEBUG && false) {
             System.out.println("WebContext.setSession: jwt is disabled for debugging!");
         } else {
             final String jwt = getCookieValue(SurveyMain.COOKIE_SAVELOGIN);
             if (jwt != null && !jwt.isBlank()) {
-                final String jwtId = CookieSession.sm.klm.getSubject(jwt);
+                KeepLoggedInManager klm = CookieSession.sm.klm;
+                final String jwtId = klm.getSubject(jwt);
                 if (jwtId != null && !jwtId.isBlank()) {
-                    User jwtInfo = CookieSession.sm.reg.getInfo(Integer.parseInt(jwtId));
-                    if (jwtInfo != null) {
-                        user = jwtInfo;
-                        logger.severe("Logged in " + jwtInfo + " #" + jwtId + " using JWT");
+                    if (!klm.jwtIsInExcludedSet(jwtId)) {
+                        if (!email.isEmpty() && !password.isEmpty()) {
+                            klm.addToExcludedSet(jwtId);
+                        } else {
+                            User jwtInfo = CookieSession.sm.reg.getInfo(Integer.parseInt(jwtId));
+                            if (jwtInfo != null) {
+                                user = jwtInfo;
+                                logger.severe("Logged in " + jwtInfo + " #" + jwtId + " using JWT");
+                            }
+                        }
                     }
                 }
             }

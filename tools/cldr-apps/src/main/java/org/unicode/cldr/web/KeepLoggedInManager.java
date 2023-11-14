@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.crypto.SecretKey;
@@ -30,6 +31,8 @@ public class KeepLoggedInManager {
 
     private final File keyFile;
     private SecretKey key;
+
+    private HashSet<String> excludedJwtId;
 
     public static File getDefaultParent() {
         final CLDRConfig config = CLDRConfig.getInstance();
@@ -174,5 +177,13 @@ public class KeepLoggedInManager {
             logger.log(Level.FINE, "Error parsing JWT", e);
             return null;
         }
+    }
+
+    public boolean jwtIsInExcludedSet(String jwtId) {
+        return excludedJwtId.contains(jwtId);
+    }
+
+    public void addToExcludedSet(String jwtId) {
+        excludedJwtId.add(jwtId);
     }
 }

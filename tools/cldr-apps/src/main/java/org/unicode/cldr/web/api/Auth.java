@@ -19,6 +19,7 @@ import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.unicode.cldr.web.CookieSession;
+import org.unicode.cldr.web.KeepLoggedInManager;
 import org.unicode.cldr.web.SurveyLog;
 import org.unicode.cldr.web.SurveyMain;
 import org.unicode.cldr.web.UserRegistry;
@@ -64,25 +65,23 @@ public class Auth {
             LoginRequest request) {
 
         // If there's no user/pass, try to fill one in from cookies.
-        boolean AUTH_DEBUG = true;
+        boolean AUTH_DEBUG = false;
         if (AUTH_DEBUG) {
             System.out.println(
                     "org.unicode.cldr.web.api.Auth.login: jwt is disabled for debugging!");
         }
         if (!AUTH_DEBUG && request.isEmpty()) {
-            // No option to ignore the cookies.
-            // If you want to logout, use the /logout endpoint first.
             // Also compare WebContext.setSession()
             final String jwt = WebContext.getCookieValue(hreq, SurveyMain.COOKIE_SAVELOGIN);
             if (jwt != null && !jwt.isBlank()) {
-                final String jwtId = CookieSession.sm.klm.getSubject(jwt);
-                if (jwtId != null && !jwtId.isBlank()) {
+                KeepLoggedInManager klm = CookieSession.sm.klm;
+                final String jwtId = klm.getSubject(jwt);
+                if (jwtId != null && !jwtId.isBlank() && !klm.jwtIsInExcludedSet(jwtId)) {
                     User jwtInfo = CookieSession.sm.reg.getInfo(Integer.parseInt(jwtId));
                     if (jwtInfo != null) {
                         request.password = jwtInfo.internalGetPassword();
                         request.email = jwtInfo.email;
-                        logger.fine(
-                                () -> "Logged in " + request.email + " #" + jwtId + " using JWT");
+                        logger.fine("Found email " + jwtInfo.email + " #" + jwtId + " using JWT");
                     }
                 }
             }
