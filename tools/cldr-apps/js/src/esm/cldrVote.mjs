@@ -84,12 +84,10 @@ function wireUpButton(button, tr, theRow, vHash) {
  * @param {Object} newValue the newly submitted value, or undefined if it's a vote for an already existing value (buttonb)
  * @param {Element} button the GUI button
  *
- * TODO: shorten this function, using (non-nested) subroutines
- *
  * Called from cldrTable.addValueVote (for new value submission)
  * as well as locally in cldrVote (vote for existing value or abstain)
  */
-function handleWiredClick(tr, theRow, vHash, newValue, button) {
+async function handleWiredClick(tr, theRow, vHash, newValue, button) {
   if (!tr || !theRow || tr.wait) {
     return;
   }
@@ -117,10 +115,6 @@ function handleWiredClick(tr, theRow, vHash, newValue, button) {
     }
     tr.myProposal = null; // mark any pending proposal as invalid.
   }
-
-  var myUnDefer = function () {
-    tr.wait = false;
-  };
   tr.wait = true;
   cldrInfo.reset();
   theRow.proposedResults = null;
@@ -133,120 +127,116 @@ function handleWiredClick(tr, theRow, vHash, newValue, button) {
     voteLevelChanged: voteLevelChanged,
   };
   const ourUrl = getSubmitUrl(theRow.xpstrid);
-
-  var originalTrClassName = tr.className;
+  const originalTrClassName = tr.className;
   tr.className = "tr_checking1";
-
-  var loadHandler = function (json) {
+  oneMorePendingVote();
+  const init = cldrAjax.makePostData(ourContent);
+  try {
+    const response = await cldrAjax.doFetch(ourUrl, init);
+    const json = await response.json();
     /*
      * Restore tr.className, so it stops being 'tr_checking1' immediately on receiving
      * any response. It may change again below, such as to 'tr_err' or 'tr_checking2'.
      */
     tr.className = originalTrClassName;
     oneLessPendingVote();
-    try {
-      if (json.err && json.err.length > 0) {
-        tr.className = "tr_err";
-        tr.innerHTML =
-          "<td colspan='4'>" +
-          cldrStatus.stopIcon() +
-          " Could not check value. Try reloading the page.<br>" +
-          json.err +
-          "</td>";
-        myUnDefer();
-        cldrRetry.handleDisconnect("Error submitting a vote", json);
-      } else {
-        if (json.didVote) {
-          // if submitted..
-          tr.className = "tr_checking2";
-          cldrTable.refreshSingleRow(
-            tr,
-            theRow,
-            function (theRow) {
-              // submit went through. Now show the pop.
-              button.className = "ichoice-o";
-              button.checked = false;
-              cldrSurvey.hideLoader();
-              if (json.testResults && (json.testWarnings || json.testErrors)) {
-                // tried to submit, have errs or warnings.
-                showProposedItem(
-                  tr.inputTd,
-                  tr,
-                  theRow,
-                  valToShow,
-                  json.testResults
-                );
-              }
-              myUnDefer();
-            },
-            function (err) {
-              myUnDefer();
-              cldrRetry.handleDisconnect(err, json);
-            }
-          ); // end refresh-loaded-fcn
-          // end: async
-        } else {
-          // Did not submit. Show errors, etc
-          if (
-            (json.statusAction && json.statusAction != "ALLOW") ||
-            (json.testResults && (json.testWarnings || json.testErrors))
-          ) {
-            showProposedItem(
-              tr.inputTd,
-              tr,
-              theRow,
-              valToShow,
-              json.testResults,
-              json
-            );
-          } // else no errors, not submitted.  Nothing to do.
-          button.className = "ichoice-o";
-          button.checked = false;
-          cldrSurvey.hideLoader();
-          myUnDefer();
-        }
-      }
-    } catch (e) {
+    if (response.ok) {
+      voteOkCallback(json, tr, theRow, button, valToShow);
+    } else {
+      voteErrorCallback(json, tr);
+    }
+  } catch (e) {
+    console.error(e);
+    window.alert("Error while voting: \n\n" + e);
+  }
+}
+
+function voteOkCallback(json, tr, theRow, button, valToShow) {
+  try {
+    if (json.err && json.err.length > 0) {
       tr.className = "tr_err";
       tr.innerHTML =
+        "<td colspan='4'>" +
         cldrStatus.stopIcon() +
         " Could not check value. Try reloading the page.<br>" +
-        e.message;
-      console.log("Error in ajax post [handleWiredClick] ", e.message);
-      myUnDefer();
-      cldrRetry.handleDisconnect("handleWiredClick:" + e.message, json);
+        json.err +
+        "</td>";
+      tr.wait = false;
+      cldrRetry.handleDisconnect("Error submitting a vote", json);
+    } else {
+      if (json.didVote) {
+        // if submitted..
+        tr.className = "tr_checking2";
+        cldrTable.refreshSingleRow(
+          tr,
+          theRow,
+          function (theRow) {
+            // submit went through. Now show the pop.
+            button.className = "ichoice-o";
+            button.checked = false;
+            cldrSurvey.hideLoader();
+            if (json.testResults && (json.testWarnings || json.testErrors)) {
+              // tried to submit, have errs or warnings.
+              showProposedItem(
+                tr.inputTd,
+                tr,
+                theRow,
+                valToShow,
+                json.testResults
+              );
+            }
+            tr.wait = false;
+          },
+          function (err) {
+            tr.wait = false;
+            cldrRetry.handleDisconnect(err, json);
+          }
+        ); // end refresh-loaded-fcn
+        // end: async
+      } else {
+        // Did not submit. Show errors, etc
+        if (
+          (json.statusAction && json.statusAction != "ALLOW") ||
+          (json.testResults && (json.testWarnings || json.testErrors))
+        ) {
+          showProposedItem(
+            tr.inputTd,
+            tr,
+            theRow,
+            valToShow,
+            json.testResults,
+            json
+          );
+        } // else no errors, not submitted.  Nothing to do.
+        button.className = "ichoice-o";
+        button.checked = false;
+        cldrSurvey.hideLoader();
+        tr.wait = false;
+      }
     }
-  };
-  var errorHandler = function (err) {
-    /*
-     * Restore tr.className, so it stops being 'tr_checking1' immediately on receiving
-     * any response. It may change again below, such as to 'tr_err'.
-     */
-    tr.className = originalTrClassName;
-    oneLessPendingVote();
-    // The err parameter is a string composed by cldrAjax.makeErrorMessage (legacy code),
-    // not user-friendly, still possibly useful for debugging if this actually occurs.
-    console.log("Error: " + err);
-    // To close the input pop-up window with minimal changes to this legacy code, call
-    // cldrLoad.reloadV when the user closes the notification. Postpone a better solution
-    // until cldrVote is modernized.
-    cldrNotify.errorWithCallback(
-      "Error submitting a vote",
-      err,
-      cldrLoad.reloadV
-    );
-    myUnDefer();
-  };
-  const xhrArgs = {
-    url: ourUrl,
-    handleAs: "json",
-    content: ourContent,
-    load: loadHandler,
-    error: errorHandler,
-    timeout: cldrAjax.mediumTimeout(),
-  };
-  oneMorePendingVote();
-  cldrAjax.sendXhr(xhrArgs);
+  } catch (e) {
+    tr.className = "tr_err";
+    tr.innerHTML =
+      cldrStatus.stopIcon() +
+      " Could not check value. Try reloading the page.<br>" +
+      e.message;
+    console.log("Error in ajax post [handleWiredClick] ", e.message);
+    tr.wait = false;
+    cldrRetry.handleDisconnect("handleWiredClick:" + e.message, json);
+  }
+}
+
+function voteErrorCallback(json, tr) {
+  console.log("Error: " + json?.message || "unknown");
+  // To close the input pop-up window with minimal changes to this legacy code, call
+  // cldrLoad.reloadV when the user closes the notification. Postpone a better solution
+  // until cldrVote is modernized.
+  cldrNotify.errorWithCallback(
+    "Error submitting a vote",
+    err,
+    cldrLoad.reloadV
+  );
+  tr.wait = false;
 }
 
 function logVote(rowHash, vHash, value) {
