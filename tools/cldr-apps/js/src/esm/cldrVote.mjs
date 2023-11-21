@@ -13,7 +13,7 @@ import * as cldrSurvey from "./cldrSurvey.mjs";
 import * as cldrTable from "./cldrTable.mjs";
 import * as cldrText from "./cldrText.mjs";
 
-const CLDR_VOTE_DEBUG = false;
+const CLDR_VOTE_DEBUG = true;
 
 /**
  * The special "vote level" selected by the user, or zero for default.
@@ -126,9 +126,7 @@ function handleWiredClick(tr, theRow, vHash, newValue, button) {
   theRow.proposedResults = null;
 
   if (CLDR_VOTE_DEBUG) {
-    console.log(
-      "Vote for " + tr.rowHash + " v='" + vHash + "', value='" + value + "'"
-    );
+    logVote(tr.rowHash, vHash, value);
   }
   const ourContent = {
     value: valToShow,
@@ -249,6 +247,19 @@ function handleWiredClick(tr, theRow, vHash, newValue, button) {
   };
   oneMorePendingVote();
   cldrAjax.sendXhr(xhrArgs);
+}
+
+function logVote(rowHash, vHash, value) {
+  console.log(
+    "Vote for " +
+      rowHash +
+      " v='" +
+      vHash +
+      "', value='" +
+      value +
+      "' time = " +
+      Date.now()
+  );
 }
 
 function getSubmitUrl(xpstrid) {
@@ -375,7 +386,7 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
 
     if (!ourItem) {
       var h3 = document.createElement("h3");
-      var span = appendItem(h3, value, "value");
+      appendItem(h3, value, "value");
       h3.className = "span";
       div3.appendChild(h3);
     }
@@ -518,7 +529,12 @@ function oneMorePendingVote() {
   ++pendingVoteCount;
   lastTimeChanged = Date.now();
   if (CLDR_VOTE_DEBUG) {
-    console.log("oneMorePendingVote: ++pendingVoteCount = " + pendingVoteCount);
+    console.log(
+      "oneMorePendingVote: ++pendingVoteCount = " +
+        pendingVoteCount +
+        " time = " +
+        lastTimeChanged
+    );
   }
 }
 
@@ -533,7 +549,12 @@ function oneLessPendingVote() {
   }
   lastTimeChanged = Date.now();
   if (CLDR_VOTE_DEBUG) {
-    console.log("oneLessPendingVote: --pendingVoteCount = " + pendingVoteCount);
+    console.log(
+      "oneLessPendingVote: --pendingVoteCount = " +
+        pendingVoteCount +
+        " time = " +
+        lastTimeChanged
+    );
   }
   if (pendingVoteCount == 0) {
     cldrSurvey.expediteStatusUpdate();
@@ -553,18 +574,24 @@ function oneLessPendingVote() {
 function isBusy() {
   if (pendingVoteCount > 0) {
     if (CLDR_VOTE_DEBUG) {
-      console.log("cldrVote busy: pendingVoteCount = " + pendingVoteCount);
+      console.log(
+        "cldrVote busy: pendingVoteCount = " +
+          pendingVoteCount +
+          " time = " +
+          Date.now()
+      );
     }
     return true;
   }
-  if (Date.now() - lastTimeChanged < 3000) {
+  const time = Date.now();
+  if (time - lastTimeChanged < 3000) {
     if (CLDR_VOTE_DEBUG) {
-      console.log("cldrVote busy: less than 3 seconds elapsed");
+      console.log("cldrVote busy: less than 3 seconds elapsed; time = " + time);
     }
     return true;
   }
   if (CLDR_VOTE_DEBUG) {
-    console.log("cldrVote not busy");
+    console.log("cldrVote not busy; time = " + time);
   }
   return false;
 }
