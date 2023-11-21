@@ -146,8 +146,14 @@ async function handleWiredClick(tr, theRow, vHash, newValue, button) {
       voteErrorCallback(json, tr);
     }
   } catch (e) {
-    console.error(e);
-    window.alert("Error while voting: \n\n" + e);
+    tr.className = "tr_err";
+    tr.innerHTML =
+      cldrStatus.stopIcon() +
+      " Could not check value. Try reloading the page.<br>" +
+      e.message;
+    console.log("Error in ajax post [handleWiredClick] ", e.message);
+    tr.wait = false;
+    cldrRetry.handleDisconnect("handleWiredClick:" + e.message, json);
   }
 }
 
