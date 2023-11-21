@@ -198,7 +198,6 @@ function voteOkCallback(json, tr, theRow, button, valToShow) {
             cldrRetry.handleDisconnect(err, json);
           }
         ); // end refresh-loaded-fcn
-        // end: async
       } else {
         // Did not submit. Show errors, etc
         if (
