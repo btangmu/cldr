@@ -72,7 +72,7 @@ public class ICUServiceBuilder {
      * not be useful in the long run. In the meantime, this should be false except while debugging.
      * Reference: https://unicode-org.atlassian.net/browse/CLDR-13970
      */
-    public static final boolean ISB_CAN_CLEAR_CACHE = false;
+    public static final boolean ISB_CAN_CLEAR_CACHE = true;
 
     public void clearCache() {
         if (ISB_CAN_CLEAR_CACHE) {
@@ -118,10 +118,10 @@ public class ICUServiceBuilder {
 
             if (locale != null) {
                 // CAUTION: this fails for files in seed, when called for DAIP, for CLDRModify,
-                // since
-                // CLDRPaths.MAIN_DIRECTORY is "common/main" NOT "seed/main"
-                // Fortunately it will be fixed soon (Oct 2022) for
-                // https://unicode-org.atlassian.net/browse/CLDR-6396
+                // since CLDRPaths.MAIN_DIRECTORY is "common/main" NOT "seed/main".
+                // Fortunately CLDR no longer uses the "seed" directory -- as of 2023 it is empty
+                // except for README files. If CLDR ever uses "seed" again, however, this will
+                // become a problem again.
                 result.cldrFile =
                         Factory.make(CLDRPaths.MAIN_DIRECTORY, ".*")
                                 .make(locale.getBaseName(), true);
@@ -666,33 +666,27 @@ public class ICUServiceBuilder {
     static int CURRENCY = 0, OTHER_KEY = 1, PATTERN = 2;
 
     public DecimalFormat getCurrencyFormat(String currency) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(currency, CURRENCY, null, null);
     }
 
     public DecimalFormat getCurrencyFormat(String currency, String currencySymbol) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(currency, CURRENCY, currencySymbol, null);
     }
 
     public DecimalFormat getCurrencyFormat(
             String currency, String currencySymbol, String numberSystem) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(currency, CURRENCY, currencySymbol, numberSystem);
     }
 
     public DecimalFormat getNumberFormat(int index) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(NumberNames[index], OTHER_KEY, null, null);
     }
 
     public DecimalFormat getNumberFormat(int index, String numberSystem) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(NumberNames[index], OTHER_KEY, null, numberSystem);
     }
 
     public NumberFormat getGenericNumberFormat(String ns) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         NumberFormat result =
                 cachingIsEnabled
                         ? cacheNumberFormats.get(cldrFile.getLocaleID() + "@numbers=" + ns)
@@ -708,12 +702,10 @@ public class ICUServiceBuilder {
     }
 
     public DecimalFormat getNumberFormat(String pattern) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(pattern, PATTERN, null, null);
     }
 
     public DecimalFormat getNumberFormat(String pattern, String numberSystem) {
-        // CLDRFile cldrFile = cldrFactory.make(localeID, true);
         return _getNumberFormat(pattern, PATTERN, null, numberSystem);
     }
 
