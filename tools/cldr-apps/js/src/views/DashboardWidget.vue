@@ -251,6 +251,7 @@ export default {
       this.localeName = cldrLoad.getLocaleName(this.locale);
       this.loadingMessage = `Loading ${this.localeName} dashboard at ${this.level} level`;
       cldrDash.doFetch(this.setData);
+      this.fetchErr = cldrDash.getFetchError();
     },
 
     setData(data) {
