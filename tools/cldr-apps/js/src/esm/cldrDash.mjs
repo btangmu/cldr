@@ -2,38 +2,120 @@
  * cldrDash: encapsulate dashboard data.
  */
 import * as cldrAjax from "./cldrAjax.mjs";
+import * as cldrCoverage from "./cldrCoverage.mjs";
 import * as cldrNotify from "./cldrNotify.mjs";
 import * as cldrProgress from "./cldrProgress.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 import * as cldrSurvey from "./cldrSurvey.mjs";
-import * as cldrXlsx from "./cldrXlsx.mjs";
 import * as XLSX from "xlsx";
 
+class DashEntry {
+  /**
+   * Construct a new DashEntry object
+   *
+   * @param {String} code the code like "long-one-nominative"
+   * @param {String} xpstrid the xpath hex string id like "710b6e70773e5764"
+   * @param {String} english the English value like "{0} metric pint"
+   * @param {String} winning the winning value like "{0} pinte métrique"
+   *
+   * @returns the new DashEntry object
+   */
+  constructor(code, xpstrid, english, winning) {
+    this.code = code;
+    this.xpstrid = xpstrid;
+    this.english = english;
+    this.winning = winning;
+    this.previousEnglish = null;
+    this.comment = null;
+    this.subtype = null;
+    this.checked = false;
+    this.cats = new Set();
+  }
+
+  setSectionPageHeader(section, page, header) {
+    this.section = section; // e.g., "Units"
+    this.page = page; // e.g., "Volume"
+    this.header = header; // e.g., "pint-metric"
+  }
+
+  setPreviousEnglish(previousEnglish) {
+    this.previousEnglish = previousEnglish; // e.g., "{0} metric pint"
+  }
+
+  setComment(comment) {
+    this.comment = comment; // e.g., "&lt;missing placeholders&gt; Need at least 1 placeholder(s), but only have 0. Placeholders..."
+  }
+
+  setSubtype(subtype) {
+    this.subtype = subtype; // e.g., "missingPlaceholders"
+  }
+
+  setChecked(checked) {
+    this.checked = checked; // boolean; the user added a checkmark for this item
+  }
+
+  addCategory(category) {
+    this.cats.add(category); // e.g., "Error", "Disputed", "English_Changed
+  }
+}
+
 /**
- * An object whose keys are xpstrid (xpath hex IDs like "db7b4f2df0427e4"), and whose values are objects whose
- * keys are notification categories such as "Error" or "English_Changed" and values are "entry"
- * objects with code, english, ..., xpstrid, ... elements.
- *
- * Example: pathIndex[xpstrid][category] = entry
- *
- * There can be at most one notification for a path within each category, but the same path may have notifications in
- * multiple categories. For example, the path with xpstrid = "db7b4f2df0427e4" might have both "Error" and "Warning" notifications,
- * but there can't be more than one "Error" notification for the same path, since the server will have combined them
- * into a single "Error" notification with multiple error messages.
+ * An object whose keys are xpstrid (xpath hex IDs like "db7b4f2df0427e4"), and whose values are DashEntry objects
  */
 let pathIndex = {};
+
+let fetchErr = "";
+
+let viewSetDataCallback = null;
+
+function doFetch(callback) {
+  viewSetDataCallback = callback;
+  const locale = cldrStatus.getCurrentLocale();
+  const level = cldrCoverage.effectiveName(locale);
+  if (!locale || !level) {
+    fetchErr = "Please choose a locale and a coverage level first.";
+    return;
+  }
+  const url = `api/summary/dashboard/${locale}/${level}`;
+  cldrAjax
+    .doFetch(url)
+    .then(cldrAjax.handleFetchErrors)
+    .then((data) => data.json())
+    // hide items that TC does not need
+    .then((data) => {
+      const { userIsTC } = cldrStatus.getPermissions();
+      if (userIsTC && false /* TODO! Filter should be on back end, for efficiency */) {
+        data.notifications = data.notifications.filter(
+          // skip this category for TC users
+          ({ category }) => category !== "Abstained"
+        );
+      }
+      return data;
+    })
+    .then((data) => {
+      setData(data);
+    })
+    .catch((err) => {
+      const msg = "Error loading Dashboard data: " + err;
+      console.error(msg);
+      fetchErr = msg;
+    });
+}
+
+function getFetchError() {
+  return fetchErr;
+}
 
 /**
  * Set the data for the Dashboard, add "total" and "checked" fields, and index it.
  *
  * The json data as received from the back end is ordered by category, then by section, page, header, code, ...
- * (but those are not ordered alphabetically). It is presented to the user in that same order.
+ * (but those are not ordered alphabetically).
  *
  * @param data  - an object with these elements:
  *   notifications - an array of objects (locally named "catData" meaning "all the data for one category"),
  *   each having these elements:
  *     category - a string like "Error" or "English_Changed"
- *     total - an integer (number of entries in this category), added by addCounts, not in json
  *     groups - an array of objects, each having these elements:
  *       header - a string
  *       page - a string
@@ -52,26 +134,52 @@ let pathIndex = {};
  *   Dashboard only uses data.notifications. There are additional fields
  *   data.* used by cldrProgress for progress meters.
  *
- * @return the modified data (with totals, etc., added)
+ * @return the modified/reorganized data
  */
 function setData(data) {
   cldrProgress.updateVoterCompletion(data);
-  addCounts(data);
-  makePathIndex(data);
-  return data;
+  const newData = reorganizeData(data);
+  viewSetDataCallback(newData);
+  return newData;
 }
 
-/**
- * Calculate total counts; modify data by adding "total" for each category
- *
- * @param data
- */
-function addCounts(data) {
+function reorganizeData(data) {
+  const newData = {};
+  newData.entries = []; // array of DashEntry objects
+  newData.cats = new Set();
+  newData.catSize = {}; // number of entries in each category
+  newData.catFirst = {}; // first entry.xpstrid in each category
   for (let catData of data.notifications) {
-    catData.total = 0;
+    const cat = catData.category;
+    newData.cats.add(cat);
+    newData.catSize[cat] = 0;
     for (let group of catData.groups) {
-      catData.total += group.entries.length;
+      const entries = group.entries;
+      catData.total += entries.length; // TODO -- get rid of catData.total, use newData.catSize instead
+      for (let e of entries) {
+        createEntry(newData, cat, group, e);
+      }
     }
+  }
+  return newData;
+}
+
+function createEntry(newData, cat, group, e) {
+  newData.catSize[cat]++;
+  if (!newData.catFirst[cat]) {
+    newData.catFirst[cat] = e.xpstrid;
+  }
+  if (pathIndex[e.xpstrid]) {
+    pathIndex[e.xpstrid].addCategory(cat);
+  } else {
+    const dashEntry = new DashEntry(e.code, e.xpstrid, e.english, e.winning);
+    dashEntry.addCategory(cat);
+    dashEntry.setSectionPageHeader(group.section, group.page, group.header);
+    dashEntry.setPreviousEnglish(e.previousEnglish);
+    dashEntry.setComment(e.comment);
+    dashEntry.setSubtype(e.subtype);
+    newData.entries.push(dashEntry);
+    pathIndex[e.xpstrid] = dashEntry;
   }
 }
 
@@ -402,4 +510,12 @@ async function downloadXlsx(data, locale, cb) {
   cb(null);
 }
 
-export { saveEntryCheckmark, setData, updatePath, downloadXlsx };
+export {
+  DashEntry,
+  doFetch,
+  getFetchError,
+  saveEntryCheckmark,
+  setData,
+  updatePath,
+  downloadXlsx,
+};
