@@ -70,7 +70,7 @@
             title="Hide checked items"
             id="hideChecked"
             v-model="hideChecked"
-          /><label for="hideChecked">hide</label>
+          /><label for="hideChecked">&nbsp;hide</label>
         </span>
       </header>
       <section id="DashboardScroller" class="sidebyside-scrollable">
@@ -92,12 +92,14 @@
                   v-bind:href="getLink(locale, entry)"
                   @click="() => setLastClicked(entry.xpstrid)"
                 >
-                  <span
+                  <span                    
                     v-bind:key="cat"
                     v-for="cat of entry.cats"
-                    class="category"
                   >
-                    <span :title="describe(cat)">{{ abbreviate(cat) }}</span>
+                    <span
+                    v-if="catIsShown[cat]"
+                    class="category"
+                     :title="describeAbbreviation(cat)">{{ abbreviate(cat) }}</span>
                   </span>
                   <span class="section-page" title="section—page">{{
                     humanize(entry.section + "—" + entry.page)
@@ -326,6 +328,12 @@ export default {
 
     describeScrollTo(category) {
       return `Scroll to this notification category [${this.humanize(
+        category
+      )}]: ${this.describe(category)}`;
+    },
+
+    describeAbbreviation(category) {
+      return `Notification category [${this.humanize(
         category
       )}]: ${this.describe(category)}`;
     },

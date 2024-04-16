@@ -13,7 +13,7 @@ class DashData {
   /**
    * Construct a new DashData object
    *
-   * @returns the new DashEntry object
+   * @returns the new DashData object
    */
   constructor() {
     this.entries = []; // array of DashEntry objects
@@ -22,7 +22,7 @@ class DashData {
     this.catFirst = {}; // first entry.xpstrid in each category
     // An object whose keys are xpstrid (xpath hex IDs like "db7b4f2df0427e4"), and whose values are DashEntry objects
     this.pathIndex = {};
-    this.hidden = null;
+    this.hiddenArray = null;
   }
 
   addCategory(cat) {
@@ -53,13 +53,24 @@ class DashData {
       dashEntry.setPreviousEnglish(e.previousEnglish);
       dashEntry.setComment(e.comment);
       dashEntry.setSubtype(e.subtype);
+      dashEntry.setChecked(this.itemIsChecked(e));
       this.entries.push(dashEntry);
       this.pathIndex[e.xpstrid] = dashEntry;
     }
   }
 
-  setHidden(hidden) {
-    this.hidden = hidden;
+  setHidden(hiddenArray) {
+    this.hiddenArray = hiddenArray;
+  }
+
+  itemIsChecked(e) {
+    if (!this.hiddenArray[e.subtype]) {
+      return false;
+    }
+    const pathValueArray = this.hiddenArray[e.subtype];
+    return pathValueArray.some(
+      (p) => p.xpstrid === e.xpstrid && p.value === e.winning
+    );
   }
 }
 
@@ -131,20 +142,6 @@ function doFetch(callback) {
     .doFetch(url)
     .then(cldrAjax.handleFetchErrors)
     .then((data) => data.json())
-    // hide items that TC does not need
-    .then((data) => {
-      const { userIsTC } = cldrStatus.getPermissions();
-      if (
-        userIsTC &&
-        false /* TODO! Filter should be on back end, for efficiency */
-      ) {
-        data.notifications = data.notifications.filter(
-          // skip this category for TC users
-          ({ category }) => category !== "Abstained"
-        );
-      }
-      return data;
-    })
     .then((data) => {
       setData(data);
     })
@@ -160,12 +157,12 @@ function getFetchError() {
 }
 
 /**
- * Set the data for the Dashboard, add "total" and "checked" fields, and index it.
+ * Set the data for the Dashboard, converting from json to a DashData object
  *
  * The json data as received from the back end is ordered by category, then by section, page, header, code, ...
  * (but those are not ordered alphabetically).
  *
- * @param data  - an object with these elements:
+ * @param jsonData  - an object with these elements:
  *   notifications - an array of objects (locally named "catData" meaning "all the data for one category"),
  *   each having these elements:
  *     category - a string like "Error" or "English_Changed"
@@ -189,16 +186,17 @@ function getFetchError() {
  *
  * @return the modified/reorganized data as a DashData object
  */
-function setData(data) {
-  cldrProgress.updateVoterCompletion(data);
-  const newData = reorganizeData(data);
+function setData(jsonData) {
+  cldrProgress.updateVoterCompletion(jsonData);
+  const newData = convertData(jsonData);
   viewSetDataCallback(newData);
   return newData;
 }
 
-function reorganizeData(data) {
+function convertData(jsonData) {
   const newData = new DashData();
-  for (let catData of data.notifications) {
+  newData.setHidden(jsonData.hidden);
+  for (let catData of jsonData.notifications) {
     const cat = catData.category;
     newData.addCategory(cat);
     for (let group of catData.groups) {
@@ -208,45 +206,7 @@ function reorganizeData(data) {
       }
     }
   }
-  newData.setHidden(data.hidden);
   return newData;
-}
-
-/**
- * Create the index; also set checked = true/false for all entries
- *
- * @param data
- */
-function makePathIndex(data) {
-  pathIndex = {};
-  for (let catData of data.notifications) {
-    for (let group of catData.groups) {
-      for (let entry of group.entries) {
-        entry.checked = itemIsChecked(data, entry);
-        if (!pathIndex[entry.xpstrid]) {
-          pathIndex[entry.xpstrid] = {};
-        } else if (pathIndex[entry.xpstrid][catData.category]) {
-          console.error(
-            "Duplicate in makePathIndex: " +
-              entry.xpstrid +
-              ", " +
-              catData.category
-          );
-        }
-        pathIndex[entry.xpstrid][catData.category] = entry;
-      }
-    }
-  }
-}
-
-function itemIsChecked(data, entry) {
-  if (!data?.hidden[entry.subtype]) {
-    return false;
-  }
-  const pathValueArray = data.hidden[entry.subtype];
-  return pathValueArray.some(
-    (p) => p.xpstrid === entry.xpstrid && p.value === entry.winning
-  );
 }
 
 /**
@@ -366,7 +326,7 @@ function getNewEntry(updater, category) {
         for (let entry of group.entries) {
           if (entry.xpstrid === updater.xpstrid) {
             updater.group = group;
-            entry.checked = itemIsChecked(updater.data, entry);
+            // entry.checked = itemIsChecked(updater.data, entry);
             return entry;
           }
         }
