@@ -92,14 +92,13 @@
                   v-bind:href="getLink(locale, entry)"
                   @click="() => setLastClicked(entry.xpstrid)"
                 >
-                  <span                    
-                    v-bind:key="cat"
-                    v-for="cat of entry.cats"
-                  >
+                  <span v-bind:key="cat" v-for="cat of entry.cats">
                     <span
-                    v-if="catIsShown[cat]"
-                    class="category"
-                     :title="describeAbbreviation(cat)">{{ abbreviate(cat) }}</span>
+                      v-if="catIsShown[cat]"
+                      class="category"
+                      :title="describeAbbreviation(cat)"
+                      >{{ abbreviate(cat) }}</span
+                    >
                   </span>
                   <span class="section-page" title="section—page">{{
                     humanize(entry.section + "—" + entry.page)
