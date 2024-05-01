@@ -1628,4 +1628,48 @@ public class SurveyForum {
             return defaultStatus;
         }
     }
+
+    public static class PathForumStatus {
+        boolean hasPosts, hasOpenPosts;
+
+        public PathForumStatus(CLDRLocale locale, String xpath) {
+            Connection conn = null;
+            PreparedStatement ps = null;
+            String tableName = DBUtils.Table.FORUM_POSTS.toString();
+            int xpathId = CookieSession.sm.xpt.getByXpath(xpath);
+            try {
+                conn = DBUtils.getInstance().getAConnection();
+                if (conn == null) {
+                    return;
+                }
+                ps =
+                        DBUtils.prepareForwardReadOnly(
+                                conn,
+                                "SELECT ID FROM "
+                                        + tableName
+                                        + " WHERE loc=? and xpath=? AND is_open=1 LIMIT 1");
+                ps.setString(1, locale.getBaseName());
+                ps.setInt(2, xpathId);
+                if (DBUtils.sqlCount(ps) > 0) {
+                    this.hasPosts = this.hasOpenPosts = true;
+                    return;
+                }
+                this.hasOpenPosts = false;
+                ps =
+                        DBUtils.prepareForwardReadOnly(
+                                conn,
+                                "SELECT ID FROM " + tableName + " WHERE loc=? and xpath=? LIMIT 1");
+                ps.setString(1, locale.getBaseName());
+                ps.setInt(2, xpathId);
+                this.hasPosts = DBUtils.sqlCount(ps) > 0;
+            } catch (SQLException e) {
+                SurveyLog.logException(
+                        logger,
+                        e,
+                        "PathForumStatus for " + tableName + " " + locale + ":" + xpathId);
+            } finally {
+                DBUtils.close(ps, conn);
+            }
+        }
+    }
 }
