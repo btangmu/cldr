@@ -1119,7 +1119,9 @@ function appendTranslationHintIcon(parent, text, loc) {
 
 function appendForumStatus(parent, forumStatus, loc) {
   const el = document.createElement("span");
-  el.textContent = "💬" + (forumStatus.hasOpenPosts ? "?" : ".");
+  el.textContent = forumStatus.hasOpenPosts
+    ? cldrText.get("forum_path_has_open_posts_icon")
+    : cldrText.get("forum_path_has_only_closed_posts_icon");
   el.title =
     cldrText.get("forum_path_has_posts") +
     (forumStatus.hasOpenPosts

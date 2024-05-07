@@ -432,6 +432,14 @@ function loadHandlerForSubmit(data) {
       cldrLoad.reloadV(); // main Forum page
     } else {
       cldrForumPanel.updatePosts(null); // Info Panel
+      // TODO: refresh forum icons (👁️‍🗨️, 💬) in the main table
+      // Reference: https://unicode-org.atlassian.net/browse/CLDR-17461
+      // Calling expediteStatusUpdate does not have the desired effect, since
+      // the status response json.localeStamp only changes due to recent votes,
+      // not due to recent posts.
+      // cldrSurvey.expediteStatusUpdate(); // refresh forum icons in the main table
+      // console.log("cldrForum.loadHandlerForSubmit called expediteStatusUpdate");
+      // cldrTable.refreshSingleRow(...)
     }
   } else {
     const post = $(".post").first();
