@@ -1987,9 +1987,27 @@ public class SurveyAjax extends HttpServlet {
             if (processedValue.equals(curValue)) {
                 continue;
             }
+            if (importTableContains(localeId, xp, processedValue)) {
+                continue;
+            }
             al.add(m);
         }
         return al.toArray(new Map[0]);
+    }
+
+    private static boolean importTableContains(String localeId, int xp, String processedValue) {
+        final int ver = Integer.parseInt(SurveyMain.getNewVersion());
+        final String importTable =
+                DBUtils.Table.IMPORT.forVersion(Integer.valueOf(ver).toString(), false).toString();
+        final int count =
+                DBUtils.sqlCount(
+                        "SELECT COUNT(*) AS count FROM "
+                                + importTable
+                                + " WHERE locale=? AND xpath=? AND value=?",
+                        localeId,
+                        xp,
+                        processedValue);
+        return count > 0;
     }
 
     /**
