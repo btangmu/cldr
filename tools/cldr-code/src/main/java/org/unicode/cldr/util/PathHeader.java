@@ -187,6 +187,8 @@ public class PathHeader implements Comparable<PathHeader> {
         Keys(SectionId.Locale_Display_Names),
 
         Fields(SectionId.DateTime),
+        Relative_Dates(SectionId.DateTime, "Relative Dates"),
+        Relative_Times(SectionId.DateTime, "Relative Times"),
         Gregorian(SectionId.DateTime),
         Generic(SectionId.DateTime),
         Buddhist(SectionId.DateTime),
@@ -2243,6 +2245,9 @@ public class PathHeader implements Comparable<PathHeader> {
         }
 
         private static String adjustPageForPath(String input, String path) {
+            if ("Fields".equals(input)) {
+                return getFieldsPageId(path).toString();
+            }
             if ("Length".equals(input)) {
                 return getLengthPageId(path).toString();
             }
@@ -2253,6 +2258,31 @@ public class PathHeader implements Comparable<PathHeader> {
                 return getVolumePageId(path).toString();
             }
             return input;
+        }
+
+        private static PageId getFieldsPageId(String path) {
+            // Extract the field type (such as "era", "year", "hour-short") from the path. For example, if path is
+            // //ldml/dates/fields/field[@type="era"]/displayName
+            // then extract "era"
+            final String fieldType =
+                XPathParts.getFrozenInstance(path).findAttributeValue("field", "type");
+            if (fieldType == null) {
+                throw new InternalCldrException("Missing field type in path " + path);
+            }
+            Transform<String, String> func = functionMap.get("datefield");
+            String temp = func.transform(fieldType);
+            if (temp != null) {
+                long datefieldOrder = order;
+                System.out.println("getFieldsPageId got " + temp + " for " + fieldType + "; datefieldOrder = " + datefieldOrder);
+                if (datefieldOrder >= 0) {
+                    func.transform("hour");
+                    long hourOrder = order;
+                    PageId id = datefieldOrder >= hourOrder ? PageId.Relative_Times : PageId.Relative_Dates;
+                    System.out.println("getFieldsPageId returning id = " + id + " for " + fieldType + "; hourOrder = " + hourOrder);
+                    return id;
+                }
+            }
+            return PageId.Fields;
         }
 
         private static Set<UnitConverter.UnitSystem> METRIC_UNITS =
