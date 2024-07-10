@@ -212,12 +212,7 @@ function show(str, tr, hideIfLast, fn) {
     unShow();
     unShow = null;
   }
-  // Ideally, updateCurrentId and setLastShown should be called from cldrTable, not cldrInfo,
-  // however it's not clear whether they need to be called after openPanel and unShow
-  if (tr?.sethash) {
-    cldrLoad.updateCurrentId(tr.sethash);
-  }
-  cldrTable.setLastShown(hideIfLast);
+  cldrTable.updateSelectedRowAndCell(tr, hideIfLast);
   addDeferredHelp(tr?.theRow); // if !tr.theRow, erase (as when click Next/Previous)
   addPlaceholderHelp(tr?.theRow); // ditto
   addInfoMessage(str);
