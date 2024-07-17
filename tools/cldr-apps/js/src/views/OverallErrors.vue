@@ -13,7 +13,7 @@
 
 <script setup>
 import { ref } from "vue";
-import { getLocaleErrors } from "../esm/cldrDash.mjs";
+import { getLocaleErrors } from "../esm/cldrDashData.mjs";
 import { getCurrentLocale } from "../esm/cldrStatus.mjs";
 import * as cldrNotify from "../esm/cldrNotify.mjs";
 
@@ -22,7 +22,7 @@ const errors = ref(null);
 const locale = ref(getCurrentLocale());
 
 async function loadData() {
-  const resp = await getLocaleErrors(locale.value);
+  const resp = getLocaleErrors(locale.value);
   if (!resp || !resp.body) {
     errors.value = null;
   } else {
