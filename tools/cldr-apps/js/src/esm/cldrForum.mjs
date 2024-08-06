@@ -13,6 +13,9 @@ import * as cldrLoad from "./cldrLoad.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 import * as cldrSurvey from "./cldrSurvey.mjs";
 import * as cldrText from "./cldrText.mjs";
+import * as cldrVue from "./cldrVue.mjs";
+
+import ForumButton from "../views/ForumButton.vue";
 
 class PostInfo {
   constructor(postType) {
@@ -247,7 +250,8 @@ function openPostOrReply(pi) {
   const subject = makePostSubject(isReply, rootPost, pi.subject);
   const root = isReply ? rootPost.id : -1;
   const open = isReply ? rootPost.open : true;
-  const typeLabel = makePostTypeLabel(postType, isReply);
+  const typeLabel = makePostTypeLabel(pi.postType, isReply);
+
   const html = makePostHtml(
     pi.postType,
     typeLabel,
@@ -930,7 +934,6 @@ function makeOneNewPostButton(
   const buttonClass = willFlag
     ? "addPostButton forumNewPostFlagButton btn btn-default btn-sm"
     : "addPostButton forumNewButton btn btn-default btn-sm";
-
   const newButton = forumCreateChunk(label, "button", buttonClass);
   if (disabled) {
     newButton.disabled = true;
@@ -970,6 +973,7 @@ function makeOneReplyButton(post, postType, label) {
     "button",
     "addPostButton btn btn-default btn-sm"
   );
+  addPostButton(replyButton /* containerEl */, post, postType, label);
   cldrDom.listenFor(replyButton, "click", function (e) {
     const pi = new PostInfo(postType);
     pi.setReplyTo(post);
@@ -978,6 +982,16 @@ function makeOneReplyButton(post, postType, label) {
     return false;
   });
   return replyButton;
+}
+
+function addPostButton(containerEl, post, postType, label) {
+  try {
+    const wrapper = cldrVue.mount(ForumButton, containerEl);
+    wrapper.setPostData(post, postType, label);
+  } catch (e) {
+    console.error("Error loading Post Button vue " + e.message + " / " + e.name);
+    cldrNotify.exception(e, "while loading Post Button");
+  }
 }
 
 /**
