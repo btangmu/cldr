@@ -63,11 +63,6 @@ class PostInfo {
   }
 }
 
-/**
- * Encapsulate this class name -- caution: it's used literally in surveytool.css
- */
-const FORUM_DIV_CLASS = "forumDiv";
-
 const SUMMARY_CLASS = "getForumSummary";
 
 const FORUM_DEBUG = false;
@@ -266,26 +261,6 @@ function prefillPostText(pi) {
 }
 
 /**
- * Submit a forum post
- *
- * @param {PostInfo} pi
- * @param {Object} formState - has nothing but "body"
- */
-function submitPost(pi, formState) {
-  if (!pi || !formState) {
-    console.error("Missing data for submitPost");
-    return;
-  }
-  const text = formState.body;
-  if (!formIsAcceptable(pi, text)) {
-    // TODO -- inform user why unacceptable; maybe should happen earlier, see onFinishFailed in ForumForm
-    console.error("!formIsAcceptable");
-    return;
-  }
-  sendPostRequest(pi, text);
-}
-
-/**
  * Is the given form data acceptable?
  *
  * @param {PostInfo} pi
@@ -317,7 +292,7 @@ function sendPostRequest(pi, text) {
     open: pi.isOpen,
     postType: pi.postType,
     replyTo: pi.replyTo,
-    root: pi.replyTo, // root and replyTo always the same
+    root: pi.replyTo, // root and replyTo are always the same
     text: text,
     value: pi.value,
     xpath: pi.xpstrid,
@@ -742,7 +717,7 @@ function addNewPostButtons(el, locale, couldFlag, xpstrid, code, value) {
     el.appendChild(document.createElement("p"));
   }
   Object.keys(options).forEach(function (postType) {
-    const label = options[postType];
+    const label = makePostTypeLabel(postType, false /* isReply */);
     // A "new post" button has type cldrForumType.REQUEST or cldrForumType.DISCUSS.
     // REQUEST is only enabled if there is a non-null value (which the user voted for).
     const disabled = postType === cldrForumType.REQUEST && value === null;
@@ -1361,7 +1336,6 @@ function parseHash(pieces) {
 }
 
 export {
-  FORUM_DIV_CLASS,
   SUMMARY_CLASS,
   addNewPostButtons,
   formIsAcceptable,
@@ -1373,8 +1347,8 @@ export {
   refresh,
   refreshSummary,
   reload,
+  sendPostRequest,
   setUserCanPost,
-  submitPost,
   /*
    * The following are meant to be accessible for unit testing only:
    */

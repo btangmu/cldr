@@ -57,7 +57,7 @@ export default {
     postOrCancel(formState) {
       this.formIsVisible = false;
       if (formState) {
-        cldrForum.submitPost(this.pi, formState);
+        cldrForum.sendPostRequest(this.pi, formState.body);
       }
     },
   },
