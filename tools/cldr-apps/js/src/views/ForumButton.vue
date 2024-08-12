@@ -1,5 +1,5 @@
 <template>
-  <a-button v-if="!disabled && !forumForm" @click="getForm">
+  <a-button v-if="!forumForm" :disabled="disabled" @click="getForm">
     {{ label }}
   </a-button>
   <template v-if="formIsVisible">

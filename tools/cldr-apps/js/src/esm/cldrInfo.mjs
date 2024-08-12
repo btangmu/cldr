@@ -458,7 +458,7 @@ function addForumPanel(tr) {
 /**
  * An empty paragraph at the bottom of the info panel enables scrolling
  * to bring the bottom content fully into view without being overlapped
- * the xpath shown by addXpath
+ * by the xpath shown by addXpath
  */
 function addBottom() {
   const el = document.getElementById(INFO_BOTTOM_ID);
