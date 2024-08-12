@@ -1,120 +1,88 @@
 <template>
-  <section>
-    <button
-      v-if="!forumForm && !success"
-      title="Make a forum post"
-      @click="getForm"
-    >
-      +
-    </button>
-    <div v-if="forumForm && forumForm.length">
-      <label for="formData">alt=</label>
-      <select
-        id="formData"
-        name="formData"
-        v-model="formData"
-        title="Choose an alt attribute"
-      >
-        <option disabled value="">Please Select</option>
-        <option :key="alt" v-for="alt in forumForm">{{ alt }}</option>
-      </select>
+  <a-button v-if="!disabled && !forumForm" @click="getForm">
+    {{ label }}
+  </a-button>
+  <template v-if="formIsVisible">
+    <div ref="popover" class="popoverForm">
+      <ForumForm :pi="pi" :postOrCancel="postOrCancel" :reminder="reminder" />
     </div>
-    <div>
-      <span v-if="formData">
-        <button title="Add alt path now" @click="reallyAdd">Add</button>
-        &nbsp;
-      </span>
-      <span v-if="formData || errMessage">
-        <button title="Do not add alt path" @click="reset">Cancel</button>
-      </span>
-    </div>
-    <div v-if="errMessage">
-      {{ errMessage }}
-    </div>
-    <div v-if="success">
-      “alt” added.
-      <button @click="clickLoad">Reload Page</button>
-    </div>
-  </section>
+  </template>
 </template>
 
 <script>
 import * as cldrForum from "../esm/cldrForum.mjs";
+import ForumForm from "./ForumForm.vue";
 
 export default {
+  components: {
+    ForumForm,
+  },
+
   data() {
     return {
-      post: null,
-      postType: null,
+      pi: null /* PostInfo */,
       label: null,
       forumForm: null,
-      formData: "",
-      errMessage: null,
-      success: false,
+      formIsVisible: false,
+      reminder: "",
+      disabled: false,
     };
   },
 
   methods: {
-    setPostData(post, postType, label) {
-      this.post = post;
-      this.postType = postType;
+    /**
+     * Set the PostInfo
+     * @param {PostInfo} pi
+     */
+    setPostInfo(pi) {
+      this.pi = pi;
+    },
+
+    setLabel(label) {
       this.label = label;
     },
 
+    setReminder(reminder) {
+      this.reminder = reminder;
+    },
+
+    setDisabled() {
+      this.disabled = true;
+    },
+
     getForm() {
-      if (this.success) {
-        // cldrAddAlt.getAlts(this.xpstrid, this.setAlts /* callback */);
+      this.formIsVisible = true;
+    },
+
+    postOrCancel(formState) {
+      this.formIsVisible = false;
+      if (formState) {
+        cldrForum.submitPost(this.pi, formState);
       }
-    },
-
-    // callback
-    // setAlts(json) {
-    //  this.forumForm = json.alt;
-    // },
-
-    /*
-    reallyAdd() {
-      if (this.xpstrid && this.formData) {
-        cldrForum.addformData(
-          this.xpstrid,
-          this.formData,
-          this.showResult
-        );
-      }
-    },
-*/
-
-    showResult(errMessage) {
-      this.reset();
-      this.errMessage = errMessage; // null or empty for success
-      if (!errMessage) {
-        this.success = true;
-      }
-    },
-
-    clickLoad() {
-      this.reset();
-      cldrAddAlt.reloadPage();
-    },
-
-    reset() {
-      this.forumForm = null;
-      this.formData = "";
-      this.errMessage = null;
-      this.success = false;
     },
   },
 };
 </script>
 
 <style scoped>
-button,
-select {
-  margin-top: 1ex;
+body {
+  overflow-x: hidden;
 }
 
-section {
-  clear: both;
-  float: right;
+button {
+  margin: 0.5em;
+}
+
+.popoverForm {
+  display: block;
+  top: 10%;
+  left: 10%;
+  width: 80%;
+  position: absolute;
+  padding: 20px 20px;
+  z-index: 1200;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+  border-radius: 3px;
 }
 </style>
