@@ -1,34 +1,28 @@
 <template>
   <header>Compose forum post</header>
   <a-form
+    ref="formRef"
     :model="formState"
-    name="basic"
+    :rules="rules"
     autocomplete="off"
-    @finish="onFinish"
-    @finishFailed="onFinishFailed"
+    autofocus
   >
     <p class="subject">{{ pi.subject }}</p>
     <p class="reminder">{{ reminder }}</p>
     <p class="postType">{{ pi.postType }}</p>
-    <a-form-item
-      class="formItems"
-      name="body"
-      :rules="[{ required: true, message: 'Please enter a message body!' }]"
-    >
+    <a-form-item class="formItems" name="body" has-feedback>
       <a-textarea
         v-model:value="formState.body"
         placeholder="Write your post (plain text) here..."
+        ref="textAreaToFocus"
         :rows="4"
       />
     </a-form-item>
-    <div v-if="errMessage" class="errMessage">
-      {{ errMessage }}
-    </div>
     <div class="buttons">
       <a-form-item>
         <a-button html-type="cancel" @click="onCancel">Cancel</a-button>
         &nbsp;
-        <a-button type="primary" html-type="submit" @click="onPost"
+        <a-button type="primary" html-type="submit" @click="onSubmit"
           >Submit</a-button
         >
       </a-form-item>
@@ -42,58 +36,75 @@
   </a-form>
 </template>
 
-<script>
-import { defineComponent, reactive } from "vue";
+<script setup>
+import { onMounted, reactive, ref } from "vue";
+
 import * as cldrForum from "../esm/cldrForum.mjs";
+import * as cldrForumType from "../esm/cldrForumType.mjs";
+import * as cldrText from "../esm/cldrText.mjs";
 
-export default defineComponent({
-  props: ["pi" /* PostInfo */, "postOrCancel", "reminder"],
+const DEBUG_FORUM_FORM = false;
 
-  setup(props) {
-    const formState = reactive({
-      body: cldrForum.prefillPostText(props.pi),
-    });
+const formRef = ref();
 
-    const onFinish = (values) => {
-      console.log("Successful validation:", values);
-    };
-
-    const onFinishFailed = (errorInfo) => {
-      console.log("Failed validation:", errorInfo);
-    };
-
-    return {
-      formState,
-      onFinish,
-      onFinishFailed,
-    };
-  },
-
-  data() {
-    return {
-      errMessage: "",
-    };
-  },
-
-  methods: {
-    onCancel() {
-      this.postOrCancel(null);
-    },
-
-    onPost() {
-      if (
-        this.pi &&
-        this.formState.body &&
-        cldrForum.formIsAcceptable(this.pi, this.formState.body)
-      ) {
-        this.postOrCancel(this.formState);
-      } else {
-        // TODO: get message from formIsAcceptable, or move that here
-        this.errMessage = "Your pants are on fire!";
-      }
-    },
-  },
+const props = defineProps({
+  pi: Object,
+  reminder: String,
 });
+
+const formState = reactive({
+  body: cldrForum.prefillPostText(props.pi),
+});
+
+const rules = {
+  body: [
+    {
+      validator: validateBody,
+      trigger: "change",
+    },
+  ],
+};
+
+const emit = defineEmits(["send-message"]);
+
+const textAreaToFocus = ref(null);
+
+function focusInput() {
+  if (textAreaToFocus.value) {
+    textAreaToFocus.value.focus();
+  }
+}
+
+onMounted(focusInput);
+
+async function validateBody(_rule, bodyText) {
+  if (!bodyText.trim()) {
+    return Promise.reject("Please enter a message body");
+  } else if (props.pi.postType === cldrForumType.REQUEST) {
+    const prefill = cldrText.sub("forum_prefill_request", [props.pi.value]);
+    if (bodyText.trim() === prefill.trim()) {
+      return Promise.reject("Please edit the message body");
+    }
+  }
+  return Promise.resolve();
+}
+
+function onCancel() {
+  emit("send-message", null);
+}
+
+function onSubmit() {
+  formRef.value
+    .validate()
+    .then(() => {
+      emit("send-message", formState);
+    })
+    .catch((error) => {
+      if (DEBUG_FORUM_FORM) {
+        console.log("onSubmit validation error", error);
+      }
+    });
+}
 </script>
 
 <style scoped>
@@ -124,10 +135,6 @@ header {
 
 .postType {
   text-align: right;
-  color: red;
-}
-
-.errMessage {
   color: red;
 }
 </style>

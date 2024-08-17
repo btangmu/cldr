@@ -260,28 +260,6 @@ function prefillPostText(pi) {
   return "";
 }
 
-/**
- * Is the given form data acceptable?
- *
- * @param {PostInfo} pi
- * @param {String} text
- * @returns {Boolean} true if acceptable
- */
-function formIsAcceptable(pi, text) {
-  if (!text.trim()) {
-    // the text field is empty or all whitespace
-    return false;
-  }
-  if (pi.postType === cldrForumType.REQUEST) {
-    const prefill = cldrText.sub("forum_prefill_request", [pi.value]);
-    if (text.trim() === prefill.trim()) {
-      // the text field for a Request matches the pre-fill
-      return false;
-    }
-  }
-  return true;
-}
-
 function sendPostRequest(pi, text) {
   const url = cldrStatus.getContextPath() + "/SurveyAjax";
   const postData = {
@@ -1338,7 +1316,6 @@ function parseHash(pieces) {
 export {
   SUMMARY_CLASS,
   addNewPostButtons,
-  formIsAcceptable,
   handleIdChanged,
   load,
   parseContent,

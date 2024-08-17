@@ -4,7 +4,11 @@
   </a-button>
   <template v-if="formIsVisible">
     <div ref="popover" class="popoverForm">
-      <ForumForm :pi="pi" :postOrCancel="postOrCancel" :reminder="reminder" />
+      <ForumForm
+        :pi="pi"
+        :reminder="reminder"
+        @send-message="handleSendMessage"
+      />
     </div>
   </template>
 </template>
@@ -54,9 +58,9 @@ export default {
       this.formIsVisible = true;
     },
 
-    postOrCancel(formState) {
+    handleSendMessage(formState) {
       this.formIsVisible = false;
-      if (formState) {
+      if (formState?.body) {
         cldrForum.sendPostRequest(this.pi, formState.body);
       }
     },
