@@ -1,5 +1,10 @@
 <template>
-  <a-button v-if="!forumForm" :disabled="disabled" @click="getForm">
+  <a-button
+    v-if="!forumForm"
+    :disabled="disabled"
+    :class="classChanger()"
+    @click="getForm"
+  >
     {{ label }}
   </a-button>
   <template v-if="formIsVisible">
@@ -65,6 +70,11 @@ export default {
       if (formState?.body) {
         cldrForum.sendPostRequest(this.pi, formState.body);
       }
+    },
+
+    classChanger() {
+      // Note: forumNewPostFlagButton and forumNewPostFlagButton:hover are defined in surveytool.css
+      return this.pi?.willFlag ? "forumNewPostFlagButton" : "";
     },
   },
 };
