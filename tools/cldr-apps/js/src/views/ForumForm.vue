@@ -65,7 +65,7 @@ const rules = {
   ],
 };
 
-const emit = defineEmits(["send-message"]);
+const emit = defineEmits(["submit-or-cancel"]);
 
 const textAreaToFocus = ref(null);
 
@@ -90,14 +90,14 @@ async function validateBody(_rule, bodyText) {
 }
 
 function onCancel() {
-  emit("send-message", null);
+  emit("submit-or-cancel", null);
 }
 
 function onSubmit() {
   formRef.value
     .validate()
     .then(() => {
-      emit("send-message", formState);
+      emit("submit-or-cancel", formState);
     })
     .catch((error) => {
       if (DEBUG_FORUM_FORM) {

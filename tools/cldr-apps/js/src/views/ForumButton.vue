@@ -7,7 +7,7 @@
       <ForumForm
         :pi="pi"
         :reminder="reminder"
-        @send-message="handleSendMessage"
+        @submit-or-cancel="handleSubmitOrCancel"
       />
     </div>
   </template>
@@ -56,10 +56,12 @@ export default {
 
     getForm() {
       this.formIsVisible = true;
+      cldrForum.setFormIsVisible(true);
     },
 
-    handleSendMessage(formState) {
+    handleSubmitOrCancel(formState) {
       this.formIsVisible = false;
+      cldrForum.setFormIsVisible(false);
       if (formState?.body) {
         cldrForum.sendPostRequest(this.pi, formState.body);
       }

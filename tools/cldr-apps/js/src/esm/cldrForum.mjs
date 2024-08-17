@@ -1119,16 +1119,6 @@ function refreshSummary() {
 }
 
 /**
- * Refresh the Forum page and/or whatever... TODO!! Compare cldrAnnounce.refresh, also see refreshSummary above
- *
- * @param {Function} viewCallbackSetData the callback function for the Forum page, or null
- * @param {Function} viewCallbackSetCounts the callback function for the Forum page, or null
- */
-async function refresh(viewCallbackSetData, viewCallbackSetCounts) {
-  console.log("This is cldrForum.refresh, currently doing nothing!"); // TODO
-}
-
-/**
  * Get a piece of html text summarizing the current Forum statistics
  *
  * @param locale the locale string
@@ -1313,18 +1303,29 @@ function parseHash(pieces) {
   }
 }
 
+let formIsVisible = false;
+
+function isFormVisible() {
+  return formIsVisible;
+}
+
+function setFormIsVisible(visible) {
+  formIsVisible = visible;
+}
+
 export {
   SUMMARY_CLASS,
   addNewPostButtons,
   handleIdChanged,
+  isFormVisible,
   load,
   parseContent,
   parseHash,
   prefillPostText,
-  refresh,
   refreshSummary,
   reload,
   sendPostRequest,
+  setFormIsVisible,
   setUserCanPost,
   /*
    * The following are meant to be accessible for unit testing only:
