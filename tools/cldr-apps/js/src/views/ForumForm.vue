@@ -67,6 +67,11 @@ function onSubmit() {
       }
     });
 }
+
+function formatParent(parentPost) {
+  const div = cldrForum.parseContent([parentPost], "parent");
+  return new XMLSerializer().serializeToString(div);
+}
 </script>
 
 <template>
@@ -98,12 +103,7 @@ function onSubmit() {
         >
       </a-form-item>
     </div>
-    <div v-if="pi.parentPost">
-      <p>
-        🛑 TODO: display the parent (root) post here (below the Cancel/Submit
-        buttons)
-      </p>
-    </div>
+    <div v-if="pi.parentPost" v-html="formatParent(pi.parentPost)"></div>
   </a-form>
 </template>
 
