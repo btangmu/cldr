@@ -1,9 +1,73 @@
+<script setup>
+import { ref, reactive } from "vue";
+
+import * as cldrForum from "../esm/cldrForum.mjs";
+import ForumForm from "./ForumForm.vue";
+
+let pi = null; /* PostInfo object */
+let label = ref(null);
+let forumForm = ref(null);
+let formIsVisible = ref(false);
+let reminder = ref("");
+let disabled = ref(false);
+
+/**
+ * Copy of pi.willFlag; see comment in setPostInfo
+ */
+let willFlag = ref(false);
+
+/**
+ * Set the PostInfo
+ *
+ * @param {PostInfo} xpi
+ */
+function setPostInfo(xpi) {
+  pi = reactive(xpi);
+  // Directly referencing pi?.willFlag in the template does not work,
+  // so we make a copy of willFlag to use in the template.
+  // https://vuejs.org/guide/essentials/class-and-style
+  willFlag.value = xpi.willFlag;
+}
+
+function setLabel(xlabel) {
+  label.value = xlabel;
+}
+
+function setReminder(xreminder) {
+  reminder.value = xreminder;
+}
+
+function setDisabled() {
+  disabled.value = true;
+}
+
+function openForm() {
+  formIsVisible.value = true;
+  cldrForum.setFormIsVisible(true);
+}
+
+function handleSubmitOrCancel(formState) {
+  formIsVisible.value = false;
+  cldrForum.setFormIsVisible(false);
+  if (formState?.body) {
+    cldrForum.sendPostRequest(pi, formState.body);
+  }
+}
+
+defineExpose({
+  setDisabled,
+  setLabel,
+  setPostInfo,
+  setReminder,
+});
+</script>
+
 <template>
   <a-button
     v-if="!forumForm"
     :disabled="disabled"
-    :class="classChanger()"
-    @click="getForm"
+    :class="{ forumNewPostFlagButton: willFlag }"
+    @click="openForm"
   >
     {{ label }}
   </a-button>
@@ -17,68 +81,6 @@
     </div>
   </template>
 </template>
-
-<script>
-import * as cldrForum from "../esm/cldrForum.mjs";
-import ForumForm from "./ForumForm.vue";
-
-export default {
-  components: {
-    ForumForm,
-  },
-
-  data() {
-    return {
-      pi: null /* PostInfo */,
-      label: null,
-      forumForm: null,
-      formIsVisible: false,
-      reminder: "",
-      disabled: false,
-    };
-  },
-
-  methods: {
-    /**
-     * Set the PostInfo
-     * @param {PostInfo} pi
-     */
-    setPostInfo(pi) {
-      this.pi = pi;
-    },
-
-    setLabel(label) {
-      this.label = label;
-    },
-
-    setReminder(reminder) {
-      this.reminder = reminder;
-    },
-
-    setDisabled() {
-      this.disabled = true;
-    },
-
-    getForm() {
-      this.formIsVisible = true;
-      cldrForum.setFormIsVisible(true);
-    },
-
-    handleSubmitOrCancel(formState) {
-      this.formIsVisible = false;
-      cldrForum.setFormIsVisible(false);
-      if (formState?.body) {
-        cldrForum.sendPostRequest(this.pi, formState.body);
-      }
-    },
-
-    classChanger() {
-      // Note: forumNewPostFlagButton and forumNewPostFlagButton:hover are defined in surveytool.css
-      return this.pi?.willFlag ? "forumNewPostFlagButton" : "";
-    },
-  },
-};
-</script>
 
 <style scoped>
 body {

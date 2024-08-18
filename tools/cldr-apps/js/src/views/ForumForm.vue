@@ -1,41 +1,3 @@
-<template>
-  <header>Compose forum post</header>
-  <a-form
-    ref="formRef"
-    :model="formState"
-    :rules="rules"
-    autocomplete="off"
-    autofocus
-  >
-    <p class="subject">{{ pi.subject }}</p>
-    <p class="reminder">{{ reminder }}</p>
-    <p class="postType">{{ pi.postType }}</p>
-    <a-form-item class="formItems" name="body" has-feedback>
-      <a-textarea
-        v-model:value="formState.body"
-        placeholder="Write your post (plain text) here..."
-        ref="textAreaToFocus"
-        :rows="4"
-      />
-    </a-form-item>
-    <div class="buttons">
-      <a-form-item>
-        <a-button html-type="cancel" @click="onCancel">Cancel</a-button>
-        &nbsp;
-        <a-button type="primary" html-type="submit" @click="onSubmit"
-          >Submit</a-button
-        >
-      </a-form-item>
-    </div>
-    <div v-if="pi.parentPost">
-      <p>
-        🛑 TODO: display the parent (root) post here (below the Cancel/Submit
-        buttons)
-      </p>
-    </div>
-  </a-form>
-</template>
-
 <script setup>
 import { onMounted, reactive, ref } from "vue";
 
@@ -106,6 +68,44 @@ function onSubmit() {
     });
 }
 </script>
+
+<template>
+  <header>Compose forum post</header>
+  <a-form
+    ref="formRef"
+    :model="formState"
+    :rules="rules"
+    autocomplete="off"
+    autofocus
+  >
+    <p class="subject">{{ pi.subject }}</p>
+    <p class="reminder">{{ reminder }}</p>
+    <p class="postType">{{ pi.postType }}</p>
+    <a-form-item class="formItems" name="body" has-feedback>
+      <a-textarea
+        v-model:value="formState.body"
+        placeholder="Write your post (plain text) here..."
+        ref="textAreaToFocus"
+        :rows="4"
+      />
+    </a-form-item>
+    <div class="buttons">
+      <a-form-item>
+        <a-button html-type="cancel" @click="onCancel">Cancel</a-button>
+        &nbsp;
+        <a-button type="primary" html-type="submit" @click="onSubmit"
+          >Submit</a-button
+        >
+      </a-form-item>
+    </div>
+    <div v-if="pi.parentPost">
+      <p>
+        🛑 TODO: display the parent (root) post here (below the Cancel/Submit
+        buttons)
+      </p>
+    </div>
+  </a-form>
+</template>
 
 <style scoped>
 header {
