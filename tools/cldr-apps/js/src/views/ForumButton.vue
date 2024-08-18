@@ -6,7 +6,6 @@ import ForumForm from "./ForumForm.vue";
 
 let pi = null; /* PostInfo object */
 let label = ref(null);
-let forumForm = ref(null);
 let formIsVisible = ref(false);
 let reminder = ref("");
 let disabled = ref(false);
@@ -64,7 +63,6 @@ defineExpose({
 
 <template>
   <a-button
-    v-if="!forumForm"
     :disabled="disabled"
     :class="{ forumNewPostFlagButton: willFlag }"
     @click="openForm"
