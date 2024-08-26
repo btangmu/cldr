@@ -1,9 +1,6 @@
 package org.unicode.cldr.web.api;
 
 import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -21,8 +18,6 @@ import org.unicode.cldr.web.*;
 @Path("/vxml")
 @Tag(name = "Generate VXML", description = "APIs for Survey Tool VXML (Vetted XML) generation")
 public class GenerateVxml {
-    private static final Logger logger = SurveyLog.forClass(GenerateVxml.class);
-
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Generate VXML", description = "Generate VXML")
@@ -83,7 +78,7 @@ public class GenerateVxml {
      * @param usersOrg the user's organization
      * @param loadingPolicy the LoadingPolicy
      * @return the VxmlResponse
-     * @throws IOException
+     * @throws IOException if thrown by VxmlGeneratorQueue.getOutput
      */
     private VxmlResponse getVxmlResponse(
             VxmlGeneratorQueue queue,

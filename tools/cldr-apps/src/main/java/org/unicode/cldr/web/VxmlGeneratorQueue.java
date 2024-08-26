@@ -10,7 +10,6 @@ import java.util.logging.Logger;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.TimeDiff;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
-import org.unicode.cldr.web.api.LocaleCompletion;
 
 public class VxmlGeneratorQueue {
     private static final Logger logger = SurveyLog.forClass(VxmlGeneratorQueue.class);
@@ -298,7 +297,6 @@ public class VxmlGeneratorQueue {
             }
 
             // TODO:
-            // vv.setLocaleBaselineCount(new VVQueueLocaleBaselineCount());
             // vv.generatePriorityItemsSummary(aBuffer, choiceSet, usersOrg);
 
             if (myThread.isAlive()) {
@@ -489,13 +487,5 @@ public class VxmlGeneratorQueue {
 
     public int getPercent() {
         return percent;
-    }
-
-    // TODO: remove reference to VettingViewer here -- or move it to a neutral reusable class...
-    private static class VVQueueLocaleBaselineCount implements VettingViewer.LocaleBaselineCount {
-
-        public int getBaselineProblemCount(CLDRLocale cldrLocale) throws ExecutionException {
-            return LocaleCompletion.getBaselineCount(cldrLocale);
-        }
     }
 }
