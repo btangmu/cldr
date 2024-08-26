@@ -1,7 +1,6 @@
 package org.unicode.cldr.web.api;
 
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 import java.util.logging.Logger;
@@ -15,6 +14,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.web.*;
 
 @ApplicationScoped
@@ -45,41 +45,61 @@ public class GenerateVxml {
                                         schema = @Schema(implementation = STError.class))),
                 @APIResponse(responseCode = "503", description = "Not ready yet"),
             })
-    public Response generateVxml(@HeaderParam(Auth.SESSION_HEADER) String sessionString) {
-        CookieSession session = Auth.getSession(sessionString);
-        if (session == null) {
-            return Auth.noSessionResponse();
-        }
-        if (!UserRegistry.userIsAdmin(session.user)) {
-            return Response.status(403, "Forbidden").build();
-        }
-        session.userDidAction();
-        if (SurveyMain.isBusted() || !SurveyMain.wasInitCalled() || !SurveyMain.triedToStartUp()) {
-            return STError.surveyNotQuiteReady();
-        }
-        VxmlResponse response = new VxmlResponse();
-        try (Writer out = new StringWriter()) {
-            OutputFileManager.generateVxml(
-                    out,
-                    true /* outputFiles */,
-                    true /* removeEmpty */,
-                    true /* verifyConsistent */);
-            response.output = out.toString();
+    public Response generateVxml(
+            VxmlRequest request, @HeaderParam(Auth.SESSION_HEADER) String sessionString) {
+        try {
+            CookieSession cs = Auth.getSession(sessionString);
+            if (cs == null) {
+                return Auth.noSessionResponse();
+            }
+            if (!UserRegistry.userIsAdmin(cs.user)) {
+                return Response.status(Response.Status.FORBIDDEN).build();
+            }
+            if (SurveyMain.isBusted()
+                    || !SurveyMain.wasInitCalled()
+                    || !SurveyMain.triedToStartUp()) {
+                return STError.surveyNotQuiteReady();
+            }
+            return getVxml(cs, request);
         } catch (Exception e) {
-            return Response.status(500, "Internal Server Error").build();
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
-        return Response.ok(response).build();
     }
 
-    public enum Status {
-        /** Waiting on other users/tasks */
-        WAITING,
-        /** Processing in progress */
-        PROCESSING,
-        /** Contents are available */
-        READY,
-        /** Stopped, due to error or successful completion */
-        STOPPED,
+    private Response getVxml(CookieSession cs, VxmlRequest request) throws IOException {
+        cs.userDidAction();
+        Organization usersOrg = cs.user.vrOrg();
+        VxmlGeneratorQueue queue = VxmlGeneratorQueue.getInstance();
+        QueueMemberId qmi = new QueueMemberId(cs);
+        VxmlResponse vr = getVxmlResponse(queue, qmi, usersOrg, request.loadingPolicy);
+        return Response.ok(vr).build();
+    }
+
+    /**
+     * Get the response for VXML
+     *
+     * @param queue the VxmlGeneratorQueue
+     * @param qmi the QueueMemberId
+     * @param usersOrg the user's organization
+     * @param loadingPolicy the LoadingPolicy
+     * @return the VxmlResponse
+     * @throws IOException
+     */
+    private VxmlResponse getVxmlResponse(
+            VxmlGeneratorQueue queue,
+            QueueMemberId qmi,
+            Organization usersOrg,
+            VxmlGeneratorQueue.LoadingPolicy loadingPolicy)
+            throws IOException {
+        VxmlResponse response = new VxmlResponse();
+        VxmlGeneratorQueue.Args args = new VxmlGeneratorQueue.Args(qmi, usersOrg, loadingPolicy);
+        VxmlGeneratorQueue.Results results = new VxmlGeneratorQueue.Results();
+        // compare VettingViewerQueue.getPriorityItemsSummaryOutput
+        response.message = queue.getOutput(args, results);
+        response.percent = queue.getPercent();
+        response.status = results.status;
+        response.output = results.output.toString();
+        return response;
     }
 
     @Schema(description = "VXML Response")
@@ -87,15 +107,15 @@ public class GenerateVxml {
         public VxmlResponse() {}
 
         @Schema(description = "VXML Response status enum")
-        public Status status;
+        public VxmlGeneratorQueue.Status status;
 
-        @Schema(description = "HTML current status message")
+        @Schema(description = "Current status message")
         public String message = "";
 
         @Schema(description = "Estimated percentage complete")
         public Number percent;
 
-        @Schema(description = "HTML output on success")
+        @Schema(description = "Output on success")
         public String output;
     }
 }

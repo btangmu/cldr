@@ -7,8 +7,6 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.TimeDiff;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
@@ -17,7 +15,7 @@ import org.unicode.cldr.web.api.LocaleCompletion;
 public class VxmlGeneratorQueue {
     private static final Logger logger = SurveyLog.forClass(VxmlGeneratorQueue.class);
 
-    private static final boolean DEBUG = false || CldrUtility.getProperty("TEST", false);
+    private static final boolean DEBUG = false;
     private static final String WAITING_IN_LINE_MESSAGE = "Waiting in line";
 
     private static final class VxmlGeneratorQueueHelper {
@@ -65,11 +63,7 @@ public class VxmlGeneratorQueue {
     /** A unique key for storing QueueEntry objects in QueueMemberId objects */
     private static final String KEY = VxmlGeneratorQueue.class.getName();
 
-    /**
-     * Status of a Task
-     *
-     * @author srl
-     */
+    /** Status of a Task */
     public enum Status {
         /** Waiting on other users/tasks */
         WAITING,
@@ -81,13 +75,7 @@ public class VxmlGeneratorQueue {
         STOPPED,
     }
 
-    /**
-     * What policy should be used when querying the queue?
-     *
-     * <p>Public for access by SummaryRequest
-     *
-     * @author srl
-     */
+    /** What policy should be used when querying the queue? */
     public enum LoadingPolicy {
         /** (Default) - start if not started */
         START,
@@ -115,12 +103,7 @@ public class VxmlGeneratorQueue {
 
     private class Task implements Runnable {
 
-        /**
-         * A VettingViewer.ProgressCallback that updates a CLDRProgressTask
-         *
-         * @author srl295
-         */
-        private final class CLDRProgressCallback extends VettingViewer.ProgressCallback {
+        private final class CLDRProgressCallback /* extends VettingViewer.ProgressCallback */ {
             private final CLDRProgressTask progress;
             private final Thread thread;
 
@@ -140,7 +123,6 @@ public class VxmlGeneratorQueue {
                 return remStr;
             }
 
-            @Override
             public void nudge() {
                 if (!myThread.isAlive()) {
                     throw new RuntimeException("Not Running- stop now.");
@@ -156,8 +138,7 @@ public class VxmlGeneratorQueue {
                 }
                 if ((now - last) > 1200) {
                     if (DEBUG) {
-                        System.out.println(
-                                "Task.nudge() for Priority Items Summary, " + taskDescription());
+                        System.out.println("Task.nudge() for VXML, " + taskDescription());
                     }
                     last = now;
                     if (n > 500) {
@@ -168,13 +149,11 @@ public class VxmlGeneratorQueue {
                 }
             }
 
-            @Override
             public void done() {
                 // note: this method is possibly never called
                 progress.update("Done!");
             }
 
-            @Override
             public boolean isStopped() {
                 // if the calling thread is gone, stop processing
                 return stop || !(thread.isAlive());
@@ -201,14 +180,14 @@ public class VxmlGeneratorQueue {
         private final StringBuffer aBuffer = new StringBuffer();
 
         /**
-         * Construct a Runnable object specifically for Priority Items Summary
+         * Construct a Runnable object specifically for VXML
          *
          * @param entry the QueueEntry
          * @param usersOrg
          */
         private Task(QueueEntry entry, Organization usersOrg) {
             if (DEBUG) {
-                System.out.println("Creating task for Priority Items Summary");
+                System.out.println("Creating task for VXML");
             }
             this.sm = CookieSession.sm;
             this.entry = entry;
@@ -222,12 +201,10 @@ public class VxmlGeneratorQueue {
              * TODO: explain this magic number! Why add 100?
              * Reference: https://unicode-org.atlassian.net/browse/CLDR-15369
              */
-            final CLDRProgressTask progress =
-                    CookieSession.sm.openProgress("vv: Priority Items Summary", maxn + 100);
+            final CLDRProgressTask progress = CookieSession.sm.openProgress("vv: VXML", maxn + 100);
 
             if (DEBUG) {
-                System.out.println(
-                        "Starting up vv task: Priority Items Summary, " + taskDescription());
+                System.out.println("Starting up vv task: VXML, " + taskDescription());
             }
 
             try {
@@ -263,11 +240,7 @@ public class VxmlGeneratorQueue {
                 status = "Finished.";
                 statusCode = Status.READY;
             } catch (RuntimeException | InterruptedException | ExecutionException re) {
-                SurveyLog.logException(
-                        logger,
-                        re,
-                        "While VettingViewer processing Priority Items Summary, "
-                                + taskDescription());
+                SurveyLog.logException(logger, re, "While generating VXML, " + taskDescription());
                 status = "Exception! " + re + ", " + taskDescription();
                 // We're done.
                 statusCode = Status.STOPPED;
@@ -286,41 +259,58 @@ public class VxmlGeneratorQueue {
         private void processCriticalWork(final CLDRProgressTask progress)
                 throws ExecutionException {
             status = "Beginning Process, Calculating";
-            VettingViewer<Organization> vv;
-            vv =
-                    new VettingViewer<>(
-                            sm.getSupplementalDataInfo(), sm.getSTFactory(), new STUsersChoice(sm));
-            vv.setSummarizeAllLocales(summarizeAllLocales);
-            int localeCount = vv.getLocaleCount(usersOrg);
+            //            VettingViewer<Organization> vv;
+            //            vv =
+            //                    new VettingViewer<>(
+            //                            sm.getSupplementalDataInfo(), sm.getSTFactory(), new
+            // STUsersChoice(sm));
+            //            int localeCount = vv.getLocaleCount(usersOrg);
+
+            int localeCount = 300; // TODO
+
+            // TODO: get localeCount (or equivalant) as in OutputFileManager.outputAllFiles
+            // for (CLDRLocale loc : sortSet) {
+
+            /*
+            try (Writer out = new StringWriter()) {
+                OutputFileManager.generateVxml(
+                    out,
+                    true, // outputFiles
+                    true, // removeEmpty
+                    true); // verifyConsistent
+                vr.output = out.toString();
+            }
+            */
+
             int pathCount = getMax(sm.getEnglishFile());
             maxn = localeCount * pathCount;
-            progress.update("Got VettingViewer");
+            progress.update("Got ..."); // TODO
             statusCode = Status.PROCESSING;
             start = System.currentTimeMillis();
             last = start;
             n = 0;
-            vv.setProgressCallback(new CLDRProgressCallback(progress, Thread.currentThread()));
 
-            EnumSet<NotificationCategory> choiceSet =
-                    VettingViewer.getPriorityItemsSummaryCategories(usersOrg);
+            // TODO: setProgressCallback?
+            // vv.setProgressCallback(new CLDRProgressCallback(progress, Thread.currentThread()));
+
             if (DEBUG) {
-                System.out.println(
-                        "Starting generation of Priority Items Summary, " + taskDescription());
+                System.out.println("Starting generation of VXML, " + taskDescription());
             }
-            vv.setLocaleBaselineCount(new VVQueueLocaleBaselineCount());
-            vv.generatePriorityItemsSummary(aBuffer, choiceSet, usersOrg);
+
+            // TODO:
+            // vv.setLocaleBaselineCount(new VVQueueLocaleBaselineCount());
+            // vv.generatePriorityItemsSummary(aBuffer, choiceSet, usersOrg);
+
             if (myThread.isAlive()) {
                 if (DEBUG) {
-                    System.out.println(
-                            "Finished generation of Priority Items Summary, " + taskDescription());
+                    System.out.println("Finished generation of VXML, " + taskDescription());
                 }
                 aBuffer.append("<hr/>Processing time: " + ElapsedTimer.elapsedTime(start));
                 entry.output.put(usersOrg, new VVOutput(aBuffer));
             } else {
                 if (DEBUG) {
                     System.out.println(
-                            "Stopped generation of Priority Items Summary (thread is dead), "
-                                    + taskDescription());
+                            "Stopped generation of VXML (thread is dead), " + taskDescription());
                 }
             }
         }
@@ -337,8 +327,8 @@ public class VxmlGeneratorQueue {
         }
     }
 
-    /** Arguments for getPriorityItemsSummaryOutput */
-    public class Args {
+    /** Arguments for getOutput */
+    public static class Args {
         private final QueueMemberId qmi;
         private final Organization usersOrg;
         private final LoadingPolicy loadingPolicy;
@@ -351,18 +341,18 @@ public class VxmlGeneratorQueue {
     }
 
     /**
-     * Results for getPriorityItemsSummaryOutput
+     * Results for getOutput
      *
-     * <p>These fields get filled in by getPriorityItemsSummaryOutput, and referenced by the caller
-     * after getPriorityItemsSummaryOutput returns
+     * <p>These fields get filled in by getOutput, and referenced by the caller after getOutput
+     * returns
      */
-    public class Results {
+    public static class Results {
         public Status status = Status.STOPPED;
         public Appendable output = new StringBuilder();
     }
 
     /*
-     * Messages returned by getPriorityItemsSummaryOutput
+     * Messages returned by getOutput
      */
     private static final String SUM_MESSAGE_COMPLETE = "Completed successfully";
     private static final String SUM_MESSAGE_STOPPED_ON_REQUEST = "Stopped on request";
@@ -372,18 +362,15 @@ public class VxmlGeneratorQueue {
     private static final String SUM_MESSAGE_STARTED = "Started new task";
 
     /**
-     * Return the status of the vetting viewer output request
+     * Return the status of the VXML request
      *
      * @param args the VxmlGeneratorQueue.Args
      * @param results the VxmlGeneratorQueue.Results
      * @return the status message, or null
      * @throws IOException
-     * @throws JSONException
      */
-    public synchronized String getPriorityItemsSummaryOutput(
-            VxmlGeneratorQueue.Args args, VxmlGeneratorQueue.Results results)
-            throws IOException, JSONException {
-        JSONObject debugStatus = DEBUG ? new JSONObject() : null;
+    public synchronized String getOutput(
+            VxmlGeneratorQueue.Args args, VxmlGeneratorQueue.Results results) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {
@@ -394,8 +381,7 @@ public class VxmlGeneratorQueue {
                 results.output.append(res.output);
                 if (DEBUG) {
                     final String desc = (t == null) ? "[null task]" : t.taskDescription();
-                    System.out.println(
-                            "Got result, calling stop for Priority Items Summary, " + desc);
+                    System.out.println("Got result, calling stop for VXML, " + desc);
                 }
                 stop(entry);
                 entry.output.remove(args.usersOrg);
@@ -405,23 +391,15 @@ public class VxmlGeneratorQueue {
             /* force stop */
             if (DEBUG) {
                 final String desc = (t == null) ? "[null task]" : t.taskDescription();
-                System.out.println("Forced stop of Priority Items Summary, " + desc);
+                System.out.println("Forced stop of VXML, " + desc);
             }
             stop(entry);
             entry.output.remove(args.usersOrg);
             results.status = Status.STOPPED;
-            if (debugStatus != null) {
-                debugStatus.put("t_running", false);
-                debugStatus.put("t_statuscode", Status.STOPPED);
-                debugStatus.put("t_status", SUM_MESSAGE_STOPPED_ON_REQUEST);
-            }
             return SUM_MESSAGE_STOPPED_ON_REQUEST;
         }
         if (t != null) {
             String waiting = waitingString();
-            if (debugStatus != null) {
-                putTaskStatus(debugStatus, t);
-            }
             results.status = Status.PROCESSING;
             if (t.myThread.isAlive()) {
                 // get progress from current thread
@@ -448,15 +426,11 @@ public class VxmlGeneratorQueue {
         t = entry.currentTask = new Task(entry, args.usersOrg);
         t.myThread = SurveyThreadManager.getThreadFactory().newThread(t);
         if (DEBUG) {
-            System.out.println(
-                    "Starting new thread for Priority Items Summary, " + t.taskDescription());
+            System.out.println("Starting new thread for VXML, " + t.taskDescription());
         }
         t.myThread.start();
 
         results.status = Status.PROCESSING;
-        if (DEBUG) {
-            putTaskStatus(debugStatus, t);
-        }
         setPercent(0);
         final String waitStr = waitingString();
         if (WAITING_IN_LINE_MESSAGE.equals(t.status) && waitStr.isEmpty()) {
@@ -464,23 +438,6 @@ public class VxmlGeneratorQueue {
             return WAITING_IN_LINE_MESSAGE;
         }
         return SUM_MESSAGE_STARTED + ": " + waitStr + t.status;
-    }
-
-    /**
-     * Assemble debugging info
-     *
-     * @param debugStatus the JSONObject to be filled in with debugging info
-     * @param t the Task
-     * @throws JSONException
-     */
-    public void putTaskStatus(JSONObject debugStatus, Task t) throws JSONException {
-        debugStatus.put("t_waiting", totalUsersWaiting());
-        debugStatus.put("t_running", t.myThread.isAlive());
-        debugStatus.put("t_id", t.myThread.getId());
-        debugStatus.put("t_statuscode", t.statusCode);
-        debugStatus.put("t_status", t.status);
-        debugStatus.put("t_progress", t.n);
-        debugStatus.put("t_progressmax", t.maxn);
     }
 
     private String waitingString() {
@@ -494,24 +451,20 @@ public class VxmlGeneratorQueue {
             if (t.myThread.isAlive() && !t.stop) {
                 if (DEBUG) {
                     System.out.println(
-                            "Alive; stop() setting stop = true for Priority Items Summary, "
-                                    + t.taskDescription());
+                            "Alive; stop() setting stop = true for VXML, " + t.taskDescription());
                 }
                 t.stop = true;
                 t.myThread.interrupt();
                 if (DEBUG) {
                     System.out.println(
-                            "Alive; called interrupt() for Priority Items Summary, "
-                                    + t.taskDescription());
+                            "Alive; called interrupt() for VXML, " + t.taskDescription());
                 }
             } else if (DEBUG) {
-                System.out.println(
-                        "Not alive or already stopped for Priority Items Summary, "
-                                + t.taskDescription());
+                System.out.println("Not alive or already stopped for VXML, " + t.taskDescription());
             }
             entry.currentTask = null;
         } else if (DEBUG) {
-            System.out.println("Task was null in stop() for Priority Items Summary");
+            System.out.println("Task was null in stop() for VXML");
         }
     }
 
@@ -538,16 +491,11 @@ public class VxmlGeneratorQueue {
         return percent;
     }
 
+    // TODO: remove reference to VettingViewer here -- or move it to a neutral reusable class...
     private static class VVQueueLocaleBaselineCount implements VettingViewer.LocaleBaselineCount {
 
         public int getBaselineProblemCount(CLDRLocale cldrLocale) throws ExecutionException {
             return LocaleCompletion.getBaselineCount(cldrLocale);
         }
-    }
-
-    private boolean summarizeAllLocales = false;
-
-    public void setSummarizeAllLocales(boolean b) {
-        summarizeAllLocales = b;
     }
 }

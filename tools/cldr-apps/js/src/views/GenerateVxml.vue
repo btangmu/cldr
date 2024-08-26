@@ -13,7 +13,12 @@ function created() {
   cldrGenerateVxml.viewCreated(setData);
   // hasPermission = Boolean(cldrGenerateVxml.canGenerateVxml());
   hasPermission.value = Boolean(cldrGenerateVxml.canGenerateVxml());
-  console.log("In GenerateVxml created, hasPermission = " + hasPermission + " and typeof(hasPermission) = " + typeof(hasPermission));
+  console.log(
+    "In GenerateVxml created, hasPermission = " +
+      hasPermission +
+      " and typeof(hasPermission) = " +
+      typeof hasPermission
+  );
 }
 
 // onActivated, onBeforeMount? no such thing as onCreated
@@ -53,7 +58,10 @@ defineExpose({
 </script>
 
 <template>
-  <div v-if="!hasPermission">Please log in as Admin to use this feature. hasPermission: {{  hasPermission }} hasPermission.value: {{  hasPermission.value }}</div>
+  <div v-if="!hasPermission">
+    Please log in as Admin to use this feature. hasPermission:
+    {{ hasPermission }} hasPermission.value: {{ hasPermission.value }}
+  </div>
   <div v-else>
     <p v-if="status">Current Status: {{ status }}</p>
     <p v-if="message">

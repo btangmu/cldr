@@ -334,9 +334,7 @@ public class OutputFileManager {
         }
     }
 
-    /**
-     * Remove "mul", "mul_ZZ", etc.
-     */
+    /** Remove "mul", "mul_ZZ", etc. */
     private void removeMulLocales(Set<CLDRLocale> sortSet) {
         Iterator<CLDRLocale> itr = sortSet.iterator();
         while (itr.hasNext()) {
