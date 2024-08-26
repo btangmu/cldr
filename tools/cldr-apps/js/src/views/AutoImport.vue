@@ -4,7 +4,7 @@
   <div v-if="errors.length">
     <span class="autoImportErrors">Error(s):</span>
     <ul>
-      <li v-for="error in errors">{{ error }}</li>
+      <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
     </ul>
   </div>
 
