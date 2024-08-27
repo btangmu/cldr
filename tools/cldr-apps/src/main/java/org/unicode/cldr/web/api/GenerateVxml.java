@@ -64,7 +64,7 @@ public class GenerateVxml {
     private Response getVxml(CookieSession cs, VxmlRequest request) throws IOException {
         cs.userDidAction();
         Organization usersOrg = cs.user.vrOrg();
-        VxmlGeneratorQueue queue = VxmlGeneratorQueue.getInstance();
+        VxmlQueue queue = VxmlQueue.getInstance();
         QueueMemberId qmi = new QueueMemberId(cs);
         VxmlResponse vr = getVxmlResponse(queue, qmi, usersOrg, request.loadingPolicy);
         return Response.ok(vr).build();
@@ -73,22 +73,22 @@ public class GenerateVxml {
     /**
      * Get the response for VXML
      *
-     * @param queue the VxmlGeneratorQueue
+     * @param queue the VxmlQueue
      * @param qmi the QueueMemberId
      * @param usersOrg the user's organization
      * @param loadingPolicy the LoadingPolicy
      * @return the VxmlResponse
-     * @throws IOException if thrown by VxmlGeneratorQueue.getOutput
+     * @throws IOException if thrown by VxmlQueue.getOutput
      */
     private VxmlResponse getVxmlResponse(
-            VxmlGeneratorQueue queue,
+            VxmlQueue queue,
             QueueMemberId qmi,
             Organization usersOrg,
-            VxmlGeneratorQueue.LoadingPolicy loadingPolicy)
+            VxmlQueue.LoadingPolicy loadingPolicy)
             throws IOException {
         VxmlResponse response = new VxmlResponse();
-        VxmlGeneratorQueue.Args args = new VxmlGeneratorQueue.Args(qmi, usersOrg, loadingPolicy);
-        VxmlGeneratorQueue.Results results = new VxmlGeneratorQueue.Results();
+        VxmlQueue.Args args = new VxmlQueue.Args(qmi, usersOrg, loadingPolicy);
+        VxmlQueue.Results results = new VxmlQueue.Results();
         // compare VettingViewerQueue.getPriorityItemsSummaryOutput
         response.message = queue.getOutput(args, results);
         response.percent = queue.getPercent();
@@ -102,7 +102,7 @@ public class GenerateVxml {
         public VxmlResponse() {}
 
         @Schema(description = "VXML Response status enum")
-        public VxmlGeneratorQueue.Status status;
+        public VxmlQueue.Status status;
 
         @Schema(description = "Current status message")
         public String message = "";

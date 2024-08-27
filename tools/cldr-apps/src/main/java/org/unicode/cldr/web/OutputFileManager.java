@@ -34,9 +34,9 @@ import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 
 public class OutputFileManager {
 
-    private static boolean DEBUG = false;
+    private static final boolean DEBUG = false;
     private static final String XML_SUFFIX = ".xml";
-    private SurveyMain sm;
+    private final SurveyMain sm;
 
     public OutputFileManager(SurveyMain surveyMain) {
         this.sm = surveyMain;
@@ -91,6 +91,9 @@ public class OutputFileManager {
      *
      * @param request the HttpServletRequest, used for "vap"
      * @param out the Writer, to receive HTML output
+     *     <p>Invoked by pasting a url like this into a browser:
+     *     http://localhost:8080/cldr-apps/admin-OutputAllFiles.jsp?vap=...
+     *     <p>Such usage (with jsp) is obsolescent
      */
     public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
         String vap = request.getParameter("vap");
@@ -203,7 +206,6 @@ public class OutputFileManager {
      * Copy the DTD file from trunk into subfolders of the given vetdata folder ("auto" or "manual")
      *
      * @param vetdataDir the File for the vetdata directory
-     * @param common the name of the "common" folder
      * @return true for success, or false for failure
      *     <p>The dtd is required for removeEmptyFiles when it calls XMLFileReader.loadPathValues.
      *     The xml files all have something like: <!DOCTYPE ldml SYSTEM
