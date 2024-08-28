@@ -34,7 +34,7 @@ import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 
 public class OutputFileManager {
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private static final String XML_SUFFIX = ".xml";
     private final SurveyMain sm;
 
@@ -123,7 +123,7 @@ public class OutputFileManager {
     /**
      * Generate VXML
      *
-     * <p>Called by legacy outputAndVerifyAllFiles and also by modern api/GenerateVxml
+     * <p>Called by legacy outputAndVerifyAllFiles
      *
      * @param out
      * @param outputFiles
@@ -132,11 +132,29 @@ public class OutputFileManager {
      */
     public static void generateVxml(
             Writer out, boolean outputFiles, boolean removeEmpty, boolean verifyConsistent) {
+        generateVxml(null, out, outputFiles, removeEmpty, verifyConsistent);
+    }
+
+    /**
+     * Generate VXML
+     *
+     * <p>Called indirectly by modern api/GenerateVxml
+     *
+     * @param vxmlGenerator the VxmlGenerator
+     * @param out
+     * @param outputFiles
+     * @param removeEmpty
+     * @param verifyConsistent
+     */
+    public static void generateVxml(
+            VxmlGenerator vxmlGenerator,
+            Writer out,
+            boolean outputFiles,
+            boolean removeEmpty,
+            boolean verifyConsistent) {
         try {
             /*
              * Sync on OutputFileManager.class here prevents re-entrance if invoked repeatedly before completion.
-             * Performance problem if run while Survey Tool has multiple users/requests?
-             * Completion of http request/response may take over ten minutes! TODO: use ajax.
              */
             synchronized (OutputFileManager.class) {
                 SurveyMain sm = CookieSession.sm;
@@ -151,7 +169,7 @@ public class OutputFileManager {
                 }
                 out.write("<p>Created new directory: " + vetdataDir.toString() + "</p>");
 
-                if (outputFiles && !ofm.outputAllFiles(out, vetdataDir)) {
+                if (outputFiles && !ofm.outputAllFiles(out, vetdataDir, vxmlGenerator)) {
                     out.write("File output failed.");
                     return;
                 }
@@ -250,11 +268,10 @@ public class OutputFileManager {
      *
      * @param out the Writer, to receive HTML output
      * @param vetDataDir the folder in which to write
+     * @param vxmlGenerator the VxmlGenerator, or null if using jsp
      * @return true for success, false for failure
-     *     <p>This function was first created using code moved here from admin-OutputAllFiles.jsp.
-     *     Reference: CLDR-12016 and CLDR-11877 and CLDR-11850
      */
-    private boolean outputAllFiles(Writer out, File vetDataDir) {
+    private boolean outputAllFiles(Writer out, File vetDataDir, VxmlGenerator vxmlGenerator) {
         try {
             long start = System.currentTimeMillis();
             ElapsedTimer overallTimer =
@@ -296,6 +313,9 @@ public class OutputFileManager {
                     if (kind == OutputFileManager.Kind.vxml
                             || kind == OutputFileManager.Kind.pxml) {
                         System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
+                        if (vxmlGenerator != null) {
+                            vxmlGenerator.update(loc);
+                        }
                         ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
                         File f = writeManualOutputFile(vetDataDir, loc, kind);
                         if (f == null) {

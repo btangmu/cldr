@@ -39,12 +39,8 @@ function canGenerateVxml() {
 }
 
 function viewCreated(setData) {
-  console.log("Hello from cldrGenerateVxml.viewCreated");
   callbackToSetData = setData;
   const perm = cldrStatus.getPermissions();
-  console.log(
-    "In cldrGenerateVxml.viewCreated, perm?.userIsAdmin = " + perm?.userIsAdmin
-  );
   if (perm?.userIsAdmin) {
     canGenerate = true;
   }

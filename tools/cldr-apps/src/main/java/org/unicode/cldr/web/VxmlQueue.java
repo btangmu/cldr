@@ -1,9 +1,6 @@
 package org.unicode.cldr.web;
 
-import com.ibm.icu.dev.util.ElapsedTimer;
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -12,6 +9,7 @@ import java.util.logging.Logger;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.TimeDiff;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
+import org.unicode.cldr.web.api.GenerateVxml;
 
 public class VxmlQueue {
     private static final Logger logger = SurveyLog.forClass(VxmlQueue.class);
@@ -30,35 +28,6 @@ public class VxmlQueue {
      */
     public static VxmlQueue getInstance() {
         return VxmlQueueHelper.instance;
-    }
-
-    private static int gMax = -1;
-
-    /**
-     * Count the # of paths in this CLDRFile
-     *
-     * @param f
-     * @return
-     */
-    private static int pathCount(CLDRFile f) {
-        int jj = 0;
-        for (@SuppressWarnings("unused") String s : f) {
-            jj++;
-        }
-        return jj;
-    }
-
-    /**
-     * Get the max expected items in a CLDRFile
-     *
-     * @param f
-     * @return
-     */
-    private synchronized int getMax(CLDRFile f) {
-        if (gMax == -1) {
-            gMax = pathCount(f);
-        }
-        return gMax;
     }
 
     /** A unique key for storing QueueEntry objects in QueueMemberId objects */
@@ -86,8 +55,9 @@ public class VxmlQueue {
         FORCESTOP
     }
 
-    private static class VVOutput {
-        public VVOutput(StringBuffer s) {
+    // Compare VettingViewerQueue.VVOutput
+    private static class VxmlOutput {
+        public VxmlOutput(StringBuffer s) {
             output = s;
         }
 
@@ -96,7 +66,9 @@ public class VxmlQueue {
 
     private static class QueueEntry {
         private Task currentTask = null;
-        private final Map<Organization, VVOutput> output = new TreeMap<>();
+        // TODO: no need for Organization here. This is based on VettingViewerQueue.QueueEntry
+        // It's doubtful that any map is needed here at all...
+        private final Map<Organization, VxmlOutput> output = new TreeMap<>();
     }
 
     /** Semaphore to ensure that only one vetter accesses VV at a time. */
@@ -132,17 +104,16 @@ public class VxmlQueue {
                 n++;
                 /*
                  * TODO: explain/encapsulate these magic numbers! 5? 10? 1200? 500?
-                 * Reference: https://unicode-org.atlassian.net/browse/CLDR-15369
                  */
                 if (n > (maxn - 5)) {
                     maxn = n + 10;
                 }
-                if ((now - last) > 1200) {
+                if ((now - last) > 1 /* was 1200 */) {
                     if (DEBUG) {
                         System.out.println("Task.nudge() for VXML, " + taskDescription());
                     }
                     last = now;
-                    if (n > 500) {
+                    if (n > 1 /* was 500 */) {
                         progress.update(n, setRemStr(now));
                     } else {
                         progress.update(n);
@@ -165,7 +136,6 @@ public class VxmlQueue {
         private boolean stop = false;
 
         private final QueueEntry entry;
-        private final SurveyMain sm;
         private int maxn;
         private int n = 0;
         private long start = -1;
@@ -180,19 +150,22 @@ public class VxmlQueue {
 
         private final StringBuffer aBuffer = new StringBuffer();
 
+        private final GenerateVxml.VxmlResponse response;
+
         /**
          * Construct a Runnable object specifically for VXML
          *
          * @param entry the QueueEntry
-         * @param usersOrg
+         * @param usersOrg the user's organization
+         * @param response the VxmlResponse to modify
          */
-        private Task(QueueEntry entry, Organization usersOrg) {
+        private Task(QueueEntry entry, Organization usersOrg, GenerateVxml.VxmlResponse response) {
             if (DEBUG) {
                 System.out.println("Creating task for VXML");
             }
-            this.sm = CookieSession.sm;
             this.entry = entry;
             this.usersOrg = usersOrg;
+            this.response = response;
         }
 
         @Override
@@ -260,15 +233,15 @@ public class VxmlQueue {
             status = "Beginning Process, Calculating";
             // compare VettingViewer class
             VxmlGenerator vg = new VxmlGenerator();
+
+            // TODO: some code here duplicates what is in generateVxml...
             Set<CLDRLocale> sortSet = new TreeSet<>();
             sortSet.addAll(SurveyMain.getLocalesSet());
             // skip "en" and "root", since they should never be changed by the Survey Tool
             sortSet.remove(CLDRLocale.getInstance("en"));
             sortSet.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
             removeMulLocales(sortSet);
-            int localeCount = sortSet.size();
-            int pathCount = getMax(sm.getEnglishFile());
-            maxn = localeCount * pathCount;
+            maxn = sortSet.size();
             progress.update("Blah blah in processCriticalWork"); // TODO
             statusCode = Status.PROCESSING;
             start = System.currentTimeMillis();
@@ -279,23 +252,13 @@ public class VxmlQueue {
             if (DEBUG) {
                 System.out.println("Starting generation of VXML, " + taskDescription());
             }
-            String output;
-            try (Writer out = new StringWriter()) {
-                OutputFileManager.generateVxml(
-                        out, true, // outputFiles
-                        true, // removeEmpty
-                        true); // verifyConsistent
-                output = out.toString();
-            } catch (Exception e) {
-                throw new ExecutionException(e);
-            }
-            System.out.println("VXML output = " + output);
+            // Compare generatePriorityItemsSummary
+            vg.generateVxml(sortSet, aBuffer, response);
             if (myThread.isAlive()) {
                 if (DEBUG) {
                     System.out.println("Finished generation of VXML, " + taskDescription());
                 }
-                aBuffer.append("<hr/>Processing time: " + ElapsedTimer.elapsedTime(start));
-                entry.output.put(usersOrg, new VVOutput(aBuffer));
+                entry.output.put(usersOrg, new VxmlOutput(aBuffer));
             } else {
                 if (DEBUG) {
                     System.out.println(
@@ -328,9 +291,9 @@ public class VxmlQueue {
     }
 
     /** Arguments for getOutput */
-    public static class Args {
+    public class Args {
         private final QueueMemberId qmi;
-        private final Organization usersOrg;
+        private final Organization usersOrg; // TODO: superfluous?
         private final LoadingPolicy loadingPolicy;
 
         public Args(QueueMemberId qmi, Organization usersOrg, LoadingPolicy loadingPolicy) {
@@ -346,7 +309,7 @@ public class VxmlQueue {
      * <p>These fields get filled in by getOutput, and referenced by the caller after getOutput
      * returns
      */
-    public static class Results {
+    public class Results {
         public Status status = Status.STOPPED;
         public Appendable output = new StringBuilder();
     }
@@ -366,16 +329,17 @@ public class VxmlQueue {
      *
      * @param args the VxmlQueue.Args
      * @param results the VxmlQueue.Results
+     * @param response the VxmlResponse to fill in
      * @return the status message, or null
      * @throws IOException
      *     <p>This is modeled on VettingViewerQueue.getPriorityItemsSummaryOutput
      */
-    public synchronized String getOutput(VxmlQueue.Args args, VxmlQueue.Results results)
-            throws IOException {
+    public synchronized String getOutput(
+            Args args, Results results, GenerateVxml.VxmlResponse response) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {
-            VVOutput res = entry.output.get(args.usersOrg);
+            VxmlOutput res = entry.output.get(args.usersOrg);
             if (res != null) {
                 setPercent(100);
                 results.status = Status.READY;
@@ -389,7 +353,6 @@ public class VxmlQueue {
                 return VXML_MESSAGE_COMPLETE;
             }
         } else {
-            /* force stop */
             if (DEBUG) {
                 final String desc = (t == null) ? "[null task]" : t.taskDescription();
                 System.out.println("Forced stop of VXML, " + desc);
@@ -424,7 +387,7 @@ public class VxmlQueue {
         // TODO: May be better to use SurveyThreadManager.getExecutorService().invoke() (rather than
         // a raw thread) but would require
         // some restructuring
-        t = entry.currentTask = new Task(entry, args.usersOrg);
+        t = entry.currentTask = new Task(entry, args.usersOrg, response);
         t.myThread = SurveyThreadManager.getThreadFactory().newThread(t);
         if (DEBUG) {
             System.out.println("Starting new thread for VXML, " + t.taskDescription());

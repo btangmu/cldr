@@ -87,10 +87,11 @@ public class GenerateVxml {
             VxmlQueue.LoadingPolicy loadingPolicy)
             throws IOException {
         VxmlResponse response = new VxmlResponse();
-        VxmlQueue.Args args = new VxmlQueue.Args(qmi, usersOrg, loadingPolicy);
-        VxmlQueue.Results results = new VxmlQueue.Results();
+        VxmlQueue.Args args = queue.new Args(qmi, usersOrg, loadingPolicy);
+        VxmlQueue.Results results = queue.new Results();
+
         // compare VettingViewerQueue.getPriorityItemsSummaryOutput
-        response.message = queue.getOutput(args, results);
+        response.message = queue.getOutput(args, results, response);
         response.percent = queue.getPercent();
         response.status = results.status;
         response.output = results.output.toString();

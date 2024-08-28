@@ -8,17 +8,11 @@ let errMessage = ref("");
 let message = ref("");
 let output = ref("");
 let status = ref("READY");
+let percent = ref(0);
 
 function created() {
   cldrGenerateVxml.viewCreated(setData);
-  // hasPermission = Boolean(cldrGenerateVxml.canGenerateVxml());
   hasPermission.value = Boolean(cldrGenerateVxml.canGenerateVxml());
-  console.log(
-    "In GenerateVxml created, hasPermission = " +
-      hasPermission +
-      " and typeof(hasPermission) = " +
-      typeof hasPermission
-  );
 }
 
 // onActivated, onBeforeMount? no such thing as onCreated
@@ -27,28 +21,28 @@ onMounted(created);
 function start() {
   if (hasPermission) {
     cldrGenerateVxml.start();
-    status = "WAITING";
+    status.value = "WAITING";
   }
 }
 
 function stop() {
   cldrGenerateVxml.stop();
-  status = "READY";
+  status.value = "READY";
 }
 
 function canStop() {
-  return status === "WAITING" || status === "PROCESSING";
+  return status.value === "WAITING" || status.value === "PROCESSING";
 }
 
 function setData(data) {
-  message = data.message;
-  percent = data.percent;
+  message.value = data.message;
+  percent.value = data.percent;
   if (data.status) {
-    status = data.status;
+    status.value = data.status;
   }
   if (data.output) {
-    output = data.output;
-    status = "READY";
+    output.value = data.output;
+    status.value = "READY";
   }
 }
 
@@ -58,10 +52,7 @@ defineExpose({
 </script>
 
 <template>
-  <div v-if="!hasPermission">
-    Please log in as Admin to use this feature. hasPermission:
-    {{ hasPermission }} hasPermission.value: {{ hasPermission.value }}
-  </div>
+  <div v-if="!hasPermission">Please log in as Admin to use this feature.</div>
   <div v-else>
     <p v-if="status">Current Status: {{ status }}</p>
     <p v-if="message">
@@ -78,6 +69,9 @@ defineExpose({
   <div v-if="errMessage">
     {{ errMessage }}
   </div>
+  <div v-if="percent" class="progressPercent">
+    <a-progress :percent="percent" />
+  </div>
   <span v-html="output"></span>
 </template>
 
@@ -85,5 +79,9 @@ defineExpose({
 button,
 select {
   margin-top: 1ex;
+}
+
+.progressPercent div {
+  margin: 1ex;
 }
 </style>
