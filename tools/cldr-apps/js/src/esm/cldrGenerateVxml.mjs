@@ -38,13 +38,12 @@ function canGenerateVxml() {
   return canGenerate;
 }
 
-function viewCreated(setData) {
+function viewMounted(setData) {
   callbackToSetData = setData;
   const perm = cldrStatus.getPermissions();
   if (perm?.userIsAdmin) {
     canGenerate = true;
   }
-  // fetchStatus();
 }
 
 function fetchStatus() {
@@ -83,9 +82,17 @@ function setVxmlData(data) {
     return;
   }
   callbackToSetData(data);
+  if (Number(data.percent) === 100) {
+    console.log(
+      "cldrGenerateVxml.setVxmlData got percent 100 and latestArgs.loadingPolicy = " +
+        latestArgs.loadingPolicy +
+        " and message = " +
+        data.message
+    );
+  }
   if (latestArgs.loadingPolicy !== LOAD_FORCESTOP) {
     window.setTimeout(fetchStatus.bind(this), NORMAL_RETRY);
   }
 }
 
-export { canGenerateVxml, start, stop, viewCreated };
+export { canGenerateVxml, start, stop, viewMounted };

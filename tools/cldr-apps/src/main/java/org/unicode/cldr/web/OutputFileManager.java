@@ -280,18 +280,12 @@ public class OutputFileManager {
 
             out.write("<ol>\n");
 
-            Set<CLDRLocale> sortSet = new TreeSet<>();
-            sortSet.addAll(SurveyMain.getLocalesSet());
-
-            /*
-             * skip "en" and "root", since they should never be changed by the Survey Tool
-             *
-             * TODO: "en.xml and root.xml ... should be copied verbatim."
-             * Reference: https://unicode-org.atlassian.net/browse/CLDR-14953
-             */
-            sortSet.remove(CLDRLocale.getInstance("en"));
-            sortSet.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
-            removeMulLocales(sortSet);
+            Set<CLDRLocale> sortSet;
+            if (vxmlGenerator != null) {
+                sortSet = vxmlGenerator.getSortSet();
+            } else {
+                sortSet = createVxmlLocaleSet();
+            }
             for (CLDRLocale loc : sortSet) {
                 out.write("<li>" + loc.getDisplayName() + "<br/>\n");
                 for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {
@@ -313,9 +307,6 @@ public class OutputFileManager {
                     if (kind == OutputFileManager.Kind.vxml
                             || kind == OutputFileManager.Kind.pxml) {
                         System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
-                        if (vxmlGenerator != null) {
-                            vxmlGenerator.update(loc);
-                        }
                         ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
                         File f = writeManualOutputFile(vetDataDir, loc, kind);
                         if (f == null) {
@@ -324,6 +315,9 @@ public class OutputFileManager {
                         }
                         numupd++;
                         System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
+                    }
+                    if (vxmlGenerator != null) {
+                        vxmlGenerator.update(loc);
                     }
                     out.write("</span>  &nbsp;");
                 }
@@ -356,15 +350,14 @@ public class OutputFileManager {
         }
     }
 
-    /** Remove "mul", "mul_ZZ", etc. */
-    private void removeMulLocales(Set<CLDRLocale> sortSet) {
-        Iterator<CLDRLocale> itr = sortSet.iterator();
-        while (itr.hasNext()) {
-            CLDRLocale loc = itr.next();
-            if (loc.getBaseName().startsWith(LocaleNames.MUL)) {
-                itr.remove();
-            }
-        }
+    public static Set<CLDRLocale> createVxmlLocaleSet() {
+        Set<CLDRLocale> set = new TreeSet<>(SurveyMain.getLocalesSet());
+        // skip "en" and "root", since they should never be changed by the Survey Tool
+        set.remove(CLDRLocale.getInstance("en"));
+        set.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
+        // Remove "mul", "mul_ZZ", etc.
+        set.removeIf(loc -> loc.getBaseName().startsWith(LocaleNames.MUL));
+        return set;
     }
 
     /**

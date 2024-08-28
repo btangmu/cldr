@@ -11,7 +11,6 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import org.unicode.cldr.util.Organization;
 import org.unicode.cldr.web.*;
 
 @ApplicationScoped
@@ -55,19 +54,14 @@ public class GenerateVxml {
                     || !SurveyMain.triedToStartUp()) {
                 return STError.surveyNotQuiteReady();
             }
-            return getVxml(cs, request);
+            cs.userDidAction();
+            VxmlQueue queue = VxmlQueue.getInstance();
+            QueueMemberId qmi = new QueueMemberId(cs);
+            VxmlResponse vr = getVxmlResponse(queue, qmi, request.loadingPolicy);
+            return Response.ok(vr).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
         }
-    }
-
-    private Response getVxml(CookieSession cs, VxmlRequest request) throws IOException {
-        cs.userDidAction();
-        Organization usersOrg = cs.user.vrOrg();
-        VxmlQueue queue = VxmlQueue.getInstance();
-        QueueMemberId qmi = new QueueMemberId(cs);
-        VxmlResponse vr = getVxmlResponse(queue, qmi, usersOrg, request.loadingPolicy);
-        return Response.ok(vr).build();
     }
 
     /**
@@ -75,23 +69,19 @@ public class GenerateVxml {
      *
      * @param queue the VxmlQueue
      * @param qmi the QueueMemberId
-     * @param usersOrg the user's organization
      * @param loadingPolicy the LoadingPolicy
      * @return the VxmlResponse
      * @throws IOException if thrown by VxmlQueue.getOutput
      */
     private VxmlResponse getVxmlResponse(
-            VxmlQueue queue,
-            QueueMemberId qmi,
-            Organization usersOrg,
-            VxmlQueue.LoadingPolicy loadingPolicy)
+            VxmlQueue queue, QueueMemberId qmi, VxmlQueue.LoadingPolicy loadingPolicy)
             throws IOException {
         VxmlResponse response = new VxmlResponse();
-        VxmlQueue.Args args = queue.new Args(qmi, usersOrg, loadingPolicy);
-        VxmlQueue.Results results = queue.new Results();
+        VxmlQueue.Args args = new VxmlQueue.Args(qmi, loadingPolicy);
+        VxmlQueue.Results results = new VxmlQueue.Results();
 
         // compare VettingViewerQueue.getPriorityItemsSummaryOutput
-        response.message = queue.getOutput(args, results, response);
+        response.message = queue.getOutput(args, results);
         response.percent = queue.getPercent();
         response.status = results.status;
         response.output = results.output.toString();

@@ -9,12 +9,11 @@ import java.util.logging.Logger;
 import org.unicode.cldr.util.*;
 import org.unicode.cldr.util.TimeDiff;
 import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
-import org.unicode.cldr.web.api.GenerateVxml;
 
 public class VxmlQueue {
     private static final Logger logger = SurveyLog.forClass(VxmlQueue.class);
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private static final String WAITING_IN_LINE_MESSAGE = "Waiting in line";
 
     private static final class VxmlQueueHelper {
@@ -55,30 +54,20 @@ public class VxmlQueue {
         FORCESTOP
     }
 
-    // Compare VettingViewerQueue.VVOutput
-    private static class VxmlOutput {
-        public VxmlOutput(StringBuffer s) {
-            output = s;
-        }
-
-        private final StringBuffer output;
-    }
-
     private static class QueueEntry {
         private Task currentTask = null;
-        // TODO: no need for Organization here. This is based on VettingViewerQueue.QueueEntry
-        // It's doubtful that any map is needed here at all...
-        private final Map<Organization, VxmlOutput> output = new TreeMap<>();
+        private String output = "";
     }
 
-    /** Semaphore to ensure that only one vetter accesses VV at a time. */
+    /** Semaphore to ensure that only one vetter generates VXML at a time. */
     private static final Semaphore OnlyOneVetter = new Semaphore(1);
 
-    private class Task implements Runnable {
-        /** A VxmlGenerator.ProgressCallback that updates a CLDRProgressTask */
-        private final class CLDRProgressCallback extends VxmlGenerator.ProgressCallback {
+    public static class Task implements Runnable {
+        public final class CLDRProgressCallback extends VxmlGenerator.ProgressCallback {
             private final CLDRProgressTask progress;
             private final Thread thread;
+
+            private String localeName = "";
 
             private CLDRProgressCallback(CLDRProgressTask progress, Thread thread) {
                 this.progress = progress;
@@ -91,19 +80,22 @@ public class VxmlQueue {
                 String remStr = "Estimated completion: " + TimeDiff.timeDiff(now, now - rem);
                 if (rem <= 1500) { // Less than 1.5 seconds remaining
                     remStr = "Finishing...";
+                } else if (!this.localeName.isEmpty()) {
+                    remStr += " -- Locale " + this.localeName;
                 }
                 setStatus(remStr);
                 return remStr;
             }
 
-            public void nudge() {
+            public void nudge(CLDRLocale loc) {
                 if (!myThread.isAlive()) {
                     throw new RuntimeException("Not Running- stop now.");
                 }
+                this.localeName = loc.getDisplayName();
                 long now = System.currentTimeMillis();
                 n++;
                 /*
-                 * TODO: explain/encapsulate these magic numbers! 5? 10? 1200? 500?
+                 * TODO: explain/encapsulate these magic numbers!
                  */
                 if (n > (maxn - 5)) {
                     maxn = n + 10;
@@ -121,11 +113,6 @@ public class VxmlQueue {
                 }
             }
 
-            public void done() {
-                // note: this method is possibly never called
-                progress.update("Done!");
-            }
-
             public boolean isStopped() {
                 // if the calling thread is gone, stop processing
                 return stop || !(thread.isAlive());
@@ -140,7 +127,6 @@ public class VxmlQueue {
         private int n = 0;
         private long start = -1;
         private long last;
-        private final Organization usersOrg;
         private String status = WAITING_IN_LINE_MESSAGE;
         private Status statusCode = Status.WAITING; // Need to start out as waiting.
 
@@ -150,35 +136,29 @@ public class VxmlQueue {
 
         private final StringBuffer aBuffer = new StringBuffer();
 
-        private final GenerateVxml.VxmlResponse response;
+        private final Results results;
 
         /**
          * Construct a Runnable object specifically for VXML
          *
          * @param entry the QueueEntry
-         * @param usersOrg the user's organization
-         * @param response the VxmlResponse to modify
+         * @param results the VxmlResults to modify
          */
-        private Task(QueueEntry entry, Organization usersOrg, GenerateVxml.VxmlResponse response) {
+        private Task(QueueEntry entry, Results results) {
             if (DEBUG) {
                 System.out.println("Creating task for VXML");
             }
             this.entry = entry;
-            this.usersOrg = usersOrg;
-            this.response = response;
+            this.results = results;
         }
 
         @Override
         public void run() {
             statusCode = Status.WAITING;
-            /*
-             * TODO: explain this magic number! Why add 100?
-             * Reference: https://unicode-org.atlassian.net/browse/CLDR-15369
-             */
-            final CLDRProgressTask progress = CookieSession.sm.openProgress("vv: VXML", maxn + 100);
+            final CLDRProgressTask progress = CookieSession.sm.openProgress("VXML", maxn);
 
             if (DEBUG) {
-                System.out.println("Starting up vv task: VXML, " + taskDescription());
+                System.out.println("Starting up VXML task, " + taskDescription());
             }
 
             try {
@@ -233,16 +213,9 @@ public class VxmlQueue {
             status = "Beginning Process, Calculating";
             // compare VettingViewer class
             VxmlGenerator vg = new VxmlGenerator();
-
-            // TODO: some code here duplicates what is in generateVxml...
-            Set<CLDRLocale> sortSet = new TreeSet<>();
-            sortSet.addAll(SurveyMain.getLocalesSet());
-            // skip "en" and "root", since they should never be changed by the Survey Tool
-            sortSet.remove(CLDRLocale.getInstance("en"));
-            sortSet.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
-            removeMulLocales(sortSet);
+            Set<CLDRLocale> sortSet = OutputFileManager.createVxmlLocaleSet();
             maxn = sortSet.size();
-            progress.update("Blah blah in processCriticalWork"); // TODO
+            progress.update("Blah blah in processCriticalWork"); // TODO -- no effect, not needed?
             statusCode = Status.PROCESSING;
             start = System.currentTimeMillis();
             last = start;
@@ -253,27 +226,18 @@ public class VxmlQueue {
                 System.out.println("Starting generation of VXML, " + taskDescription());
             }
             // Compare generatePriorityItemsSummary
-            vg.generateVxml(sortSet, aBuffer, response);
+            vg.generate(sortSet);
             if (myThread.isAlive()) {
                 if (DEBUG) {
                     System.out.println("Finished generation of VXML, " + taskDescription());
                 }
-                entry.output.put(usersOrg, new VxmlOutput(aBuffer));
+                // TODO: is one of these redundant/superfluous?
+                entry.output = aBuffer.toString();
+                results.output = aBuffer;
             } else {
                 if (DEBUG) {
                     System.out.println(
                             "Stopped generation of VXML (thread is dead), " + taskDescription());
-                }
-            }
-        }
-
-        /** Remove "mul", "mul_ZZ", etc. */
-        private void removeMulLocales(Set<CLDRLocale> sortSet) {
-            Iterator<CLDRLocale> itr = sortSet.iterator();
-            while (itr.hasNext()) {
-                CLDRLocale loc = itr.next();
-                if (loc.getBaseName().startsWith(LocaleNames.MUL)) {
-                    itr.remove();
                 }
             }
         }
@@ -291,14 +255,12 @@ public class VxmlQueue {
     }
 
     /** Arguments for getOutput */
-    public class Args {
+    public static class Args {
         private final QueueMemberId qmi;
-        private final Organization usersOrg; // TODO: superfluous?
         private final LoadingPolicy loadingPolicy;
 
-        public Args(QueueMemberId qmi, Organization usersOrg, LoadingPolicy loadingPolicy) {
+        public Args(QueueMemberId qmi, LoadingPolicy loadingPolicy) {
             this.qmi = qmi;
-            this.usersOrg = usersOrg;
             this.loadingPolicy = loadingPolicy;
         }
     }
@@ -309,7 +271,7 @@ public class VxmlQueue {
      * <p>These fields get filled in by getOutput, and referenced by the caller after getOutput
      * returns
      */
-    public class Results {
+    public static class Results {
         public Status status = Status.STOPPED;
         public Appendable output = new StringBuilder();
     }
@@ -329,27 +291,24 @@ public class VxmlQueue {
      *
      * @param args the VxmlQueue.Args
      * @param results the VxmlQueue.Results
-     * @param response the VxmlResponse to fill in
      * @return the status message, or null
      * @throws IOException
      *     <p>This is modeled on VettingViewerQueue.getPriorityItemsSummaryOutput
      */
-    public synchronized String getOutput(
-            Args args, Results results, GenerateVxml.VxmlResponse response) throws IOException {
+    public synchronized String getOutput(Args args, Results results) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {
-            VxmlOutput res = entry.output.get(args.usersOrg);
-            if (res != null) {
+            String res = entry.output;
+            if (!res.isEmpty()) {
                 setPercent(100);
                 results.status = Status.READY;
-                results.output.append(res.output);
+                results.output.append(res);
                 if (DEBUG) {
                     final String desc = (t == null) ? "[null task]" : t.taskDescription();
                     System.out.println("Got result, calling stop for VXML, " + desc);
                 }
                 stop(entry);
-                entry.output.remove(args.usersOrg);
                 return VXML_MESSAGE_COMPLETE;
             }
         } else {
@@ -358,7 +317,6 @@ public class VxmlQueue {
                 System.out.println("Forced stop of VXML, " + desc);
             }
             stop(entry);
-            entry.output.remove(args.usersOrg);
             results.status = Status.STOPPED;
             return VXML_MESSAGE_STOPPED_ON_REQUEST;
         }
@@ -384,10 +342,10 @@ public class VxmlQueue {
             return VXML_MESSAGE_NOT_LOADING;
         }
 
-        // TODO: May be better to use SurveyThreadManager.getExecutorService().invoke() (rather than
-        // a raw thread) but would require
-        // some restructuring
-        t = entry.currentTask = new Task(entry, args.usersOrg, response);
+        // Note: May be better to use SurveyThreadManager.getExecutorService().invoke() (rather than
+        // a raw thread) but would require some restructuring; compare
+        // VettingViewerQueue.getPriorityItemsSummaryOutput
+        t = entry.currentTask = new Task(entry, results);
         t.myThread = SurveyThreadManager.getThreadFactory().newThread(t);
         if (DEBUG) {
             System.out.println("Starting new thread for VXML, " + t.taskDescription());

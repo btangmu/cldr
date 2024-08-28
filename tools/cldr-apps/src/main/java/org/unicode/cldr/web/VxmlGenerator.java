@@ -5,13 +5,16 @@ import java.io.Writer;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.unicode.cldr.util.CLDRLocale;
-import org.unicode.cldr.web.api.GenerateVxml;
 
 // compare VettingViewer class
 public class VxmlGenerator {
-    public void generateVxml(
-            Set<CLDRLocale> sortSet, StringBuffer aBuffer, GenerateVxml.VxmlResponse response)
+
+    private Set<CLDRLocale> sortSet = null;
+
+    public void generate(
+            Set<CLDRLocale> sortSet)
             throws ExecutionException {
+        this.sortSet = sortSet;
         try (Writer out = new StringWriter()) {
             // TODO: get the booleans somewhere, or remove the parameters
             // -- in practice, we want them all true
@@ -19,26 +22,25 @@ public class VxmlGenerator {
                     this, out, true, // outputFiles
                     true, // removeEmpty
                     true); // verifyConsistent
-            response.output = out.toString();
         } catch (Exception e) {
             throw new ExecutionException(e);
         }
+    }
+
+    public Set<CLDRLocale> getSortSet() {
+        return sortSet;
     }
 
     public void update(CLDRLocale loc) {
         if (progressCallback.isStopped()) {
             throw new RuntimeException("Requested to stop");
         }
-        progressCallback.nudge(); // Let the user know we're moving along
+        progressCallback.nudge(loc); // Let the user know we're moving along
     }
 
     /** Class that allows the relaying of progress information */
     public static class ProgressCallback {
-        /**
-         * Note any progress. This will be called before any output is produced. It will be called
-         * approximately once per locale.
-         */
-        public void nudge() {}
+        public void nudge(CLDRLocale loc) {}
 
         /** Called when all operations are complete. */
         public void done() {}
@@ -46,7 +48,7 @@ public class VxmlGenerator {
         /**
          * Return true to cause an early stop.
          *
-         * @return
+         * @return true or false
          */
         public boolean isStopped() {
             return false;

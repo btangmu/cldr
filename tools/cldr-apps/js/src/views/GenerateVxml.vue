@@ -4,19 +4,17 @@ import { onMounted, ref } from "vue";
 import * as cldrGenerateVxml from "../esm/cldrGenerateVxml.mjs";
 
 let hasPermission = ref(false);
-let errMessage = ref("");
 let message = ref("");
 let output = ref("");
 let status = ref("READY");
 let percent = ref(0);
 
-function created() {
-  cldrGenerateVxml.viewCreated(setData);
+function mounted() {
+  cldrGenerateVxml.viewMounted(setData);
   hasPermission.value = Boolean(cldrGenerateVxml.canGenerateVxml());
 }
 
-// onActivated, onBeforeMount? no such thing as onCreated
-onMounted(created);
+onMounted(mounted);
 
 function start() {
   if (hasPermission) {
@@ -66,9 +64,6 @@ defineExpose({
       </button>
     </p>
   </div>
-  <div v-if="errMessage">
-    {{ errMessage }}
-  </div>
   <div v-if="percent" class="progressPercent">
     <a-progress :percent="percent" />
   </div>
@@ -76,12 +71,13 @@ defineExpose({
 </template>
 
 <style scoped>
-button,
+/* button,
 select {
   margin-top: 1ex;
-}
+} */
 
 .progressPercent div {
-  margin: 1ex;
+  /* margin: 3ex; */
+  width: 90%;
 }
 </style>
