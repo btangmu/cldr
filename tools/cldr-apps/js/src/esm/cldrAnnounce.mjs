@@ -10,7 +10,7 @@ import * as cldrStatus from "./cldrStatus.mjs";
  * This should be false for production. It can be made true during debugging, which
  * may be useful for performance testing.
  */
-const DISABLE_ANNOUNCEMENTS = false;
+const DISABLE_ANNOUNCEMENTS = true;
 
 const CLDR_ANNOUNCE_DEBUG = false;
 

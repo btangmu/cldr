@@ -228,12 +228,13 @@ public class VxmlQueue {
             // Compare generatePriorityItemsSummary
             vg.generate(sortSet);
             if (myThread.isAlive()) {
-                if (DEBUG) {
-                    System.out.println("Finished generation of VXML, " + taskDescription());
-                }
                 // TODO: is one of these redundant/superfluous?
                 entry.output = aBuffer.toString();
                 results.output = aBuffer;
+                if (DEBUG) {
+                    System.out.println("Finished generation of VXML, " + taskDescription());
+                    System.out.println("processCriticalWork set entry.output = " + entry.output);
+                }
             } else {
                 if (DEBUG) {
                     System.out.println(

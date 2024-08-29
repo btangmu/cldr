@@ -1830,7 +1830,7 @@ public class SurveyAjax extends HttpServlet {
             ps = DBUtils.prepareStatementWithArgs(conn, sql, locale.getBaseName(), xpathId);
             DBUtils.setStringUTF8(ps, 3, unprocessedValue);
             ps.executeUpdate();
-            conn.commit();
+            DBUtils.commit(conn);
         } finally {
             DBUtils.close(ps, conn);
         }
@@ -2122,14 +2122,14 @@ public class SurveyAjax extends HttpServlet {
                                 conn,
                                 "INSERT INTO " + autoImportTable + " VALUES (" + userId + ")");
                 count = ps.executeUpdate();
-                conn.commit();
+                DBUtils.commit(conn);
             } else if ("clear".equals(action)) {
                 conn = DBUtils.getInstance().getDBConnection();
                 ps =
                         DBUtils.prepareStatementWithArgs(
                                 conn, "DELETE FROM " + autoImportTable + " WHERE userid=" + userId);
                 count = ps.executeUpdate();
-                conn.commit();
+                DBUtils.commit(conn);
             }
         } catch (SQLException e) {
             SurveyLog.logException(logger, e, "SQL exception: " + autoImportTable);

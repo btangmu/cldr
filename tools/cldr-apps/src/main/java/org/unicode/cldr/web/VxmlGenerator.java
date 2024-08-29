@@ -11,9 +11,7 @@ public class VxmlGenerator {
 
     private Set<CLDRLocale> sortSet = null;
 
-    public void generate(
-            Set<CLDRLocale> sortSet)
-            throws ExecutionException {
+    public void generate(Set<CLDRLocale> sortSet) throws ExecutionException {
         this.sortSet = sortSet;
         try (Writer out = new StringWriter()) {
             // TODO: get the booleans somewhere, or remove the parameters

@@ -1020,7 +1020,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                     clearFlag(conn, locale, xpathId);
                     didClearFlag = true;
                 }
-                conn.commit();
+                DBUtils.commit(conn);
             } catch (SQLException e) {
                 SurveyLog.logException(logger, e, "Exception in saveVoteToDb");
                 SurveyMain.busted("Could not vote for value in locale " + locale, e);
@@ -1488,7 +1488,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_VALUE);
             } else if (!DBUtils.tableHasColumn(
                     conn, DBUtils.Table.VOTE_VALUE.toString(), VOTE_TYPE)) {
@@ -1502,7 +1502,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null;
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println(
                         "Added column " + VOTE_TYPE + " to table " + DBUtils.Table.VOTE_VALUE);
             }
@@ -1538,7 +1538,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_VALUE_ALT);
             }
             if (!DBUtils.hasTable(DBUtils.Table.VOTE_FLAGGED.toString())) {
@@ -1567,7 +1567,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_FLAGGED);
             }
             if (!DBUtils.hasTable(DBUtils.Table.IMPORT.toString())) {
@@ -1605,7 +1605,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.IMPORT);
             }
             if (!DBUtils.hasTable(DBUtils.Table.IMPORT_AUTO.toString())) {
@@ -1631,7 +1631,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.IMPORT_AUTO);
             }
             String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
@@ -1656,7 +1656,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                conn.commit();
+                DBUtils.commit(conn);
                 System.err.println("Created table " + tableName);
             }
         } catch (SQLException se) {

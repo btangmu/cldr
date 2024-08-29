@@ -72,6 +72,15 @@ public class DBUtils {
      */
     public static final boolean db_Mysql = true;
 
+    public static void commit(Connection conn) throws SQLException {
+        if (conn.getAutoCommit()) {
+            System.err.println(
+                    "commit called for auto commit connection! Stack: " + getDBOpenStack());
+            return;
+        }
+        conn.commit();
+    }
+
     public String getDBInfo() {
         return dbInfo;
     }
@@ -118,6 +127,18 @@ public class DBUtils {
      */
     public static void closeDBConnection(Connection conn) {
         if (conn != null) {
+            try {
+                if (conn.isClosed()) {
+                    System.err.println(
+                            "closeDBConnection called for already-closed connection! Stack: "
+                                    + getDBOpenStack());
+                    return;
+                }
+            } catch (Exception e) {
+                System.err.println(
+                        "closeDBConnection exception for isClosed! Stack: " + getDBOpenStack());
+                return;
+            }
             if (SurveyMain.isUnofficial() && tracker != null) {
                 tracker.remove(conn);
             }
@@ -128,6 +149,7 @@ public class DBUtils {
                 e.printStackTrace();
             }
             db_number_open--;
+            System.out.println("closeDBConnection, db_number_open = " + db_number_open);
         }
     }
 
@@ -295,7 +317,7 @@ public class DBUtils {
                 while (rs.next())
                     ;
             }
-
+            DBUtils.close(conn);
             if (hadTable) {
                 if (DEBUG) SurveyLog.warnOnce(logger, "table " + canonName + " already existed.");
                 return true;
@@ -356,7 +378,9 @@ public class DBUtils {
      */
     public static int sqlCount(String sql, Object... args) {
         try (Connection conn = DBUtils.getInstance().getAConnection()) {
-            return sqlCount(conn, sql, args);
+            int count = sqlCount(conn, sql, args);
+            closeDBConnection(conn);
+            return count;
         } catch (SQLException e) {
             SurveyMain.busted("sqlCount", e);
             return -1;
@@ -635,10 +659,15 @@ public class DBUtils {
                 c.setAutoCommit(true);
                 return c;
             }
-            return datasource.getConnection();
+            db_number_open++; // TB added
+            System.out.println("getAConnection, db_number_open = " + db_number_open);
+            Connection c = datasource.getConnection();
+            // System.out.println("getAConnection: c.getClass = " + c.getClass());
+            return c;
+            // return datasource.getConnection();
         } catch (SQLException se) {
             se.printStackTrace();
-            SurveyMain.busted("Fatal in getConnection()", se);
+            SurveyMain.busted("Fatal in getAConnection()", se);
             return null;
         }
     }
@@ -651,6 +680,8 @@ public class DBUtils {
      */
     private static Connection getDBConnectionFor(final String connectionUrl) {
         try {
+            db_number_open++; // TB added
+            System.out.println("getDBConnectionFor, db_number_open = " + db_number_open);
             return DriverManager.getConnection(connectionUrl);
         } catch (SQLException e) {
             throw new RuntimeException("getConnection() failed for url", e);
