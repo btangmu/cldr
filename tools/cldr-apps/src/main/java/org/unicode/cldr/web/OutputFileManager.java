@@ -113,26 +113,11 @@ public class OutputFileManager {
                 out.write("verify=true/false<br>\n");
                 return;
             }
-            generateVxml(out, outputFiles, removeEmpty, verifyConsistent);
+            generateVxml(null, out, outputFiles, removeEmpty, verifyConsistent);
         } catch (Exception e) {
             System.err.println("Exception in outputAndVerifyAllFiles: " + e);
             e.printStackTrace();
         }
-    }
-
-    /**
-     * Generate VXML
-     *
-     * <p>Called by legacy outputAndVerifyAllFiles
-     *
-     * @param out
-     * @param outputFiles
-     * @param removeEmpty
-     * @param verifyConsistent
-     */
-    public static void generateVxml(
-            Writer out, boolean outputFiles, boolean removeEmpty, boolean verifyConsistent) {
-        generateVxml(null, out, outputFiles, removeEmpty, verifyConsistent);
     }
 
     /**
@@ -280,12 +265,8 @@ public class OutputFileManager {
 
             out.write("<ol>\n");
 
-            Set<CLDRLocale> sortSet;
-            if (vxmlGenerator != null) {
-                sortSet = vxmlGenerator.getSortSet();
-            } else {
-                sortSet = createVxmlLocaleSet();
-            }
+            Set<CLDRLocale> sortSet =
+                    (vxmlGenerator != null) ? vxmlGenerator.getSortSet() : createVxmlLocaleSet();
             for (CLDRLocale loc : sortSet) {
                 out.write("<li>" + loc.getDisplayName() + "<br/>\n");
                 for (OutputFileManager.Kind kind : OutputFileManager.Kind.values()) {

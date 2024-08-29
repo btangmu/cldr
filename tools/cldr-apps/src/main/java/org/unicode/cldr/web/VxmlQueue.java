@@ -1,6 +1,7 @@
 package org.unicode.cldr.web;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -57,6 +58,7 @@ public class VxmlQueue {
     private static class QueueEntry {
         private Task currentTask = null;
         private String output = "";
+        private Boolean done = false;
     }
 
     /** Semaphore to ensure that only one vetter generates VXML at a time. */
@@ -134,7 +136,7 @@ public class VxmlQueue {
             this.status = status;
         }
 
-        private final StringBuffer aBuffer = new StringBuffer();
+        private final StringWriter stringWriter = new StringWriter();
 
         private final Results results;
 
@@ -155,7 +157,7 @@ public class VxmlQueue {
         @Override
         public void run() {
             statusCode = Status.WAITING;
-            final CLDRProgressTask progress = CookieSession.sm.openProgress("VXML", maxn);
+            // final CLDRProgressTask progress = CookieSession.sm.openProgress("VXML", maxn);
 
             if (DEBUG) {
                 System.out.println("Starting up VXML task, " + taskDescription());
@@ -163,7 +165,6 @@ public class VxmlQueue {
 
             try {
                 status = "Waiting...";
-                progress.update("Waiting...");
                 if (DEBUG) {
                     System.out.println("Calling OnlyOneVetter.acquire(), " + taskDescription());
                 }
@@ -182,7 +183,7 @@ public class VxmlQueue {
                         statusCode = Status.STOPPED;
                         return;
                     }
-                    processCriticalWork(progress);
+                    processCriticalWork();
                 } finally {
                     // this happens sometimes six minutes after pressing Stop button
                     if (DEBUG) {
@@ -196,11 +197,6 @@ public class VxmlQueue {
                 SurveyLog.logException(logger, re, "While generating VXML, " + taskDescription());
                 status = "Exception! " + re + ", " + taskDescription();
                 statusCode = Status.STOPPED;
-            } finally {
-                // don't change the status
-                if (progress != null) {
-                    progress.close();
-                }
             }
         }
 
@@ -208,29 +204,26 @@ public class VxmlQueue {
             return "thread " + myThread.getId() + ", " + LocalTime.now();
         }
 
-        private void processCriticalWork(final CLDRProgressTask progress)
+        private void processCriticalWork()
                 throws ExecutionException {
             status = "Beginning Process, Calculating";
             // compare VettingViewer class
             VxmlGenerator vg = new VxmlGenerator();
             Set<CLDRLocale> sortSet = OutputFileManager.createVxmlLocaleSet();
             maxn = sortSet.size();
-            progress.update("Blah blah in processCriticalWork"); // TODO -- no effect, not needed?
             statusCode = Status.PROCESSING;
             start = System.currentTimeMillis();
             last = start;
             n = 0;
-            vg.setProgressCallback(new CLDRProgressCallback(progress, Thread.currentThread()));
+            vg.setProgressCallback(new CLDRProgressCallback(null /* progress */, Thread.currentThread()));
 
             if (DEBUG) {
                 System.out.println("Starting generation of VXML, " + taskDescription());
             }
             // Compare generatePriorityItemsSummary
-            vg.generate(sortSet);
+            vg.generate(sortSet, stringWriter);
             if (myThread.isAlive()) {
-                // TODO: is one of these redundant/superfluous?
-                entry.output = aBuffer.toString();
-                results.output = aBuffer;
+                entry.done = true;
                 if (DEBUG) {
                     System.out.println("Finished generation of VXML, " + taskDescription());
                     System.out.println("processCriticalWork set entry.output = " + entry.output);
@@ -288,23 +281,26 @@ public class VxmlQueue {
     private static final String VXML_MESSAGE_STARTED = "Started new task";
 
     /**
-     * Return the status of the VXML request
+     * Start running, or continue running, the long-running task that generates VXML.
+     * This is called once for each request, including the initial request
+     * that starts VXML generation, and subsequent requests that query the
+     * status or trigger early termination of the task.
      *
      * @param args the VxmlQueue.Args
      * @param results the VxmlQueue.Results
-     * @return the status message, or null
+     * @return the status message
      * @throws IOException
+     *
      *     <p>This is modeled on VettingViewerQueue.getPriorityItemsSummaryOutput
      */
     public synchronized String getOutput(Args args, Results results) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {
-            String res = entry.output;
-            if (!res.isEmpty()) {
+            if (entry.done) {
                 setPercent(100);
                 results.status = Status.READY;
-                results.output.append(res);
+                results.output.append(entry.output);
                 if (DEBUG) {
                     final String desc = (t == null) ? "[null task]" : t.taskDescription();
                     System.out.println("Got result, calling stop for VXML, " + desc);
@@ -344,8 +340,7 @@ public class VxmlQueue {
         }
 
         // Note: May be better to use SurveyThreadManager.getExecutorService().invoke() (rather than
-        // a raw thread) but would require some restructuring; compare
-        // VettingViewerQueue.getPriorityItemsSummaryOutput
+        // a raw thread) ... compare VettingViewerQueue.getPriorityItemsSummaryOutput
         t = entry.currentTask = new Task(entry, results);
         t.myThread = SurveyThreadManager.getThreadFactory().newThread(t);
         if (DEBUG) {

@@ -1,6 +1,5 @@
 package org.unicode.cldr.web;
 
-import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -11,9 +10,9 @@ public class VxmlGenerator {
 
     private Set<CLDRLocale> sortSet = null;
 
-    public void generate(Set<CLDRLocale> sortSet) throws ExecutionException {
+    public void generate(Set<CLDRLocale> sortSet, Writer out) throws ExecutionException {
         this.sortSet = sortSet;
-        try (Writer out = new StringWriter()) {
+        try {
             // TODO: get the booleans somewhere, or remove the parameters
             // -- in practice, we want them all true
             OutputFileManager.generateVxml(
