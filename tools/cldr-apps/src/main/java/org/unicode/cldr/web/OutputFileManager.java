@@ -297,12 +297,12 @@ public class OutputFileManager {
                         numupd++;
                         System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
                     }
-                    if (vxmlGenerator != null) {
-                        vxmlGenerator.update(loc);
-                    }
                     out.write("</span>  &nbsp;");
                 }
                 out.write("</li>\n");
+                if (vxmlGenerator != null) {
+                    vxmlGenerator.update(loc);
+                }
             }
             out.write("</ol>\n");
             out.write("<hr>\n");

@@ -8,8 +8,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 import org.unicode.cldr.util.*;
-import org.unicode.cldr.util.TimeDiff;
-import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 
 public class VxmlQueue {
     private static final Logger logger = SurveyLog.forClass(VxmlQueue.class);
@@ -57,7 +55,6 @@ public class VxmlQueue {
 
     private static class QueueEntry {
         private Task currentTask = null;
-        private String output = "";
         private Boolean done = false;
     }
 
@@ -66,53 +63,18 @@ public class VxmlQueue {
 
     public static class Task implements Runnable {
         public final class CLDRProgressCallback extends VxmlGenerator.ProgressCallback {
-            private final CLDRProgressTask progress;
             private final Thread thread;
 
-            private String localeName = "";
-
-            private CLDRProgressCallback(CLDRProgressTask progress, Thread thread) {
-                this.progress = progress;
+            private CLDRProgressCallback(Thread thread) {
                 this.thread = thread;
-            }
-
-            private String setRemStr(long now) {
-                double per = (double) (now - start) / (double) n;
-                long rem = (long) ((maxn - n) * per);
-                String remStr = "Estimated completion: " + TimeDiff.timeDiff(now, now - rem);
-                if (rem <= 1500) { // Less than 1.5 seconds remaining
-                    remStr = "Finishing...";
-                } else if (!this.localeName.isEmpty()) {
-                    remStr += " -- Locale " + this.localeName;
-                }
-                setStatus(remStr);
-                return remStr;
             }
 
             public void nudge(CLDRLocale loc) {
                 if (!myThread.isAlive()) {
                     throw new RuntimeException("Not Running- stop now.");
                 }
-                this.localeName = loc.getDisplayName();
-                long now = System.currentTimeMillis();
+                setStatus(loc.getDisplayName());
                 n++;
-                /*
-                 * TODO: explain/encapsulate these magic numbers!
-                 */
-                if (n > (maxn - 5)) {
-                    maxn = n + 10;
-                }
-                if ((now - last) > 1 /* was 1200 */) {
-                    if (DEBUG) {
-                        System.out.println("Task.nudge() for VXML, " + taskDescription());
-                    }
-                    last = now;
-                    if (n > 1 /* was 500 */) {
-                        progress.update(n, setRemStr(now));
-                    } else {
-                        progress.update(n);
-                    }
-                }
             }
 
             public boolean isStopped() {
@@ -127,8 +89,6 @@ public class VxmlQueue {
         private final QueueEntry entry;
         private int maxn;
         private int n = 0;
-        private long start = -1;
-        private long last;
         private String status = WAITING_IN_LINE_MESSAGE;
         private Status statusCode = Status.WAITING; // Need to start out as waiting.
 
@@ -138,26 +98,21 @@ public class VxmlQueue {
 
         private final StringWriter stringWriter = new StringWriter();
 
-        private final Results results;
-
         /**
          * Construct a Runnable object specifically for VXML
          *
          * @param entry the QueueEntry
-         * @param results the VxmlResults to modify
          */
-        private Task(QueueEntry entry, Results results) {
+        private Task(QueueEntry entry) {
             if (DEBUG) {
                 System.out.println("Creating task for VXML");
             }
             this.entry = entry;
-            this.results = results;
         }
 
         @Override
         public void run() {
             statusCode = Status.WAITING;
-            // final CLDRProgressTask progress = CookieSession.sm.openProgress("VXML", maxn);
 
             if (DEBUG) {
                 System.out.println("Starting up VXML task, " + taskDescription());
@@ -204,18 +159,15 @@ public class VxmlQueue {
             return "thread " + myThread.getId() + ", " + LocalTime.now();
         }
 
-        private void processCriticalWork()
-                throws ExecutionException {
+        private void processCriticalWork() throws ExecutionException {
             status = "Beginning Process, Calculating";
             // compare VettingViewer class
             VxmlGenerator vg = new VxmlGenerator();
             Set<CLDRLocale> sortSet = OutputFileManager.createVxmlLocaleSet();
             maxn = sortSet.size();
             statusCode = Status.PROCESSING;
-            start = System.currentTimeMillis();
-            last = start;
             n = 0;
-            vg.setProgressCallback(new CLDRProgressCallback(null /* progress */, Thread.currentThread()));
+            vg.setProgressCallback(new CLDRProgressCallback(Thread.currentThread()));
 
             if (DEBUG) {
                 System.out.println("Starting generation of VXML, " + taskDescription());
@@ -224,10 +176,6 @@ public class VxmlQueue {
             vg.generate(sortSet, stringWriter);
             if (myThread.isAlive()) {
                 entry.done = true;
-                if (DEBUG) {
-                    System.out.println("Finished generation of VXML, " + taskDescription());
-                    System.out.println("processCriticalWork set entry.output = " + entry.output);
-                }
             } else {
                 if (DEBUG) {
                     System.out.println(
@@ -281,26 +229,26 @@ public class VxmlQueue {
     private static final String VXML_MESSAGE_STARTED = "Started new task";
 
     /**
-     * Start running, or continue running, the long-running task that generates VXML.
-     * This is called once for each request, including the initial request
-     * that starts VXML generation, and subsequent requests that query the
-     * status or trigger early termination of the task.
+     * Start running, or continue running, the long-running task that generates VXML. This is called
+     * once for each request, including the initial request that starts VXML generation, and
+     * subsequent requests that query the status or trigger early termination of the task.
      *
      * @param args the VxmlQueue.Args
      * @param results the VxmlQueue.Results
      * @return the status message
      * @throws IOException
-     *
      *     <p>This is modeled on VettingViewerQueue.getPriorityItemsSummaryOutput
      */
     public synchronized String getOutput(Args args, Results results) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
+        if (t != null) {
+            results.output.append(t.stringWriter.toString());
+        }
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {
             if (entry.done) {
                 setPercent(100);
                 results.status = Status.READY;
-                results.output.append(entry.output);
                 if (DEBUG) {
                     final String desc = (t == null) ? "[null task]" : t.taskDescription();
                     System.out.println("Got result, calling stop for VXML, " + desc);
@@ -341,7 +289,7 @@ public class VxmlQueue {
 
         // Note: May be better to use SurveyThreadManager.getExecutorService().invoke() (rather than
         // a raw thread) ... compare VettingViewerQueue.getPriorityItemsSummaryOutput
-        t = entry.currentTask = new Task(entry, results);
+        t = entry.currentTask = new Task(entry);
         t.myThread = SurveyThreadManager.getThreadFactory().newThread(t);
         if (DEBUG) {
             System.out.println("Starting new thread for VXML, " + t.taskDescription());
@@ -381,6 +329,7 @@ public class VxmlQueue {
                 System.out.println("Not alive or already stopped for VXML, " + t.taskDescription());
             }
             entry.currentTask = null;
+            entry.done = true;
         } else if (DEBUG) {
             System.out.println("Task was null in stop() for VXML");
         }

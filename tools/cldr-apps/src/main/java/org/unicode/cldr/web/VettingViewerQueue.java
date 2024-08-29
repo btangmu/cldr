@@ -245,7 +245,8 @@ public class VettingViewerQueue {
                 }
                 try {
                     if (stop) {
-                        // this NEVER happens?! Possibly should check stop AFTER calling processCriticalWork
+                        // this NEVER happens?! Possibly should check stop AFTER calling
+                        // processCriticalWork
                         if (DEBUG) {
                             System.out.println(
                                     "VettingViewerQueue.Task.run -- stopping, "
