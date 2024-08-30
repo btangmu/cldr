@@ -3,17 +3,13 @@ import { onMounted, ref } from "vue";
 
 import * as cldrGenerateVxml from "../esm/cldrGenerateVxml.mjs";
 
-// These must match the back end (VxmlQueue.Status)
-const STATUS_WAITING = "WAITING";
-const STATUS_READY = "READY";
-const STATUS_PROCESSING = "PROCESSING";
-const STATUS_STOPPED = "STOPPED";
+const STATUS = cldrGenerateVxml.Status;
 
 let hasPermission = ref(false);
 let message = ref("");
 let output = ref("");
-let status = ref(STATUS_READY);
 let percent = ref(0);
+let status = ref(STATUS.INIT);
 
 function mounted() {
   cldrGenerateVxml.viewMounted(setData);
@@ -25,17 +21,17 @@ onMounted(mounted);
 function start() {
   if (hasPermission) {
     cldrGenerateVxml.start();
-    status.value = STATUS_WAITING;
+    status.value = STATUS.WAITING;
   }
 }
 
 function stop() {
   cldrGenerateVxml.stop();
-  status.value = STATUS_STOPPED;
+  status.value = STATUS.STOPPED;
 }
 
 function canStop() {
-  return status.value === STATUS_WAITING || status.value === STATUS_PROCESSING;
+  return status.value === STATUS.WAITING || status.value === STATUS.PROCESSING;
 }
 
 function setData(data) {
@@ -53,24 +49,27 @@ defineExpose({
 <template>
   <div v-if="!hasPermission">Please log in as Admin to use this feature.</div>
   <div v-else>
-    <p v-if="status">Current Status: {{ status }}</p>
+    <p v-if="status != STATUS.INIT">Current Status: {{ status }}</p>
     <p v-if="message">
       <span v-html="message"></span>
     </p>
-    <hr />
-    <p>
+    <p class="buttons">
       <button v-if="canStop()" @click="stop()">Stop</button>
       <button v-else @click="start()">Generate VXML Now</button>
     </p>
+    <p class="progressBar">
+      <a-progress :percent="percent" />
+    </p>
+    <p v-html="output"></p>
   </div>
-  <div v-if="percent" class="progressPercent">
-    <a-progress :percent="percent" />
-  </div>
-  <span v-html="output"></span>
 </template>
 
 <style scoped>
-.progressPercent div {
-  width: 80%;
+.buttons {
+  margin: 1em;
+}
+
+.progressBar {
+  width: 50%;
 }
 </style>

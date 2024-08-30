@@ -39,7 +39,7 @@ public class VxmlQueue {
         PROCESSING,
         /** Contents are available */
         READY,
-        /** Stopped, due to error or successful completion */
+        /** Stopped, due to error or cancellation (LoadingPolicy.FORCESTOP) */
         STOPPED,
     }
 
@@ -223,7 +223,7 @@ public class VxmlQueue {
      * returns
      */
     public static class Results {
-        public Status status = Status.STOPPED;
+        public Status status = Status.WAITING;
         public Appendable output = new StringBuilder();
     }
 
@@ -250,7 +250,9 @@ public class VxmlQueue {
     public synchronized String getOutput(Args args, Results results) throws IOException {
         QueueEntry entry = getEntry(args.qmi);
         Task t = entry.currentTask;
-        if (t != null) {
+        if (t == null) {
+            System.out.println("Got null Task in getOutput!");
+        } else {
             results.output.append(t.stringWriter.toString());
         }
         if (args.loadingPolicy != LoadingPolicy.FORCESTOP) {

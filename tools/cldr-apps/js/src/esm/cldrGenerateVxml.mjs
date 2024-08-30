@@ -13,21 +13,32 @@ const NORMAL_RETRY = 10 * SECONDS_IN_MS; // "Normal" retry: starting or about to
 const VXML_URL = "api/vxml";
 
 // These must match the back end (VxmlQueue.LoadingPolicy)
-const LOAD_START = "START";
-const LOAD_NOSTART = "NOSTART";
-const LOAD_FORCESTOP = "FORCESTOP";
+class LoadingPolicy {
+  static START = "START"; // start generating vxml
+  static NOSTART = "NOSTART"; // continue generating vxml
+  static FORCESTOP = "FORCESTOP"; // stop generating vxml
+}
+
+// These must match the back end (VxmlQueue.Status)
+class Status {
+  static INIT = "INIT"; // before making a request (back end does not have INIT)
+  static WAITING = "WAITING"; // waiting on other users/tasks
+  static PROCESSING = "PROCESSING";
+  static READY = "READY"; // meaning "done", success; also on front end means "ready to start"
+  static STOPPED = "STOPPED"; // due to error or cancellation (LoadingPolicy.FORCESTOP)
+}
 
 class VxmlArgs {
   /**
    * Construct a new VxmlArgs object
    *
    * @param {VxmlArgs} defaultArgs -- default (latest) args, or null/undefined
-   * @param {String} loadingPolicy -- LOAD_START, LOAD_NOSTART or LOAD_FORCESTOP
+   * @param {String} loadingPolicy -- START, NOSTART or FORCESTOP
    * @returns a new VxmlArgs
    */
   constructor(defaultArgs, loadingPolicy) {
     this.loadingPolicy =
-      loadingPolicy || defaultArgs?.loadingPolicy || LOAD_NOSTART;
+      loadingPolicy || defaultArgs?.loadingPolicy || LoadingPolicy.NOSTART;
   }
 }
 
@@ -55,17 +66,17 @@ function fetchStatus() {
     return;
   }
   if (canGenerate) {
-    requestVxml(new VxmlArgs(latestArgs, LOAD_NOSTART));
+    requestVxml(new VxmlArgs(latestArgs, LoadingPolicy.NOSTART));
   }
 }
 
 function start() {
-  const vxmlArgs = new VxmlArgs(null, LOAD_START);
+  const vxmlArgs = new VxmlArgs(null, LoadingPolicy.START);
   requestVxml(vxmlArgs);
 }
 
 function stop() {
-  const vxmlArgs = new VxmlArgs(latestArgs, LOAD_FORCESTOP);
+  const vxmlArgs = new VxmlArgs(latestArgs, LoadingPolicy.FORCESTOP);
   requestVxml(vxmlArgs);
 }
 
@@ -93,9 +104,9 @@ function setVxmlData(data) {
         data.message
     );
   }
-  if (latestArgs.loadingPolicy !== LOAD_FORCESTOP) {
+  if (data.status === Status.WAITING || data.status === Status.PROCESSING) {
     window.setTimeout(fetchStatus.bind(this), NORMAL_RETRY);
   }
 }
 
-export { canGenerateVxml, start, stop, viewMounted };
+export { Status, canGenerateVxml, start, stop, viewMounted };
