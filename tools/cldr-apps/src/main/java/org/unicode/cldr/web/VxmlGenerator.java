@@ -27,13 +27,6 @@ public class VxmlGenerator {
         return sortSet;
     }
 
-    public void update(CLDRLocale loc) {
-        if (progressCallback.isStopped()) {
-            throw new RuntimeException("Requested to stop");
-        }
-        progressCallback.nudge(loc);
-    }
-
     public enum VerificationStatus {
         SUCCESSFUL,
         FAILED,
@@ -50,28 +43,28 @@ public class VxmlGenerator {
         verificationStatus = status;
     }
 
-    /** Class that allows the relaying of progress information */
+    /**
+     * Class that allows the relaying of progress information. Extended by
+     * VxmlQueue.Task.VxmlProgressCallback
+     */
     public static class ProgressCallback {
         public void nudge(CLDRLocale loc) {}
 
-        /** Called when all operations are complete. */
-        public void done() {}
-
-        /**
-         * Return true to cause an early stop.
-         *
-         * @return true or false
-         */
         public boolean isStopped() {
             return false;
         }
     }
-    /*
-     * null instance by default
-     */
-    private ProgressCallback progressCallback = new ProgressCallback();
+
+    private ProgressCallback progressCallback;
 
     public void setProgressCallback(ProgressCallback newCallback) {
         progressCallback = newCallback;
+    }
+
+    public void update(CLDRLocale loc) {
+        if (progressCallback.isStopped()) {
+            throw new RuntimeException("Requested to stop");
+        }
+        progressCallback.nudge(loc);
     }
 }

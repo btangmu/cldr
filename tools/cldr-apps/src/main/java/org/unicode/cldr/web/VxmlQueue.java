@@ -64,10 +64,10 @@ public class VxmlQueue {
     private static final Semaphore OnlyOneVetter = new Semaphore(1);
 
     public static class Task implements Runnable {
-        public final class CLDRProgressCallback extends VxmlGenerator.ProgressCallback {
+        public final class VxmlProgressCallback extends VxmlGenerator.ProgressCallback {
             private final Thread thread;
 
-            private CLDRProgressCallback(Thread thread) {
+            private VxmlProgressCallback(Thread thread) {
                 this.thread = thread;
             }
 
@@ -175,7 +175,7 @@ public class VxmlQueue {
             maxn = sortSet.size();
             statusCode = Status.PROCESSING;
             n = 0;
-            vg.setProgressCallback(new CLDRProgressCallback(Thread.currentThread()));
+            vg.setProgressCallback(new VxmlProgressCallback(Thread.currentThread()));
 
             if (DEBUG) {
                 System.out.println("Starting generation of VXML, " + taskDescription());
