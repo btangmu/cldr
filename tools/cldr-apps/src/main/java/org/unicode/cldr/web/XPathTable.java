@@ -200,7 +200,7 @@ public class XPathTable {
         Connection conn = null;
         PreparedStatement queryStmt = null;
         try {
-            conn = DBUtils.getInstance().getDBConnection();
+            conn = DBUtils.getInstance().getAConnection();
             if (!DEBUG) {
                 addXpaths(unloadedXpaths, conn);
             } else {
