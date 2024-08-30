@@ -4,12 +4,15 @@
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
+const DEBUG = true;
+
 const SECONDS_IN_MS = 1000;
 
 const NORMAL_RETRY = 10 * SECONDS_IN_MS; // "Normal" retry: starting or about to start
 
 const VXML_URL = "api/vxml";
 
+// These must match the back end (VxmlQueue.LoadingPolicy)
 const LOAD_START = "START";
 const LOAD_NOSTART = "NOSTART";
 const LOAD_FORCESTOP = "FORCESTOP";
@@ -82,7 +85,7 @@ function setVxmlData(data) {
     return;
   }
   callbackToSetData(data);
-  if (Number(data.percent) === 100) {
+  if (DEBUG && Number(data.percent) === 100) {
     console.log(
       "cldrGenerateVxml.setVxmlData got percent 100 and latestArgs.loadingPolicy = " +
         latestArgs.loadingPolicy +

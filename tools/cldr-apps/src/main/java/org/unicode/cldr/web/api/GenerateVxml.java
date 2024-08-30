@@ -54,10 +54,12 @@ public class GenerateVxml {
                     || !SurveyMain.triedToStartUp()) {
                 return STError.surveyNotQuiteReady();
             }
+            // Make sure setupDB has run before we start to generate VXML, to avoid the risk of
+            // concurrency problems, since otherwise if the server just started, setupDB may run
+            // concurrently with the vxml worker thread.
+            CookieSession.sm.getSTFactory().setupDB();
             cs.userDidAction();
-            VxmlQueue queue = VxmlQueue.getInstance();
-            QueueMemberId qmi = new QueueMemberId(cs);
-            VxmlResponse vr = getVxmlResponse(queue, qmi, request.loadingPolicy);
+            VxmlResponse vr = getVxmlResponse(request.loadingPolicy, cs);
             return Response.ok(vr).build();
         } catch (Exception e) {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -67,15 +69,15 @@ public class GenerateVxml {
     /**
      * Get the response for VXML
      *
-     * @param queue the VxmlQueue
-     * @param qmi the QueueMemberId
      * @param loadingPolicy the LoadingPolicy
+     * @param cs the CookieSession
      * @return the VxmlResponse
      * @throws IOException if thrown by VxmlQueue.getOutput
      */
-    private VxmlResponse getVxmlResponse(
-            VxmlQueue queue, QueueMemberId qmi, VxmlQueue.LoadingPolicy loadingPolicy)
+    private VxmlResponse getVxmlResponse(VxmlQueue.LoadingPolicy loadingPolicy, CookieSession cs)
             throws IOException {
+        VxmlQueue queue = VxmlQueue.getInstance();
+        QueueMemberId qmi = new QueueMemberId(cs);
         VxmlResponse response = new VxmlResponse();
         VxmlQueue.Args args = new VxmlQueue.Args(qmi, loadingPolicy);
         VxmlQueue.Results results = new VxmlQueue.Results();
