@@ -7,9 +7,6 @@ import org.unicode.cldr.util.CLDRLocale;
 
 // compare VettingViewer class
 public class VxmlGenerator {
-
-    private Set<CLDRLocale> sortSet = null;
-
     public void generate(Set<CLDRLocale> sortSet, Writer out) throws ExecutionException {
         this.sortSet = sortSet;
         try {
@@ -24,6 +21,8 @@ public class VxmlGenerator {
         }
     }
 
+    private Set<CLDRLocale> sortSet = null;
+
     public Set<CLDRLocale> getSortSet() {
         return sortSet;
     }
@@ -32,7 +31,23 @@ public class VxmlGenerator {
         if (progressCallback.isStopped()) {
             throw new RuntimeException("Requested to stop");
         }
-        progressCallback.nudge(loc); // Let the user know we're moving along
+        progressCallback.nudge(loc);
+    }
+
+    public enum VerificationStatus {
+        SUCCESSFUL,
+        FAILED,
+        INCOMPLETE
+    }
+
+    private VerificationStatus verificationStatus = VerificationStatus.INCOMPLETE;
+
+    public VerificationStatus getVerificationStatus() {
+        return verificationStatus;
+    }
+
+    public void setVerificationStatus(VerificationStatus status) {
+        verificationStatus = status;
     }
 
     /** Class that allows the relaying of progress information */

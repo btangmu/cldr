@@ -54,6 +54,8 @@ public class VxmlQueue {
     }
 
     private static class QueueEntry {
+        public VxmlGenerator.VerificationStatus verificationStatus =
+                VxmlGenerator.VerificationStatus.INCOMPLETE;
         private Task currentTask = null;
         private Boolean done = false;
     }
@@ -129,16 +131,14 @@ public class VxmlQueue {
                 }
                 try {
                     if (stop) {
-                        // this NEVER happens?
-                        if (DEBUG) {
-                            System.out.println(
-                                    "VxmlQueue.Task.run -- stopping, " + taskDescription());
-                        }
-                        status = "Stopped on request.";
-                        statusCode = Status.STOPPED;
+                        doStop();
                         return;
                     }
                     processCriticalWork();
+                    if (stop) {
+                        doStop();
+                        return;
+                    }
                 } finally {
                     // this happens sometimes six minutes after pressing Stop button
                     if (DEBUG) {
@@ -153,6 +153,14 @@ public class VxmlQueue {
                 status = "Exception! " + re + ", " + taskDescription();
                 statusCode = Status.STOPPED;
             }
+        }
+
+        private void doStop() {
+            if (DEBUG) {
+                System.out.println("VxmlQueue.Task -- stopping, " + taskDescription());
+            }
+            status = "Stopped on request.";
+            statusCode = Status.STOPPED;
         }
 
         private String taskDescription() {
@@ -174,6 +182,7 @@ public class VxmlQueue {
             }
             // Compare generatePriorityItemsSummary
             vg.generate(sortSet, stringWriter);
+            entry.verificationStatus = vg.getVerificationStatus();
             if (myThread.isAlive()) {
                 entry.done = true;
             } else {
@@ -221,7 +230,6 @@ public class VxmlQueue {
     /*
      * Messages returned by getOutput
      */
-    private static final String VXML_MESSAGE_COMPLETE = "Completed successfully";
     private static final String VXML_MESSAGE_STOPPED_ON_REQUEST = "Stopped on request";
     private static final String VXML_MESSAGE_PROGRESS = "In Progress";
     private static final String VXML_MESSAGE_STOPPED_STUCK = "Stopped (refresh if stuck)";
@@ -254,7 +262,7 @@ public class VxmlQueue {
                     System.out.println("Got result, calling stop for VXML, " + desc);
                 }
                 stop(entry);
-                return VXML_MESSAGE_COMPLETE;
+                return entry.verificationStatus.toString();
             }
         } else {
             if (DEBUG) {

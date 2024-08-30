@@ -621,6 +621,7 @@ public class DBUtils {
      * @return
      */
     public final Connection getDBConnection() {
+        System.out.println("getDBConnection called by " + getDBOpenStack());
         Connection c = getAConnection();
         try {
             c.setAutoCommit(false);
@@ -653,6 +654,7 @@ public class DBUtils {
      */
     public final Connection getAConnection() {
         logger.fine(() -> "DB OPEN: " + getDBOpenStack());
+        System.out.println("getAConnection called by " + getDBOpenStack());
         try {
             if (connectionUrl != null) {
                 Connection c = getDBConnectionFor(connectionUrl);

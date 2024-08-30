@@ -35,13 +35,8 @@ function canStop() {
 function setData(data) {
   message.value = data.message;
   percent.value = data.percent;
-  if (data.status) {
-    status.value = data.status;
-  }
-  if (data.output) {
-    output.value = data.output;
-    status.value = "READY";
-  }
+  status.value = data.status;
+  output.value = data.output;
 }
 
 defineExpose({
@@ -71,13 +66,7 @@ defineExpose({
 </template>
 
 <style scoped>
-/* button,
-select {
-  margin-top: 1ex;
-} */
-
 .progressPercent div {
-  /* margin: 3ex; */
-  width: 90%;
+  width: 80%;
 }
 </style>

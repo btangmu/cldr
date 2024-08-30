@@ -24,9 +24,7 @@ import java.nio.file.Files;
 import java.time.Instant;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.unicode.cldr.util.*;
@@ -34,7 +32,6 @@ import org.unicode.cldr.web.CLDRProgressIndicator.CLDRProgressTask;
 
 public class OutputFileManager {
 
-    private static final boolean DEBUG = true;
     private static final String XML_SUFFIX = ".xml";
     private final SurveyMain sm;
 
@@ -59,12 +56,9 @@ public class OutputFileManager {
     private static final String RXML_PREFIX = "/rxml/main";
 
     private static final FileFilter xmlFileFilter =
-            new FileFilter() {
-                @Override
-                public boolean accept(File file) {
-                    String s = file.getName().toLowerCase();
-                    return s.endsWith(XML_SUFFIX) && !"en.xml".equals(s) && !"root.xml".equals(s);
-                }
+            file -> {
+                String s = file.getName().toLowerCase();
+                return s.endsWith(XML_SUFFIX) && !"en.xml".equals(s) && !"root.xml".equals(s);
             };
 
     /**
@@ -92,7 +86,7 @@ public class OutputFileManager {
      * @param request the HttpServletRequest, used for "vap"
      * @param out the Writer, to receive HTML output
      *     <p>Invoked by pasting a url like this into a browser:
-     *     http://localhost:8080/cldr-apps/admin-OutputAllFiles.jsp?vap=...
+     *     .../cldr-apps/admin-OutputAllFiles.jsp?vap=...
      *     <p>Such usage (with jsp) is obsolescent
      */
     public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
@@ -152,7 +146,7 @@ public class OutputFileManager {
                     out.write("Directory creation for vetting data failed.");
                     return;
                 }
-                out.write("<p>Created new directory: " + vetdataDir.toString() + "</p>");
+                out.write("<p>Created new directory: " + vetdataDir + "</p>");
 
                 if (outputFiles && !ofm.outputAllFiles(out, vetdataDir, vxmlGenerator)) {
                     out.write("File output failed.");
@@ -164,13 +158,13 @@ public class OutputFileManager {
                 }
                 File vxmlDir = null;
                 if (removeEmpty || verifyConsistent) {
-                    vxmlDir = new File(vetdataDir.toString() + "/" + Kind.vxml.name());
+                    vxmlDir = new File(vetdataDir + "/" + Kind.vxml.name());
                 }
                 if (removeEmpty) {
-                    ofm.removeEmptyFiles(out, vxmlDir);
+                    ofm.removeEmptyFiles(vxmlDir);
                 }
                 if (verifyConsistent) {
-                    ofm.verifyAllFiles(out, vxmlDir);
+                    ofm.verifyAllFiles(vxmlGenerator, out, vxmlDir);
                 }
             }
             System.out.println("reallyOutputAndVerifyAllFiles finished");
@@ -229,7 +223,7 @@ public class OutputFileManager {
         if (!dtdSource.exists()) {
             return false;
         }
-        String vp[] = {Kind.vxml.toString(), Kind.pxml.toString()};
+        String[] vp = {Kind.vxml.toString(), Kind.pxml.toString()};
         for (String s : vp) {
             File destDir =
                     new File(vetdataDir + "/" + s + "/" + DirNames.justCommon + "/" + dtdDirName);
@@ -289,11 +283,7 @@ public class OutputFileManager {
                             || kind == OutputFileManager.Kind.pxml) {
                         System.err.println("Writing " + loc.getDisplayName() + ":" + kind);
                         ElapsedTimer et = new ElapsedTimer("to write " + loc + ":" + kind);
-                        File f = writeManualOutputFile(vetDataDir, loc, kind);
-                        if (f == null) {
-                            out.write("FILE CREATION FAILED: " + loc.toString() + kind.name());
-                            return false;
-                        }
+                        writeManualOutputFile(vetDataDir, loc, kind);
                         numupd++;
                         System.err.println(et + " - upd " + numupd + "/" + (sortSet.size() + 2));
                     }
@@ -332,13 +322,19 @@ public class OutputFileManager {
     }
 
     public static Set<CLDRLocale> createVxmlLocaleSet() {
-        Set<CLDRLocale> set = new TreeSet<>(SurveyMain.getLocalesSet());
-        // skip "en" and "root", since they should never be changed by the Survey Tool
-        set.remove(CLDRLocale.getInstance("en"));
-        set.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
-        // Remove "mul", "mul_ZZ", etc.
-        set.removeIf(loc -> loc.getBaseName().startsWith(LocaleNames.MUL));
-        return set;
+        if (true) { // TODO: debugging only!
+            Set<CLDRLocale> set = new TreeSet<>();
+            set.add(CLDRLocale.getInstance("aa"));
+            return set;
+        } else {
+            Set<CLDRLocale> set = new TreeSet<>(SurveyMain.getLocalesSet());
+            // skip "en" and "root", since they should never be changed by the Survey Tool
+            set.remove(CLDRLocale.getInstance("en"));
+            set.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
+            // Remove "mul", "mul_ZZ", etc.
+            set.removeIf(loc -> loc.getBaseName().startsWith(LocaleNames.MUL));
+            return set;
+        }
     }
 
     /**
@@ -352,9 +348,8 @@ public class OutputFileManager {
      *
      * @param loc the CLDRLocale
      * @param kind the Kind, currently Kind.vxml and Kind.pxml are supported
-     * @return the File, or null for failure
      */
-    private File writeManualOutputFile(File vetDataDir, CLDRLocale loc, Kind kind) {
+    private void writeManualOutputFile(File vetDataDir, CLDRLocale loc, Kind kind) {
         long st = System.currentTimeMillis();
         CLDRFile cldrFile;
         if (kind == Kind.vxml) {
@@ -374,15 +369,7 @@ public class OutputFileManager {
             File baseDir = CLDRConfig.getInstance().getCldrBaseDirectory();
             String commonOrSeed = DirNames.justCommon;
             for (String c : DirNames.commonAndSeed) {
-                String path =
-                        baseDir
-                                + "/"
-                                + c
-                                + "/"
-                                + DirNames.justMain
-                                + "/"
-                                + loc.toString()
-                                + XML_SUFFIX;
+                String path = baseDir + "/" + c + "/" + DirNames.justMain + "/" + loc + XML_SUFFIX;
                 if (new File(path).exists()) {
                     commonOrSeed = c;
                     break;
@@ -392,18 +379,12 @@ public class OutputFileManager {
              * Only create the file in "main" here; doWriteFile will then create the file in "annotations"
              */
             String outDirName =
-                    vetDataDir
-                            + "/"
-                            + kind.toString()
-                            + "/"
-                            + commonOrSeed
-                            + "/"
-                            + DirNames.justMain;
+                    vetDataDir + "/" + kind + "/" + commonOrSeed + "/" + DirNames.justMain;
             File outDir = new File(outDirName);
             if (!outDir.exists() && !outDir.mkdirs()) {
                 throw new InternalError("Unable to create directory: " + outDirName);
             }
-            String outFileName = outDirName + "/" + loc.toString() + XML_SUFFIX;
+            String outFileName = outDirName + "/" + loc + XML_SUFFIX;
             File outFile = new File(outFileName);
             doWriteFile(cldrFile, kind, outFile);
             SurveyLog.debug(
@@ -413,28 +394,21 @@ public class OutputFileManager {
                             + loc
                             + " - "
                             + ElapsedTimer.elapsedTime(st));
-            return outFile;
         } catch (IOException e) {
             e.printStackTrace();
-            throw new RuntimeException("IO Exception " + e.toString(), e);
+            throw new RuntimeException("IO Exception " + e, e);
         }
     }
 
-    /**
-     * Remove "empty" VXML files in a set of directories
-     *
-     * @param out the Writer, to receive HTML output
-     *     <p>Compare RemoveEmptyCLDR.main
-     *     <p>Reference: https://unicode-org.atlassian.net/browse/CLDR-12016
-     */
-    private void removeEmptyFiles(Writer out, File vxmlDir) throws IOException {
+    /** Remove "empty" VXML files in a set of directories */
+    private void removeEmptyFiles(File vxmlDir) throws IOException {
         for (String c : DirNames.commonAndSeed) {
             /*
              * Skip main. Only do common/annotations and seed/annotations.
              */
             File dirFile = new File(vxmlDir + "/" + c + "/" + DirNames.justAnnotations);
             if (dirFile.exists()) {
-                removeEmptyFilesOneDir(out, dirFile);
+                removeEmptyFilesOneDir(dirFile);
             }
         }
     }
@@ -442,11 +416,10 @@ public class OutputFileManager {
     /**
      * Remove "empty" VXML files in the given directory
      *
-     * @param out the Writer, to receive HTML output
      * @param dirFile the given directory
      * @throws IOException
      */
-    private void removeEmptyFilesOneDir(Writer out, File dirFile) throws IOException {
+    private void removeEmptyFilesOneDir(File dirFile) throws IOException {
         Set<String> treatAsNonEmpty = new HashSet<>();
         BiMap<String, File> onlyHasIdentity = HashBiMap.create();
         int counter = 0;
@@ -507,6 +480,7 @@ public class OutputFileManager {
     /**
      * Verify all VXML files
      *
+     * @param vxmlGenerator
      * @param out the Writer, to receive HTML output
      *     <p>The following need to be verified on the server when generating vxml: • The same file
      *     must not occur in both the common/X and seed/X directories, for any X=main|annotations •
@@ -518,7 +492,8 @@ public class OutputFileManager {
      *     <p>vetdata └── vxml    ├── common    │   ├── annotations    │   └── main    └── seed ├──
      *     annotations    └── main
      */
-    private void verifyAllFiles(Writer out, File vxmlDir) throws IOException {
+    private void verifyAllFiles(VxmlGenerator vxmlGenerator, Writer out, File vxmlDir)
+            throws IOException {
         int failureCount = 0;
 
         /*
@@ -543,13 +518,21 @@ public class OutputFileManager {
 
         if (failureCount == 0) {
             out.write("<h1>✅ VXML verification succeeded</h1>\nOK<br>");
-            System.out.println("VXML verification succeeded");
+            if (vxmlGenerator != null) {
+                vxmlGenerator.setVerificationStatus(VxmlGenerator.VerificationStatus.SUCCESSFUL);
+            } else {
+                System.out.println("VXML verification succeeded");
+            }
         } else {
             out.write(
                     "<h1>❌ VXML verification failed!</h1>\nFailure count = "
                             + failureCount
                             + "<br>");
-            System.out.println("VXML verification failed! Failure count = " + failureCount);
+            if (vxmlGenerator != null) {
+                vxmlGenerator.setVerificationStatus(VxmlGenerator.VerificationStatus.FAILED);
+            } else {
+                System.out.println("VXML verification failed! Failure count = " + failureCount);
+            }
         }
     }
 
@@ -627,7 +610,7 @@ public class OutputFileManager {
                     }
                     CLDRLocale parLoc = childLoc.getParent();
                     if (parLoc != null) {
-                        String parentName = parLoc.toString() + XML_SUFFIX;
+                        String parentName = parLoc + XML_SUFFIX;
                         if (!childName.equals(parentName)
                                 && !"en.xml".equals(parentName)
                                 && !"root.xml".equals(parentName)) {
@@ -819,11 +802,9 @@ public class OutputFileManager {
      * @param response
      * @return true if request is for a kind of xml we can provide, else false.
      * @throws IOException
-     * @throws ServletException
-     *     <p>Called by SurveyMain.doGet when get a request.
      */
     public boolean doRawXml(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, ServletException {
+            throws IOException {
         /*
          * request.getPathInfo returns what follows "survey" in the url.
          * If the url is ".../cldr-apps/survey/vxml/main/aa.xml", it returns "vxml/main/aa.xml".
@@ -905,7 +886,7 @@ public class OutputFileManager {
                 ctx.println("<a href='" + ctx.base() + "'>Return to SurveyTool</a><p>");
                 ctx.println("<h4>Locales</h4>");
                 ctx.println("<ul>");
-                CLDRLocale locales[] = SurveyMain.getLocales();
+                CLDRLocale[] locales = SurveyMain.getLocales();
                 int nrInFiles = locales.length;
                 for (int i = 0; i < nrInFiles; i++) {
                     CLDRLocale locale = locales[i];
@@ -929,7 +910,7 @@ public class OutputFileManager {
                 response.sendRedirect(ctx.schemeHostPort() + ctx.base() + XML_PREFIX + "/");
             } else {
                 boolean found = false;
-                CLDRLocale locales[] = SurveyMain.getLocales();
+                CLDRLocale[] locales = SurveyMain.getLocales();
                 CLDRLocale foundLocale = null;
                 int nrInFiles = locales.length;
                 for (int i = 0; (!found) && (i < nrInFiles); i++) {
@@ -969,69 +950,6 @@ public class OutputFileManager {
             if (p != null) {
                 p.close();
             }
-        }
-    }
-
-    // statistics helpers
-    private static Map<CLDRLocale, Pair<String, String>> localeNameCache =
-            new ConcurrentHashMap<>();
-
-    // for the statistics page - wrap locale ids in an <old data> span to show they were from the
-    // previous revision
-    private static final String OLD_DATA_BEGIN = "<span class='olddata'>";
-    private static final String OLD_DATA_END = "</span>";
-
-    private static Pair<String, String> statGetLocaleDisplayName(CLDRLocale loc) {
-        Pair<String, String> ret = localeNameCache.get(loc), toAdd = null;
-        if (ret == null) {
-            toAdd = ret = new Pair<>();
-        }
-        // note, may concurrently modify this object- that's OK.
-        if (ret.getFirst() == null) {
-            // use baseline data
-            ret.setFirst(loc.getDisplayName(false, null));
-        }
-        if (ret.getSecond() == null) {
-            // uses 'on disk' (old) data.
-            ret.setSecond(
-                    OLD_DATA_BEGIN
-                            + CookieSession.sm
-                                    .getDiskFactory()
-                                    .make(loc.getBaseName(), true)
-                                    .getName(loc.toLanguageTag())
-                            + OLD_DATA_END);
-        }
-        // needed to add it
-        if (toAdd != null) {
-            localeNameCache.put(loc, toAdd);
-        }
-        return ret;
-    }
-
-    // update the cache
-    public static void updateLocaleDisplayName(CLDRFile f, CLDRLocale l) {
-        try {
-            Pair<String, String> ret = statGetLocaleDisplayName(l);
-            String newValue = (f.getName(l.getBaseName()));
-            if (DEBUG) {
-                if (!newValue.equals(ret.getSecond())) {
-                    System.out.println(
-                            "Setting: "
-                                    + newValue
-                                    + " insteadof "
-                                    + ret.getSecond()
-                                    + " for "
-                                    + ret.getFirst());
-                }
-            }
-            ret.setSecond(newValue);
-        } catch (Throwable t) {
-            SurveyLog.logException(
-                    t,
-                    "Updating the Locale Display Name for "
-                            + l.getBaseName()
-                            + " with language tag "
-                            + l.toLanguageTag());
         }
     }
 }
