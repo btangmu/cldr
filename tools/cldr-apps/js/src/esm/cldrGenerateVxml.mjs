@@ -2,6 +2,7 @@
  * cldrGenerateVxml: for Survey Tool feature "Generate VXML". The display logic is in GenerateVxml.vue.
  */
 import * as cldrAjax from "./cldrAjax.mjs";
+import * as cldrAnnounce from "./cldrAnnounce.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
 const SECONDS_IN_MS = 1000;
