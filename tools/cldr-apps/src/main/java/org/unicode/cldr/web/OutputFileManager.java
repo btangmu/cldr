@@ -322,7 +322,7 @@ public class OutputFileManager {
     }
 
     public static Set<CLDRLocale> createVxmlLocaleSet() {
-        if (true) { // TODO: debugging only!
+        if (false) { // TODO: debugging only!
             Set<CLDRLocale> set = new TreeSet<>();
             set.add(CLDRLocale.getInstance("aa"));
             return set;
