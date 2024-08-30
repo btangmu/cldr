@@ -4,27 +4,25 @@
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
-const DEBUG = true;
-
 const SECONDS_IN_MS = 1000;
 
 const NORMAL_RETRY = 10 * SECONDS_IN_MS; // "Normal" retry: starting or about to start
 
 const VXML_URL = "api/vxml";
 
-// These must match the back end (VxmlQueue.LoadingPolicy)
+// These must match the back end
 class LoadingPolicy {
   static START = "START"; // start generating vxml
   static NOSTART = "NOSTART"; // continue generating vxml
   static FORCESTOP = "FORCESTOP"; // stop generating vxml
 }
 
-// These must match the back end (VxmlQueue.Status)
+// These must match the back end
 class Status {
   static INIT = "INIT"; // before making a request (back end does not have INIT)
   static WAITING = "WAITING"; // waiting on other users/tasks
-  static PROCESSING = "PROCESSING";
-  static READY = "READY"; // meaning "done", success; also on front end means "ready to start"
+  static PROCESSING = "PROCESSING"; // in progress
+  static READY = "READY"; // finished successfully
   static STOPPED = "STOPPED"; // due to error or cancellation (LoadingPolicy.FORCESTOP)
 }
 
@@ -63,9 +61,7 @@ function viewMounted(setData) {
 function fetchStatus() {
   if (!canGenerate || "generate_vxml" !== cldrStatus.getCurrentSpecial()) {
     canGenerate = false;
-    return;
-  }
-  if (canGenerate) {
+  } else if (canGenerate) {
     requestVxml(new VxmlArgs(latestArgs, LoadingPolicy.NOSTART));
   }
 }
@@ -96,14 +92,6 @@ function setVxmlData(data) {
     return;
   }
   callbackToSetData(data);
-  if (DEBUG && Number(data.percent) === 100) {
-    console.log(
-      "cldrGenerateVxml.setVxmlData got percent 100 and latestArgs.loadingPolicy = " +
-        latestArgs.loadingPolicy +
-        " and message = " +
-        data.message
-    );
-  }
   if (data.status === Status.WAITING || data.status === Status.PROCESSING) {
     window.setTimeout(fetchStatus.bind(this), NORMAL_RETRY);
   }
