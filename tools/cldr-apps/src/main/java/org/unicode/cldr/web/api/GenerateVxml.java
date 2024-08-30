@@ -90,6 +90,14 @@ public class GenerateVxml {
         return response;
     }
 
+    @Schema(description = "VXML Request")
+    public static final class VxmlRequest {
+        public VxmlRequest() {}
+
+        @Schema(implementation = VxmlQueue.LoadingPolicy.class, defaultValue = "NOSTART")
+        public VxmlQueue.LoadingPolicy loadingPolicy = VxmlQueue.LoadingPolicy.NOSTART;
+    }
+
     @Schema(description = "VXML Response")
     public static final class VxmlResponse {
         public VxmlResponse() {}
