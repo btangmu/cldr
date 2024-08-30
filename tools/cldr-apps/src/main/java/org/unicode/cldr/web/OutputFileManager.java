@@ -322,19 +322,13 @@ public class OutputFileManager {
     }
 
     public static Set<CLDRLocale> createVxmlLocaleSet() {
-        if (false) { // TODO: debugging only!
-            Set<CLDRLocale> set = new TreeSet<>();
-            set.add(CLDRLocale.getInstance("aa"));
-            return set;
-        } else {
-            Set<CLDRLocale> set = new TreeSet<>(SurveyMain.getLocalesSet());
-            // skip "en" and "root", since they should never be changed by the Survey Tool
-            set.remove(CLDRLocale.getInstance("en"));
-            set.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
-            // Remove "mul", "mul_ZZ", etc.
-            set.removeIf(loc -> loc.getBaseName().startsWith(LocaleNames.MUL));
-            return set;
-        }
+        Set<CLDRLocale> set = new TreeSet<>(SurveyMain.getLocalesSet());
+        // skip "en" and "root", since they should never be changed by the Survey Tool
+        set.remove(CLDRLocale.getInstance("en"));
+        set.remove(CLDRLocale.getInstance(LocaleNames.ROOT));
+        // Remove "mul", "mul_ZZ", etc.
+        set.removeIf(loc -> loc.getBaseName().startsWith(LocaleNames.MUL));
+        return set;
     }
 
     /**
@@ -342,9 +336,6 @@ public class OutputFileManager {
      *
      * <p>If kind is vxml (for example), we may write to both common/main and common/annotations, or
      * to both seed/main and seed/annotations.
-     *
-     * <p>Note: this is only used for "manually" generated files. Compare writeOutputFile which is
-     * for "automatic" scheduled generation of files.
      *
      * @param loc the CLDRLocale
      * @param kind the Kind, currently Kind.vxml and Kind.pxml are supported

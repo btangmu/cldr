@@ -1020,7 +1020,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                     clearFlag(conn, locale, xpathId);
                     didClearFlag = true;
                 }
-                DBUtils.commit(conn);
+                conn.commit();
             } catch (SQLException e) {
                 SurveyLog.logException(logger, e, "Exception in saveVoteToDb");
                 SurveyMain.busted("Could not vote for value in locale " + locale, e);
@@ -1451,9 +1451,7 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
     }
 
     public synchronized void setupDB() {
-        System.out.println("This is setupDB starting; dbIsSetup = " + dbIsSetup);
         if (dbIsSetup) return;
-        System.out.println("This is setupDB setting dbIsSetup = true");
         dbIsSetup = true; // don't thrash.
         String sql = "(none)"; // this points to
         Statement s = null;
@@ -1490,7 +1488,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_VALUE);
             } else if (!DBUtils.tableHasColumn(
                     conn, DBUtils.Table.VOTE_VALUE.toString(), VOTE_TYPE)) {
@@ -1504,7 +1501,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null;
-                // DBUtils.commit(conn);
                 System.err.println(
                         "Added column " + VOTE_TYPE + " to table " + DBUtils.Table.VOTE_VALUE);
             }
@@ -1540,7 +1536,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_VALUE_ALT);
             }
             if (!DBUtils.hasTable(DBUtils.Table.VOTE_FLAGGED.toString())) {
@@ -1569,7 +1564,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.VOTE_FLAGGED);
             }
             if (!DBUtils.hasTable(DBUtils.Table.IMPORT.toString())) {
@@ -1607,7 +1601,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.IMPORT);
             }
             if (!DBUtils.hasTable(DBUtils.Table.IMPORT_AUTO.toString())) {
@@ -1633,7 +1626,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + DBUtils.Table.IMPORT_AUTO);
             }
             String tableName = DBUtils.Table.LOCKED_XPATHS.toString();
@@ -1658,7 +1650,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
                 s.execute(sql);
                 s.close();
                 s = null; // don't close twice.
-                // DBUtils.commit(conn);
                 System.err.println("Created table " + tableName);
             }
         } catch (SQLException se) {
@@ -1668,7 +1659,6 @@ public class STFactory extends Factory implements BallotBoxFactory<UserRegistry.
         } finally {
             DBUtils.close(s);
         }
-        System.out.println("This is setupDB returning");
     }
 
     /**
