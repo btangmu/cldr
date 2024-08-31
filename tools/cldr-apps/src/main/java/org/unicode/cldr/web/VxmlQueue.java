@@ -147,17 +147,15 @@ public class VxmlQueue {
 
         private void processCriticalWork() throws ExecutionException {
             status = "Beginning";
-            VxmlGenerator vg = new VxmlGenerator();
             Set<CLDRLocale> sortSet = OutputFileManager.createVxmlLocaleSet();
             maxn = sortSet.size();
             statusCode = Status.PROCESSING;
             n = 0;
+            VxmlGenerator vg = new VxmlGenerator();
             vg.setProgressCallback(new VxmlProgressCallback(Thread.currentThread()));
             vg.generate(sortSet, output);
             entry.verificationStatus = vg.getVerificationStatus();
-            if (myThread.isAlive()) {
-                entry.done = true;
-            }
+            entry.done = true;
         }
 
         private int getPercent() {
@@ -294,6 +292,9 @@ public class VxmlQueue {
         return entry;
     }
 
+    /**
+     * Estimated percentage complete for VXML generation
+     */
     private int percent = 0;
 
     private void setPercent(int p) {
