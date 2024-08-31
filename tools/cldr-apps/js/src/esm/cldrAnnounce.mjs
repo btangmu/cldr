@@ -33,7 +33,7 @@ const MOST_RECENT_ID_UNKNOWN = -1; // must be less than zero
 let alreadyGotId = MOST_RECENT_ID_UNKNOWN;
 
 /**
- * Ordinarily announcements are enabled. They may be temporarily enabled during
+ * Ordinarily announcements are enabled. They may be temporarily disabled during
  * critical operations such as VXML generation, or for debugging.
  */
 let announcementsEnabled = true;

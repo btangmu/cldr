@@ -86,9 +86,10 @@ public class OutputFileManager {
      * @param request the HttpServletRequest, used for "vap"
      * @param out the Writer, to receive HTML output
      *     <p>Invoked by pasting a url like this into a browser:
-     *     .../cldr-apps/admin-OutputAllFiles.jsp?vap=... TODO: remove this method, and
-     *     admin-OutputAllFiles.jsp, and other obsolete code once the new implementation with
-     *     GenerateVxml.java is well tested
+     *     .../cldr-apps/admin-OutputAllFiles.jsp?vap=...
+     *     <p>TODO: remove this method, and admin-OutputAllFiles.jsp, and other obsolete code once
+     *     the new implementation with GenerateVxml.java is well tested
+     *     <p>Reference: https://unicode-org.atlassian.net/browse/CLDR-14913
      */
     public static void outputAndVerifyAllFiles(HttpServletRequest request, Writer out) {
         String vap = request.getParameter("vap");
@@ -149,7 +150,7 @@ public class OutputFileManager {
                 }
                 out.write("<p>Created new directory: " + vetdataDir + "</p>");
 
-                if (outputFiles && !ofm.outputAllFiles(out, vetdataDir, vxmlGenerator)) {
+                if (outputFiles && !ofm.outputAllFiles(vxmlGenerator, out, vetdataDir)) {
                     out.write("File output failed.");
                     return;
                 }
@@ -246,12 +247,12 @@ public class OutputFileManager {
     /**
      * Output all files (VXML, etc.)
      *
+     * @param vxmlGenerator the VxmlGenerator, or null if using jsp
      * @param out the Writer, to receive HTML output
      * @param vetDataDir the folder in which to write
-     * @param vxmlGenerator the VxmlGenerator, or null if using jsp
      * @return true for success, false for failure
      */
-    private boolean outputAllFiles(Writer out, File vetDataDir, VxmlGenerator vxmlGenerator) {
+    private boolean outputAllFiles(VxmlGenerator vxmlGenerator, Writer out, File vetDataDir) {
         try {
             long start = System.currentTimeMillis();
             ElapsedTimer overallTimer =
@@ -472,7 +473,7 @@ public class OutputFileManager {
     /**
      * Verify all VXML files
      *
-     * @param vxmlGenerator
+     * @param vxmlGenerator the VxmlGenerator, or null if using jsp
      * @param out the Writer, to receive HTML output
      *     <p>The following need to be verified on the server when generating vxml: • The same file
      *     must not occur in both the common/X and seed/X directories, for any X=main|annotations •
