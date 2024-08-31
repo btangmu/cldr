@@ -81,8 +81,6 @@ public class GenerateVxml {
         VxmlResponse response = new VxmlResponse();
         VxmlQueue.Args args = new VxmlQueue.Args(qmi, loadingPolicy);
         VxmlQueue.Results results = new VxmlQueue.Results();
-
-        // compare VettingViewerQueue.getPriorityItemsSummaryOutput
         response.message = queue.getOutput(args, results);
         response.percent = queue.getPercent();
         response.status = results.status;
@@ -92,16 +90,12 @@ public class GenerateVxml {
 
     @Schema(description = "VXML Request")
     public static final class VxmlRequest {
-        public VxmlRequest() {}
-
-        @Schema(implementation = VxmlQueue.LoadingPolicy.class, defaultValue = "NOSTART")
-        public VxmlQueue.LoadingPolicy loadingPolicy = VxmlQueue.LoadingPolicy.NOSTART;
+        @Schema(implementation = VxmlQueue.LoadingPolicy.class)
+        public VxmlQueue.LoadingPolicy loadingPolicy;
     }
 
     @Schema(description = "VXML Response")
     public static final class VxmlResponse {
-        public VxmlResponse() {}
-
         @Schema(description = "VXML Response status enum")
         public VxmlQueue.Status status;
 

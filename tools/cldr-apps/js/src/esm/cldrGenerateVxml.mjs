@@ -3,6 +3,7 @@
  */
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrAnnounce from "./cldrAnnounce.mjs";
+import * as cldrNotify from "./cldrNotify.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 
 const SECONDS_IN_MS = 1000;
@@ -11,37 +12,21 @@ const NORMAL_RETRY = 10 * SECONDS_IN_MS; // "Normal" retry: starting or about to
 
 const VXML_URL = "api/vxml";
 
-// These must match the back end
+// These must match the back end; used in requests
 class LoadingPolicy {
   static START = "START"; // start generating vxml
-  static NOSTART = "NOSTART"; // continue generating vxml
-  static FORCESTOP = "FORCESTOP"; // stop (cancel) generating vxml
+  static CONTINUE = "CONTINUE"; // continue generating vxml
+  static STOP = "STOP"; // stop (cancel) generating vxml
 }
 
-// These must match the back end
+// These must match the back end; used in responses
 class Status {
   static INIT = "INIT"; // before making a request (back end does not have INIT)
   static WAITING = "WAITING"; // waiting on other users/tasks
   static PROCESSING = "PROCESSING"; // in progress
   static READY = "READY"; // finished successfully
-  static STOPPED = "STOPPED"; // due to error or cancellation (LoadingPolicy.FORCESTOP)
+  static STOPPED = "STOPPED"; // due to error or cancellation (LoadingPolicy.STOP)
 }
-
-class VxmlArgs {
-  /**
-   * Construct a new VxmlArgs object
-   *
-   * @param {VxmlArgs} defaultArgs -- default (latest) args, or null/undefined
-   * @param {String} loadingPolicy -- START, NOSTART or FORCESTOP
-   * @returns a new VxmlArgs
-   */
-  constructor(defaultArgs, loadingPolicy) {
-    this.loadingPolicy =
-      loadingPolicy || defaultArgs?.loadingPolicy || LoadingPolicy.NOSTART;
-  }
-}
-
-let latestArgs = new VxmlArgs();
 
 let canGenerate = false;
 
@@ -54,40 +39,38 @@ function canGenerateVxml() {
 function viewMounted(setData) {
   callbackToSetData = setData;
   const perm = cldrStatus.getPermissions();
-  if (perm?.userIsAdmin) {
-    canGenerate = true;
-  }
+  canGenerate = Boolean(perm?.userIsAdmin);
+}
+
+function start() {
+  // Disable announcements during VXML generation to reduce risk of interference
+  cldrAnnounce.enableAnnouncements(false);
+  requestVxml(LoadingPolicy.START);
 }
 
 function fetchStatus() {
   if (!canGenerate || "generate_vxml" !== cldrStatus.getCurrentSpecial()) {
     canGenerate = false;
   } else if (canGenerate) {
-    requestVxml(new VxmlArgs(latestArgs, LoadingPolicy.NOSTART));
+    requestVxml(LoadingPolicy.CONTINUE);
   }
 }
 
-function start() {
-  // Disable announcements during VXML generation to reduce risk of interference
-  cldrAnnounce.enableAnnouncements(false);
-  const vxmlArgs = new VxmlArgs(null, LoadingPolicy.START);
-  requestVxml(vxmlArgs);
-}
-
 function stop() {
-  const vxmlArgs = new VxmlArgs(latestArgs, LoadingPolicy.FORCESTOP);
-  requestVxml(vxmlArgs);
+  requestVxml(LoadingPolicy.STOP);
 }
 
-function requestVxml(vxmlArgs) {
-  latestArgs = vxmlArgs;
-  const init = cldrAjax.makePostData(vxmlArgs);
+function requestVxml(loadingPolicy) {
+  const args = { loadingPolicy: loadingPolicy };
+  const init = cldrAjax.makePostData(args);
   cldrAjax
     .doFetch(VXML_URL, init)
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(setVxmlData)
-    .catch((error) => console.log(error));
+    .catch((e) => {
+      cldrNotify.exception(e, "generating VXML");
+    });
 }
 
 function setVxmlData(data) {
