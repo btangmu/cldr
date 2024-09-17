@@ -9,6 +9,7 @@
  */
 
 import * as cldrAddAlt from "./cldrAddAlt.mjs";
+import * as cldrAddValue from "./cldrAddValue.mjs";
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrCoverage from "./cldrCoverage.mjs";
 import * as cldrDashContext from "./cldrDashContext.mjs";
@@ -567,6 +568,7 @@ function reallyUpdateRow(tr, theRow) {
     if (addCell) {
       cldrDom.removeAllChildNodes(addCell);
       addCell.appendChild(formAdd);
+      cldrAddValue.addButton(addCell, theRow.xpstrid);
     }
   }
 
