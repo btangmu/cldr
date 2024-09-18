@@ -1431,6 +1431,7 @@ export {
   getPageUrl,
   getRowApprovalStatusClass,
   getStatusIcon,
+  getValidWinningValue,
   goToHeaderId,
   insertRows,
   isHeaderId,

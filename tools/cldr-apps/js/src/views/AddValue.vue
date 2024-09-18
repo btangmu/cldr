@@ -4,18 +4,18 @@ import { nextTick, ref } from "vue";
 import * as cldrAddValue from "../esm/cldrAddValue.mjs";
 
 const xpstrid = ref("");
-const formIsVisible = ref(false);
 const newValue = ref("");
-const inputToFocus = ref(null);
 const formLeft = ref(0);
 const formTop = ref(0);
+const formIsVisible = ref(false);
+const inputToFocus = ref(null);
 
 function setXpathStringId(id) {
   xpstrid.value = id;
 }
 
 function showModal(event) {
-  // Get the coordinates of the button's top-left corner
+  // Use the coordinates of the button's top-left corner
   formLeft.value = event.clientX - event.offsetX;
   formTop.value = event.clientY - event.offsetY;
   newValue.value = "";
@@ -31,11 +31,11 @@ function focusInput() {
 }
 
 function onEnglish() {
-  console.log("TODO: implement onEnglish");
+  newValue.value = cldrAddValue.getEnglish(xpstrid.value);
 }
 
 function onWinning() {
-  console.log("TODO: implement onWinning");
+  newValue.value = cldrAddValue.getWinning(xpstrid.value);
 }
 
 function onCancel() {
@@ -66,6 +66,7 @@ defineExpose({
     <a-modal
       v-model:visible="formIsVisible"
       :footer="null"
+      :closable="false"
       :style="{
         position: 'sticky',
         left: formLeft + 'px',
@@ -73,7 +74,6 @@ defineExpose({
       }"
       @ok="onSubmit"
     >
-      <header>Add a translation</header>
       <a-input
         v-model:value="newValue"
         placeholder="Add a translation"
@@ -81,11 +81,8 @@ defineExpose({
       />
       <div class="button-container">
         <a-button @click="onEnglish">→English</a-button>
-        &nbsp;
         <a-button @click="onWinning">→Winning</a-button>
-        &nbsp;
         <a-button type="cancel" @click="onCancel">Cancel</a-button>
-        &nbsp;
         <a-button type="primary" @click="onSubmit">Submit</a-button>
       </div>
     </a-modal>
@@ -93,10 +90,6 @@ defineExpose({
 </template>
 
 <style scoped>
-body {
-  overflow-x: hidden;
-}
-
 .button-container {
   display: flex;
   justify-content: space-between;

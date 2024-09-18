@@ -1,6 +1,7 @@
 /**
  * cldrSurvey: encapsulate miscellaneous Survey Tool functions
  */
+import * as cldrAddValue from "./cldrAddValue.mjs";
 import * as cldrAjax from "./cldrAjax.mjs";
 import * as cldrCoverage from "./cldrCoverage.mjs";
 import * as cldrCoverageReset from "./cldrCoverageReset.mjs";
@@ -107,13 +108,15 @@ function getXpathMap() {
  * @return true if busy
  */
 function isInputBusy() {
-  if (cldrForum.isFormVisible()) {
+  if (cldrAddValue.isFormVisible() || cldrForum.isFormVisible()) {
     return true;
   }
   const sel = window.getSelection ? window.getSelection() : null;
   if (sel?.anchorNode?.className) {
     // "popover-content" identifies the little input window, created using bootstrap, that appears when the
     // user clicks an add ("+") button.
+    // TODO: remove this code when remove legacy input window
+    // Reference: https://unicode-org.atlassian.net/browse/CLDR-17953
     if (sel.anchorNode.className.indexOf("popover-content") != -1) {
       return true;
     }

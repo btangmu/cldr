@@ -34,9 +34,25 @@ function addButton(containerEl, xpstrid) {
   }
 }
 
+function getEnglish(xpstrid) {
+  const theRow = getTheRowFromXpathStringId(xpstrid);
+  return theRow?.displayName || "";
+}
+
+function getWinning(xpstrid) {
+  const theRow = getTheRowFromXpathStringId(xpstrid);
+  if (!theRow) {
+    return "";
+  }
+  let theValue = cldrTable.getValidWinningValue(theRow);
+  if (theValue === cldrSurvey.INHERITANCE_MARKER || theValue === null) {
+    theValue = theRow.inheritedDisplayValue;
+  }
+  return theValue || "";
+}
+
 function sendRequest(xpstrid, newValue) {
-  const rowId = cldrTable.makeRowId(xpstrid);
-  const tr = document.getElementById(rowId);
+  const tr = getTrFromXpathStringId(xpstrid);
   if (!tr) {
     return;
   }
@@ -51,4 +67,21 @@ function sendRequest(xpstrid, newValue) {
   );
 }
 
-export { addButton, isFormVisible, sendRequest, setFormIsVisible };
+function getTheRowFromXpathStringId(xpstrid) {
+  const tr = getTrFromXpathStringId(xpstrid);
+  return tr?.theRow;
+}
+
+function getTrFromXpathStringId(xpstrid) {
+  const rowId = cldrTable.makeRowId(xpstrid);
+  return document.getElementById(rowId);
+}
+
+export {
+  addButton,
+  getEnglish,
+  getWinning,
+  isFormVisible,
+  sendRequest,
+  setFormIsVisible,
+};
