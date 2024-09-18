@@ -18,9 +18,15 @@ onMounted(() => {
 
 function showModal(event) {
   console.log("showModal: x, y = " + event.clientX + ", " + event.clientY);
+  console.log(
+    "showModal: offsetX, offsetY = " + event.offsetX + ", " + event.offsetY
+  );
   formIsVisible.value = true;
   cldrAddValue.setFormIsVisible(true);
-  setModalPosition(event.clientX, event.clientY);
+  setModalPosition(
+    event.clientX - event.offsetX,
+    event.clientY - event.offsetY
+  );
   nextTick(focusInput);
 }
 
@@ -104,14 +110,11 @@ function onSubmit() {
       @ok="onSubmit"
     >
       <header>Add a translation</header>
-      <a-form-item class="formItems" name="body" has-feedback>
-        <a-input
-          v-model:value="newValue"
-          placeholder="Add a translation"
-          ref="inputToFocus"
-        />
-      </a-form-item>
-
+      <a-input
+        v-model:value="newValue"
+        placeholder="Add a translation"
+        ref="inputToFocus"
+      />
       <div class="button-container">
         <a-button @click="onEnglish">→English</a-button>
         &nbsp;
