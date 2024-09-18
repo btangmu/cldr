@@ -1,10 +1,10 @@
 /*
  * cldrAddValue: enable submitting a new value for a path
  */
-import * as cldrAjax from "./cldrAjax.mjs";
-import * as cldrLoad from "./cldrLoad.mjs";
 import * as cldrNotify from "./cldrNotify.mjs";
-import * as cldrStatus from "./cldrStatus.mjs";
+import * as cldrSurvey from "./cldrSurvey.mjs";
+import * as cldrTable from "./cldrTable.mjs";
+import * as cldrVote from "./cldrVote.mjs";
 import * as cldrVue from "./cldrVue.mjs";
 
 import AddValue from "../views/AddValue.vue";
@@ -34,48 +34,21 @@ function addButton(containerEl, xpstrid) {
   }
 }
 
-async function sendRequest(xpstrid, newValue) {
-  if (true) {
-    console.log(
-      "TODO: implement cldrAddValue.sendRequest, newValue = " +
-        newValue +
-        "; xpstrid = " +
-        xpstrid
-    );
+function sendRequest(xpstrid, newValue) {
+  const rowId = cldrTable.makeRowId(xpstrid);
+  const tr = document.getElementById(rowId);
+  if (!tr) {
     return;
   }
-  const localeId = cldrStatus.getCurrentLocale();
-  if (!localeId) {
-    return;
-  }
-  const url = cldrAjax.makeApiUrl("xpath/value", null); // TODO ???
-  const data = {
-    newValue: newValue,
-    localeId: localeId,
-    hexId: xpstrid,
-  };
-  const init = cldrAjax.makePostData(data);
-  try {
-    const response = await cldrAjax.doFetch(url, init);
-    if (response.ok) {
-      callbackFunction(null);
-    } else {
-      const json = await response.json();
-      const message = json.message || "Unknown server response";
-      throw new Error(message);
-    }
-  } catch (e) {
-    console.error(e);
-    window.alert("Error while adding value: \n\n" + e);
-    callbackFunction(e);
-  }
+  tr.inputTd = tr.querySelector(".othercell");
+  const protoButton = document.getElementById("proto-button");
+  cldrVote.handleWiredClick(
+    tr,
+    tr.theRow,
+    "",
+    newValue,
+    cldrSurvey.cloneAnon(protoButton)
+  );
 }
 
-/**
- * Reload the page table so it will include the new row
- */
-function reloadPage() {
-  cldrLoad.reloadV(); // crude
-}
-
-export { addButton, isFormVisible, reloadPage, sendRequest, setFormIsVisible };
+export { addButton, isFormVisible, sendRequest, setFormIsVisible };
