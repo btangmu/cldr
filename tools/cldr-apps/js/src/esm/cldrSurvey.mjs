@@ -116,7 +116,7 @@ function isInputBusy() {
     // "popover-content" identifies the little input window, created using bootstrap, that appears when the
     // user clicks an add ("+") button.
     // TODO: remove this code when remove legacy input window
-    // Reference: https://unicode-org.atlassian.net/browse/CLDR-17953
+    // Reference: https://unicode-org.atlassian.net/browse/CLDR-16750
     if (sel.anchorNode.className.indexOf("popover-content") != -1) {
       return true;
     }
