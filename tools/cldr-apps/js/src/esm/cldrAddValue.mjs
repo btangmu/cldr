@@ -9,41 +9,48 @@ import * as cldrVue from "./cldrVue.mjs";
 
 import AddValue from "../views/AddValue.vue";
 
+/**
+ * Is the "Add Value" form currently visible?
+ */
+let formIsVisible = false;
+
+function isFormVisible() {
+  return formIsVisible;
+}
+
+function setFormIsVisible(visible) {
+  formIsVisible = visible;
+}
+
 function addButton(containerEl, xpstrid) {
   try {
     const AddValueWrapper = cldrVue.mount(AddValue, containerEl);
-    AddValueWrapper.setXpathStringId(xpstrid);
+    // AddValueWrapper.setXpathStringId(xpstrid); // TODO ???
   } catch (e) {
-    console.error("Error loading Add Value vue " + e.message + " / " + e.name);
+    console.error(
+      "Error loading Add Value Button vue " + e.message + " / " + e.name
+    );
     cldrNotify.exception(e, "while loading AddValue");
   }
 }
 
-async function getAlts(xpstrid, callbackFunction) { // TODO ???
+async function sendRequest(newValue, xpstrid, callbackFunction) {
+  if (true) {
+    console.log(
+      "TODO: implement cldrAddValue.sendRequest, newValue = " +
+        newValue +
+        "; xpstrid = " +
+        xpstrid
+    );
+    return;
+  }
   const localeId = cldrStatus.getCurrentLocale();
   if (!localeId) {
     return;
   }
-  const url = cldrAjax.makeApiUrl( // TODO ???
-    "xpath/value/" + localeId + "/" + xpstrid,
-    null
-  );
-  return await cldrAjax
-    .doFetch(url)
-    .then(cldrAjax.handleFetchErrors)
-    .then((r) => r.json())
-    .then(callbackFunction)
-    .catch((e) => console.error(e));
-}
-
-async function addChosenValue(xpstrid, alt, callbackFunction) {
-  const localeId = cldrStatus.getCurrentLocale();
-  if (!localeId) {
-    return;
-  }
-  const url = cldrAjax.makeApiUrl("xpath/value", null); // ???
+  const url = cldrAjax.makeApiUrl("xpath/value", null); // TODO ???
   const data = {
-    alt: alt,
+    newValue: newValue,
     localeId: localeId,
     hexId: xpstrid,
   };
@@ -71,4 +78,4 @@ function reloadPage() {
   cldrLoad.reloadV(); // crude
 }
 
-export { addButton, getAlts, addChosenValue, reloadPage };
+export { addButton, isFormVisible, reloadPage, sendRequest, setFormIsVisible };

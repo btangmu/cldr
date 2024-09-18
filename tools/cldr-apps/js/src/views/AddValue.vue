@@ -1,114 +1,129 @@
-<template>
-  <section>
-    <button
-      v-if="!valueForm && !success"
-      title="Add a value"
-      @click="getMenu"
-    >
-      +value
-    </button>
-    <div v-if="valueForm && valueForm.length">
-      <label for="chosenAlt">alt=</label>
-      <select
-        id="chosenAlt"
-        name="chosenAlt"
-        v-model="chosenAlt"
-        title="Choose an alt attribute"
-      >
-        <option disabled value="">Please Select</option>
-        <option :key="alt" v-for="alt in valueForm">{{ alt }}</option>
-      </select>
-    </div>
-    <div>
-      <span v-if="chosenAlt">
-        <button title="Add alt path now" @click="reallyAdd">Add</button>
-        &nbsp;
-      </span>
-      <span v-if="chosenAlt || errMessage">
-        <button title="Do not add alt path" @click="reset">Cancel</button>
-      </span>
-    </div>
-    <div v-if="errMessage">
-      {{ errMessage }}
-    </div>
-    <div v-if="success">
-      “alt” added.
-      <button @click="clickLoad">Reload Page</button>
-    </div>
-  </section>
-</template>
+<script setup>
+import { nextTick, onMounted, ref } from "vue";
 
-<script>
 import * as cldrAddValue from "../esm/cldrAddValue.mjs";
 
-export default {
-  data() {
-    return {
-      xpstrid: null,
-      valueForm: null,
-      chosenAlt: "",
-      errMessage: null,
-      success: false,
-    };
-  },
+const formIsVisible = ref(false);
+const newValue = ref("");
+const theButton = ref(null);
+const theModal = ref(null);
+const inputToFocus = ref(null);
+const formLeft = ref(0);
+const formTop = ref(0);
+let buttonRect = null;
 
-  methods: {
-    setXpathStringId(xpstrid) {
-      this.xpstrid = xpstrid;
-    },
+onMounted(() => {
+  nextTick(getButtonRect);
+});
 
-    getMenu() {
-      if (this.xpstrid) {
-        cldrAddValue.getAlts(this.xpstrid, this.setAlts /* callback */);
-      }
-    },
-
-    // callback
-    setAlts(json) {
-      this.valueForm = json.alt;
-    },
-
-    reallyAdd() {
-      if (this.xpstrid && this.chosenAlt) {
-        cldrAddValue.addChosenValue(
-          this.xpstrid,
-          this.chosenAlt,
-          this.showResult /* callback */
-        );
-      }
-    },
-
-    showResult(errMessage) {
-      this.reset();
-      this.errMessage = errMessage; // null or empty for success
-      if (!errMessage) {
-        this.success = true;
-      }
-    },
-
-    clickLoad() {
-      this.reset();
-      cldrAddValue.reloadPage();
-    },
-
-    reset() {
-      this.valueForm = null;
-      this.chosenAlt = "";
-      this.errMessage = null;
-      this.success = false;
-    },
-  },
-};
-</script>
-
-<style scoped>
-button,
-select {
-  margin-top: 1ex;
+function showModal() {
+  formIsVisible.value = true;
+  cldrAddValue.setFormIsVisible(true);
+  nextTick(setModalPosition);
+  nextTick(focusInput);
 }
 
-section {
-  clear: both;
-  float: right;
+function getButtonRect() {
+  if (theButton.value?.getBoundingClientRect) {
+    buttonRect = theButton.value?.getBoundingClientRect();
+    console.log(
+      "getButtonRect: left = " + buttonRect.left + " top = " + buttonRect.top
+    );
+  } else {
+    console.log("getButtonRect: no getBoundingClientRect");
+  }
+}
+
+function setModalPosition() {
+  if (!buttonRect) {
+    console.log("setModalPosition: no buttonRect");
+    return;
+  }
+  console.log(
+    "setModalPosition: left = " + buttonRect.left + " top = " + buttonRect.top
+  );
+  formLeft.value = buttonRect.left;
+  formTop.value = buttonRect.top;
+  console.log(
+    "setModalPosition: formLeft = " +
+      formLeft.value +
+      " formTop = " +
+      formTop.value
+  );
+}
+
+function focusInput() {
+  if (inputToFocus.value) {
+    inputToFocus.value.focus();
+  }
+}
+
+function onEnglish() {
+  console.log("TODO: implement onEnglish");
+}
+
+function onWinning() {
+  console.log("TODO: implement onWinning");
+}
+
+function onCancel() {
+  formIsVisible.value = false;
+  cldrAddValue.setFormIsVisible(false);
+}
+
+function onSubmit() {
+  formIsVisible.value = false;
+  cldrAddValue.setFormIsVisible(false);
+  if (newValue.value) {
+    cldrAddValue.sendRequest(newValue.value);
+  }
+}
+</script>
+
+<template>
+  <div>
+    <button ref="theButton" type="primary" @click="showModal">+</button>
+    <a-modal
+      ref="theModal"
+      v-model:visible="formIsVisible"
+      :footer="null"
+      :style="{
+        position: 'absolute',
+        left: formLeft + 'px',
+        top: formTop + 'px',
+      }"
+      @ok="onSubmit"
+    >
+      <header>Add a translation</header>
+      <a-form-item class="formItems" name="body" has-feedback>
+        <a-input
+          v-model:value="newValue"
+          placeholder="Add a translation"
+          ref="inputToFocus"
+        />
+      </a-form-item>
+
+      <div class="button-container">
+        <a-button @click="onEnglish">→English</a-button>
+        &nbsp;
+        <a-button @click="onWinning">→Winning</a-button>
+        &nbsp;
+        <a-button type="cancel" @click="onCancel">Cancel</a-button>
+        &nbsp;
+        <a-button type="primary" @click="onSubmit">Submit</a-button>
+      </div>
+    </a-modal>
+  </div>
+</template>
+
+<style scoped>
+body {
+  overflow-x: hidden;
+}
+
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 1em;
 }
 </style>
