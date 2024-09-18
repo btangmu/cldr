@@ -20,7 +20,7 @@ function showModal(event) {
   formTop.value = event.clientY - event.offsetY;
   newValue.value = "";
   formIsVisible.value = true;
-  cldrAddValue.setFormIsVisible(true);
+  cldrAddValue.setFormIsVisible(true, xpstrid.value);
   nextTick(focusInput);
 }
 
@@ -40,12 +40,12 @@ function onWinning() {
 
 function onCancel() {
   formIsVisible.value = false;
-  cldrAddValue.setFormIsVisible(false);
+  cldrAddValue.setFormIsVisible(false, xpstrid.value);
 }
 
 function onSubmit() {
   formIsVisible.value = false;
-  cldrAddValue.setFormIsVisible(false);
+  cldrAddValue.setFormIsVisible(false, xpstrid.value);
   if (newValue.value) {
     cldrAddValue.sendRequest(xpstrid.value, newValue.value);
   }
@@ -65,8 +65,8 @@ defineExpose({
     </button>
     <a-modal
       v-model:visible="formIsVisible"
-      :footer="null"
       :closable="false"
+      :footer="null"
       :style="{
         position: 'sticky',
         left: formLeft + 'px',
@@ -78,6 +78,7 @@ defineExpose({
         v-model:value="newValue"
         placeholder="Add a translation"
         ref="inputToFocus"
+        @keydown.enter="onSubmit"
       />
       <div class="button-container">
         <a-button @click="onEnglish">→English</a-button>

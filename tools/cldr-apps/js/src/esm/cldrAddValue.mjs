@@ -14,12 +14,21 @@ import AddValue from "../views/AddValue.vue";
  */
 let formIsVisible = false;
 
+let originalTrClassName = "";
+
 function isFormVisible() {
   return formIsVisible;
 }
 
-function setFormIsVisible(visible) {
+function setFormIsVisible(visible, xpstrid) {
   formIsVisible = visible;
+  const tr = getTrFromXpathStringId(xpstrid);
+  if (tr) {
+    if (visible) {
+      originalTrClassName = tr.className;
+    }
+    tr.className = visible ? "tr_submit" : originalTrClassName;
+  }
 }
 
 function addButton(containerEl, xpstrid) {
