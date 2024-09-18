@@ -16,10 +16,11 @@ onMounted(() => {
   nextTick(getButtonRect);
 });
 
-function showModal() {
+function showModal(event) {
+  console.log("showModal: x, y = " + event.clientX + ", " + event.clientY);
   formIsVisible.value = true;
   cldrAddValue.setFormIsVisible(true);
-  nextTick(setModalPosition);
+  setModalPosition(event.clientX, event.clientY);
   nextTick(focusInput);
 }
 
@@ -34,7 +35,7 @@ function getButtonRect() {
   }
 }
 
-function setModalPosition() {
+function setModalPosition(x, y) {
   if (!buttonRect) {
     console.log("setModalPosition: no buttonRect");
     return;
@@ -42,8 +43,15 @@ function setModalPosition() {
   console.log(
     "setModalPosition: left = " + buttonRect.left + " top = " + buttonRect.top
   );
-  formLeft.value = buttonRect.left;
-  formTop.value = buttonRect.top;
+    console.log(
+    "setModalPosition: x = " + x + " y = " + y
+  );
+  // ideally should use the buttonRect to determine the dialog coordinates,
+  // but that fails when scrollbar is used; mouse x, y works better
+  formLeft.value = x;
+  formTop.value = y;
+  // formLeft.value = buttonRect.left;
+  // formTop.value = buttonRect.top;
   console.log(
     "setModalPosition: formLeft = " +
       formLeft.value +
@@ -88,7 +96,7 @@ function onSubmit() {
       v-model:visible="formIsVisible"
       :footer="null"
       :style="{
-        position: 'absolute',
+        position: 'sticky',
         left: formLeft + 'px',
         top: formTop + 'px',
       }"
