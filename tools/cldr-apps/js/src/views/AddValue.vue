@@ -43,9 +43,7 @@ function setModalPosition(x, y) {
   console.log(
     "setModalPosition: left = " + buttonRect.left + " top = " + buttonRect.top
   );
-    console.log(
-    "setModalPosition: x = " + x + " y = " + y
-  );
+  console.log("setModalPosition: x = " + x + " y = " + y);
   // ideally should use the buttonRect to determine the dialog coordinates,
   // but that fails when scrollbar is used; mouse x, y works better
   formLeft.value = x;
@@ -90,7 +88,10 @@ function onSubmit() {
 
 <template>
   <div>
-    <button ref="theButton" type="primary" @click="showModal">+</button>
+    <!-- If use a-button instead of button, positioning fails -->
+    <button ref="theButton" class="plus" type="primary" @click="showModal">
+      ✚
+    </button>
     <a-modal
       ref="theModal"
       v-model:visible="formIsVisible"
@@ -133,5 +134,17 @@ body {
   display: flex;
   justify-content: space-between;
   padding-top: 1em;
+}
+
+.plus {
+  color: #fff;
+  background-color: #428bca;
+  background-image: none;
+  font-size: 115%;
+  border: 1px solid #345578;
+  border-radius: 4px;
+  padding: 6px 12px;
+  vertical-align: middle;
+  text-align: center;
 }
 </style>
