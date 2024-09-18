@@ -1,67 +1,27 @@
 <script setup>
-import { nextTick, onMounted, ref } from "vue";
+import { nextTick, ref } from "vue";
 
 import * as cldrAddValue from "../esm/cldrAddValue.mjs";
 
+const xpstrid = ref("");
 const formIsVisible = ref(false);
 const newValue = ref("");
-const theButton = ref(null);
-const theModal = ref(null);
 const inputToFocus = ref(null);
 const formLeft = ref(0);
 const formTop = ref(0);
-let buttonRect = null;
 
-onMounted(() => {
-  nextTick(getButtonRect);
-});
+function setXpathStringId(id) {
+  xpstrid.value = id;
+}
 
 function showModal(event) {
-  console.log("showModal: x, y = " + event.clientX + ", " + event.clientY);
-  console.log(
-    "showModal: offsetX, offsetY = " + event.offsetX + ", " + event.offsetY
-  );
+  // Get the coordinates of the button's top-left corner
+  formLeft.value = event.clientX - event.offsetX;
+  formTop.value = event.clientY - event.offsetY;
+  newValue.value = "";
   formIsVisible.value = true;
   cldrAddValue.setFormIsVisible(true);
-  setModalPosition(
-    event.clientX - event.offsetX,
-    event.clientY - event.offsetY
-  );
   nextTick(focusInput);
-}
-
-function getButtonRect() {
-  if (theButton.value?.getBoundingClientRect) {
-    buttonRect = theButton.value?.getBoundingClientRect();
-    console.log(
-      "getButtonRect: left = " + buttonRect.left + " top = " + buttonRect.top
-    );
-  } else {
-    console.log("getButtonRect: no getBoundingClientRect");
-  }
-}
-
-function setModalPosition(x, y) {
-  if (!buttonRect) {
-    console.log("setModalPosition: no buttonRect");
-    return;
-  }
-  console.log(
-    "setModalPosition: left = " + buttonRect.left + " top = " + buttonRect.top
-  );
-  console.log("setModalPosition: x = " + x + " y = " + y);
-  // ideally should use the buttonRect to determine the dialog coordinates,
-  // but that fails when scrollbar is used; mouse x, y works better
-  formLeft.value = x;
-  formTop.value = y;
-  // formLeft.value = buttonRect.left;
-  // formTop.value = buttonRect.top;
-  console.log(
-    "setModalPosition: formLeft = " +
-      formLeft.value +
-      " formTop = " +
-      formTop.value
-  );
 }
 
 function focusInput() {
@@ -87,19 +47,23 @@ function onSubmit() {
   formIsVisible.value = false;
   cldrAddValue.setFormIsVisible(false);
   if (newValue.value) {
-    cldrAddValue.sendRequest(newValue.value);
+    cldrAddValue.sendRequest(xpstrid.value, newValue.value);
   }
 }
+
+defineExpose({
+  setXpathStringId,
+});
 </script>
 
 <template>
   <div>
     <!-- If use a-button instead of button, positioning fails -->
-    <button ref="theButton" class="plus" type="primary" @click="showModal">
+    <button class="plus" type="button" @click="showModal">
       ✚
+      <!-- U+271A HEAVY GREEK CROSS -->
     </button>
     <a-modal
-      ref="theModal"
       v-model:visible="formIsVisible"
       :footer="null"
       :style="{
@@ -140,14 +104,11 @@ body {
 }
 
 .plus {
-  color: #fff;
-  background-color: #428bca;
-  background-image: none;
-  font-size: 115%;
-  border: 1px solid #345578;
+  font-size: 118%;
   border-radius: 4px;
   padding: 6px 12px;
-  vertical-align: middle;
-  text-align: center;
+  color: #fff;
+  background-color: #428bca;
+  border: 1px solid #345578;
 }
 </style>

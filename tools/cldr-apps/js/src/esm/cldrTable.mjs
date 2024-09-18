@@ -567,8 +567,8 @@ function reallyUpdateRow(tr, theRow) {
   if (tr.canChange) {
     if (addCell) {
       cldrDom.removeAllChildNodes(addCell);
-      addCell.appendChild(formAdd);
       cldrAddValue.addButton(addCell, theRow.xpstrid);
+      addCell.appendChild(formAdd);
     }
   }
 

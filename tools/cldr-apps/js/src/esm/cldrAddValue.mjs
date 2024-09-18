@@ -25,7 +25,7 @@ function setFormIsVisible(visible) {
 function addButton(containerEl, xpstrid) {
   try {
     const AddValueWrapper = cldrVue.mount(AddValue, containerEl);
-    // AddValueWrapper.setXpathStringId(xpstrid); // TODO ???
+    AddValueWrapper.setXpathStringId(xpstrid);
   } catch (e) {
     console.error(
       "Error loading Add Value Button vue " + e.message + " / " + e.name
@@ -34,7 +34,7 @@ function addButton(containerEl, xpstrid) {
   }
 }
 
-async function sendRequest(newValue, xpstrid, callbackFunction) {
+async function sendRequest(xpstrid, newValue) {
   if (true) {
     console.log(
       "TODO: implement cldrAddValue.sendRequest, newValue = " +
