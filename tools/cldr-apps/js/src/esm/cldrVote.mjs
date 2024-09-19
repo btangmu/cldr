@@ -360,7 +360,7 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
     } else {
       // modern Vue
       const description = cldrSurvey.testsToHtml(tests);
-      cldrNotify.error("Submitting new translation", description);
+      cldrNotify.popup("Response to voting", description);
     }
     if (ourItem || (replaceErrors && value === "") /* Abstain */) {
       const message = cldrText.sub(

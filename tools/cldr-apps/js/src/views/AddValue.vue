@@ -58,13 +58,13 @@ defineExpose({
 
 <template>
   <div>
-    <!-- If use a-button instead of button, positioning fails -->
+    <!-- If use a-button instead of button, form positioning fails -->
     <button class="plus" type="button" @click="showModal">
       ✚
       <!-- U+271A HEAVY GREEK CROSS -->
     </button>
     <a-modal
-      v-model:visible="formIsVisible"
+      :visible="formIsVisible"
       :closable="false"
       :footer="null"
       :style="{
