@@ -495,7 +495,7 @@ public class VoteAPIHelper {
                                             mySession.user);
                     if (!r.statusAction.isForbidden()) {
                         try {
-                            if (r != null) {
+                            if (r != null && false) {
                                 throw new VoteNotAcceptedException(
                                         ErrorCode.E_PERMANENT_VOTE_NO_FORUM, "ouch");
                             }

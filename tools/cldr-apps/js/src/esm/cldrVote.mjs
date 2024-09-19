@@ -342,26 +342,8 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
       ];
     }
 
-    var input = $(inTd).closest("tr").find(".input-add");
-    if (input && false) {
-      // legacy bootstrap
-      // TODO: remove this; reference: https://unicode-org.atlassian.net/browse/CLDR-16750
-      input.closest(".form-group").addClass("has-error");
-      input
-        .popover("destroy")
-        .popover({
-          placement: "bottom",
-          html: true,
-          content: cldrSurvey.testsToHtml(tests),
-          trigger: "hover",
-        })
-        .popover("show");
-      if (tr.myProposal) tr.myProposal.style.display = "none";
-    } else {
-      // modern Vue
-      const description = cldrSurvey.testsToHtml(tests);
-      cldrNotify.popup("Response to voting", description);
-    }
+    const description = cldrSurvey.testsToHtml(tests);
+    cldrNotify.openWithHtml("Response to voting", description);
     if (ourItem || (replaceErrors && value === "") /* Abstain */) {
       const message = cldrText.sub(
         "StatusAction_msg",

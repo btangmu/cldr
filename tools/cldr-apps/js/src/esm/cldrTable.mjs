@@ -25,6 +25,8 @@ import * as cldrText from "./cldrText.mjs";
 import * as cldrVote from "./cldrVote.mjs";
 import * as cldrXPathUtils from "./cldrXpathUtils.mjs";
 
+const KEEP_OLD_ADD_BUTTON = false;
+
 const HEADER_ID_PREFIX = "header_";
 const ROW_ID_PREFIX = "row_"; // formerly "r@"
 
@@ -503,12 +505,17 @@ function reallyUpdateRow(tr, theRow) {
   const comparisonCell = tr.querySelector(".comparisoncell");
   const proposedCell = tr.querySelector(".proposedcell");
   const otherCell = tr.querySelector(".othercell");
+  if (tr.id.includes("64b4281002d1e793")) {
+    console.log(
+      "Got 64b4281002d1e793, setting addCell; tr.canModify = " + tr.canModify
+    );
+  }
   const addCell = tr.canModify ? tr.querySelector(".addcell") : null;
 
   /*
    * "Add" button, potentially used by updateRowOthersCell and/or by otherCell or addCell
    */
-  const formAdd = document.createElement("form");
+  const formAdd = KEEP_OLD_ADD_BUTTON ? document.createElement("form") : null;
 
   /*
    * Update the "status cell", a.k.a. the "A" column.
@@ -565,10 +572,12 @@ function reallyUpdateRow(tr, theRow) {
    * If the user can make changes, add "+" button for adding new candidate item.
    */
   if (tr.canChange) {
-    if (addCell) {
+    if (addCell && !theRow.fixedCandidates) {
       cldrDom.removeAllChildNodes(addCell);
       cldrAddValue.addButton(addCell, theRow.xpstrid);
-      addCell.appendChild(formAdd);
+      if (KEEP_OLD_ADD_BUTTON) {
+        addCell.appendChild(formAdd);
+      }
     }
   }
 
@@ -852,7 +861,7 @@ function updateRowOthersCell(tr, theRow, cell, protoButton, formAdd) {
   cldrDom.removeAllChildNodes(cell); // other
   cldrSurvey.setLang(cell);
 
-  if (tr.canModify && !tr.theRow.fixedCandidates) {
+  if (KEEP_OLD_ADD_BUTTON && tr.canModify && !tr.theRow.fixedCandidates) {
     formAdd.role = "form";
     formAdd.className = "form-inline";
     const buttonAdd = document.createElement("div");

@@ -124,12 +124,12 @@ function exception(e, context) {
 }
 
 /**
- * Display an error notification with a custom popup dialog
+ * Display an error notification, possibly containing HTML, with a custom dialog
  *
  * @param {String} message the title, displayed at the top (plain text)
- * @param {String} description a description of the problem, possibly HTML!)
+ * @param {String} description a description of the problem, possibly HTML
  */
-function popup(message, description) {
+function openWithHtml(message, description) {
   if (hasDataDog) {
     datadogLogs.logger.error(message, { description });
   }
@@ -150,4 +150,4 @@ function popup(message, description) {
   }
 }
 
-export { error, errorWithCallback, exception, open, popup, warning };
+export { error, errorWithCallback, exception, open, openWithHtml, warning };

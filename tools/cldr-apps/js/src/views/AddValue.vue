@@ -64,7 +64,7 @@ defineExpose({
       <!-- U+271A HEAVY GREEK CROSS -->
     </button>
     <a-modal
-      :visible="formIsVisible"
+      v-model:visible="formIsVisible"
       :closable="false"
       :footer="null"
       :style="{
