@@ -3,7 +3,7 @@ import { nextTick, ref } from "vue";
 
 import * as cldrAddValue from "../esm/cldrAddValue.mjs";
 
-const xpstrid = ref("");
+const xpstrid = ref(""); // xpath string id
 const newValue = ref("");
 const formLeft = ref(0);
 const formTop = ref(0);

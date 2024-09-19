@@ -495,10 +495,6 @@ public class VoteAPIHelper {
                                             mySession.user);
                     if (!r.statusAction.isForbidden()) {
                         try {
-                            if (r != null && false) {
-                                throw new VoteNotAcceptedException(
-                                        ErrorCode.E_PERMANENT_VOTE_NO_FORUM, "ouch");
-                            }
                             final BallotBox<UserRegistry.User> ballotBox =
                                     stf.ballotBoxForLocale(locale);
                             Integer withVote = (voteLevelChanged == 0) ? null : voteLevelChanged;
