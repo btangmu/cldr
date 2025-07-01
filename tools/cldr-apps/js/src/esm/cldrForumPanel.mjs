@@ -6,6 +6,7 @@ import * as cldrCache from "./cldrCache.mjs";
 import * as cldrDom from "./cldrDom.mjs";
 import * as cldrEvent from "./cldrEvent.mjs";
 import * as cldrForum from "./cldrForum.mjs";
+import * as cldrMenu from "./cldrMenu.mjs";
 import * as cldrNotify from "./cldrNotify.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 import * as cldrSurvey from "./cldrSurvey.mjs";
@@ -40,14 +41,25 @@ function loadInfo(frag, tr, theRow) {
   if (!frag || !tr || !theRow) {
     return;
   }
-  cldrForum.setUserCanPost(tr.theTable.json.canModify);
+  // Formerly for setUserCanPost instead of "true" this had "tr.theTable.json.canModify",
+  // but that was inconsistent with code in cldrForum that assumes a non-error response
+  // from the server for forum data for a given user and locale implies that the
+  // user has permission to post as well as view.
+  // For now, rely on the server to enforce limitations on viewing/posting.
+  const loc = cldrStatus.getCurrentLocale();
+  if (!cldrMenu.canModifyLoc(loc)) {
+    return;
+  }
+  cldrForum.setUserCanPost(true);
   addTopButtons(theRow, frag);
   const div = document.createElement("div");
   div.className = FORUM_DIV_CLASS;
   const cachedData = forumCache.get(makeCacheKey(theRow.xpstrid));
   if (cachedData) {
+    console.log("cldrForumPanel.loadInfo calling setPostsFromData");
     setPostsFromData(frag, div, cachedData, theRow.xpstrid);
   } else {
+    console.log("cldrForumPanel.loadInfo calling fetchAndLoadPosts");
     fetchAndLoadPosts(frag, div, tr, theRow);
   }
 }
