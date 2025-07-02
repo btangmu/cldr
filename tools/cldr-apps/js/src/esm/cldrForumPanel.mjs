@@ -6,7 +6,6 @@ import * as cldrCache from "./cldrCache.mjs";
 import * as cldrDom from "./cldrDom.mjs";
 import * as cldrEvent from "./cldrEvent.mjs";
 import * as cldrForum from "./cldrForum.mjs";
-import * as cldrMenu from "./cldrMenu.mjs";
 import * as cldrNotify from "./cldrNotify.mjs";
 import * as cldrStatus from "./cldrStatus.mjs";
 import * as cldrSurvey from "./cldrSurvey.mjs";
@@ -41,25 +40,13 @@ function loadInfo(frag, tr, theRow) {
   if (!frag || !tr || !theRow) {
     return;
   }
-  // Formerly for setUserCanPost instead of "true" this had "tr.theTable.json.canModify",
-  // but that was inconsistent with code in cldrForum that assumes a non-error response
-  // from the server for forum data for a given user and locale implies that the
-  // user has permission to post as well as view.
-  // For now, rely on the server to enforce limitations on viewing/posting.
-  const loc = cldrStatus.getCurrentLocale();
-  if (!cldrMenu.canModifyLoc(loc)) {
-    return;
-  }
-  cldrForum.setUserCanPost(true);
   addTopButtons(theRow, frag);
   const div = document.createElement("div");
   div.className = FORUM_DIV_CLASS;
   const cachedData = forumCache.get(makeCacheKey(theRow.xpstrid));
   if (cachedData) {
-    console.log("cldrForumPanel.loadInfo calling setPostsFromData");
     setPostsFromData(frag, div, cachedData, theRow.xpstrid);
   } else {
-    console.log("cldrForumPanel.loadInfo calling fetchAndLoadPosts");
     fetchAndLoadPosts(frag, div, tr, theRow);
   }
 }
@@ -80,7 +67,12 @@ function fetchAndLoadPosts(frag, div, tr, theRow) {
       url: ourUrl,
       handleAs: "json",
       load: function (json) {
-        if (json && json.forum_count !== undefined) {
+        cldrDom.setDisplayed(loader2, false);
+        if (json?.err_code === "E_NO_PERMISSION") {
+          cldrForum.setUserCanPost(false);
+        } else if (json && json.forum_count !== undefined) {
+          // It is assumed here that permission to view equals permission to post.
+          cldrForum.setUserCanPost(true);
           const nrPosts = parseInt(json.forum_count);
           havePosts(nrPosts, div, tr, loader2);
         } else {
@@ -126,8 +118,6 @@ function getUsersValue(theRow) {
 }
 
 function havePosts(nrPosts, div, tr, loader2) {
-  cldrDom.setDisplayed(loader2, false); // not needed
-
   if (nrPosts == 0) {
     return; // nothing to do
   }

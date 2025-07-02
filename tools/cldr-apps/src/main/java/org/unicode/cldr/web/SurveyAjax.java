@@ -532,7 +532,6 @@ public class SurveyAjax extends HttpServlet {
                             if (what.equals(WHAT_FORUM_COUNT)) {
                                 r.put(what, sm.fora.postCountFor(locale, id));
                             } else { // WHAT_FORUM_FETCH
-                                r.put("what", what);
                                 r.put("loc", loc);
                                 r.put("xpath", xpath);
                                 r.put("ret", sm.fora.toJSON(mySession, locale, id, 0));
