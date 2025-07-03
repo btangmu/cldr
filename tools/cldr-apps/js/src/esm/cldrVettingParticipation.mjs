@@ -259,7 +259,7 @@ function storeInitialResponseData(json) {
   vpData.localeToData = localeToData;
   vpData.uidToUser = uidToUser;
 }
-s
+
 async function fetchMoreData() {
   preloadVotingResults();
   if (!wasCancelled()) {
