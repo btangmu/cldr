@@ -277,7 +277,7 @@ jobs:
         lfs: false
     - run: mkdir -p tools/cldr-apps/target
     - name: Download cldr-apps.zip
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: cldr-apps-server
         path: tools/cldr-apps/target/cldr-apps.zip
@@ -335,7 +335,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download cldr-apps.zip
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v5
       with:
         name: cldr-apps-server
     - name: Deploy to cldr-smoke
