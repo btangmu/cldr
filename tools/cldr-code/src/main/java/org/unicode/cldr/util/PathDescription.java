@@ -61,8 +61,7 @@ public class PathDescription {
     private static final RegexLookup<Pair<String, String>> pathHandling =
             parser.parse(pathDescriptionString);
 
-    private static final RegexLookup<Pair<String, String>> pathHintsHandling =
-            hintsParser.parse(pathDescriptionHintsString);
+    private static RegexLookup<Pair<String, String>> pathHintsHandling = null;
 
     /** markdown to append */
     private static final String references = parser.getReferences();
@@ -135,6 +134,9 @@ public class PathDescription {
     }
 
     public String getHintRawDescription(String path, Object context) {
+        if (pathHintsHandling == null) {
+            pathHintsHandling = hintsParser.parse(pathDescriptionHintsString);
+        }
         status.clear();
         final Pair<String, String> entry = pathHintsHandling.get(path, context, pathArguments);
         if (entry == null) {
