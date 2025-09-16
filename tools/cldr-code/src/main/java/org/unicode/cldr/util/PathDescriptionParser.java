@@ -19,7 +19,9 @@ public class PathDescriptionParser {
     List<String> referenceLines = new ArrayList<>();
 
     public RegexLookup<Pair<String, String>> parse(String string) {
-        final String lines[] = string.split("\n");
+        lookup.addVariable("%anyAttribute", "([^\"]*)");
+
+        final String[] lines = string.split("\n");
         int n = 0;
 
         try {
@@ -168,8 +170,7 @@ public class PathDescriptionParser {
         } else if (patterns.size() > 1) {
             throw new IllegalArgumentException("Only one pattern is supported at present.");
         }
-
-        lookup.addWithoutVariables(patterns.get(0), Pair.of(description, textStr));
+        lookup.add(patterns.get(0), Pair.of(description, textStr));
     }
 
     void resetContent() {

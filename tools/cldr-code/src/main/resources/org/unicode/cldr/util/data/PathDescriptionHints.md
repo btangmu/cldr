@@ -6,7 +6,7 @@ See PathDescriptions.md for documentation.
 
 ### HINT
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="duration-day"\](/displayName|/unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="duration-day"\](/displayName|/unitPattern\[@count="%anyAttribute"\])`
 
 "day" here means a time duration of 24 hours, not a calendar day
 
@@ -30,37 +30,37 @@ an alternate form using Sorani or Central, whichever is not used by the standard
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="energy-calorie"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="energy-calorie"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 calories as used in chemistry, not the same as food calorie
 
 ###
 
-- `units/unitLength\[@type="(narrow|short)"\]/unit\[@type="energy-foodcalorie"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="(narrow|short)"\]/unit\[@type="energy-foodcalorie"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 kilocalories for food energy, may have same translation as energy-kilocalorie; displayed as Cal in the US/UK
 
 ###
 
-- `units/unitLength\[@type="long"\]/unit\[@type="energy-foodcalorie"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="long"\]/unit\[@type="energy-foodcalorie"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 kilocalories for food energy, may have same translation as energy-kilocalorie; displayed as Calories in the US/UK
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="energy-kilocalorie"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="energy-kilocalorie"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 kilocalories for uses not specific to food energy, such as chemistry
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="area-acre"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="area-acre"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 refers specifically to an English acre
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="mass-ton"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="mass-ton"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 refers to U.S. short ton, not U.K. long ton or metric ton
 
@@ -252,37 +252,37 @@ translate as just "South Africa Time"
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="graphics-pixel-per-(centimeter|inch)"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="graphics-pixel-per-(centimeter|inch)"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 typically used for display resolution
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="graphics-dot-per-(centimeter|inch)"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="graphics-dot-per-(centimeter|inch)"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 typically used for printer resolution
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="graphics-em"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="graphics-em"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 typographic length equal to a font’s point size
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="graphics-megapixel"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="graphics-megapixel"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 used for counting the individual elements in bitmap image
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="graphics-pixel"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="graphics-pixel"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 used for counting the individual elements in bitmap image; in some contexts means 1⁄96 inch
 
 ###
 
-- `units/unitLength\[@type='%unitLengths'\]/unit\[@type="mass-stone"\]/(displayName|unitPattern\[@count='%anyAttribute'\])`
+- `units/unitLength\[@type="%unitLengths"\]/unit\[@type="mass-stone"\]/(displayName|unitPattern\[@count="%anyAttribute"\])`
 
 used in UK/Ireland for body weight, equal to 14 pounds
 
