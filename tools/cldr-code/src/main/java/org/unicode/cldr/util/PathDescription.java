@@ -80,14 +80,14 @@ public class PathDescription {
     /** for tests */
     public static RegexLookup<Pair<String, String>> getPathHandling() {
         if (pathHandling == null) {
-            pathHandling = parser.parse(pathDescriptionString);
+            pathHandling = parser.parse(pathDescriptionFileName);
         }
         return pathHandling;
     }
 
     private static RegexLookup<Pair<String, String>> getPathHintsHandling() {
         if (pathHintsHandling == null) {
-            pathHintsHandling = hintsParser.parse(pathDescriptionHintsString);
+            pathHintsHandling = hintsParser.parse(pathDescriptionHintsFileName);
         }
         return pathHintsHandling;
     }

@@ -2,6 +2,9 @@
 
 See PathDescriptions.md for documentation.
 
+# VARIABLES
+%anyAttribute = ([^"]*)
+
 ## HINT descriptions
 
 ### HINT
@@ -132,7 +135,7 @@ specifically, Mandarin Chinese
 
 ###
 
-- `localeDisplayNames/scripts/script\[@type="Han(s|t)"\]$`
+- `localeDisplayNames/scripts/script\[@type="Han(s|t)"\]`
 
 this version of the script name is used in combination with the language name for Chinese
 

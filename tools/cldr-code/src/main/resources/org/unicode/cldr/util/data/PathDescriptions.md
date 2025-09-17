@@ -15,6 +15,9 @@ Example Entry:
 3. Finally is markdown, continuing up to the next line beginning with `#`.  Please keep all URLs in [References](#references), which is copied to every markdown fragment. This way we can share URLs and use more natural sounding links.
 4. Double hash (`##`) are used to group sections. These may not be blank. The last section is special and is named `References`.
 
+# VARIABLES
+%anyAttribute = ([^"]*)
+
 ## ROOT descriptions (using special placeholders). Must occur first.
 
 ### ROOT territory
