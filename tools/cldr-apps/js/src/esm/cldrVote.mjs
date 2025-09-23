@@ -52,17 +52,7 @@ function wireUpButton(button, tr, theRow, vHash) {
     return false;
   });
 
-  // proposal issues
-  if (tr.myProposal) {
-    if (button == tr.myProposal.button) {
-      button.className = "ichoice-x";
-      button.checked = true;
-      tr.lastOn = button;
-    } else {
-      button.className = "ichoice-o";
-      button.checked = false;
-    }
-  } else if (
+  if (
     theRow.voteVhash === vHash ||
     (theRow.voteVhash === undefined && vHash === null)
   ) {
@@ -110,13 +100,6 @@ async function handleWiredClick(tr, theRow, vHash, newValue, button) {
   // and scroll
   cldrLoad.showCurrentId();
 
-  if (tr.myProposal) {
-    const otherCell = tr.querySelector(".othercell");
-    if (otherCell) {
-      otherCell.removeChild(tr.myProposal);
-    }
-    tr.myProposal = null; // mark any pending proposal as invalid.
-  }
   tr.wait = true;
   cldrTable.resetLastShown();
   theRow.proposedResults = null;
@@ -209,7 +192,7 @@ function handleVoteSubmitted(json, tr, theRow, button, valToShow) {
       cldrSurvey.hideLoader();
       if (json.testResults && (json.testWarnings || json.testErrors)) {
         // tried to submit, have errs or warnings.
-        showProposedItem(tr.inputTd, tr, theRow, valToShow, json.testResults);
+        showProposedItem(tr, theRow, valToShow, json.testResults);
       }
       if (CLDR_VOTE_DEBUG) {
         console.log(
@@ -232,7 +215,7 @@ function handleVoteNotSubmitted(json, tr, theRow, button, valToShow) {
     (json.statusAction && json.statusAction != "ALLOW") ||
     (json.testResults && (json.testWarnings || json.testErrors))
   ) {
-    showProposedItem(tr.inputTd, tr, theRow, valToShow, json.testResults, json);
+    showProposedItem(tr, theRow, valToShow, json.testResults, json);
   }
   button.className = "ichoice-o";
   button.checked = false;
@@ -288,58 +271,11 @@ function getSubmitUrl(xpstrid) {
  * Called only by loadHandler in handleWiredClick.
  * Used for "+" button in table.
  */
-function showProposedItem(inTd, tr, theRow, value, tests, json) {
+function showProposedItem(tr, theRow, value, tests, json) {
   // Find where our value went.
-  var ourItem = cldrSurvey.findItemByValue(theRow.items, value);
-  var testKind = getTestKind(tests);
-  var ourDiv = null;
-  var wrap;
-  if (!ourItem) {
-    /*
-     * This may happen if, for example, the user types a space (" ") in
-     * the input pop-up window and presses Enter. The value has been rejected
-     * by the server. Then we show an additional pop-up window with the error message
-     * from the server like "Input Processor Error: DAIP returned a 0 length string"
-     */
-    ourDiv = document.createElement("div");
-    var newButton = cldrSurvey.cloneAnon(
-      document.getElementById("proto-button")
-    );
-    const otherCell = tr.querySelector(".othercell");
-    if (otherCell && tr.myProposal) {
-      otherCell.removeChild(tr.myProposal);
-    }
-    tr.myProposal = ourDiv;
-    tr.myProposal.value = value;
-    tr.myProposal.button = newButton;
-    if (newButton) {
-      if (value === "") {
-        newButton.value = cldrTable.EMPTY_ELEMENT_VALUE; // Special case for ''
-      } else {
-        newButton.value = value;
-      }
-      if (tr.lastOn) {
-        tr.lastOn.checked = false;
-        tr.lastOn.className = "ichoice-o";
-      }
-      wireUpButton(newButton, tr, theRow, "[retry]", {
-        value: value,
-      });
-      wrap = wrapRadio(newButton);
-      ourDiv.appendChild(wrap);
-    }
-    var h3 = document.createElement("span");
-    appendItem(h3, value, "value");
-    ourDiv.appendChild(h3);
-    if (otherCell) {
-      otherCell.appendChild(tr.myProposal);
-    }
-  } else {
-    ourDiv = ourItem.div;
-  }
+  const ourItem = cldrSurvey.findItemByValue(theRow.items, value);
+  const testKind = getTestKind(tests);
   if (json && !cldrSurvey.parseStatusAction(json.statusAction).vote) {
-    ourDiv.className = "d-item-err";
-
     const replaceErrors =
       json.statusAction === "FORBID_PERMANENT_WITHOUT_FORUM";
     if (replaceErrors) {
@@ -366,6 +302,12 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
         "p",
         ""
       );
+      /*
+       * This may happen if, for example, the user types a space (" ") in
+       * the input pop-up window and presses Enter. The value has been rejected
+       * by the server. Then we show an additional pop-up window with the error message
+       * from the server like "Input Processor Error: DAIP returned a 0 length string"
+       */
       const description = cldrText.sub(
         "StatusAction_popupmsg",
         [cldrText.get("StatusAction_" + json.statusAction), theRow.code],
@@ -375,14 +317,13 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
       cldrNotify.error(message, description);
     }
     return;
-  } else if (json && json.didNotSubmit) {
-    ourDiv.className = "d-item-err";
+  } else if (json?.didNotSubmit) {
     const description = "Did not submit this value: " + json.didNotSubmit;
     cldrNotify.error("Not submitted", description);
     return;
-  } else {
-    cldrTable.setDivClassSelected(ourDiv, testKind);
   }
+  const ourDiv = ourItem ? ourItem.div : document.createElement("div");
+  cldrTable.setDivClassSelected(ourDiv, testKind);
 
   if (testKind || !ourItem) {
     var div3 = document.createElement("div");
@@ -420,10 +361,6 @@ function showProposedItem(inTd, tr, theRow, value, tests, json) {
         retFn = ourItem.showFn(showDiv);
       } else {
         retFn = null;
-      }
-      if (tr.myProposal && value == tr.myProposal.value) {
-        // make sure it wasn't submitted twice
-        showDiv.appendChild(div3);
       }
       return retFn;
     };
