@@ -4,7 +4,7 @@
     <div v-if="errors.length">
       <span class="addUserErrors">Please correct the following error(s):</span>
       <ul>
-        <li v-for="error in errors">{{ error }}</li>
+        <li v-for="error in errors" :key="error">{{ error }}</li>
       </ul>
     </div>
     <div v-if="!loading && !addedNewUser" class="adduser">
@@ -17,7 +17,7 @@
               size="40"
               id="new_name"
               name="new_name"
-              v-model="newUser.name"
+              v-model="newUserName"
             />
           </td>
         </tr>
@@ -28,7 +28,7 @@
               size="40"
               id="new_email"
               name="new_email"
-              v-model="newUser.email"
+              v-model="newUserEmail"
               type="email"
             />
           </td>
@@ -36,42 +36,70 @@
         <tr>
           <th><label for="new_org">Organization:</label></th>
           <td v-if="canChooseOrg">
-            <select id="new_org" name="new_org" v-model="newUser.org">
+            <select id="new_org" name="new_org" v-model="newUserOrg">
               <option disabled value="">Please select one</option>
               <option
                 v-for="displayName of orgs.sortedDisplayNames"
                 v-bind:value="orgs.displayToShort[displayName]"
+                :key="displayName"
               >
                 {{ displayName }}
               </option>
             </select>
           </td>
           <td v-else>
-            <input id="new_org" disabled="disabled" v-model="newUser.org" />
+            <input id="new_org" disabled="disabled" v-model="newUserOrg" />
           </td>
         </tr>
         <tr>
           <th><label for="new_level">User level:</label></th>
           <td>
-            <select id="new_level" name="new_level" v-model="newUser.level">
+            <select id="new_level" name="new_level" v-model="newUserLevel">
               <option disabled value="">Please select one</option>
               <option
                 v-for="(v, number) in levelList"
                 v-bind:value="number"
                 :disabled="!v.canCreateOrSetLevelTo"
+                :key="number"
               >
                 {{ v.string }}
               </option>
             </select>
           </td>
         </tr>
-        <tr v-if="newUser.level && newUser.level >= 5">
+        <tr v-if="newUserLevel && newUserLevel >= 5">
           <th><label for="new_locales">Languages responsible:</label></th>
           <td>
+            <a-select
+              v-model:value="value"
+              mode="multiple"
+              style="width: 100%"
+              placeholder="select locale(s)"
+              :options="localeOptions"
+            >
+              <!-- this appears in the menu -->
+              <template #option="{ value: val, label, icon }">
+                <span role="img" :aria-label="val">X {{ icon }}</span>
+                &nbsp;&nbsp;A {{ label }}
+              </template>
+              <!-- this appears in the input box (after choosing from menu) -->
+              <template
+                #tagRender="{ value: val, label, closable, onClose, option }"
+              >
+                <a-tag
+                  :closable="closable"
+                  style="margin-right: 3px"
+                  @close="onClose"
+                >
+                  B {{ label }}&nbsp;&nbsp;
+                  <span role="img" :aria-label="val">Y {{ option.icon }}</span>
+                </a-tag>
+              </template>
+            </a-select>
             <input
               id="new_locales"
               name="new_locales"
-              v-model="newUser.locales"
+              v-model="newUserLocales"
               @change="validateLocales"
               placeholder="en de de_CH fr zh_Hant"
             />
@@ -94,12 +122,13 @@
             </div>
           </td>
         </tr>
+        <tr v-else>
+          newUserLevel not yet
+        </tr>
         <tr class="addButton">
           <td colspan="2">
             <button
-              v-if="
-                newUser.name && newUser.email && newUser.org && newUser.level
-              "
+              v-if="newUserName && newUserEmail && newUserOrg && newUserLevel"
               v-on:click="add()"
             >
               Add
@@ -112,8 +141,8 @@
     <div v-if="addedNewUser">
       <h2>Added User</h2>
       <p>
-        ✅ The new user was added. Name: <kbd>{{ newUser.name }}</kbd> E-mail:
-        <kbd>{{ newUser.email }}</kbd> ID:
+        ✅ The new user was added. Name: <kbd>{{ newUserName }}</kbd> E-mail:
+        <kbd>{{ newUserEmail }}</kbd> ID:
         <kbd>{{ userId }}</kbd>
       </p>
       <p>
@@ -130,9 +159,10 @@
       <p><button v-on:click="initializeData()">Add another user</button></p>
     </div>
   </article>
+  <p>orgLocales = {{ orgLocales }}</p>
 </template>
 
-<script>
+<script setup>
 import * as cldrAccount from "../esm/cldrAccount.mjs";
 import * as cldrAjax from "../esm/cldrAjax.mjs";
 import * as cldrLoad from "../esm/cldrLoad.mjs";
@@ -141,235 +171,298 @@ import * as cldrStatus from "../esm/cldrStatus.mjs";
 import * as cldrText from "../esm/cldrText.mjs";
 import * as cldrUserLevels from "../esm/cldrUserLevels.mjs";
 
-export default {
-  data() {
-    return {
-      addedNewUser: false,
-      canChooseOrg: null,
-      errors: [],
-      locWarnings: null,
-      levelList: null,
-      loading: false,
-      newUser: {
-        email: null,
-        level: null,
-        locales: null,
-        name: null,
-        org: null,
-      },
-      orgs: null,
-      userId: null,
+import { onMounted, ref, reactive, watch } from "vue";
+
+const value = ref([]);
+const options = ref([
+  {
+    value: "china",
+    label: "China (中国)",
+    icon: "🇨🇳",
+  },
+  {
+    value: "usa",
+    label: "USA (美国)",
+    icon: "🇺🇸",
+  },
+  {
+    value: "japan",
+    label: "Japan (日本)",
+    icon: "🇯🇵",
+  },
+  {
+    value: "korea",
+    label: "Korea (韩国)",
+    icon: "🇨🇰",
+  },
+]);
+watch(value, (val) => {
+  console.log(`selected:`, val);
+});
+
+let addedNewUser = ref(false);
+let canChooseOrg = ref(false);
+let errors = [];
+
+let locWarnings = null;
+let levelList = null;
+let loading = ref(false);
+let newUserEmail = ref("");
+let newUserLevel = ref("");
+let newUserLocales = ref("");
+let newUserName = ref("");
+let newUserOrg = ref("");
+let orgLocales = ref("");
+let orgs = null;
+let userId = null;
+let localeOptions = ref([]);
+
+function mounted() {
+  initializeData();
+}
+
+onMounted(mounted);
+
+function initializeData() {
+  addedNewUser.value = false;
+  errors = [];
+  locWarnings = null;
+  newUserEmail.value = "";
+  newUserLevel.value = "";
+  newUserLocales.value = "";
+  newUserName.value = "";
+  userId = null;
+  getLevelList();
+  if (cldrStatus.getPermissions()?.userIsAdmin) {
+    canChooseOrg.value = true;
+    newUserOrg.value = "";
+    getOrgs();
+  } else {
+    canChooseOrg.value = false;
+    newUserOrg.value = cldrStatus.getOrganizationName();
+    orgs = null;
+  }
+  getOrgLocales();
+}
+
+async function getOrgLocales() {
+  await cldrAjax
+    .doFetch("./api/locales/org/" + newUserOrg.value)
+    .then(cldrAjax.handleFetchErrors)
+    .then((r) => r.json())
+    .then(setOrgLocales)
+    .catch((e) => errors.push(`Error: ${e} getting org locales`));
+}
+
+function setOrgLocales(json) {
+  if (json.err) {
+    cldrRetry.handleDisconnect(json.err, json, "", "Loading org locales");
+  } else {
+    if ("*" == json.locales) {
+      orgLocales.value = "aa fr zh"; // TODO
+    } else {
+      orgLocales.value = json.locales;
+    }
+    setupLocaleOptions();
+  }
+}
+
+function setupLocaleOptions() {
+  const locmap = cldrLoad.getTheLocaleMap();
+  let array = [];
+  for (let localeId of orgLocales.value.split(" ")) {
+    const localeName = locmap.getRegionAndOrVariantName(localeId);
+    const item = {
+      value: localeId,
+      label: localeName + " (" + localeId + ")",
+      icon: "😈",
     };
-  },
+    array.push(item);
+  }
+  localeOptions = ref(array);
+}
 
-  created() {
-    this.initializeData();
-  },
-
-  methods: {
-    initializeData() {
-      this.addedNewUser = false;
-      this.errors = [];
-      this.locWarnings = null;
-      this.newUser.email = "";
-      this.newUser.level = "";
-      this.newUser.locales = "";
-      this.newUser.name = "";
-      this.userId = null;
-      this.getLevelList();
-      if (cldrStatus.getPermissions().userIsAdmin) {
-        this.canChooseOrg = true;
-        this.newUser.org = "";
-        this.getOrgs();
-      } else {
-        this.canChooseOrg = false;
-        this.newUser.org = cldrStatus.getOrganizationName();
-        this.orgs = null;
-      }
-    },
-
-    async validateLocales() {
-      const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
-        this.newUser.level,
-        this.levelList
-      );
-      const orgForValidation = skipOrg ? "" : this.newUser.org;
-      await cldrAjax
-        .doFetch(
-          "./api/locales/normalize?" +
-            new URLSearchParams({
-              locs: this.newUser.locales,
-              org: orgForValidation,
-            })
-        )
-        .then(cldrAjax.handleFetchErrors)
-        .then((r) => r.json())
-        .then(({ messages, normalized }) => {
-          if (this.newUser.locales != normalized) {
-            // only update the warnings if the normalized value changes
-            this.newUser.locales = normalized;
-            this.locWarnings = messages;
-          }
+async function validateLocales() {
+  const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
+    newUserLevel,
+    levelList
+  );
+  const orgForValidation = skipOrg ? "" : newUserOrg;
+  await cldrAjax
+    .doFetch(
+      "./api/locales/normalize?" +
+        new URLSearchParams({
+          locs: newUserLocales,
+          org: orgForValidation,
         })
-        .catch((e) => this.errors.push(`Error: ${e} validating locale`));
-    },
-
-    getLevelList() {
-      this.loading = true;
-      this.levelList = cldrUserLevels.getLevelList().then(this.loadLevelList);
-    },
-
-    loadLevelList(list) {
-      if (!list) {
-        this.errors.push("User-level list not received from server");
-        this.loading = false;
-      } else {
-        this.levelList = list;
-        this.areWeLoading();
+    )
+    .then(cldrAjax.handleFetchErrors)
+    .then((r) => r.json())
+    .then(({ messages, normalized }) => {
+      if (newUserLocales != normalized) {
+        // only update the warnings if the normalized value changes
+        newUserLocales.value = normalized;
+        locWarnings = messages;
       }
-    },
+    })
+    .catch((e) => errors.push(`Error: ${e} validating locale`));
+}
 
-    getLocaleName(loc) {
-      if (!loc) return null;
-      return cldrLoad.getTheLocaleMap()?.getLocaleName(loc);
-    },
+function getLevelList() {
+  loading.value = true;
+  cldrUserLevels.getLevelList().then(loadLevelList);
+}
 
-    getParenthesizedName(loc) {
-      const name = this.getLocaleName(loc);
-      if (name && name !== loc) {
-        return `(${name})`;
+function loadLevelList(list) {
+  if (!list) {
+    errors.push("User-level list not received from server");
+    loading.value = false;
+  } else {
+    levelList = reactive(list);
+    areWeLoading();
+  }
+}
+
+function getLocaleName(loc) {
+  if (!loc) {
+    return null;
+  }
+  return cldrLoad.getTheLocaleMap()?.getLocaleName(loc);
+}
+
+function getParenthesizedName(loc) {
+  const name = getLocaleName(loc);
+  if (name && name !== loc) {
+    return `(${name})`;
+  }
+  return "";
+}
+
+function explainWarning(reason) {
+  return cldrText.get(`locale_rejection_${reason}`, reason);
+}
+
+function getOrgs() {
+  loading.value = true;
+  cldrOrganizations.get().then(loadOrgs);
+}
+
+function loadOrgs(o) {
+  if (o) {
+    orgs.value = o;
+    areWeLoading();
+  } else {
+    errors.push("Organization names not received from server");
+    loading.value = false;
+  }
+}
+
+function areWeLoading() {
+  loading.value = !(levelList && (orgs || newUserOrg));
+}
+
+async function add() {
+  validate();
+  await validateLocales();
+  if (errors.length) {
+    return;
+  }
+  const postData = {
+    email: newUserEmail,
+    level: newUserLevel,
+    locales: newUserLocales,
+    name: newUserName,
+    org: newUserOrg,
+  };
+  const xhrArgs = {
+    url: cldrAjax.makeApiUrl("adduser", null),
+    postData: postData,
+    handleAs: "json",
+    load: loadHandler,
+    error: (err) => errors.push(err),
+  };
+  cldrAjax.sendXhr(xhrArgs);
+}
+
+function validate() {
+  errors = [];
+  if (!newUserName) {
+    errors.push("Name required.");
+  }
+  if (!newUserEmail) {
+    errors.push("E-mail required.");
+  } else if (!validateEmail(newUserEmail)) {
+    errors.push("Valid e-mail required.");
+  }
+  if (!newUserOrg) {
+    errors.push("Organization required.");
+  }
+  if (!newUserLevel) {
+    errors.push("Level required.");
+  } else if (newUserLevel >= 5 && !newUserLocales) {
+    errors.push("Languages responsible is required for this userlevel.");
+  }
+}
+
+/**
+ * Let the browser validate the e-mail address
+ *
+ * @return true if the given e-mail address is valid
+ *
+ * Note: the Survey Tool back end may have different criteria.
+ * For example (as of 2021-03), the back end requires a period, while
+ * the browser may not. Also, the back end (Java) may normalize the e-mail
+ * by Java trim() and toLowerCase().
+ */
+function validateEmail(emailAddress) {
+  const el = document.createElement("input");
+  el.type = "email";
+  el.value = emailAddress;
+  return el.checkValidity();
+}
+
+function loadHandler(json) {
+  if (json.err) {
+    errors.push("Error from the server: " + translateErr(json.err));
+  } else if (!json.userId) {
+    errors.push("The server did not return a user id.");
+  } else {
+    const n = Math.floor(Number(json.userId));
+    if (String(n) !== String(json.userId) || n <= 0 || !Number.isInteger(n)) {
+      errors.push("The server returned an invalid id: " + json.userId);
+    } else {
+      addedNewUser = true;
+      userId = Number(json.userId);
+      if (json.email) {
+        newUserEmail.value = json.email; // normalized, e.g., to lower case by server
       }
-      return "";
-    },
+    }
+  }
+}
 
-    explainWarning(reason) {
-      return cldrText.get(`locale_rejection_${reason}`, reason);
-    },
+function translateErr(err) {
+  const map = {
+    BAD_NAME: "Missing or invalid name",
+    BAD_EMAIL: "Missing or invalid e-mail",
+    BAD_ORG: "Missing or invalid organization",
+    BAD_LEVEL: "Missing, invalid, or forbidden user level",
+    DUP_EMAIL: "A user with that e-mail already exists",
+    UNKNOWN: "An unspecified error occurred",
+  };
+  if (!map[err]) {
+    return err;
+  }
+  return map[err] + " [" + err + "]";
+}
 
-    getOrgs() {
-      this.loading = true;
-      cldrOrganizations.get().then(this.loadOrgs);
-    },
+function setAllLocales() {
+  newUserLocales = "*";
+  return false;
+}
 
-    loadOrgs(o) {
-      if (o) {
-        this.orgs = o;
-        this.areWeLoading();
-      } else {
-        this.errors.push("Organization names not received from server");
-        this.loading = false;
-      }
-    },
-
-    areWeLoading() {
-      this.loading = !(this.levelList && (this.orgs || this.newUser.org));
-    },
-
-    async add() {
-      this.validate();
-      await this.validateLocales();
-      if (this.errors.length) {
-        return;
-      }
-      const xhrArgs = {
-        url: cldrAjax.makeApiUrl("adduser", null),
-        postData: this.newUser,
-        handleAs: "json",
-        load: this.loadHandler,
-        error: (err) => this.errors.push(err),
-      };
-      cldrAjax.sendXhr(xhrArgs);
-    },
-
-    validate() {
-      this.errors = [];
-      if (!this.newUser.name) {
-        this.errors.push("Name required.");
-      }
-      if (!this.newUser.email) {
-        this.errors.push("E-mail required.");
-      } else if (!this.validateEmail(this.newUser.email)) {
-        this.errors.push("Valid e-mail required.");
-      }
-      if (!this.newUser.org) {
-        this.errors.push("Organization required.");
-      }
-      if (!this.newUser.level) {
-        this.errors.push("Level required.");
-      } else if (this.newUser.level >= 5 && !this.newUser.locales) {
-        this.errors.push(
-          "Languages responsible is required for this userlevel."
-        );
-      }
-    },
-
-    /**
-     * Let the browser validate the e-mail address
-     *
-     * @return true if the given e-mail address is valid
-     *
-     * Note: the Survey Tool back end may have different criteria.
-     * For example (as of 2021-03), the back end requires a period, while
-     * the browser may not. Also, the back end (Java) may normalize the e-mail
-     * by Java trim() and toLowerCase().
-     */
-    validateEmail(emailAddress) {
-      const el = document.createElement("input");
-      el.type = "email";
-      el.value = emailAddress;
-      return el.checkValidity();
-    },
-
-    loadHandler(json) {
-      if (json.err) {
-        this.errors.push(
-          "Error from the server: " + this.translateErr(json.err)
-        );
-      } else if (!json.userId) {
-        this.errors.push("The server did not return a user id.");
-      } else {
-        const n = Math.floor(Number(json.userId));
-        if (
-          String(n) !== String(json.userId) ||
-          n <= 0 ||
-          !Number.isInteger(n)
-        ) {
-          this.errors.push("The server returned an invalid id: " + json.userId);
-        } else {
-          this.addedNewUser = true;
-          this.userId = Number(json.userId);
-          if (json.email) {
-            this.newUser.email = json.email; // normalized, e.g., to lower case by server
-          }
-        }
-      }
-    },
-
-    translateErr(err) {
-      const map = {
-        BAD_NAME: "Missing or invalid name",
-        BAD_EMAIL: "Missing or invalid e-mail",
-        BAD_ORG: "Missing or invalid organization",
-        BAD_LEVEL: "Missing, invalid, or forbidden user level",
-        DUP_EMAIL: "A user with that e-mail already exists",
-        UNKNOWN: "An unspecified error occurred",
-      };
-      if (!map[err]) {
-        return err;
-      }
-      return map[err] + " [" + err + "]";
-    },
-
-    setAllLocales() {
-      this.newUser.locales = "*";
-      return false;
-    },
-
-    manageThisUser() {
-      cldrAccount.zoomUser(this.newUser.email);
-    },
-  },
-};
+function manageThisUser() {
+  cldrAccount.zoomUser(newUserEmail);
+}
 </script>
 
 <style scoped>
