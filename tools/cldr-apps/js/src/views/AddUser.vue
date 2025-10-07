@@ -7,7 +7,7 @@
         <li v-for="error in errors" :key="error">{{ error }}</li>
       </ul>
     </div>
-    <div v-if="!loading && !addedNewUser" class="adduser">
+    <div v-if="hasPermission && !loading && !addedNewUser" class="adduser">
       <h2>Add User</h2>
       <table>
         <tr>
@@ -67,32 +67,32 @@
             </select>
           </td>
         </tr>
-        <tr v-if="newUserLevel && newUserLevel >= 5">
-          <th><label for="new_locales">Languages responsible:</label></th>
+        <tr v-if="newUserLevel >= 5">
+          <th><label for="new_locales">Locales responsible:</label></th>
           <td>
             <a-select
-              v-model:value="value"
+              v-model:value="chosenLocales"
               mode="multiple"
               style="width: 100%"
               placeholder="select locale(s)"
               :options="localeOptions"
             >
-              <!-- this appears in the menu -->
-              <template #option="{ value: val, label, icon }">
-                <span role="img" :aria-label="val">X {{ icon }}</span>
-                &nbsp;&nbsp;A {{ label }}
+              <!-- This appears in the menu: -->
+              <template #option="{ localeDescription }">
+                {{ localeDescription }}
               </template>
-              <!-- this appears in the input box (after choosing from menu) -->
+              <!-- This appears in the input box after choosing from menu: -->
               <template
-                #tagRender="{ value: val, label, closable, onClose, option }"
+                #tagRender="{ value: localeIdValue, closable, onClose, option }"
               >
                 <a-tag
                   :closable="closable"
                   style="margin-right: 3px"
                   @close="onClose"
                 >
-                  B {{ label }}&nbsp;&nbsp;
-                  <span role="img" :aria-label="val">Y {{ option.icon }}</span>
+                  <span :title="option.localeDescription">{{
+                    localeIdValue
+                  }}</span>
                 </a-tag>
               </template>
             </a-select>
@@ -171,35 +171,14 @@ import * as cldrStatus from "../esm/cldrStatus.mjs";
 import * as cldrText from "../esm/cldrText.mjs";
 import * as cldrUserLevels from "../esm/cldrUserLevels.mjs";
 
-import { onMounted, ref, reactive, watch } from "vue";
+import { onMounted, ref, reactive, toRaw, watch } from "vue";
 
-const value = ref([]);
-const options = ref([
-  {
-    value: "china",
-    label: "China (中国)",
-    icon: "🇨🇳",
-  },
-  {
-    value: "usa",
-    label: "USA (美国)",
-    icon: "🇺🇸",
-  },
-  {
-    value: "japan",
-    label: "Japan (日本)",
-    icon: "🇯🇵",
-  },
-  {
-    value: "korea",
-    label: "Korea (韩国)",
-    icon: "🇨🇰",
-  },
-]);
-watch(value, (val) => {
-  console.log(`selected:`, val);
+let chosenLocales = ref([]);
+watch(chosenLocales, (val) => {
+  console.log(`chosenLocales:`, toRaw(val));
 });
 
+let hasPermission = ref(false);
 let addedNewUser = ref(false);
 let canChooseOrg = ref(false);
 let errors = [];
@@ -232,17 +211,23 @@ function initializeData() {
   newUserLocales.value = "";
   newUserName.value = "";
   userId = null;
+  const perm = cldrStatus.getPermissions();
+  hasPermission.value = !!perm?.userCanListUsers;
   getLevelList();
-  if (cldrStatus.getPermissions()?.userIsAdmin) {
+  if (perm?.userIsAdmin) {
     canChooseOrg.value = true;
     newUserOrg.value = "";
     getOrgs();
   } else {
     canChooseOrg.value = false;
-    newUserOrg.value = cldrStatus.getOrganizationName();
+    if (hasPermission) {
+      newUserOrg.value = cldrStatus.getOrganizationName();
+    }
     orgs = null;
   }
-  getOrgLocales();
+  if (hasPermission) {
+    getOrgLocales();
+  }
 }
 
 async function getOrgLocales() {
@@ -259,7 +244,7 @@ function setOrgLocales(json) {
     cldrRetry.handleDisconnect(json.err, json, "", "Loading org locales");
   } else {
     if ("*" == json.locales) {
-      orgLocales.value = "aa fr zh"; // TODO
+      orgLocales.value = "aa de_CH fr zh"; // TODO
     } else {
       orgLocales.value = json.locales;
     }
@@ -274,8 +259,7 @@ function setupLocaleOptions() {
     const localeName = locmap.getRegionAndOrVariantName(localeId);
     const item = {
       value: localeId,
-      label: localeName + " (" + localeId + ")",
-      icon: "😈",
+      localeDescription: localeName + " (" + localeId + ")",
     };
     array.push(item);
   }
