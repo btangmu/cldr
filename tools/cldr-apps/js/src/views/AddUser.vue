@@ -1,6 +1,9 @@
 <template>
   <article>
     <a-spin v-if="loading" :delay="500" />
+    <div v-if="!hasPermission">
+      Please log in as a user with sufficient permissions.
+    </div>
     <div v-if="errors.length">
       <span class="addUserErrors">Please correct the following error(s):</span>
       <ul>
@@ -11,14 +14,31 @@
       <h2>Add User</h2>
       <table>
         <tr>
+          <th><label for="new_org">Organization:</label></th>
+          <td v-if="canChooseOrg">
+            <a-select
+              id="new_org"
+              v-model:value="orgValueAndLabel"
+              label-in-value
+              show-search
+              style="width: 100%"
+              placeholder="Select an organization"
+              :options="orgOptions"
+              @change="getOrgLocalesAfterChoosingOrg"
+            >
+              <template #option="{ label }">
+                {{ label }}
+              </template>
+            </a-select>
+          </td>
+          <td v-else>
+            <input id="new_org" disabled="disabled" v-model="newUserOrg" />
+          </td>
+        </tr>
+        <tr>
           <th><label for="new_name">Name:</label></th>
           <td>
-            <input
-              size="40"
-              id="new_name"
-              name="new_name"
-              v-model="newUserName"
-            />
+            <input size="40" id="new_name" v-model="newUserName" />
           </td>
         </tr>
         <tr>
@@ -27,34 +47,15 @@
             <input
               size="40"
               id="new_email"
-              name="new_email"
               v-model="newUserEmail"
               type="email"
             />
           </td>
         </tr>
         <tr>
-          <th><label for="new_org">Organization:</label></th>
-          <td v-if="canChooseOrg">
-            <select id="new_org" name="new_org" v-model="newUserOrg">
-              <option disabled value="">Please select one</option>
-              <option
-                v-for="displayName of orgs.sortedDisplayNames"
-                v-bind:value="orgs.displayToShort[displayName]"
-                :key="displayName"
-              >
-                {{ displayName }}
-              </option>
-            </select>
-          </td>
-          <td v-else>
-            <input id="new_org" disabled="disabled" v-model="newUserOrg" />
-          </td>
-        </tr>
-        <tr>
           <th><label for="new_level">User level:</label></th>
           <td>
-            <select id="new_level" name="new_level" v-model="newUserLevel">
+            <select id="new_level" v-model="newUserLevel">
               <option disabled value="">Please select one</option>
               <option
                 v-for="(v, number) in levelList"
@@ -67,46 +68,42 @@
             </select>
           </td>
         </tr>
-        <tr v-if="newUserLevel >= 5">
-          <th><label for="new_locales">Locales responsible:</label></th>
+        <tr v-if="newUserLevel >= VETTER_LEVEL_NUMBER">
+          <th><label for="new_locales">Locales:</label></th>
           <td>
             <a-select
+              id="new_locales"
               v-model:value="chosenLocales"
               mode="multiple"
+              show-search
               style="width: 100%"
-              placeholder="select locale(s)"
+              placeholder="Select locale(s)"
               :options="localeOptions"
+              :max-tag-count="10"
+              @change="concatenateAndValidateLocales"
             >
               <!-- This appears in the menu: -->
               <template #option="{ localeDescription }">
                 {{ localeDescription }}
               </template>
               <!-- This appears in the input box after choosing from menu: -->
-              <template
-                #tagRender="{ value: localeIdValue, closable, onClose, option }"
-              >
+              <template #tagRender="{ closable, onClose, option }">
                 <a-tag
                   :closable="closable"
                   style="margin-right: 3px"
                   @close="onClose"
                 >
+                  <!-- I would like to have something other than "option.value" here,
+                    such as "option.localeIdValue", but I can't make that work.
+                    See "localeIdValue" elsewhere. -->
                   <span :title="option.localeDescription">{{
-                    localeIdValue
+                    option.value
                   }}</span>
                 </a-tag>
               </template>
             </a-select>
-            <input
-              id="new_locales"
-              name="new_locales"
-              v-model="newUserLocales"
-              @change="validateLocales"
-              placeholder="en de de_CH fr zh_Hant"
-            />
-            &nbsp;
             <button v-on:click="setAllLocales()">All Locales</button><br />
-            (Space separated. Use the All Locales button to grant access to all
-            locales. )<br />
+            (Use the All Locales button to grant access to all locales.)<br />
 
             <div v-if="locWarnings">
               <span class="locWarnings"
@@ -121,9 +118,6 @@
               </ul>
             </div>
           </td>
-        </tr>
-        <tr v-else>
-          newUserLevel not yet
         </tr>
         <tr class="addButton">
           <td colspan="2">
@@ -159,7 +153,6 @@
       <p><button v-on:click="initializeData()">Add another user</button></p>
     </div>
   </article>
-  <p>orgLocales = {{ orgLocales }}</p>
 </template>
 
 <script setup>
@@ -171,115 +164,159 @@ import * as cldrStatus from "../esm/cldrStatus.mjs";
 import * as cldrText from "../esm/cldrText.mjs";
 import * as cldrUserLevels from "../esm/cldrUserLevels.mjs";
 
-import { onMounted, ref, reactive, toRaw, watch } from "vue";
+import { onMounted, ref, reactive } from "vue";
 
-let chosenLocales = ref([]);
-watch(chosenLocales, (val) => {
-  console.log(`chosenLocales:`, toRaw(val));
-});
+const VETTER_LEVEL_NUMBER = 5;
 
 let hasPermission = ref(false);
 let addedNewUser = ref(false);
 let canChooseOrg = ref(false);
-let errors = [];
-
+let errors = ref([]);
 let locWarnings = null;
-let levelList = null;
+let levelList = ref([]);
 let loading = ref(false);
 let newUserEmail = ref("");
 let newUserLevel = ref("");
 let newUserLocales = ref("");
 let newUserName = ref("");
 let newUserOrg = ref("");
+let orgValueAndLabel = ref([]);
 let orgLocales = ref("");
-let orgs = null;
-let userId = null;
+let orgOptions = ref([]);
+let userId = ref(0);
 let localeOptions = ref([]);
+let chosenLocales = ref([]);
+
+onMounted(mounted);
 
 function mounted() {
   initializeData();
 }
 
-onMounted(mounted);
-
 function initializeData() {
   addedNewUser.value = false;
-  errors = [];
+  errors.value = [];
   locWarnings = null;
   newUserEmail.value = "";
   newUserLevel.value = "";
   newUserLocales.value = "";
   newUserName.value = "";
-  userId = null;
+  userId.value = null;
   const perm = cldrStatus.getPermissions();
   hasPermission.value = !!perm?.userCanListUsers;
-  getLevelList();
   if (perm?.userIsAdmin) {
     canChooseOrg.value = true;
     newUserOrg.value = "";
-    getOrgs();
+    setupOrgOptions();
   } else {
     canChooseOrg.value = false;
-    if (hasPermission) {
+    if (hasPermission.value) {
       newUserOrg.value = cldrStatus.getOrganizationName();
     }
-    orgs = null;
-  }
-  if (hasPermission) {
+    // orgs.value = null;
     getOrgLocales();
+  }
+  if (hasPermission.value) {
+    console.log("initializeData calling getLevelList");
+    getLevelList();
+    console.log("initializeData after getLevelList");
+  } else {
+    console.log(
+      "initializeData skipping getLevelList since !hasPermission.value"
+    );
   }
 }
 
+function getOrgLocalesAfterChoosingOrg() {
+  // label-in-value causes the selected org to be an object { value: ..., label: ... },
+  // so we need to extract the value (short name).
+  // The first "value" in orgValueAndLabel.value.value is a Vue thing.
+  // The second "value" in orgValueAndLabel.value.value is the first key in { value: ..., label: ... }.
+  newUserOrg.value = orgValueAndLabel.value.value;
+  getOrgLocales();
+}
+
 async function getOrgLocales() {
+  if (!newUserOrg.value) {
+    return; // temporary, testing
+  }
+  const resource = "./api/locales/org/" + newUserOrg.value;
   await cldrAjax
-    .doFetch("./api/locales/org/" + newUserOrg.value)
+    .doFetch(resource)
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(setOrgLocales)
-    .catch((e) => errors.push(`Error: ${e} getting org locales`));
+    .catch((e) => errors.value.push(`Error: ${e} getting org locales`));
 }
 
 function setOrgLocales(json) {
   if (json.err) {
     cldrRetry.handleDisconnect(json.err, json, "", "Loading org locales");
   } else {
-    if ("*" == json.locales) {
-      orgLocales.value = "aa de_CH fr zh"; // TODO
-    } else {
-      orgLocales.value = json.locales;
-    }
+    reallySetOrgLocales(json.locales);
     setupLocaleOptions();
   }
 }
 
+function reallySetOrgLocales(locales) {
+  if ("*" == locales) {
+    orgLocales.value = "";
+    // orgLocales.value = "aa de_CH fr zh";
+    for (let loc in cldrLoad.getTheLocaleMap().locmap.locales) {
+      if (orgLocales.value) {
+        orgLocales.value += " ";
+      }
+      orgLocales.value += loc;
+    }
+  } else {
+    orgLocales.value = locales;
+  }
+  orgLocales.value += " bogus"; // TODO: TEMPORARY TESTING!
+}
+
+function setAllLocales() {
+  newUserLocales.value = "*";
+  chosenLocales.value = ["*"];
+  const item = {
+    value: "*",
+    localeDescription: "All Locales = *",
+  };
+  localeOptions = ref([item]);
+  return false;
+}
+
 function setupLocaleOptions() {
   const locmap = cldrLoad.getTheLocaleMap();
-  let array = [];
+  const array = [];
   for (let localeId of orgLocales.value.split(" ")) {
-    const localeName = locmap.getRegionAndOrVariantName(localeId);
+    const localeName =
+      "*" === localeId ? "All Locales" : locmap.getLocaleName(localeId);
     const item = {
+      // I would like to use a key other than "value" here, such as "localeIdValue",
+      // but I can't make that work. See "localeIdValue" elsewhere.
       value: localeId,
-      localeDescription: localeName + " (" + localeId + ")",
+      localeDescription: localeName + " = " + localeId,
     };
     array.push(item);
   }
   localeOptions = ref(array);
 }
 
-async function validateLocales() {
+async function concatenateAndValidateLocales() {
+  newUserLocales.value = chosenLocales.value.join(" ");
   const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
     newUserLevel,
     levelList
   );
-  const orgForValidation = skipOrg ? "" : newUserOrg;
+  const orgForValidation = skipOrg ? "" : newUserOrg.value;
+  const resource =
+    "./api/locales/normalize?" +
+    new URLSearchParams({
+      locs: newUserLocales.value,
+      org: orgForValidation,
+    });
   await cldrAjax
-    .doFetch(
-      "./api/locales/normalize?" +
-        new URLSearchParams({
-          locs: newUserLocales,
-          org: orgForValidation,
-        })
-    )
+    .doFetch(resource)
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(({ messages, normalized }) => {
@@ -289,7 +326,7 @@ async function validateLocales() {
         locWarnings = messages;
       }
     })
-    .catch((e) => errors.push(`Error: ${e} validating locale`));
+    .catch((e) => errors.value.push(`Error: ${e} validating locale`));
 }
 
 function getLevelList() {
@@ -299,10 +336,13 @@ function getLevelList() {
 
 function loadLevelList(list) {
   if (!list) {
-    errors.push("User-level list not received from server");
+    errors.value.push("User-level list not received from server");
     loading.value = false;
   } else {
     levelList = reactive(list);
+    console.log(
+      "loadLevelList just got levelList; levelList[0] = " + levelList[0]
+    );
     areWeLoading();
   }
 }
@@ -326,65 +366,97 @@ function explainWarning(reason) {
   return cldrText.get(`locale_rejection_${reason}`, reason);
 }
 
-function getOrgs() {
+/**
+ * Set up the organization menu, for Admin only (canChooseOrg)
+ */
+async function setupOrgOptions() {
   loading.value = true;
-  cldrOrganizations.get().then(loadOrgs);
-}
-
-function loadOrgs(o) {
-  if (o) {
-    orgs.value = o;
-    areWeLoading();
-  } else {
-    errors.push("Organization names not received from server");
+  const o = await cldrOrganizations.get();
+  if (!o) {
+    errors.value.push("Organization names not received from server");
     loading.value = false;
+    return;
   }
+  // o = { displayToShort, shortToDisplay, sortedDisplayNames };
+  // Two maps and one array
+  const array = [];
+  for (let orgDisplayName of o.sortedDisplayNames) {
+    const orgShortName = o.displayToShort[orgDisplayName];
+    const item = {
+      // The key must be "value" for the menu to work right.
+      value: orgShortName,
+      // The key must be "label" (not, e.g., "orgDescription") in order to use label-in-value,
+      // which enables the displayed chosen value to include the display name.
+      label: orgDisplayName + " = " + orgShortName,
+    };
+    array.push(item);
+  }
+  orgOptions = ref(array);
+  areWeLoading();
 }
 
 function areWeLoading() {
-  loading.value = !(levelList && (orgs || newUserOrg));
+  // Note: given levelList = reactive([..., ...]), Vue does not support getting
+  // levelList.length directly. Use Object.keys(levelList).length instead.
+  console.log(
+    "areWeLoading: levelList.length = " +
+      levelList.length +
+      "; Object.keys(levelList).length = " +
+      Object.keys(levelList).length +
+      "; orgOptions.value.length = " +
+      orgOptions.value.length +
+      "; newUserOrg.value = " +
+      newUserOrg.value
+  );
+  loading.value = !(
+    Object.keys(levelList).length &&
+    (orgOptions.value.length || newUserOrg.value)
+  );
 }
 
 async function add() {
   validate();
-  await validateLocales();
-  if (errors.length) {
+  await concatenateAndValidateLocales();
+  if (errors.value.length) {
     return;
   }
   const postData = {
-    email: newUserEmail,
-    level: newUserLevel,
-    locales: newUserLocales,
-    name: newUserName,
-    org: newUserOrg,
+    email: newUserEmail.value,
+    level: newUserLevel.value,
+    locales: newUserLocales.value,
+    name: newUserName.value,
+    org: newUserOrg.value,
   };
   const xhrArgs = {
     url: cldrAjax.makeApiUrl("adduser", null),
     postData: postData,
     handleAs: "json",
     load: loadHandler,
-    error: (err) => errors.push(err),
+    error: (err) => errors.value.push(err),
   };
   cldrAjax.sendXhr(xhrArgs);
 }
 
 function validate() {
-  errors = [];
-  if (!newUserName) {
-    errors.push("Name required.");
+  errors.value = [];
+  if (!newUserName.value) {
+    errors.value.push("Name required.");
   }
-  if (!newUserEmail) {
-    errors.push("E-mail required.");
-  } else if (!validateEmail(newUserEmail)) {
-    errors.push("Valid e-mail required.");
+  if (!newUserEmail.value) {
+    errors.value.push("E-mail required.");
+  } else if (!validateEmail(newUserEmail.value)) {
+    errors.value.push("Valid e-mail required.");
   }
-  if (!newUserOrg) {
-    errors.push("Organization required.");
+  if (!newUserOrg.value) {
+    errors.value.push("Organization required.");
   }
-  if (!newUserLevel) {
-    errors.push("Level required.");
-  } else if (newUserLevel >= 5 && !newUserLocales) {
-    errors.push("Languages responsible is required for this userlevel.");
+  if (!newUserLevel.value) {
+    errors.value.push("Level required.");
+  } else if (
+    newUserLevel.value >= VETTER_LEVEL_NUMBER &&
+    !newUserLocales.value
+  ) {
+    errors.value.push("Locales is required for this userlevel.");
   }
 }
 
@@ -402,21 +474,22 @@ function validateEmail(emailAddress) {
   const el = document.createElement("input");
   el.type = "email";
   el.value = emailAddress;
-  return el.checkValidity();
+  const isValid = el.checkValidity();
+  return isValid;
 }
 
 function loadHandler(json) {
   if (json.err) {
-    errors.push("Error from the server: " + translateErr(json.err));
+    errors.value.push("Error from the server: " + translateErr(json.err));
   } else if (!json.userId) {
-    errors.push("The server did not return a user id.");
+    errors.value.push("The server did not return a user id.");
   } else {
     const n = Math.floor(Number(json.userId));
     if (String(n) !== String(json.userId) || n <= 0 || !Number.isInteger(n)) {
-      errors.push("The server returned an invalid id: " + json.userId);
+      errors.value.push("The server returned an invalid id: " + json.userId);
     } else {
-      addedNewUser = true;
-      userId = Number(json.userId);
+      addedNewUser.value = true;
+      userId.value = Number(json.userId);
       if (json.email) {
         newUserEmail.value = json.email; // normalized, e.g., to lower case by server
       }
@@ -439,13 +512,8 @@ function translateErr(err) {
   return map[err] + " [" + err + "]";
 }
 
-function setAllLocales() {
-  newUserLocales = "*";
-  return false;
-}
-
 function manageThisUser() {
-  cldrAccount.zoomUser(newUserEmail);
+  cldrAccount.zoomUser(newUserEmail.value);
 }
 </script>
 
