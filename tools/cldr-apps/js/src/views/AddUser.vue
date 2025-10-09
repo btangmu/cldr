@@ -7,7 +7,7 @@
     <div v-if="errorsExist()">
       <span class="addUserErrors">Please correct the following error(s):</span>
       <ul>
-        <li v-for="error in errors" :key="error">{{ error }}</li>
+        <li v-for="error in getErrors()" :key="error">{{ error }}</li>
       </ul>
     </div>
     <div v-if="hasPermission && !loading && !addedNewUser" class="adduser">
@@ -163,19 +163,16 @@
         </button>
       </p>
       <hr />
-      <p><button v-on:click="initializeData()">Add another user</button></p>
+      <p>
+        <button v-on:click="startAddingAnotherUser()">Add another user</button>
+      </p>
     </div>
   </article>
 </template>
 
 <script setup>
-import * as cldrAccount from "../esm/cldrAccount.mjs";
-import * as cldrAjax from "../esm/cldrAjax.mjs";
-import * as cldrLoad from "../esm/cldrLoad.mjs";
-import * as cldrOrganizations from "../esm/cldrOrganizations.mjs";
-import * as cldrStatus from "../esm/cldrStatus.mjs";
+import * as cldrAddUser from "../esm/cldrAddUser.mjs";
 import * as cldrText from "../esm/cldrText.mjs";
-import * as cldrUserLevels from "../esm/cldrUserLevels.mjs";
 
 import { onMounted, ref, reactive } from "vue";
 
@@ -183,17 +180,16 @@ const DEBUG = false;
 
 const VETTER_LEVEL_NUMBER = 5;
 
-const ALL_LOCALES = "*";
-
 // Numbers
 let userId = ref(0);
 
 // Booleans
-let loading = ref(false);
+let loading = ref(true);
 let hasPermission = ref(false);
 let addedNewUser = ref(false);
 let canChooseOrg = ref(false);
 let allLocales = ref(false);
+let justGotError = ref(false);
 
 // Strings
 let newUserEmail = ref("");
@@ -201,7 +197,6 @@ let newUserLevel = ref("");
 let newUserLocales = ref("");
 let newUserName = ref("");
 let newUserOrg = ref("");
-let orgLocales = ref("");
 
 // Arrays
 
@@ -216,18 +211,27 @@ let localeOptions = ref([]);
 // Variables assigned with reactive() must be handled differently
 // from those assigned with ref().
 // For example, they are not referenced using .value
-let errors = reactive([]);
 let locWarnings = reactive([]);
 let levelList = reactive([]);
 
-onMounted(initializeData);
+onMounted(mounted);
+
+function mounted() {
+  startAddingAnotherUser();
+  hasPermission.value = Boolean(cldrAddUser.hasPermission());
+}
+
+function startAddingAnotherUser() {
+  initializeData();
+  cldrAddUser.viewMounted(setData);
+}
 
 function initializeData() {
   // Numbers
   userId.value = 0;
 
   // Booleans
-  loading.value = false;
+  loading.value = true;
   addedNewUser.value = false;
   canChooseOrg.value = false;
   allLocales.value = false;
@@ -238,7 +242,6 @@ function initializeData() {
   newUserLocales.value = "";
   newUserName.value = "";
   newUserOrg.value = "";
-  orgLocales.value = "";
 
   // Arrays (see comment above about ref()/.value vs reactive())
 
@@ -247,23 +250,72 @@ function initializeData() {
   chosenLocales.value = [];
   localeOptions.value = [];
 
-  errors = reactive([]);
   locWarnings = reactive([]);
   levelList = reactive([]);
+}
 
-  const perm = cldrStatus.getPermissions();
-  hasPermission.value = !!perm?.userCanListUsers;
-  if (hasPermission.value) {
-    getLevelList();
-    if (perm?.userIsAdmin) {
-      canChooseOrg.value = true;
-      newUserOrg.value = "";
-      setupOrgOptions();
-    } else {
-      newUserOrg.value = cldrStatus.getOrganizationName();
-      getOrgLocales();
-    }
+function setData(data) {
+  if (data.levelList) {
+    levelList = reactive(data.levelList);
   }
+  if (data.orgObject) {
+    setOrgData(data.orgObject);
+  }
+  if (data.orgLocales) {
+    setOrgLocales(data.orgLocales);
+  }
+  if (data.error) {
+    justGotError.value = true;
+  }
+  if (data.validatedLocales) {
+    locWarnings = reactive(data.validatedLocales.locWarnings);
+    newUserLocales.value = data.validatedLocales.newUserLocales;
+  }
+  if (data.newUser) {
+    setNewUserData(data.newUser);
+  }
+  areWeLoading();
+}
+
+function setNewUserData(newUser) {
+  addedNewUser.value = true;
+  userId.value = newUser.id;
+  newUserEmail.value = newUser.email;
+}
+
+function setOrgData(orgObject) {
+  // orgObject= { displayToShort, shortToDisplay, sortedDisplayNames };
+  // Two maps and one array
+  const array = [];
+  for (let orgDisplayName of orgObject.sortedDisplayNames) {
+    const orgShortName = orgObject.displayToShort[orgDisplayName];
+    const item = {
+      // The key must be "value" for the menu to work right.
+      value: orgShortName,
+      // The key must be "label" (not, e.g., "orgDescription") in order to use label-in-value,
+      // which enables the displayed chosen value to include the display name.
+      label: orgDisplayName + " = " + orgShortName,
+    };
+    array.push(item);
+  }
+  orgOptions.value = array;
+  canChooseOrg.value = true;
+  newUserOrg.value = "";
+}
+
+function setOrgLocales(orgLocales) {
+  const array = [];
+  for (let localeId of orgLocales.split(" ")) {
+    const localeName = cldrAddUser.getLocaleName(localeId);
+    const item = {
+      // A key other than "value" here, such as "localeIdValue", would be more descriptive,
+      // but does not appear to work.
+      value: localeId,
+      localeDescription: localeName + " = " + localeId,
+    };
+    array.push(item);
+  }
+  localeOptions.value = array;
 }
 
 function getOrgLocalesAfterChoosingOrg() {
@@ -285,113 +337,25 @@ function getOrgLocalesAfterChoosingOrg() {
   // The first "value" in orgValueAndLabel.value.value is for Vue ref().
   // The second "value" in orgValueAndLabel.value.value is a key in { value: ..., label: ... }.
   newUserOrg.value = orgValueAndLabel.value.value;
-  getOrgLocales();
-}
-
-async function getOrgLocales() {
-  if (!newUserOrg.value) {
-    console.error("No newUserOrg in getOrgLocales!");
-    return;
-  }
-  const resource = "./api/locales/org/" + newUserOrg.value;
-  await cldrAjax
-    .doFetch(resource)
-    .then(cldrAjax.handleFetchErrors)
-    .then((r) => r.json())
-    .then(setOrgLocales)
-    .catch((e) => addError(`Error: ${e} getting org locales`));
-}
-
-function setOrgLocales(json) {
-  if (json.err) {
-    cldrRetry.handleDisconnect(json.err, json, "", "Loading org locales");
-    return;
-  }
-  const locmap = cldrLoad.getTheLocaleMap();
-  if (json.locales == ALL_LOCALES) {
-    orgLocales.value = locmap.locmap.locales.join(" ");
-  } else {
-    orgLocales.value = json.locales;
-  }
-  const array = [];
-  for (let localeId of orgLocales.value.split(" ")) {
-    const localeName = locmap.getLocaleName(localeId);
-    const item = {
-      // A key other than "value" here, such as "localeIdValue", would be more descriptive,
-      // but does not appear to work.
-      value: localeId,
-      localeDescription: localeName + " = " + localeId,
-    };
-    array.push(item);
-  }
-  localeOptions.value = array;
+  cldrAddUser.getOrgLocales(newUserOrg.value);
 }
 
 async function concatenateAndValidateLocales() {
   if (allLocales.value) {
-    newUserLocales.value = ALL_LOCALES;
+    newUserLocales.value = cldrAddUser.ALL_LOCALES;
     return;
   }
   newUserLocales.value = chosenLocales.value.join(" ");
-  const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
-    newUserLevel,
+  cldrAddUser.validateLocales(
+    newUserOrg.value,
+    newUserLocales.value,
+    newUserLevel.value,
     levelList
   );
-  const orgForValidation = skipOrg ? "" : newUserOrg.value;
-  const resource =
-    "./api/locales/normalize?" +
-    new URLSearchParams({
-      locs: newUserLocales.value,
-      org: orgForValidation,
-    });
-  await cldrAjax
-    .doFetch(resource)
-    .then(cldrAjax.handleFetchErrors)
-    .then((r) => r.json())
-    .then(({ messages, normalized }) => {
-      if (newUserLocales != normalized) {
-        // only update the warnings if the normalized value changes
-        newUserLocales.value = normalized;
-        if (messages) {
-          if (typeof messages != "object") {
-            console.log("typeof messages = " + typeof messages);
-          }
-          locWarnings = reactive(messages);
-        }
-      }
-    })
-    .catch((e) => addError(`Error: ${e} validating locale`));
-}
-
-function getLevelList() {
-  loading.value = true;
-  cldrUserLevels.getLevelList().then(loadLevelList);
-}
-
-function loadLevelList(list) {
-  if (!list) {
-    addError("User-level list not received from server");
-    loading.value = false;
-  } else {
-    levelList = reactive(list);
-    if (DEBUG) {
-      console.log(
-        "loadLevelList just got levelList; levelList[0] = " + levelList[0]
-      );
-    }
-    areWeLoading();
-  }
-}
-
-function getLocaleName(loc) {
-  if (!loc) {
-    return null;
-  }
-  return cldrLoad.getTheLocaleMap()?.getLocaleName(loc);
 }
 
 function getParenthesizedName(loc) {
-  const name = getLocaleName(loc);
+  const name = cldrAddUser.getLocaleName(loc);
   if (name && name !== loc) {
     return `(${name})`;
   }
@@ -400,35 +364,6 @@ function getParenthesizedName(loc) {
 
 function explainWarning(reason) {
   return cldrText.get(`locale_rejection_${reason}`, reason);
-}
-
-/**
- * Set up the organization menu, for Admin only (canChooseOrg)
- */
-async function setupOrgOptions() {
-  loading.value = true;
-  const o = await cldrOrganizations.get();
-  if (!o) {
-    addError("Organization names not received from server");
-    loading.value = false;
-    return;
-  }
-  // o = { displayToShort, shortToDisplay, sortedDisplayNames };
-  // Two maps and one array
-  const array = [];
-  for (let orgDisplayName of o.sortedDisplayNames) {
-    const orgShortName = o.displayToShort[orgDisplayName];
-    const item = {
-      // The key must be "value" for the menu to work right.
-      value: orgShortName,
-      // The key must be "label" (not, e.g., "orgDescription") in order to use label-in-value,
-      // which enables the displayed chosen value to include the display name.
-      label: orgDisplayName + " = " + orgShortName,
-    };
-    array.push(item);
-  }
-  orgOptions.value = array;
-  areWeLoading();
 }
 
 function areWeLoading() {
@@ -490,18 +425,11 @@ async function add() {
     name: newUserName.value,
     org: newUserOrg.value,
   };
-  const xhrArgs = {
-    url: cldrAjax.makeApiUrl("adduser", null),
-    postData: postData,
-    handleAs: "json",
-    load: loadHandler,
-    error: (err) => addError(err),
-  };
-  cldrAjax.sendXhr(xhrArgs);
+  cldrAddUser.add(postData);
 }
 
 function validate() {
-  clearErrors();
+  cldrAddUser.clearErrors();
   if (!newUserOrg.value) {
     addError("Organization required.");
   }
@@ -522,6 +450,26 @@ function validate() {
   ) {
     addError("Locales is required for this userlevel.");
   }
+}
+
+function addError(message) {
+  cldrAddUser.addError(message);
+}
+
+function removeError(message) {
+  cldrAddUser.removeError(message);
+}
+
+function errorsExist() {
+  if (justGotError.value) {
+    justGotError.value = false;
+    return true;
+  }
+  return cldrAddUser.errorsExist(); // boolean
+}
+
+function getErrors() {
+  return cldrAddUser.getErrors();
 }
 
 function localesAreRequired() {
@@ -551,70 +499,8 @@ function validateEmail(emailAddress) {
   }
 }
 
-function loadHandler(json) {
-  if (json.err) {
-    addError("Error from the server: " + translateErr(json.err));
-  } else if (!json.userId) {
-    addError("The server did not return a user id.");
-  } else {
-    const n = Math.floor(Number(json.userId));
-    if (String(n) !== String(json.userId) || n <= 0 || !Number.isInteger(n)) {
-      addError("The server returned an invalid id: " + json.userId);
-    } else {
-      addedNewUser.value = true;
-      userId.value = Number(json.userId);
-      if (json.email) {
-        newUserEmail.value = json.email; // normalized, e.g., to lower case by server
-      }
-    }
-  }
-}
-
-function addError(message) {
-  const index = errors.indexOf(message);
-  if (index < 0) {
-    errors.push(message);
-  }
-}
-
-function removeError(message) {
-  const index = errors.indexOf(message);
-  if (index > -1) {
-    errors.splice(index, 1);
-  }
-}
-
-function clearErrors() {
-  errors.length = 0;
-  if (errorsExist()) {
-    console.error("clearErrors failure");
-  }
-}
-
-function errorsExist() {
-  if (Object.keys(errors).length) {
-    return true;
-  }
-  return false;
-}
-
-function translateErr(err) {
-  const map = {
-    BAD_NAME: "Missing or invalid name",
-    BAD_EMAIL: "Missing or invalid e-mail",
-    BAD_ORG: "Missing or invalid organization",
-    BAD_LEVEL: "Missing, invalid, or forbidden user level",
-    DUP_EMAIL: "A user with that e-mail already exists",
-    UNKNOWN: "An unspecified error occurred",
-  };
-  if (!map[err]) {
-    return err;
-  }
-  return map[err] + " [" + err + "]";
-}
-
 function manageThisUser() {
-  cldrAccount.zoomUser(newUserEmail.value);
+  cldrAddUser.manageThisUser(newUserEmail.value);
 }
 </script>
 
