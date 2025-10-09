@@ -18,7 +18,7 @@
           <td v-if="canChooseOrg">
             <a-select
               id="new_org"
-              v-model="orgValueAndLabel"
+              v-model:value="orgValueAndLabel"
               label-in-value
               show-search
               style="width: 100%"
@@ -41,7 +41,7 @@
             <a-input
               id="new_name"
               size="40"
-              v-model="newUserName"
+              v-model:value="newUserName"
               placeholder="Enter a user name"
             />
           </td>
@@ -52,7 +52,7 @@
             <a-input
               id="new_email"
               size="40"
-              v-model="newUserEmail"
+              v-model:value="newUserEmail"
               type="email"
               placeholder="Enter an e-mail address"
             />
@@ -80,8 +80,9 @@
         </tr>
         <template v-if="newUserLevel >= VETTER_LEVEL_NUMBER">
           <tr>
+            <th><label for="radio_head"> </label></th>
             <td class="rightRadio">
-              <a-radio-group v-model:value="allLocales">
+              <a-radio-group id="radio_head" v-model:value="allLocales">
                 <a-radio :value="true">All locales</a-radio>
                 <a-radio :value="false">Specific locales</a-radio>
               </a-radio-group>
@@ -103,7 +104,7 @@
               >
                 <!-- This appears in the menu: -->
                 <template #option="{ localeDescription }">
-                  Desc: {{ localeDescription }}
+                  {{ localeDescription }}
                 </template>
                 <!-- This appears in the input box after choosing from menu: -->
                 <template #tagRender="{ closable, onClose, option }">
@@ -112,9 +113,9 @@
                     style="margin-right: 3px"
                     @close="onClose"
                   >
-                    <span :title="option.localeDescription"
-                      >Val: {{ option.value }}</span
-                    >
+                    <span :title="option.localeDescription">{{
+                      option.value
+                    }}</span>
                   </a-tag>
                 </template>
               </a-select>
@@ -137,12 +138,7 @@
 
         <tr class="addButton">
           <td colspan="2">
-            <button
-              v-if="newUserName && newUserEmail && newUserOrg && newUserLevel"
-              v-on:click="add()"
-            >
-              Add
-            </button>
+            <button v-if="readyToAdd()" v-on:click="add()">Add</button>
             <button v-else>
               cannot add yet: {{ newUserName + " " + newUserEmail }}
             </button>
@@ -205,15 +201,15 @@ let orgLocales = ref("");
 let errors = reactive([]);
 let locWarnings = reactive([]);
 let levelList = reactive([]);
-let orgValueAndLabel = reactive([]);
-let orgOptions = reactive([]);
 
 // normally for arrays, reactive() seems better than ref(),
 // but for a-select menus, ref() seems to be required.
 // https://www.antdv.com/components/select/
 
-let chosenLocales = ref([]);
+let orgValueAndLabel = ref([]);
+let orgOptions = ref([]);
 
+let chosenLocales = ref([]);
 let localeOptions = ref([]);
 
 onMounted(mounted);
@@ -223,45 +219,32 @@ function mounted() {
 }
 
 function initializeData() {
-  loading = ref(false);
-  // hasPermission = ref(false);
-  addedNewUser = ref(false);
-  canChooseOrg = ref(false);
-  allLocales = ref(false);
+  loading.value = false;
+  addedNewUser.value = false;
+  canChooseOrg.value = false;
+  allLocales.value = false;
 
-  userId = ref(0);
+  userId.value = 0;
 
-  newUserEmail = ref("");
-  newUserLevel = ref("");
-  newUserLocales = ref("");
-  newUserName = ref("");
-  newUserOrg = ref("");
-  orgLocales = ref("");
+  newUserEmail.value = "";
+  newUserLevel.value = "";
+  newUserLocales.value = "";
+  newUserName.value = "";
+  newUserOrg.value = "";
+  orgLocales.value = "";
 
   errors = reactive([]);
   locWarnings = reactive([]);
   levelList = reactive([]);
-  orgValueAndLabel = reactive([]);
-  orgOptions = reactive([]);
 
-  chosenLocales = ref([]);
+  orgValueAndLabel.value = [];
+  orgOptions.value = [];
 
-  localeOptions = ref([]);
+  chosenLocales.value = [];
+  localeOptions.value = [];
 
   const perm = cldrStatus.getPermissions();
   hasPermission.value = !!perm?.userCanListUsers;
-  if (perm?.userIsAdmin) {
-    canChooseOrg.value = true;
-    newUserOrg.value = "";
-    setupOrgOptions();
-  } else {
-    canChooseOrg.value = false;
-    if (hasPermission.value) {
-      newUserOrg.value = cldrStatus.getOrganizationName();
-    }
-    // orgs.value = null;
-    getOrgLocales();
-  }
   if (hasPermission.value) {
     console.log("initializeData calling getLevelList");
     getLevelList();
@@ -271,20 +254,40 @@ function initializeData() {
       "initializeData skipping getLevelList since !hasPermission.value"
     );
   }
+  if (perm?.userIsAdmin) {
+    canChooseOrg.value = true;
+    newUserOrg.value = "";
+    setupOrgOptions();
+  } else if (hasPermission.value) {
+    newUserOrg.value = cldrStatus.getOrganizationName();
+    getOrgLocales();
+  }
 }
 
 function getOrgLocalesAfterChoosingOrg() {
   // label-in-value causes the selected org to be an object { value: ..., label: ... },
   // so we need to extract the value (short name).
   // The "value" in newUserOrg.value is a Vue thing.
-  // The "value" in orgValueAndLabel.value is the first key in { value: ..., label: ... }.
-  newUserOrg.value = orgValueAndLabel.value;
+  // The first "value" in orgValueAndLabel.value.value is a Vue thing.
+  // The first "value" in orgValueAndLabel.value.value is the first key in { value: ..., label: ... }.
+  console.log(
+    "In getOrgLocalesAfterChoosingOrg, orgValueAndLabel.value = " +
+      orgValueAndLabel.value
+  );
+  console.log(
+    "In getOrgLocalesAfterChoosingOrg, typeof orgValueAndLabel = " +
+      typeof orgValueAndLabel
+  );
+  const keys = Object.keys(orgValueAndLabel);
+  console.log("orgValueAndLabel contains " + keys.length + " keys: " + keys);
+  newUserOrg.value = orgValueAndLabel.value.value;
   getOrgLocales();
 }
 
 async function getOrgLocales() {
   if (!newUserOrg.value) {
-    return; // temporary, testing
+    console.error("No newUserOrg in getOrgLocales!");
+    return;
   }
   const resource = "./api/locales/org/" + newUserOrg.value;
   await cldrAjax
@@ -292,7 +295,7 @@ async function getOrgLocales() {
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(setOrgLocales)
-    .catch((e) => errors.value.push(`Error: ${e} getting org locales`));
+    .catch((e) => errors.push(`Error: ${e} getting org locales`));
 }
 
 function setOrgLocales(json) {
@@ -334,7 +337,7 @@ function setupLocaleOptions() {
     };
     array.push(item);
   }
-  localeOptions = ref(array);
+  localeOptions.value = array;
 }
 
 async function concatenateAndValidateLocales() {
@@ -358,10 +361,15 @@ async function concatenateAndValidateLocales() {
       if (newUserLocales != normalized) {
         // only update the warnings if the normalized value changes
         newUserLocales.value = normalized;
-        locWarnings = reactive(messages);
+        if (messages) {
+          if (typeof messages != "object") {
+            console.log("typeof messages = " + typeof messages);
+          }
+          locWarnings = reactive(messages);
+        }
       }
     })
-    .catch((e) => errors.value.push(`Error: ${e} validating locale`));
+    .catch((e) => errors.push(`Error: ${e} validating locale`));
 }
 
 function getLevelList() {
@@ -371,7 +379,7 @@ function getLevelList() {
 
 function loadLevelList(list) {
   if (!list) {
-    errors.value.push("User-level list not received from server");
+    errors.push("User-level list not received from server");
     loading.value = false;
   } else {
     levelList = reactive(list);
@@ -408,7 +416,7 @@ async function setupOrgOptions() {
   loading.value = true;
   const o = await cldrOrganizations.get();
   if (!o) {
-    errors.value.push("Organization names not received from server");
+    errors.push("Organization names not received from server");
     loading.value = false;
     return;
   }
@@ -426,7 +434,7 @@ async function setupOrgOptions() {
     };
     array.push(item);
   }
-  orgOptions = reactive(array);
+  orgOptions.value = array;
   areWeLoading();
 }
 
@@ -447,10 +455,30 @@ function areWeLoading() {
   );
 }
 
+function readyToAdd() {
+  console.log(
+    "readyToAdd? org/name/email/level = [" +
+      newUserOrg.value +
+      "][" +
+      newUserName.value +
+      "][" +
+      newUserEmail.value +
+      "][" +
+      newUserLevel.value +
+      "]"
+  );
+  return (
+    newUserOrg.value &&
+    newUserName.value &&
+    newUserEmail.value &&
+    newUserLevel.value
+  );
+}
+
 async function add() {
   validate();
   await concatenateAndValidateLocales();
-  if (errors.value.length) {
+  if (errors.length) {
     return;
   }
   const postData = {
@@ -465,32 +493,33 @@ async function add() {
     postData: postData,
     handleAs: "json",
     load: loadHandler,
-    error: (err) => errors.value.push(err),
+    error: (err) => errors.push(err),
   };
   cldrAjax.sendXhr(xhrArgs);
 }
 
 function validate() {
-  errors.value = [];
+  const e = [];
+  if (!newUserOrg.value) {
+    e.push("Organization required.");
+  }
   if (!newUserName.value) {
-    errors.value.push("Name required.");
+    e.push("Name required.");
   }
   if (!newUserEmail.value) {
-    errors.value.push("E-mail required.");
+    e.push("E-mail required.");
   } else if (!validateEmail(newUserEmail.value)) {
-    errors.value.push("Valid e-mail required.");
-  }
-  if (!newUserOrg.value) {
-    errors.value.push("Organization required.");
+    e.push("Valid e-mail required.");
   }
   if (!newUserLevel.value) {
-    errors.value.push("Level required.");
+    e.push("Level required.");
   } else if (
     newUserLevel.value >= VETTER_LEVEL_NUMBER &&
     !newUserLocales.value
   ) {
-    errors.value.push("Locales is required for this userlevel.");
+    e.push("Locales is required for this userlevel.");
   }
+  errors = reactive(e);
 }
 
 /**
@@ -513,13 +542,13 @@ function validateEmail(emailAddress) {
 
 function loadHandler(json) {
   if (json.err) {
-    errors.value.push("Error from the server: " + translateErr(json.err));
+    errors.push("Error from the server: " + translateErr(json.err));
   } else if (!json.userId) {
-    errors.value.push("The server did not return a user id.");
+    errors.push("The server did not return a user id.");
   } else {
     const n = Math.floor(Number(json.userId));
     if (String(n) !== String(json.userId) || n <= 0 || !Number.isInteger(n)) {
-      errors.value.push("The server returned an invalid id: " + json.userId);
+      errors.push("The server returned an invalid id: " + json.userId);
     } else {
       addedNewUser.value = true;
       userId.value = Number(json.userId);
