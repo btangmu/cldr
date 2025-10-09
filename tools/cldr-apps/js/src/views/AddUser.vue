@@ -4,7 +4,7 @@
     <div v-if="!hasPermission">
       Please log in as a user with sufficient permissions.
     </div>
-    <div v-if="errors.length">
+    <div v-if="errorsExist()">
       <span class="addUserErrors">Please correct the following error(s):</span>
       <ul>
         <li v-for="error in errors" :key="error">{{ error }}</li>
@@ -55,6 +55,7 @@
               v-model:value="newUserEmail"
               type="email"
               placeholder="Enter an e-mail address"
+              @blur="validateEmail(newUserEmail)"
             />
           </td>
         </tr>
@@ -78,10 +79,10 @@
             </a-select>
           </td>
         </tr>
-        <template v-if="newUserLevel >= VETTER_LEVEL_NUMBER">
+        <template v-if="localesAreRequired()">
           <tr>
             <th><label for="radio_head"> </label></th>
-            <td class="rightRadio">
+            <td>
               <a-radio-group id="radio_head" v-model:value="allLocales">
                 <a-radio :value="true">All locales</a-radio>
                 <a-radio :value="false">Specific locales</a-radio>
@@ -119,7 +120,7 @@
                   </a-tag>
                 </template>
               </a-select>
-              <div v-if="locWarnings.length">
+              <div v-if="Object.keys(locWarnings).length">
                 <span class="locWarnings"
                   >The following locales will not be added due to
                   problems:</span
@@ -139,9 +140,6 @@
         <tr class="addButton">
           <td colspan="2">
             <button v-if="readyToAdd()" v-on:click="add()">Add</button>
-            <button v-else>
-              cannot add yet: {{ newUserName + " " + newUserEmail }}
-            </button>
           </td>
         </tr>
       </table>
@@ -181,16 +179,23 @@ import * as cldrUserLevels from "../esm/cldrUserLevels.mjs";
 
 import { onMounted, ref, reactive } from "vue";
 
+const DEBUG = false;
+
 const VETTER_LEVEL_NUMBER = 5;
 
+const ALL_LOCALES = "*";
+
+// Numbers
+let userId = ref(0);
+
+// Booleans
 let loading = ref(false);
 let hasPermission = ref(false);
 let addedNewUser = ref(false);
 let canChooseOrg = ref(false);
 let allLocales = ref(false);
 
-let userId = ref(0);
-
+// Strings
 let newUserEmail = ref("");
 let newUserLevel = ref("");
 let newUserLocales = ref("");
@@ -198,34 +203,36 @@ let newUserName = ref("");
 let newUserOrg = ref("");
 let orgLocales = ref("");
 
+// Arrays
+
+// Often for arrays, reactive() seems to work better than ref(),
+// but for a-select menus, ref() sometimes seems to be required.
+// For documentation of a-select, see https://www.antdv.com/components/select/
+let orgValueAndLabel = ref([]);
+let orgOptions = ref([]);
+let chosenLocales = ref([]);
+let localeOptions = ref([]);
+
+// Variables assigned with reactive() must be handled differently
+// from those assigned with ref().
+// For example, they are not referenced using .value
 let errors = reactive([]);
 let locWarnings = reactive([]);
 let levelList = reactive([]);
 
-// normally for arrays, reactive() seems better than ref(),
-// but for a-select menus, ref() seems to be required.
-// https://www.antdv.com/components/select/
-
-let orgValueAndLabel = ref([]);
-let orgOptions = ref([]);
-
-let chosenLocales = ref([]);
-let localeOptions = ref([]);
-
-onMounted(mounted);
-
-function mounted() {
-  initializeData();
-}
+onMounted(initializeData);
 
 function initializeData() {
+  // Numbers
+  userId.value = 0;
+
+  // Booleans
   loading.value = false;
   addedNewUser.value = false;
   canChooseOrg.value = false;
   allLocales.value = false;
 
-  userId.value = 0;
-
+  // Strings
   newUserEmail.value = "";
   newUserLevel.value = "";
   newUserLocales.value = "";
@@ -233,53 +240,50 @@ function initializeData() {
   newUserOrg.value = "";
   orgLocales.value = "";
 
+  // Arrays (see comment above about ref()/.value vs reactive())
+
+  orgValueAndLabel.value = [];
+  orgOptions.value = [];
+  chosenLocales.value = [];
+  localeOptions.value = [];
+
   errors = reactive([]);
   locWarnings = reactive([]);
   levelList = reactive([]);
 
-  orgValueAndLabel.value = [];
-  orgOptions.value = [];
-
-  chosenLocales.value = [];
-  localeOptions.value = [];
-
   const perm = cldrStatus.getPermissions();
   hasPermission.value = !!perm?.userCanListUsers;
   if (hasPermission.value) {
-    console.log("initializeData calling getLevelList");
     getLevelList();
-    console.log("initializeData after getLevelList");
-  } else {
-    console.log(
-      "initializeData skipping getLevelList since !hasPermission.value"
-    );
-  }
-  if (perm?.userIsAdmin) {
-    canChooseOrg.value = true;
-    newUserOrg.value = "";
-    setupOrgOptions();
-  } else if (hasPermission.value) {
-    newUserOrg.value = cldrStatus.getOrganizationName();
-    getOrgLocales();
+    if (perm?.userIsAdmin) {
+      canChooseOrg.value = true;
+      newUserOrg.value = "";
+      setupOrgOptions();
+    } else {
+      newUserOrg.value = cldrStatus.getOrganizationName();
+      getOrgLocales();
+    }
   }
 }
 
 function getOrgLocalesAfterChoosingOrg() {
+  if (DEBUG) {
+    console.log(
+      "In getOrgLocalesAfterChoosingOrg, orgValueAndLabel.value = " +
+        orgValueAndLabel.value
+    );
+    console.log(
+      "In getOrgLocalesAfterChoosingOrg, typeof orgValueAndLabel = " +
+        typeof orgValueAndLabel
+    );
+    const keys = Object.keys(orgValueAndLabel);
+    console.log("orgValueAndLabel contains " + keys.length + " keys: " + keys);
+  }
   // label-in-value causes the selected org to be an object { value: ..., label: ... },
   // so we need to extract the value (short name).
-  // The "value" in newUserOrg.value is a Vue thing.
-  // The first "value" in orgValueAndLabel.value.value is a Vue thing.
-  // The first "value" in orgValueAndLabel.value.value is the first key in { value: ..., label: ... }.
-  console.log(
-    "In getOrgLocalesAfterChoosingOrg, orgValueAndLabel.value = " +
-      orgValueAndLabel.value
-  );
-  console.log(
-    "In getOrgLocalesAfterChoosingOrg, typeof orgValueAndLabel = " +
-      typeof orgValueAndLabel
-  );
-  const keys = Object.keys(orgValueAndLabel);
-  console.log("orgValueAndLabel contains " + keys.length + " keys: " + keys);
+  // The "value" in newUserOrg.value is for Vue ref().
+  // The first "value" in orgValueAndLabel.value.value is for Vue ref().
+  // The second "value" in orgValueAndLabel.value.value is a key in { value: ..., label: ... }.
   newUserOrg.value = orgValueAndLabel.value.value;
   getOrgLocales();
 }
@@ -295,43 +299,26 @@ async function getOrgLocales() {
     .then(cldrAjax.handleFetchErrors)
     .then((r) => r.json())
     .then(setOrgLocales)
-    .catch((e) => errors.push(`Error: ${e} getting org locales`));
+    .catch((e) => addError(`Error: ${e} getting org locales`));
 }
 
 function setOrgLocales(json) {
   if (json.err) {
     cldrRetry.handleDisconnect(json.err, json, "", "Loading org locales");
-  } else {
-    reallySetOrgLocales(json.locales);
-    setupLocaleOptions();
+    return;
   }
-}
-
-function reallySetOrgLocales(locales) {
-  if ("*" == locales) {
-    orgLocales.value = "";
-    // orgLocales.value = "aa de_CH fr zh";
-    for (let loc in cldrLoad.getTheLocaleMap().locmap.locales) {
-      if (orgLocales.value) {
-        orgLocales.value += " ";
-      }
-      orgLocales.value += loc;
-    }
-  } else {
-    orgLocales.value = locales;
-  }
-  orgLocales.value += " bogus"; // TODO: TEMPORARY TESTING!
-}
-
-function setupLocaleOptions() {
   const locmap = cldrLoad.getTheLocaleMap();
+  if (json.locales == ALL_LOCALES) {
+    orgLocales.value = locmap.locmap.locales.join(" ");
+  } else {
+    orgLocales.value = json.locales;
+  }
   const array = [];
   for (let localeId of orgLocales.value.split(" ")) {
-    const localeName =
-      "*" === localeId ? "All Locales" : locmap.getLocaleName(localeId);
+    const localeName = locmap.getLocaleName(localeId);
     const item = {
-      // I would like to use a key other than "value" here, such as "localeIdValue",
-      // but I can't make that work. See "localeIdValue" elsewhere.
+      // A key other than "value" here, such as "localeIdValue", would be more descriptive,
+      // but does not appear to work.
       value: localeId,
       localeDescription: localeName + " = " + localeId,
     };
@@ -341,6 +328,10 @@ function setupLocaleOptions() {
 }
 
 async function concatenateAndValidateLocales() {
+  if (allLocales.value) {
+    newUserLocales.value = ALL_LOCALES;
+    return;
+  }
   newUserLocales.value = chosenLocales.value.join(" ");
   const skipOrg = cldrUserLevels.canVoteInNonOrgLocales(
     newUserLevel,
@@ -369,7 +360,7 @@ async function concatenateAndValidateLocales() {
         }
       }
     })
-    .catch((e) => errors.push(`Error: ${e} validating locale`));
+    .catch((e) => addError(`Error: ${e} validating locale`));
 }
 
 function getLevelList() {
@@ -379,13 +370,15 @@ function getLevelList() {
 
 function loadLevelList(list) {
   if (!list) {
-    errors.push("User-level list not received from server");
+    addError("User-level list not received from server");
     loading.value = false;
   } else {
     levelList = reactive(list);
-    console.log(
-      "loadLevelList just got levelList; levelList[0] = " + levelList[0]
-    );
+    if (DEBUG) {
+      console.log(
+        "loadLevelList just got levelList; levelList[0] = " + levelList[0]
+      );
+    }
     areWeLoading();
   }
 }
@@ -416,7 +409,7 @@ async function setupOrgOptions() {
   loading.value = true;
   const o = await cldrOrganizations.get();
   if (!o) {
-    errors.push("Organization names not received from server");
+    addError("Organization names not received from server");
     loading.value = false;
     return;
   }
@@ -441,44 +434,53 @@ async function setupOrgOptions() {
 function areWeLoading() {
   // Note: given levelList = reactive([..., ...]), Vue does not support getting
   // levelList.length directly. Use Object.keys(levelList).length instead.
-  console.log(
-    "areWeLoading: Object.keys(levelList).length = " +
-      Object.keys(levelList).length +
-      "; orgOptions.length = " +
-      Object.keys(orgOptions).length +
-      "; newUserOrg.value = " +
-      newUserOrg.value
-  );
+
   loading.value = !(
     Object.keys(levelList).length &&
     (Object.keys(orgOptions).length || newUserOrg.value)
   );
+  if (DEBUG) {
+    console.log(
+      "areWeLoading: loading.value = " +
+        loading.value +
+        "; Object.keys(levelList).length = " +
+        Object.keys(levelList).length +
+        "; orgOptions.length = " +
+        Object.keys(orgOptions).length +
+        "; newUserOrg.value = " +
+        newUserOrg.value
+    );
+  }
 }
 
 function readyToAdd() {
-  console.log(
-    "readyToAdd? org/name/email/level = [" +
-      newUserOrg.value +
-      "][" +
-      newUserName.value +
-      "][" +
-      newUserEmail.value +
-      "][" +
-      newUserLevel.value +
-      "]"
-  );
   return (
+    // It could make sense to require errorsExist() == false here; however, currently this
+    // is not done, since some errors are detected on the back end, and the only way to
+    // determine whether they are fixed is to submit with the Add button.
     newUserOrg.value &&
     newUserName.value &&
     newUserEmail.value &&
-    newUserLevel.value
+    newUserLevel.value &&
+    (newUserLocales.value || allLocales.value === true)
   );
 }
 
 async function add() {
   validate();
   await concatenateAndValidateLocales();
-  if (errors.length) {
+  if (!readyToAdd()) {
+    if (DEBUG) {
+      console.log("Early return from add() since readyToAdd() returned false");
+    }
+    return;
+  }
+  if (errorsExist()) {
+    // Errors are cleared at the start of validate(), so if errorsExist() here, they
+    // were detected on the front end, not the back end.
+    if (DEBUG) {
+      console.log("Early return from add() since errorsExist() returned true");
+    }
     return;
   }
   const postData = {
@@ -493,38 +495,43 @@ async function add() {
     postData: postData,
     handleAs: "json",
     load: loadHandler,
-    error: (err) => errors.push(err),
+    error: (err) => addError(err),
   };
   cldrAjax.sendXhr(xhrArgs);
 }
 
 function validate() {
-  const e = [];
+  clearErrors();
   if (!newUserOrg.value) {
-    e.push("Organization required.");
+    addError("Organization required.");
   }
   if (!newUserName.value) {
-    e.push("Name required.");
+    addError("Name required.");
   }
   if (!newUserEmail.value) {
-    e.push("E-mail required.");
-  } else if (!validateEmail(newUserEmail.value)) {
-    e.push("Valid e-mail required.");
+    addError("E-mail required.");
+  } else {
+    validateEmail(newUserEmail.value);
   }
   if (!newUserLevel.value) {
-    e.push("Level required.");
+    addError("Level required.");
   } else if (
-    newUserLevel.value >= VETTER_LEVEL_NUMBER &&
+    localesAreRequired() &&
+    !allLocales.value &&
     !newUserLocales.value
   ) {
-    e.push("Locales is required for this userlevel.");
+    addError("Locales is required for this userlevel.");
   }
-  errors = reactive(e);
+}
+
+function localesAreRequired() {
+  return newUserLevel.value >= VETTER_LEVEL_NUMBER;
 }
 
 /**
  * Let the browser validate the e-mail address
  *
+ * @emailAddress string value
  * @return true if the given e-mail address is valid
  *
  * Note: the Survey Tool back end may have different criteria.
@@ -533,22 +540,26 @@ function validate() {
  * by Java trim() and toLowerCase().
  */
 function validateEmail(emailAddress) {
+  const message = "Valid e-mail required.";
   const el = document.createElement("input");
   el.type = "email";
   el.value = emailAddress;
-  const isValid = el.checkValidity();
-  return isValid;
+  if (el.checkValidity()) {
+    removeError(message);
+  } else {
+    addError(message);
+  }
 }
 
 function loadHandler(json) {
   if (json.err) {
-    errors.push("Error from the server: " + translateErr(json.err));
+    addError("Error from the server: " + translateErr(json.err));
   } else if (!json.userId) {
-    errors.push("The server did not return a user id.");
+    addError("The server did not return a user id.");
   } else {
     const n = Math.floor(Number(json.userId));
     if (String(n) !== String(json.userId) || n <= 0 || !Number.isInteger(n)) {
-      errors.push("The server returned an invalid id: " + json.userId);
+      addError("The server returned an invalid id: " + json.userId);
     } else {
       addedNewUser.value = true;
       userId.value = Number(json.userId);
@@ -557,6 +568,34 @@ function loadHandler(json) {
       }
     }
   }
+}
+
+function addError(message) {
+  const index = errors.indexOf(message);
+  if (index < 0) {
+    errors.push(message);
+  }
+}
+
+function removeError(message) {
+  const index = errors.indexOf(message);
+  if (index > -1) {
+    errors.splice(index, 1);
+  }
+}
+
+function clearErrors() {
+  errors.length = 0;
+  if (errorsExist()) {
+    console.error("clearErrors failure");
+  }
+}
+
+function errorsExist() {
+  if (Object.keys(errors).length) {
+    return true;
+  }
+  return false;
 }
 
 function translateErr(err) {
@@ -621,11 +660,5 @@ table {
 
 .manageButton {
   font-size: x-large;
-}
-
-.rightRadio {
-  display: flex;
-  justify-content: flex-end;
-  /* ??? */
 }
 </style>
