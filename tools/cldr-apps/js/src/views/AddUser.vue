@@ -18,7 +18,7 @@
           <td v-if="canChooseOrg">
             <a-select
               id="new_org"
-              v-model:value="orgValueAndLabel"
+              v-model="orgValueAndLabel"
               label-in-value
               show-search
               style="width: 100%"
@@ -38,87 +38,103 @@
         <tr>
           <th><label for="new_name">Name:</label></th>
           <td>
-            <input size="40" id="new_name" v-model="newUserName" />
+            <a-input
+              id="new_name"
+              size="40"
+              v-model="newUserName"
+              placeholder="Enter a user name"
+            />
           </td>
         </tr>
         <tr>
           <th><label for="new_email">E-mail:</label></th>
           <td>
-            <input
-              size="40"
+            <a-input
               id="new_email"
+              size="40"
               v-model="newUserEmail"
               type="email"
+              placeholder="Enter an e-mail address"
             />
           </td>
         </tr>
         <tr>
           <th><label for="new_level">User level:</label></th>
           <td>
-            <select id="new_level" v-model="newUserLevel">
-              <option disabled value="">Please select one</option>
-              <option
+            <a-select
+              id="new_level"
+              v-model:value="newUserLevel"
+              style="width: 100%"
+              placeholder="Select a user level"
+            >
+              <a-select-option
                 v-for="(v, number) in levelList"
                 v-bind:value="number"
                 :disabled="!v.canCreateOrSetLevelTo"
                 :key="number"
               >
                 {{ v.string }}
-              </option>
-            </select>
-          </td>
-        </tr>
-        <tr v-if="newUserLevel >= VETTER_LEVEL_NUMBER">
-          <th><label for="new_locales">Locales:</label></th>
-          <td>
-            <a-select
-              id="new_locales"
-              v-model:value="chosenLocales"
-              mode="multiple"
-              show-search
-              style="width: 100%"
-              placeholder="Select locale(s)"
-              :options="localeOptions"
-              :max-tag-count="10"
-              @change="concatenateAndValidateLocales"
-            >
-              <!-- This appears in the menu: -->
-              <template #option="{ localeDescription }">
-                {{ localeDescription }}
-              </template>
-              <!-- This appears in the input box after choosing from menu: -->
-              <template #tagRender="{ closable, onClose, option }">
-                <a-tag
-                  :closable="closable"
-                  style="margin-right: 3px"
-                  @close="onClose"
-                >
-                  <!-- I would like to have something other than "option.value" here,
-                    such as "option.localeIdValue", but I can't make that work.
-                    See "localeIdValue" elsewhere. -->
-                  <span :title="option.localeDescription">{{
-                    option.value
-                  }}</span>
-                </a-tag>
-              </template>
+              </a-select-option>
             </a-select>
-            <button v-on:click="setAllLocales()">All Locales</button><br />
-            (Use the All Locales button to grant access to all locales.)<br />
-
-            <div v-if="locWarnings">
-              <span class="locWarnings"
-                >The following locales will not be added due to problems:</span
-              >
-              <ul>
-                <li v-bind:key="loc" v-for="loc in Object.keys(locWarnings)">
-                  <code>{{ loc }}</code>
-                  {{ getParenthesizedName(loc) }}
-                  — {{ explainWarning(locWarnings[loc]) }}
-                </li>
-              </ul>
-            </div>
           </td>
         </tr>
+        <template v-if="newUserLevel >= VETTER_LEVEL_NUMBER">
+          <tr>
+            <td class="rightRadio">
+              <a-radio-group v-model:value="allLocales">
+                <a-radio :value="true">All locales</a-radio>
+                <a-radio :value="false">Specific locales</a-radio>
+              </a-radio-group>
+            </td>
+          </tr>
+          <tr v-if="!allLocales">
+            <th><label for="new_locales">Locales:</label></th>
+            <td>
+              <a-select
+                id="new_locales"
+                v-model:value="chosenLocales"
+                mode="multiple"
+                show-search
+                style="width: 100%"
+                placeholder="Select locale(s)"
+                :options="localeOptions"
+                :max-tag-count="10"
+                @change="concatenateAndValidateLocales"
+              >
+                <!-- This appears in the menu: -->
+                <template #option="{ localeDescription }">
+                  Desc: {{ localeDescription }}
+                </template>
+                <!-- This appears in the input box after choosing from menu: -->
+                <template #tagRender="{ closable, onClose, option }">
+                  <a-tag
+                    :closable="closable"
+                    style="margin-right: 3px"
+                    @close="onClose"
+                  >
+                    <span :title="option.localeDescription"
+                      >Val: {{ option.value }}</span
+                    >
+                  </a-tag>
+                </template>
+              </a-select>
+              <div v-if="locWarnings.length">
+                <span class="locWarnings"
+                  >The following locales will not be added due to
+                  problems:</span
+                >
+                <ul>
+                  <li v-bind:key="loc" v-for="loc in Object.keys(locWarnings)">
+                    <code>{{ loc }}</code>
+                    {{ getParenthesizedName(loc) }}
+                    — {{ explainWarning(locWarnings[loc]) }}
+                  </li>
+                </ul>
+              </div>
+            </td>
+          </tr>
+        </template>
+
         <tr class="addButton">
           <td colspan="2">
             <button
@@ -126,6 +142,9 @@
               v-on:click="add()"
             >
               Add
+            </button>
+            <button v-else>
+              cannot add yet: {{ newUserName + " " + newUserEmail }}
             </button>
           </td>
         </tr>
@@ -168,24 +187,34 @@ import { onMounted, ref, reactive } from "vue";
 
 const VETTER_LEVEL_NUMBER = 5;
 
+let loading = ref(false);
 let hasPermission = ref(false);
 let addedNewUser = ref(false);
 let canChooseOrg = ref(false);
-let errors = ref([]);
-let locWarnings = null;
-let levelList = ref([]);
-let loading = ref(false);
+let allLocales = ref(false);
+
+let userId = ref(0);
+
 let newUserEmail = ref("");
 let newUserLevel = ref("");
 let newUserLocales = ref("");
 let newUserName = ref("");
 let newUserOrg = ref("");
-let orgValueAndLabel = ref([]);
 let orgLocales = ref("");
-let orgOptions = ref([]);
-let userId = ref(0);
-let localeOptions = ref([]);
+
+let errors = reactive([]);
+let locWarnings = reactive([]);
+let levelList = reactive([]);
+let orgValueAndLabel = reactive([]);
+let orgOptions = reactive([]);
+
+// normally for arrays, reactive() seems better than ref(),
+// but for a-select menus, ref() seems to be required.
+// https://www.antdv.com/components/select/
+
 let chosenLocales = ref([]);
+
+let localeOptions = ref([]);
 
 onMounted(mounted);
 
@@ -194,14 +223,31 @@ function mounted() {
 }
 
 function initializeData() {
-  addedNewUser.value = false;
-  errors.value = [];
-  locWarnings = null;
-  newUserEmail.value = "";
-  newUserLevel.value = "";
-  newUserLocales.value = "";
-  newUserName.value = "";
-  userId.value = null;
+  loading = ref(false);
+  // hasPermission = ref(false);
+  addedNewUser = ref(false);
+  canChooseOrg = ref(false);
+  allLocales = ref(false);
+
+  userId = ref(0);
+
+  newUserEmail = ref("");
+  newUserLevel = ref("");
+  newUserLocales = ref("");
+  newUserName = ref("");
+  newUserOrg = ref("");
+  orgLocales = ref("");
+
+  errors = reactive([]);
+  locWarnings = reactive([]);
+  levelList = reactive([]);
+  orgValueAndLabel = reactive([]);
+  orgOptions = reactive([]);
+
+  chosenLocales = ref([]);
+
+  localeOptions = ref([]);
+
   const perm = cldrStatus.getPermissions();
   hasPermission.value = !!perm?.userCanListUsers;
   if (perm?.userIsAdmin) {
@@ -230,9 +276,9 @@ function initializeData() {
 function getOrgLocalesAfterChoosingOrg() {
   // label-in-value causes the selected org to be an object { value: ..., label: ... },
   // so we need to extract the value (short name).
-  // The first "value" in orgValueAndLabel.value.value is a Vue thing.
-  // The second "value" in orgValueAndLabel.value.value is the first key in { value: ..., label: ... }.
-  newUserOrg.value = orgValueAndLabel.value.value;
+  // The "value" in newUserOrg.value is a Vue thing.
+  // The "value" in orgValueAndLabel.value is the first key in { value: ..., label: ... }.
+  newUserOrg.value = orgValueAndLabel.value;
   getOrgLocales();
 }
 
@@ -274,17 +320,6 @@ function reallySetOrgLocales(locales) {
   orgLocales.value += " bogus"; // TODO: TEMPORARY TESTING!
 }
 
-function setAllLocales() {
-  newUserLocales.value = "*";
-  chosenLocales.value = ["*"];
-  const item = {
-    value: "*",
-    localeDescription: "All Locales = *",
-  };
-  localeOptions = ref([item]);
-  return false;
-}
-
 function setupLocaleOptions() {
   const locmap = cldrLoad.getTheLocaleMap();
   const array = [];
@@ -323,7 +358,7 @@ async function concatenateAndValidateLocales() {
       if (newUserLocales != normalized) {
         // only update the warnings if the normalized value changes
         newUserLocales.value = normalized;
-        locWarnings = messages;
+        locWarnings = reactive(messages);
       }
     })
     .catch((e) => errors.value.push(`Error: ${e} validating locale`));
@@ -391,7 +426,7 @@ async function setupOrgOptions() {
     };
     array.push(item);
   }
-  orgOptions = ref(array);
+  orgOptions = reactive(array);
   areWeLoading();
 }
 
@@ -399,18 +434,16 @@ function areWeLoading() {
   // Note: given levelList = reactive([..., ...]), Vue does not support getting
   // levelList.length directly. Use Object.keys(levelList).length instead.
   console.log(
-    "areWeLoading: levelList.length = " +
-      levelList.length +
-      "; Object.keys(levelList).length = " +
+    "areWeLoading: Object.keys(levelList).length = " +
       Object.keys(levelList).length +
-      "; orgOptions.value.length = " +
-      orgOptions.value.length +
+      "; orgOptions.length = " +
+      Object.keys(orgOptions).length +
       "; newUserOrg.value = " +
       newUserOrg.value
   );
   loading.value = !(
     Object.keys(levelList).length &&
-    (orgOptions.value.length || newUserOrg.value)
+    (Object.keys(orgOptions).length || newUserOrg.value)
   );
 }
 
@@ -559,5 +592,11 @@ table {
 
 .manageButton {
   font-size: x-large;
+}
+
+.rightRadio {
+  display: flex;
+  justify-content: flex-end;
+  /* ??? */
 }
 </style>
