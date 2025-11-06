@@ -68,9 +68,7 @@ public class ICUServiceBuilder {
     }
 
     /**
-     * TODO: the ability to clear the cache(s) is temporarily useful for debugging, and may or may
-     * not be useful in the long run. In the meantime, this should be false except while debugging.
-     * Reference: <a href="https://unicode-org.atlassian.net/browse/CLDR-13970">CLDR-13970</a>
+     * The ability to clear the caches is needed for GenerateExampleDependencies
      */
     public static final boolean ISB_CAN_CLEAR_CACHE = true;
 
@@ -907,6 +905,13 @@ public class ICUServiceBuilder {
             symbols.setMonetaryGroupingSeparator(symbols.getGroupingSeparator());
         }
 
+        // Note: as of 2025-11-05, none of these six paths occur anywhere except in root.xml:
+        // .../beforeCurrency/currencyMatch
+        // .../beforeCurrency/surroundingMatch
+        // .../beforeCurrency/insertBetween
+        // .../afterCurrency/currencyMatch
+        // .../afterCurrency/surroundingMatch
+        // .../afterCurrency/insertBetween
         String prefix =
                 "//ldml/numbers/currencyFormats[@numberSystem=\"latn\"]/currencySpacing/beforeCurrency/";
         beforeCurrencyMatch =
