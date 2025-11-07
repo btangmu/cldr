@@ -9,11 +9,11 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 import org.unicode.cldr.draft.FileUtilities;
-import org.unicode.cldr.test.CheckExemplars.ExemplarType;
 import org.unicode.cldr.test.DisplayAndInputProcessor;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRFile.WinningChoice;
 import org.unicode.cldr.util.CLDRPaths;
+import org.unicode.cldr.util.ExemplarSets;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.SimpleFactory;
 
@@ -54,7 +54,7 @@ public class GenerateIndexCharacters {
             uset.add(item);
         }
         DisplayAndInputProcessor daip = new DisplayAndInputProcessor(cFile);
-        String cleanedSet = daip.getCleanedUnicodeSet(uset, ExemplarType.index);
+        String cleanedSet = daip.getCleanedUnicodeSet(uset, ExemplarSets.ExemplarType.index);
         return cleanedSet;
     }
 }

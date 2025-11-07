@@ -37,6 +37,7 @@ import org.unicode.cldr.util.CLDRConfig;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRFile.Status;
 import org.unicode.cldr.util.DateConstants;
+import org.unicode.cldr.util.ExemplarSets;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.InternalCldrException;
 import org.unicode.cldr.util.LocaleIDParser;
@@ -260,25 +261,7 @@ public class CheckForExemplars extends FactoryCheckCLDR {
             exemplars.addAll(auxiliary);
         }
 
-        if (CheckExemplars.USE_PUNCTUATION) {
-            UnicodeSet punctuation =
-                    safeGetExemplars(
-                            "punctuation",
-                            possibleErrors,
-                            resolvedFile,
-                            ok); // resolvedFile.getExemplarSet("auxiliary",
-            if (punctuation != null) {
-                exemplars.addAll(punctuation);
-            }
-
-            UnicodeSet numbers = getNumberSystemExemplars();
-            exemplars.addAll(numbers);
-
-            // TODO fix replacement character
-            exemplars.add(STAND_IN);
-        }
-
-        exemplars.addAll(CheckExemplars.AlwaysOK).addAll(LB_JOIN_CONTROLS).freeze();
+        exemplars.addAll(ExemplarSets.AlwaysOK).addAll(LB_JOIN_CONTROLS).freeze();
         exemplarsPlusAscii = new UnicodeSet(exemplars).addAll(ASCII).freeze();
 
         skip = false;

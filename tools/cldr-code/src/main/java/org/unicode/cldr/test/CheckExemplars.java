@@ -11,136 +11,24 @@ import com.ibm.icu.util.ULocale;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import org.unicode.cldr.test.CheckCLDR.CheckStatus.Subtype;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.ComparatorUtilities;
+import org.unicode.cldr.util.ExemplarSets;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.SimpleUnicodeSetFormatter;
 import org.unicode.cldr.util.UnicodeSetPrettyPrinter;
 import org.unicode.cldr.util.XPathParts;
 
 public class CheckExemplars extends FactoryCheckCLDR {
-
-    public static final boolean USE_PUNCTUATION = false;
     private static final boolean SUPPRESS_AUX_EMPTY_CHECK = true;
     private static final String[] QUOTE_ELEMENTS = {
         "quotationStart", "quotationEnd",
         "alternateQuotationStart", "alternateQuotationEnd"
     };
 
-    Collator col;
-    boolean isRoot;
-    SimpleUnicodeSetFormatter displayFormatter;
-    UnicodeSetPrettyPrinter rawFormatter;
-
-    static final UnicodeSet HangulSyllables =
-            new UnicodeSet("[[:Hangul_Syllable_Type=LVT:][:Hangul_Syllable_Type=LV:]]").freeze();
-
-    public static final UnicodeSet AlwaysOK;
-
-    static {
-        if (USE_PUNCTUATION) {
-            AlwaysOK = new UnicodeSet("[\\u0020\\u00A0]");
-        } else {
-            AlwaysOK =
-                    new UnicodeSet(
-                            "[[[:Nd:][:script=common:][:script=inherited:]-[:Default_Ignorable_Code_Point:]-[:C:] - [_]] [\u05BE \u05F3 \u066A-\u066C]"
-                                    + "[[؉][་ །༌][ཱ]‎‎{য়}য়]"
-                                    + // TODO Fix this Hack
-                                    "-[❮❯]]"); // [\\u200c-\\u200f]
-            // [:script=common:][:script=inherited:]
-        }
-        AlwaysOK.freeze();
-    }
-
-    // TODO Fix some of these characters
-    private static final UnicodeSet SPECIAL_ALLOW =
-            new UnicodeSet(
-                            "[\u061C\\u200E\\u200F\\u200c\\u200d"
-                                    + "‎‎‎[\u064B\u064E-\u0651\u0670]‎[:Nd:]‎[\u0951\u0952]‎[\u064B-\u0652\u0654-\u0657\u0670]‎[\u0A66-\u0A6F][\u0ED0-\u0ED9][\u064B-\u0652]‎[\\u02BB\\u02BC][\u0CE6-\u0CEF]‎‎[\u0966-\u096F]"
-                                    + "‎‎‎[:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:] ]" // restore
-                            // [:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
-                            )
-                    .freeze(); // add RLM, LRM [\u200C\u200D]‎
-
-    public static final UnicodeSet UAllowedInExemplars =
-            new UnicodeSet(
-                            "[[:assigned:]-[:Z:]]") // [:alphabetic:][:Mn:][:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
-                    .removeAll(AlwaysOK) // this will remove some
-                    // [:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:] so we
-                    // restore them
-                    // in SPECIAL_ALLOW
-                    .addAll(SPECIAL_ALLOW) // add RLM, LRM [\u200C\u200D]‎
-                    .freeze();
-
-    public static final UnicodeSet UAllowedInNumbers =
-            new UnicodeSet(
-                            "[\u00A0\u202F[:N:][:P:][:Sm:][:Letter_Number:][:Numeric_Type=Numeric:]]") // [:alphabetic:][:Mn:][:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
-                    .addAll(SPECIAL_ALLOW) // add RLM, LRM [\u200C\u200D]‎
-                    .freeze();
-
-    public static final UnicodeSet AllowedInExemplars =
-            new UnicodeSet(UAllowedInExemplars)
-                    .removeAll(new UnicodeSet("[[:Uppercase:]-[\u0130]]"))
-                    .freeze();
-
-    private static final UnicodeSet ALLOWED_IN_NUMBERS_NOT_IN_MAIN =
-            new UnicodeSet("[[:Numeric_Type=Decimal:]]").freeze();
-
-    private static final UnicodeSet ALLOWED_IN_MAIN =
-            new UnicodeSet(AllowedInExemplars).removeAll(ALLOWED_IN_NUMBERS_NOT_IN_MAIN).freeze();
-
-    public static final UnicodeSet ALLOWED_IN_PUNCTUATION =
-            new UnicodeSet("[[:P:][:S:]-[:Sc:]]").freeze();
-
-    public static final UnicodeSet ALLOWED_IN_AUX =
-            new UnicodeSet(AllowedInExemplars)
-                    .addAll(ALLOWED_IN_PUNCTUATION)
-                    .removeAll(AlwaysOK) // this will remove some
-                    // [:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:] so we
-                    // restore them
-                    // in SPECIAL_ALLOW
-                    .addAll(SPECIAL_ALLOW) // add RLM, LRM [\u200C\u200D]‎
-                    .freeze();
-
-    public enum ExemplarType {
-        main(
-                ALLOWED_IN_MAIN,
-                "(specific-script - uppercase - invisibles - numbers + \u0130)",
-                true),
-        auxiliary(ALLOWED_IN_AUX, "(specific-script - uppercase - invisibles + \u0130)", true),
-        punctuation(ALLOWED_IN_PUNCTUATION, "punctuation", false),
-        punctuation_auxiliary(ALLOWED_IN_PUNCTUATION, "punctuation-auxiliary", false),
-        punctuation_person(ALLOWED_IN_PUNCTUATION, "punctuation-person", false),
-        numbers(UAllowedInNumbers, "(specific-script - invisibles)", false),
-        numbers_auxiliary(UAllowedInNumbers, "(specific-script - invisibles)", false),
-        index(UAllowedInExemplars, "(specific-script - invisibles)", false),
-    // currencySymbol(AllowedInExemplars, "(specific-script - uppercase - invisibles + \u0130)",
-    // false)
-    ;
-
-        public final UnicodeSet allowed;
-        public final UnicodeSet toRemove;
-        public final String message;
-        public final boolean convertUppercase;
-
-        ExemplarType(UnicodeSet allowed, String message, boolean convertUppercase) {
-            if (!allowed.isFrozen()) {
-                throw new IllegalArgumentException("Internal Error");
-            }
-            this.allowed = allowed;
-            this.message = message;
-            this.toRemove = new UnicodeSet(allowed).complement().freeze();
-            this.convertUppercase = convertUppercase;
-        }
-
-        public static ExemplarType from(String name) {
-            return name == null
-                    ? ExemplarType.main
-                    : ExemplarType.valueOf(name.replace('-', '_').toLowerCase(Locale.ROOT));
-        }
-    }
+    private boolean isRoot;
+    private UnicodeSetPrettyPrinter rawFormatter;
 
     public CheckExemplars(Factory factory) {
         super(factory);
@@ -155,10 +43,9 @@ public class CheckExemplars extends FactoryCheckCLDR {
         super.handleSetCldrFileToCheck(cldrFileToCheck, options, possibleErrors);
         String locale = cldrFileToCheck.getLocaleID();
         isRoot = cldrFileToCheck.getLocaleID().equals("root");
-        col = ComparatorUtilities.getIcuCollator(new ULocale(locale), Collator.IDENTICAL);
+        Collator col = ComparatorUtilities.getIcuCollator(new ULocale(locale), Collator.IDENTICAL);
         Collator spaceCol =
                 ComparatorUtilities.getIcuCollator(new ULocale(locale), Collator.PRIMARY);
-        displayFormatter = new SimpleUnicodeSetFormatter((Comparator) col);
         rawFormatter = UnicodeSetPrettyPrinter.from((Comparator) col, (Comparator) spaceCol);
 
         // check for auxiliary anyway
@@ -193,14 +80,14 @@ public class CheckExemplars extends FactoryCheckCLDR {
         if (!accept(result)) return this;
         XPathParts oparts = XPathParts.getFrozenInstance(path);
         final String exemplarString = oparts.findAttributeValue("exemplarCharacters", "type");
-        ExemplarType type = ExemplarType.from(exemplarString);
+        ExemplarSets.ExemplarType type = ExemplarSets.ExemplarType.from(exemplarString);
         checkExemplar(value, result, type);
 
         // check relation to auxiliary set
         try {
             UnicodeSet mainSet =
                     getResolvedCldrFileToCheck().getExemplarSet("", CLDRFile.WinningChoice.WINNING);
-            if (type == ExemplarType.auxiliary) {
+            if (type == ExemplarSets.ExemplarType.auxiliary) {
                 UnicodeSet auxiliarySet = SimpleUnicodeSetFormatter.parseLenient(value);
 
                 UnicodeSet combined = new UnicodeSet(mainSet).addAll(auxiliarySet);
@@ -210,7 +97,7 @@ public class CheckExemplars extends FactoryCheckCLDR {
                     UnicodeSet overlap =
                             new UnicodeSet(mainSet)
                                     .retainAll(auxiliarySet)
-                                    .removeAll(HangulSyllables);
+                                    .removeAll(ExemplarSets.HangulSyllables);
                     if (!overlap.isEmpty()) {
                         String fixedExemplar1 = rawFormatter.format(overlap);
                         result.add(
@@ -223,7 +110,7 @@ public class CheckExemplars extends FactoryCheckCLDR {
                                                 fixedExemplar1));
                     }
                 }
-            } else if (type == ExemplarType.punctuation) {
+            } else if (type == ExemplarSets.ExemplarType.punctuation) {
                 // Check that the punctuation exemplar characters include quotation marks.
                 UnicodeSet punctuationSet = SimpleUnicodeSetFormatter.parseLenient(value);
                 UnicodeSet quoteSet = new UnicodeSet();
@@ -253,7 +140,7 @@ public class CheckExemplars extends FactoryCheckCLDR {
                                             characters);
                     result.add(message);
                 }
-            } else if (type == ExemplarType.index) {
+            } else if (type == ExemplarSets.ExemplarType.index) {
                 // Check that the index exemplar characters are in case-completed union of main and
                 // auxiliary exemplars
                 UnicodeSet auxiliarySet =
@@ -361,15 +248,12 @@ public class CheckExemplars extends FactoryCheckCLDR {
         }
     }
 
-    static final BitSet Japn = new BitSet();
-    static final BitSet Kore = new BitSet();
-
     static {
-        Japn.set(UScript.HAN);
-        Japn.set(UScript.HIRAGANA);
-        Japn.set(UScript.KATAKANA);
-        Kore.set(UScript.HAN);
-        Kore.set(UScript.HANGUL);
+        ExemplarSets.Japn.set(UScript.HAN);
+        ExemplarSets.Japn.set(UScript.HIRAGANA);
+        ExemplarSets.Japn.set(UScript.KATAKANA);
+        ExemplarSets.Kore.set(UScript.HAN);
+        ExemplarSets.Kore.set(UScript.HANGUL);
     }
 
     private void checkMixedScripts(String title, UnicodeSet set, List<CheckStatus> result) {
@@ -388,7 +272,7 @@ public class CheckExemplars extends FactoryCheckCLDR {
             return; // allow 2 scripts in exemplars for currencies.
         }
         // allowable combinations
-        if (s.equals(Japn) || s.equals(Kore)) {
+        if (s.equals(ExemplarSets.Japn) || s.equals(ExemplarSets.Kore)) {
             return;
         }
         StringBuilder scripts = new StringBuilder();
@@ -422,7 +306,8 @@ public class CheckExemplars extends FactoryCheckCLDR {
                         .setMessage("{0} exemplars contain multiple scripts: {1}", title, scripts));
     }
 
-    private void checkExemplar(String v, List<CheckStatus> result, ExemplarType exemplarType) {
+    private void checkExemplar(
+            String v, List<CheckStatus> result, ExemplarSets.ExemplarType exemplarType) {
         if (v == null) return;
         final UnicodeSet exemplar1;
         try {
@@ -516,7 +401,9 @@ public class CheckExemplars extends FactoryCheckCLDR {
                                             "Exemplar set ("
                                                     + exemplarType
                                                     + ") must not be empty -- that would imply that this language uses no "
-                                                    + (exemplarType == ExemplarType.punctuation
+                                                    + (exemplarType
+                                                                    == ExemplarSets.ExemplarType
+                                                                            .punctuation
                                                             ? "punctuation"
                                                             : "letters")
                                                     + "!"));
