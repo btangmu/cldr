@@ -15,6 +15,7 @@ import org.unicode.cldr.test.CheckCLDR.CheckStatus.Subtype;
 import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.ComparatorUtilities;
 import org.unicode.cldr.util.ExemplarSets;
+import org.unicode.cldr.util.ExemplarSets.ExemplarType;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.SimpleUnicodeSetFormatter;
 import org.unicode.cldr.util.UnicodeSetPrettyPrinter;
@@ -52,7 +53,7 @@ public class CheckExemplars extends FactoryCheckCLDR {
         if (!SUPPRESS_AUX_EMPTY_CHECK) {
             UnicodeSet auxiliarySet =
                     getResolvedCldrFileToCheck()
-                            .getExemplarSet("auxiliary", CLDRFile.WinningChoice.WINNING);
+                            .getExemplarSet(ExemplarType.auxiliary, CLDRFile.WinningChoice.WINNING);
 
             if (auxiliarySet == null) {
                 possibleErrors.add(
@@ -70,103 +71,47 @@ public class CheckExemplars extends FactoryCheckCLDR {
     @Override
     public CheckCLDR handleCheck(
             String path, String fullPath, String value, Options options, List<CheckStatus> result) {
-        if (fullPath == null) return this; // skip paths that we don't have
+        if (fullPath == null) {
+            return this; // skip paths that we don't have
+        }
         if (!path.contains("/exemplarCharacters")) {
             if (path.contains("parseLenient")) {
                 checkParse(path, value, result);
             }
             return this;
         }
-        if (!accept(result)) return this;
+        if (!accept(result)) {
+            return this;
+        }
         XPathParts oparts = XPathParts.getFrozenInstance(path);
         final String exemplarString = oparts.findAttributeValue("exemplarCharacters", "type");
-        ExemplarSets.ExemplarType type = ExemplarSets.ExemplarType.from(exemplarString);
+        ExemplarType type = ExemplarType.from(exemplarString);
         checkExemplar(value, result, type);
 
         // check relation to auxiliary set
         try {
             UnicodeSet mainSet =
-                    getResolvedCldrFileToCheck().getExemplarSet("", CLDRFile.WinningChoice.WINNING);
-            if (type == ExemplarSets.ExemplarType.auxiliary) {
-                UnicodeSet auxiliarySet = SimpleUnicodeSetFormatter.parseLenient(value);
-
-                UnicodeSet combined = new UnicodeSet(mainSet).addAll(auxiliarySet);
-                checkMixedScripts("main+auxiliary", combined, result);
-
-                if (auxiliarySet.containsSome(mainSet)) {
-                    UnicodeSet overlap =
-                            new UnicodeSet(mainSet)
-                                    .retainAll(auxiliarySet)
-                                    .removeAll(ExemplarSets.HangulSyllables);
-                    if (!overlap.isEmpty()) {
-                        String fixedExemplar1 = rawFormatter.format(overlap);
-                        result.add(
-                                new CheckStatus()
-                                        .setCause(this)
-                                        .setMainType(CheckStatus.errorType)
-                                        .setSubtype(Subtype.auxiliaryExemplarsOverlap)
-                                        .setMessage(
-                                                "Auxiliary characters also exist in main: \u200E{0}\u200E",
-                                                fixedExemplar1));
-                    }
-                }
-            } else if (type == ExemplarSets.ExemplarType.punctuation) {
-                // Check that the punctuation exemplar characters include quotation marks.
-                UnicodeSet punctuationSet = SimpleUnicodeSetFormatter.parseLenient(value);
-                UnicodeSet quoteSet = new UnicodeSet();
-                for (String element : QUOTE_ELEMENTS) {
-                    quoteSet.add(
-                            getResolvedCldrFileToCheck()
-                                    .getWinningValue("//ldml/delimiters/" + element));
-                }
-                if (!punctuationSet.containsAll(quoteSet)) {
-                    quoteSet.removeAll(punctuationSet);
-                    // go ahead and list the characters separately, with space between, for clarity.
-                    StringBuilder characters = new StringBuilder();
-                    for (String item : quoteSet) {
-                        if (characters.length() != 0) {
-                            characters.append(" ");
-                        }
-                        characters.append(item);
-                    }
-                    // String characters = quoteSet.toPattern(false);
-                    CheckStatus message =
-                            new CheckStatus()
-                                    .setCause(this)
-                                    .setMainType(CheckStatus.warningType)
-                                    .setSubtype(Subtype.missingPunctuationCharacters)
-                                    .setMessage(
-                                            "Punctuation exemplar characters are missing quotation marks for this locale: {0}",
-                                            characters);
-                    result.add(message);
-                }
-            } else if (type == ExemplarSets.ExemplarType.index) {
-                // Check that the index exemplar characters are in case-completed union of main and
-                // auxiliary exemplars
-                UnicodeSet auxiliarySet =
-                        getResolvedCldrFileToCheck()
-                                .getExemplarSet("auxiliary", CLDRFile.WinningChoice.WINNING);
-                if (auxiliarySet == null) {
-                    auxiliarySet = new UnicodeSet();
-                }
-                UnicodeSet mainAndAuxAllCase =
-                        new UnicodeSet(mainSet)
-                                .addAll(auxiliarySet)
-                                .closeOver(UnicodeSet.ADD_CASE_MAPPINGS);
-                UnicodeSet indexBadChars =
-                        SimpleUnicodeSetFormatter.parseLenient(value).removeAll(mainAndAuxAllCase);
-
-                if (!indexBadChars.isEmpty()) {
-                    CheckStatus message =
-                            new CheckStatus()
-                                    .setCause(this)
-                                    .setMainType(CheckStatus.warningType)
-                                    .setSubtype(Subtype.charactersNotInMainOrAuxiliaryExemplars)
-                                    .setMessage(
-                                            "Index exemplars include characters not in main or auxiliary exemplars: {0}",
-                                            indexBadChars.toPattern(false));
-                    result.add(message);
-                }
+                    getResolvedCldrFileToCheck()
+                            .getExemplarSet(ExemplarType.main, CLDRFile.WinningChoice.WINNING);
+            UnicodeSet currentSet = SimpleUnicodeSetFormatter.parseLenient(value);
+            switch (type) {
+                case auxiliary:
+                    checkAuxiliary(currentSet, mainSet, result);
+                    break;
+                case punctuation:
+                    checkPunctuation(currentSet, result);
+                    break;
+                case index:
+                    checkIndex(currentSet, mainSet, result);
+                    break;
+                case main:
+                case punctuation_auxiliary:
+                case punctuation_person:
+                case numbers:
+                case numbers_auxiliary:
+                    break;
+                default:
+                    throw new IllegalArgumentException("Case not handled: " + type);
             }
 
             // check for consistency with RTL
@@ -201,6 +146,87 @@ public class CheckExemplars extends FactoryCheckCLDR {
         } catch (Exception ignored) {
         } // if these didn't parse, checkExemplar will be called anyway at some point
         return this;
+    }
+
+    private void checkAuxiliary(
+            UnicodeSet currentSet, UnicodeSet mainSet, List<CheckStatus> result) {
+        UnicodeSet combined = new UnicodeSet(mainSet).addAll(currentSet);
+        checkMixedScripts("main+auxiliary", combined, result);
+        if (currentSet.containsSome(mainSet)) {
+            UnicodeSet overlap =
+                    new UnicodeSet(mainSet)
+                            .retainAll(currentSet)
+                            .removeAll(ExemplarSets.HangulSyllables);
+            if (!overlap.isEmpty()) {
+                String fixedExemplar1 = rawFormatter.format(overlap);
+                result.add(
+                        new CheckStatus()
+                                .setCause(this)
+                                .setMainType(CheckStatus.errorType)
+                                .setSubtype(Subtype.auxiliaryExemplarsOverlap)
+                                .setMessage(
+                                        "Auxiliary characters also exist in main: \u200E{0}\u200E",
+                                        fixedExemplar1));
+            }
+        }
+    }
+
+    private void checkPunctuation(UnicodeSet currentSet, List<CheckStatus> result) {
+        // Check that the punctuation exemplar characters include quotation marks.
+        UnicodeSet quoteSet = new UnicodeSet();
+        for (String element : QUOTE_ELEMENTS) {
+            quoteSet.add(
+                    getResolvedCldrFileToCheck().getWinningValue("//ldml/delimiters/" + element));
+        }
+        if (!currentSet.containsAll(quoteSet)) {
+            quoteSet.removeAll(currentSet);
+            // go ahead and list the characters separately, with space between, for
+            // clarity.
+            StringBuilder characters = new StringBuilder();
+            for (String item : quoteSet) {
+                if (characters.length() != 0) {
+                    characters.append(" ");
+                }
+                characters.append(item);
+            }
+            CheckStatus message =
+                    new CheckStatus()
+                            .setCause(this)
+                            .setMainType(CheckStatus.warningType)
+                            .setSubtype(Subtype.missingPunctuationCharacters)
+                            .setMessage(
+                                    "Punctuation exemplar characters are missing quotation marks for this locale: {0}",
+                                    characters);
+            result.add(message);
+        }
+    }
+
+    private void checkIndex(UnicodeSet currentSet, UnicodeSet mainSet, List<CheckStatus> result) {
+        // Check that the index exemplar characters are in case-completed union of main
+        // and auxiliary exemplars
+        UnicodeSet auxiliarySet2 =
+                getResolvedCldrFileToCheck()
+                        .getExemplarSet(ExemplarType.auxiliary, CLDRFile.WinningChoice.WINNING);
+        if (auxiliarySet2 == null) {
+            auxiliarySet2 = new UnicodeSet();
+        }
+        UnicodeSet mainAndAuxAllCase =
+                new UnicodeSet(mainSet)
+                        .addAll(auxiliarySet2)
+                        .closeOver(UnicodeSet.ADD_CASE_MAPPINGS);
+        UnicodeSet indexBadChars = currentSet.removeAll(mainAndAuxAllCase);
+
+        if (!indexBadChars.isEmpty()) {
+            CheckStatus message =
+                    new CheckStatus()
+                            .setCause(this)
+                            .setMainType(CheckStatus.warningType)
+                            .setSubtype(Subtype.charactersNotInMainOrAuxiliaryExemplars)
+                            .setMessage(
+                                    "Index exemplars include characters not in main or auxiliary exemplars: {0}",
+                                    indexBadChars.toPattern(false));
+            result.add(message);
+        }
     }
 
     private void checkParse(String path, String value, List<CheckStatus> result) {
@@ -246,14 +272,6 @@ public class CheckExemplars extends FactoryCheckCLDR {
                             .setMessage(e + (e.getMessage() == null ? "" : ": " + e.getMessage()));
             result.add(message);
         }
-    }
-
-    static {
-        ExemplarSets.Japn.set(UScript.HAN);
-        ExemplarSets.Japn.set(UScript.HIRAGANA);
-        ExemplarSets.Japn.set(UScript.KATAKANA);
-        ExemplarSets.Kore.set(UScript.HAN);
-        ExemplarSets.Kore.set(UScript.HANGUL);
     }
 
     private void checkMixedScripts(String title, UnicodeSet set, List<CheckStatus> result) {

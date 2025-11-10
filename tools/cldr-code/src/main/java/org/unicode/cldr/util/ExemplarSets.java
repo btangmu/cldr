@@ -1,5 +1,6 @@
 package org.unicode.cldr.util;
 
+import com.ibm.icu.lang.UScript;
 import com.ibm.icu.text.UnicodeSet;
 import java.util.BitSet;
 import java.util.Locale;
@@ -20,6 +21,14 @@ public class ExemplarSets {
     public static final BitSet Japn = new BitSet();
     public static final BitSet Kore = new BitSet();
 
+    static {
+        ExemplarSets.Japn.set(UScript.HAN);
+        ExemplarSets.Japn.set(UScript.HIRAGANA);
+        ExemplarSets.Japn.set(UScript.KATAKANA);
+        ExemplarSets.Kore.set(UScript.HAN);
+        ExemplarSets.Kore.set(UScript.HANGUL);
+    }
+
     // TODO Fix some of these characters
     private static final UnicodeSet SPECIAL_ALLOW =
             new UnicodeSet(
@@ -29,7 +38,7 @@ public class ExemplarSets {
                             // [:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
                             )
                     .freeze(); // add RLM, LRM [\u200C\u200D]‎
-    public static final UnicodeSet UAllowedInExemplars =
+    private static final UnicodeSet UAllowedInExemplars =
             new UnicodeSet(
                             "[[:assigned:]-[:Z:]]") // [:alphabetic:][:Mn:][:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
                     .removeAll(AlwaysOK) // this will remove some
@@ -38,12 +47,12 @@ public class ExemplarSets {
                     // in SPECIAL_ALLOW
                     .addAll(SPECIAL_ALLOW) // add RLM, LRM [\u200C\u200D]‎
                     .freeze();
-    public static final UnicodeSet AllowedInExemplars =
+    private static final UnicodeSet AllowedInExemplars =
             new UnicodeSet(UAllowedInExemplars)
                     .removeAll(new UnicodeSet("[[:Uppercase:]-[\u0130]]"))
                     .freeze();
 
-    public static final UnicodeSet UAllowedInNumbers =
+    private static final UnicodeSet UAllowedInNumbers =
             new UnicodeSet(
                             "[\u00A0\u202F[:N:][:P:][:Sm:][:Letter_Number:][:Numeric_Type=Numeric:]]") // [:alphabetic:][:Mn:][:word_break=Katakana:][:word_break=ALetter:][:word_break=MidLetter:]
                     .addAll(SPECIAL_ALLOW) // add RLM, LRM [\u200C\u200D]‎
@@ -54,9 +63,9 @@ public class ExemplarSets {
     private static final UnicodeSet ALLOWED_IN_MAIN =
             new UnicodeSet(AllowedInExemplars).removeAll(ALLOWED_IN_NUMBERS_NOT_IN_MAIN).freeze();
 
-    public static final UnicodeSet ALLOWED_IN_PUNCTUATION =
+    private static final UnicodeSet ALLOWED_IN_PUNCTUATION =
             new UnicodeSet("[[:P:][:S:]-[:Sc:]]").freeze();
-    public static final UnicodeSet ALLOWED_IN_AUX =
+    private static final UnicodeSet ALLOWED_IN_AUX =
             new UnicodeSet(AllowedInExemplars)
                     .addAll(ALLOWED_IN_PUNCTUATION)
                     .removeAll(AlwaysOK) // this will remove some
@@ -96,7 +105,7 @@ public class ExemplarSets {
         }
 
         public static ExemplarType from(String name) {
-            return name == null
+            return name == null || name.isEmpty()
                     ? ExemplarType.main
                     : ExemplarType.valueOf(name.replace('-', '_').toLowerCase(Locale.ROOT));
         }

@@ -38,6 +38,7 @@ import org.unicode.cldr.util.CLDRFile;
 import org.unicode.cldr.util.CLDRFile.Status;
 import org.unicode.cldr.util.DateConstants;
 import org.unicode.cldr.util.ExemplarSets;
+import org.unicode.cldr.util.ExemplarSets.ExemplarType;
 import org.unicode.cldr.util.Factory;
 import org.unicode.cldr.util.InternalCldrException;
 import org.unicode.cldr.util.LocaleIDParser;
@@ -225,7 +226,7 @@ public class CheckForExemplars extends FactoryCheckCLDR {
 
         CLDRFile resolvedFile = getResolvedCldrFileToCheck();
         boolean[] ok = new boolean[1];
-        exemplars = safeGetExemplars("", possibleErrors, resolvedFile, ok);
+        exemplars = safeGetExemplars(ExemplarType.main, possibleErrors, resolvedFile, ok);
 
         if (exemplars == null) {
             CheckStatus item =
@@ -252,7 +253,7 @@ public class CheckForExemplars extends FactoryCheckCLDR {
         // if (temp != null) exemplars.addAll(temp);
         UnicodeSet auxiliary =
                 safeGetExemplars(
-                        "auxiliary",
+                        ExemplarType.auxiliary,
                         possibleErrors,
                         resolvedFile,
                         ok); // resolvedFile.getExemplarSet("auxiliary",
@@ -277,7 +278,10 @@ public class CheckForExemplars extends FactoryCheckCLDR {
     }
 
     private UnicodeSet safeGetExemplars(
-            String type, List<CheckStatus> possibleErrors, CLDRFile resolvedFile, boolean[] ok) {
+            ExemplarType type,
+            List<CheckStatus> possibleErrors,
+            CLDRFile resolvedFile,
+            boolean[] ok) {
         UnicodeSet result = null;
         try {
             result = resolvedFile.getExemplarSet(type, CLDRFile.WinningChoice.WINNING);

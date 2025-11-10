@@ -41,7 +41,6 @@ import org.unicode.cldr.util.ComparatorUtilities;
 import org.unicode.cldr.util.DateTimeCanonicalizer;
 import org.unicode.cldr.util.DateTimeCanonicalizer.DateTimePatternType;
 import org.unicode.cldr.util.Emoji;
-import org.unicode.cldr.util.ExemplarSets;
 import org.unicode.cldr.util.ExemplarSets.ExemplarType;
 import org.unicode.cldr.util.LocaleNames;
 import org.unicode.cldr.util.PatternCache;
@@ -786,9 +785,7 @@ public class DisplayAndInputProcessor {
         ExemplarType exemplarType =
                 !path.contains("exemplarCharacters")
                         ? null
-                        : type == null
-                                ? ExemplarSets.ExemplarType.main
-                                : ExemplarSets.ExemplarType.from(type);
+                        : type == null ? ExemplarType.main : ExemplarType.from(type);
         value = getCleanedUnicodeSet(exemplar, exemplarType);
         return value;
     }
