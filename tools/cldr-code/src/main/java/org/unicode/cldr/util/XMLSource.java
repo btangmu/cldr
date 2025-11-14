@@ -54,10 +54,9 @@ public abstract class XMLSource implements Freezable<XMLSource>, Iterable<String
     transient String[] fixedPath = new String[1];
 
     /**
-     * Whether to call intern() on strings, such as in getPathLocation.
-     * This can reduce memory usage. However, in special circumstances such as
-     * during GenerateExampleDependencies, faster performance is achieved by
-     * making it false.
+     * Whether to call intern() on strings, such as in getPathLocation. This can reduce memory
+     * usage. However, in special circumstances such as during GenerateExampleDependencies, faster
+     * performance is achieved by making it false.
      */
     private static boolean doInternStrings = true;
 
