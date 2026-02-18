@@ -86,18 +86,14 @@ function isAllowed(codePoint) {
 }
 
 /**
- * Is the given character (code point or single-character string) white space?
+ * Is the given character (single-character string) white space?
  *
- * @param {Number|String} c -- the code point or single-character string
+ * @param {String} c -- the single-character string
  * @returns {Boolean} true or false
  */
 function isWhiteSpace(c) {
-  if (typeof c === "number") {
-    c = String.fromCodePoint(c);
-  } else if (typeof c !== "string" || [...c].length !== 1) {
-    throw new Error(
-      "isWhiteSpace requires a numeric code point or single-character string"
-    );
+  if (typeof c !== "string" || [...c].length !== 1) {
+    throw new Error("isWhiteSpace requires a single-character string");
   }
   // Reference: https://util.unicode.org/UnicodeJsps/character.jsp
   return c.match(/\p{White_Space}/u);

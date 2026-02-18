@@ -151,8 +151,9 @@ function processInput(s) {
 }
 
 function displayTag(tag) {
-  const codePoint = cldrChar.firstCodePoint(tag);
-  if (cldrChar.isWhiteSpace(codePoint)) {
+  const c = cldrChar.firstChar(tag);
+  if (cldrChar.isWhiteSpace(c)) {
+    const codePoint = cldrChar.firstCodePoint(c);
     return cldrChar.name(codePoint);
   } else {
     return tag;
@@ -182,11 +183,12 @@ const whiteSpaceChars = [
 ];
 
 function handleClickTag(event, index) {
-  const codePointToReplace = cldrChar.firstCodePoint(tagArray.value[index]);
-  if (!cldrChar.isWhiteSpace(codePointToReplace)) {
+  const c = cldrChar.firstChar(tagArray.value[index]);
+  if (!cldrChar.isWhiteSpace(c)) {
     return;
   }
   chosenIndex.value = index;
+  const codePointToReplace = cldrChar.firstCodePoint(c);
   charToReplace.value = menuText(codePointToReplace);
   // Use the coordinates of the tag's top-left corner
   menuLeft.value = event.clientX - event.offsetX;

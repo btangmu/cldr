@@ -118,13 +118,14 @@ function convertTextToTags(text) {
 }
 
 function tagIsClickable(tag) {
-  const codePoint = cldrChar.firstCodePoint(tag);
-  return cldrChar.isWhiteSpace(codePoint);
+  const c = cldrChar.firstChar(tag);
+  return cldrChar.isWhiteSpace(c);
 }
 
 function displayTag(tag, index) {
+  const c = cldrChar.firstChar(tag);
   const codePoint = cldrChar.firstCodePoint(tag);
-  if (cldrChar.isWhiteSpace(codePoint)) {
+  if (cldrChar.isWhiteSpace(c)) {
     if (DEBUG) {
       console.log(
         "AddValueTags.displayTag (index = " +
@@ -170,10 +171,11 @@ const whiteSpaceChars = [
 ];
 
 function handleClickTag(event, index) {
-  const codePointToReplace = cldrChar.firstCodePoint(tagArray.value[index]);
-  if (!cldrChar.isWhiteSpace(codePointToReplace)) {
+  const c = cldrChar.firstChar(tagArray.value[index]);
+  if (!cldrChar.isWhiteSpace(c)) {
     return;
   }
+  const codePointToReplace = cldrChar.firstCodePoint(c);
   chosenIndex.value = index;
   charToReplace.value = menuText(codePointToReplace);
   // Use the coordinates of the tag's top-left corner
