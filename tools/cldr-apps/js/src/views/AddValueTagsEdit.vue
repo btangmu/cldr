@@ -59,7 +59,7 @@ import { onMounted, ref } from "vue";
 import * as cldrChar from "../esm/cldrChar.mjs";
 import * as cldrEscaper from "../esm/cldrEscaper.mjs";
 
-const DEBUG = true;
+const DEBUG = false;
 
 // The END_TAG is not displayed; it serves only for [+] adding a new tag at the end
 const END_TAG = "end";

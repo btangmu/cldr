@@ -101,7 +101,7 @@
       :closable="true"
       :footer="null"
     >
-      <a-radio-group v-model:value="tagMode" @change="handleModeChange">
+      <a-radio-group v-model:value="tagMode">
         <a-radio :value="TAG_MODE_NONE"> no tags </a-radio><br />
         <a-radio :value="TAG_MODE_BASIC"> basic tags </a-radio><br />
         <a-radio :value="TAG_MODE_MENUS"> tags with menus </a-radio><br />
@@ -125,7 +125,15 @@ import * as cldrConstants from "../esm/cldrConstants.mjs";
 import * as cldrLoad from "../esm/cldrLoad.mjs";
 import * as cldrStatus from "../esm/cldrStatus.mjs";
 
-const DEBUG = true;
+const DEBUG = false;
+
+/**
+ * If TEST_ALTERNATIVE_MODES is true and the user Shift-clicks on the Cancel button, a dialog
+ * appears with radio buttons to choose a different tag mode. This is for development testing,
+ * with the expectation that alternative modes may be appropriate for special kinds of path,
+ * such as exemplars and annotations.
+ */
+const TEST_ALTERNATIVE_MODES = true;
 
 const TAG_MODE_NONE = 0; // tags not displayed
 const TAG_MODE_BASIC = 1; // basic tags
@@ -196,7 +204,7 @@ function onWinning() {
 }
 
 function onCancel(event) {
-  if (DEBUG && event.shiftKey) {
+  if (TEST_ALTERNATIVE_MODES && event.shiftKey) {
     formHasTagOptions.value = true;
     return;
   }
@@ -245,13 +253,6 @@ function handleTextChange() {
 
 function handleTagsCheckboxChange() {
   tagMode.value = useTags.value ? TAG_MODE_MENUS : TAG_MODE_NONE;
-}
-
-function handleModeChange() {
-  console.log("handleModeChange");
-  if (!useTags.value) {
-    tagMode.value = TAG_MODE_NONE;
-  }
 }
 
 function toggleInsertMenu(event) {

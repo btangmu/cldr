@@ -14,7 +14,7 @@ import { onMounted, ref } from "vue";
 
 import * as cldrChar from "../esm/cldrChar.mjs";
 
-const DEBUG = true;
+const DEBUG = false;
 
 const props = defineProps({
   modelValue: String,
